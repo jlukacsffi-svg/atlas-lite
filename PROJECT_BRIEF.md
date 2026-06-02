@@ -42,6 +42,8 @@ The long-term system should behave like a company that continuously gathers info
 
 The eventual vision may include autonomous trading, but the project should reach that only through staged, tested, owner-approved phases.
 
+For the detailed staged development plan, read `ROADMAP.md`.
+
 Atlas should evolve in stages:
 
 1. Research and reporting.
@@ -231,4 +233,3 @@ Suggested requirements:
 - Do not add trading capability.
 - Keep the project simple.
 - Run `py -3.12 main.py` after changes.
-
