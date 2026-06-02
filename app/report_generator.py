@@ -43,6 +43,9 @@ class ReportGenerator:
         if not self._has_valid_market_data():
             report.append("### ⚠️ Market data unavailable for this run.\n")
         
+        # Executive Summary
+        report.append(self._generate_executive_summary())
+
         # Market Summary
         report.append(self._generate_market_summary())
         
@@ -74,6 +77,104 @@ class ReportGenerator:
             item.get('status') == 'available'
             for item in self.market_summary.values()
         )
+
+    def _available_market_data(self):
+        return {
+            ticker: data for ticker, data in self.market_data.items()
+            if data.get('status') == 'available'
+        }
+
+    def _generate_executive_summary(self):
+        """Generate a concise, rule-based executive summary"""
+        section = ["## Executive Summary\n"]
+        available_data = self._available_market_data()
+
+        if not available_data:
+            section.append("- Market data was unavailable, so Atlas cannot produce a reliable executive summary.")
+            section.append("- Review data connectivity and fallback diagnostics before using today's report.")
+            return "\n".join(section) + "\n"
+
+        spy_pct = self.market_summary.get('SPY', {}).get('percent_change')
+        qqq_pct = self.market_summary.get('QQQ', {}).get('percent_change')
+        index_changes = [
+            pct for pct in (spy_pct, qqq_pct)
+            if pct is not None
+        ]
+        avg_index_change = sum(index_changes) / len(index_changes) if index_changes else 0
+
+        if avg_index_change >= 1:
+            market_tone = "risk-on"
+        elif avg_index_change <= -1:
+            market_tone = "risk-off"
+        else:
+            market_tone = "mixed to stable"
+
+        sorted_by_change = sorted(
+            available_data.items(),
+            key=lambda x: x[1].get('percent_change', 0),
+            reverse=True,
+        )
+        top_gainer, top_gainer_data = sorted_by_change[0]
+        top_loser, top_loser_data = sorted_by_change[-1]
+
+        significant_movers = [
+            (ticker, data) for ticker, data in available_data.items()
+            if abs(data.get('percent_change', 0)) > 2
+        ]
+        gainers = [
+            (ticker, data) for ticker, data in significant_movers
+            if data.get('percent_change', 0) > 0
+        ]
+        losers = [
+            (ticker, data) for ticker, data in significant_movers
+            if data.get('percent_change', 0) < 0
+        ]
+
+        section.append(
+            f"- **Market tone**: {market_tone}; SPY {self._format_value(spy_pct, '{:+.2f}%')} "
+            f"and QQQ {self._format_value(qqq_pct, '{:+.2f}%')}."
+        )
+        section.append(
+            f"- **Leadership**: {top_gainer} led the watchlist at "
+            f"{top_gainer_data.get('percent_change', 0):+.2f}%."
+        )
+        section.append(
+            f"- **Pressure point**: {top_loser} was the weakest name at "
+            f"{top_loser_data.get('percent_change', 0):+.2f}%."
+        )
+
+        if significant_movers:
+            section.append(
+                f"- **Volatility**: {len(significant_movers)} watchlist names moved more than 2%; "
+                f"{len(gainers)} higher and {len(losers)} lower."
+            )
+        else:
+            section.append("- **Volatility**: no watchlist names moved more than 2%.")
+
+        if losers:
+            downside_focus = ", ".join(
+                ticker for ticker, _ in sorted(
+                    losers,
+                    key=lambda x: x[1].get('percent_change', 0)
+                )[:3]
+            )
+            section.append(f"- **Risk focus**: monitor downside follow-through in {downside_focus}.")
+        elif gainers:
+            upside_focus = ", ".join(
+                ticker for ticker, _ in sorted(
+                    gainers,
+                    key=lambda x: abs(x[1].get('percent_change', 0)),
+                    reverse=True
+                )[:3]
+            )
+            section.append(
+                f"- **Opportunity focus**: review whether strength in {upside_focus} "
+                "is supported by company-specific news."
+            )
+        else:
+            section.append("- **Action focus**: no urgent watchlist dislocation detected.")
+
+        return "\n".join(section) + "\n"
 
     def _generate_data_quality(self):
         """Generate data quality/source section"""

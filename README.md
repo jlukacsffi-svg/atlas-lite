@@ -7,6 +7,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Monitors a watchlist of major tech, defense, and market index stocks
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
+- Generates a rule-based executive summary of market tone, leaders, risks, and volatility
 - Generates a Morning Executive Brief in markdown format
 - Saves reports to the `reports/` folder with timestamps
 
@@ -24,12 +25,13 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 Each Morning Executive Brief includes:
 
 1. **Date** - Report generation date
-2. **Market Summary** - Overview of major indices
-3. **Watchlist Summary** - Current prices and performance
-4. **Top Movers** - Best and worst performing stocks
-5. **News Highlights** - Recent headlines for stocks moving more than 2%
-6. **Potential Opportunities** - Notable price changes
-7. **Risks To Watch** - Key considerations
+2. **Executive Summary** - Concise readout of market tone, leaders, risks, and volatility
+3. **Market Summary** - Overview of major indices
+4. **Watchlist Summary** - Current prices and performance
+5. **Top Movers** - Best and worst performing stocks
+6. **News Highlights** - Recent headlines for stocks moving more than 2%
+7. **Potential Opportunities** - Notable price changes
+8. **Risks To Watch** - Key considerations
 
 ## Installation
 
