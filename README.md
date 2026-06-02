@@ -6,6 +6,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 
 - Monitors a watchlist of major tech, defense, and market index stocks
 - Fetches real-time market data using yfinance
+- Adds recent news headlines for major watchlist movers
 - Generates a Morning Executive Brief in markdown format
 - Saves reports to the `reports/` folder with timestamps
 
@@ -26,8 +27,9 @@ Each Morning Executive Brief includes:
 2. **Market Summary** - Overview of major indices
 3. **Watchlist Summary** - Current prices and performance
 4. **Top Movers** - Best and worst performing stocks
-5. **Potential Opportunities** - Notable price changes
-6. **Risks To Watch** - Key considerations
+5. **News Highlights** - Recent headlines for stocks moving more than 2%
+6. **Potential Opportunities** - Notable price changes
+7. **Risks To Watch** - Key considerations
 
 ## Installation
 
@@ -55,6 +57,7 @@ Atlas-lite/
 ├── app/                          # Core application modules
 │   ├── __init__.py
 │   ├── market_data.py           # Market data fetching
+│   ├── news_data.py             # News headline fetching
 │   └── report_generator.py      # Report generation
 ├── reports/                      # Generated reports
 ├── tests/                        # Test files

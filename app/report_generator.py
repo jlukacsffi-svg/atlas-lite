@@ -2,6 +2,8 @@
 
 from datetime import datetime
 
+from app.news_data import NewsFetcher
+
 
 class ReportGenerator:
     """Generate markdown reports from market data"""
@@ -17,6 +19,7 @@ class ReportGenerator:
         self.market_data = market_data or {}
         self.market_summary = market_summary or {}
         self.timestamp = datetime.now()
+        self.news_fetcher = NewsFetcher()
     
     def generate_report(self):
         """
@@ -48,6 +51,9 @@ class ReportGenerator:
         
         # Top Movers
         report.append(self._generate_top_movers())
+
+        # News Highlights
+        report.append(self._generate_news_highlights())
         
         # Potential Opportunities
         report.append(self._generate_opportunities())
@@ -168,6 +174,64 @@ class ReportGenerator:
         for ticker, data in sorted_data[-3:]:
             section.append(f"- **{ticker}**: {data['percent_change']:+.2f}% (${data['price']})")
         
+        return "\n".join(section) + "\n"
+
+    def _get_significant_movers(self, threshold=2, limit=6):
+        available_data = {
+            ticker: data for ticker, data in self.market_data.items()
+            if data.get('status') == 'available'
+        }
+
+        movers = [
+            (ticker, data) for ticker, data in available_data.items()
+            if abs(data.get('percent_change', 0)) > threshold
+        ]
+
+        return sorted(
+            movers,
+            key=lambda x: abs(x[1].get('percent_change', 0)),
+            reverse=True
+        )[:limit]
+
+    def _generate_news_highlights(self):
+        """Generate recent headline section for major movers"""
+        section = ["## News Highlights\n"]
+        movers = self._get_significant_movers()
+
+        if not movers:
+            section.append("No major watchlist moves required headline review today.\n")
+            return "\n".join(section) + "\n"
+
+        section.append("Recent headlines for watchlist moves greater than 2%:\n")
+
+        for ticker, data in movers:
+            company_name = data.get('company_name') or ticker
+            pct = data.get('percent_change', 0)
+            section.append(f"### {ticker}: {pct:+.2f}%")
+
+            headlines = self.news_fetcher.fetch_headlines(ticker, company_name)
+            if not headlines:
+                section.append("- No recent headlines found from the configured news source.")
+                section.append("")
+                continue
+
+            for headline in headlines:
+                title = headline['title']
+                publisher = headline['publisher']
+                url = headline['url']
+                relevance = headline.get('relevance', 'broad')
+                relevance_label = {
+                    'company': 'company headline',
+                    'sector': 'sector headline',
+                    'broad': 'broad market headline',
+                }.get(relevance, 'headline')
+                if url:
+                    section.append(f"- [{title}]({url}) - {publisher} ({relevance_label})")
+                else:
+                    section.append(f"- {title} - {publisher} ({relevance_label})")
+
+            section.append("")
+
         return "\n".join(section) + "\n"
     
     def _generate_opportunities(self):
