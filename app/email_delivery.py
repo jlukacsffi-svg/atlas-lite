@@ -9,12 +9,36 @@ import ssl
 
 
 TRUE_VALUES = {"1", "true", "yes", "on"}
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+LOCAL_ENV_FILE = PROJECT_ROOT / ".env"
+
+
+def load_local_env(env_path=LOCAL_ENV_FILE):
+    """Load simple KEY=VALUE settings from a local ignored .env file."""
+    if not env_path.exists():
+        return False
+
+    with open(env_path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+
+            key, value = line.split("=", 1)
+            key = key.strip()
+            value = value.strip().strip('"').strip("'")
+
+            if key and key not in os.environ:
+                os.environ[key] = value
+
+    return True
 
 
 class EmailConfig:
     """Read email delivery settings from environment variables."""
 
     def __init__(self):
+        self.loaded_local_env = load_local_env()
         self.enabled = os.getenv("ATLAS_EMAIL_ENABLED", "").strip().lower() in TRUE_VALUES
         self.smtp_host = os.getenv("ATLAS_SMTP_HOST", "").strip()
         self.smtp_port = int(os.getenv("ATLAS_SMTP_PORT", "587"))

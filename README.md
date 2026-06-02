@@ -114,6 +114,22 @@ $env:ATLAS_SMTP_USE_SSL = "false"
 
 When enabled, Atlas attaches both the Markdown and HTML reports to the email.
 
+If environment variables set in PowerShell are not visible to Atlas, create a local `.env` file in the project root. The `.env` file is ignored by Git and must not be committed.
+
+Example `.env`:
+
+```text
+ATLAS_EMAIL_ENABLED=true
+ATLAS_SMTP_HOST=smtp.gmail.com
+ATLAS_SMTP_PORT=587
+ATLAS_SMTP_USER=atlas.capital.reports@gmail.com
+ATLAS_SMTP_PASSWORD=your-app-password
+ATLAS_EMAIL_FROM=atlas.capital.reports@gmail.com
+ATLAS_EMAIL_TO=jlukacsffi@gmail.com
+ATLAS_SMTP_USE_STARTTLS=true
+ATLAS_SMTP_USE_SSL=false
+```
+
 ## Project Structure
 
 The `scripts/` folder contains Windows scheduled execution helpers.
