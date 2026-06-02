@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from app.market_data import MarketDataFetcher
 from app.report_generator import ReportGenerator
+from app.email_delivery import EmailDelivery
 
 LOG_DIR = Path(__file__).resolve().parent / "logs"
 
@@ -91,6 +92,16 @@ def main():
         print(f"[ok] Report saved to: {report_path}")
         if generator.last_html_path:
             print(f"[ok] HTML report saved to: {generator.last_html_path}")
+
+        print()
+        print("[email] Checking email delivery settings...")
+        email_delivery = EmailDelivery()
+        if email_delivery.config.enabled:
+            email_delivery.send_report(report_path, generator.last_html_path)
+            print("[ok] Report email sent.")
+        else:
+            print("[email] Email delivery disabled.")
+
         print("[ok] Report generation complete.")
         return 0
 

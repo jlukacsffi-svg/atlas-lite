@@ -10,6 +10,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Generates a rule-based executive summary of market tone, leaders, risks, and volatility
 - Generates Morning Executive Brief reports in markdown and HTML formats
 - Supports Windows scheduled daily execution
+- Supports optional SMTP email delivery using environment variables
 - Saves reports to the `reports/` folder with timestamps
 
 ## Watchlist
@@ -86,6 +87,33 @@ Scheduled run logs are written to:
 logs/scheduled_run_YYYYMMDD_HHMMSS.log
 ```
 
+## Email Delivery
+
+Email delivery is optional and disabled by default.
+
+Do not store email passwords or app passwords in this repository.
+
+To enable email delivery, set these environment variables outside the repo:
+
+```powershell
+$env:ATLAS_EMAIL_ENABLED = "true"
+$env:ATLAS_SMTP_HOST = "smtp.example.com"
+$env:ATLAS_SMTP_PORT = "587"
+$env:ATLAS_SMTP_USER = "your-email@example.com"
+$env:ATLAS_SMTP_PASSWORD = "your-app-password"
+$env:ATLAS_EMAIL_FROM = "your-email@example.com"
+$env:ATLAS_EMAIL_TO = "recipient@example.com"
+```
+
+Optional settings:
+
+```powershell
+$env:ATLAS_SMTP_USE_STARTTLS = "true"
+$env:ATLAS_SMTP_USE_SSL = "false"
+```
+
+When enabled, Atlas attaches both the Markdown and HTML reports to the email.
+
 ## Project Structure
 
 The `scripts/` folder contains Windows scheduled execution helpers.
@@ -113,6 +141,7 @@ Atlas-lite/
 - Skips yfinance for the rest of a run after repeated yfinance failures, then uses the Yahoo fallback directly
 - Fetch diagnostics are written to `logs/atlas_diagnostics.log`
 - Reports are generated in markdown and HTML formats for easy sharing and viewing
+- Email delivery requires SMTP environment variables and should use an app password or provider-specific secure credential
 
 ## License
 
