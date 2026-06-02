@@ -89,6 +89,8 @@ def main():
         report_path = generator.save_report()
 
         print(f"[ok] Report saved to: {report_path}")
+        if generator.last_html_path:
+            print(f"[ok] HTML report saved to: {generator.last_html_path}")
         print("[ok] Report generation complete.")
         return 0
 

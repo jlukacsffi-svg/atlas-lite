@@ -8,7 +8,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
 - Generates a rule-based executive summary of market tone, leaders, risks, and volatility
-- Generates a Morning Executive Brief in markdown format
+- Generates Morning Executive Brief reports in markdown and HTML formats
 - Saves reports to the `reports/` folder with timestamps
 
 ## Watchlist
@@ -52,6 +52,11 @@ py -3.12 main.py
 
 Reports are saved to the `reports/` folder with a timestamp in the filename.
 
+Each run writes both:
+
+- `morning_brief_YYYYMMDD_HHMMSS.md`
+- `morning_brief_YYYYMMDD_HHMMSS.html`
+
 ## Project Structure
 
 ```
@@ -76,7 +81,7 @@ Atlas-lite/
 - Uses Yahoo Finance fallback data when yfinance history is unavailable
 - Skips yfinance for the rest of a run after repeated yfinance failures, then uses the Yahoo fallback directly
 - Fetch diagnostics are written to `logs/atlas_diagnostics.log`
-- Reports are generated in markdown format for easy sharing and viewing
+- Reports are generated in markdown and HTML formats for easy sharing and viewing
 
 ## License
 

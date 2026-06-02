@@ -1,6 +1,8 @@
 """Report generation module"""
 
 from datetime import datetime
+import html
+import re
 
 from app.news_data import NewsFetcher
 
@@ -20,6 +22,7 @@ class ReportGenerator:
         self.market_summary = market_summary or {}
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
+        self.last_html_path = None
     
     def generate_report(self):
         """
@@ -68,6 +71,251 @@ class ReportGenerator:
         report.append(f"\n---\n\n*Report generated on {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}*\n")
         
         return "\n".join(report)
+
+    def generate_html_report(self, markdown_content=None):
+        """
+        Generate an HTML version of the Morning Executive Brief.
+
+        Args:
+            markdown_content (str): Optional markdown content to render.
+
+        Returns:
+            str: Complete HTML document
+        """
+        markdown_content = markdown_content or self.generate_report()
+        body = self._markdown_to_html(markdown_content)
+        title = f"Morning Executive Brief - {self.timestamp.strftime('%B %d, %Y')}"
+
+        return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{html.escape(title)}</title>
+  <style>
+    :root {{
+      color-scheme: light;
+      --bg: #f6f7f9;
+      --panel: #ffffff;
+      --text: #1d2433;
+      --muted: #667085;
+      --line: #d9dee8;
+      --accent: #2457a6;
+      --positive: #0f7a4f;
+      --negative: #a33b35;
+    }}
+
+    * {{ box-sizing: border-box; }}
+
+    body {{
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", Arial, sans-serif;
+      line-height: 1.55;
+    }}
+
+    main {{
+      width: min(1120px, calc(100% - 32px));
+      margin: 32px auto;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 32px;
+      box-shadow: 0 12px 30px rgba(29, 36, 51, 0.08);
+    }}
+
+    h1 {{
+      margin: 0 0 20px;
+      color: #101828;
+      font-size: 2rem;
+      line-height: 1.2;
+    }}
+
+    h2 {{
+      margin: 32px 0 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--line);
+      color: #172033;
+      font-size: 1.35rem;
+    }}
+
+    h3 {{
+      margin: 20px 0 8px;
+      color: #243b63;
+      font-size: 1.05rem;
+    }}
+
+    p, ul {{
+      margin-top: 0;
+    }}
+
+    a {{
+      color: var(--accent);
+      text-decoration: none;
+    }}
+
+    a:hover {{
+      text-decoration: underline;
+    }}
+
+    table {{
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 24px;
+      font-size: 0.94rem;
+    }}
+
+    th, td {{
+      border: 1px solid var(--line);
+      padding: 9px 10px;
+      text-align: left;
+      vertical-align: top;
+    }}
+
+    th {{
+      background: #eef2f8;
+      color: #1d2939;
+      font-weight: 650;
+    }}
+
+    tr:nth-child(even) td {{
+      background: #fafbfc;
+    }}
+
+    li {{
+      margin-bottom: 7px;
+    }}
+
+    hr {{
+      border: 0;
+      border-top: 1px solid var(--line);
+      margin: 32px 0 12px;
+    }}
+
+    em {{
+      color: var(--muted);
+    }}
+
+    @media (max-width: 720px) {{
+      main {{
+        width: 100%;
+        margin: 0;
+        border-radius: 0;
+        border-left: 0;
+        border-right: 0;
+        padding: 20px;
+      }}
+
+      table {{
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+      }}
+    }}
+  </style>
+</head>
+<body>
+  <main>
+{body}
+  </main>
+</body>
+</html>
+"""
+
+    def _markdown_to_html(self, markdown_content):
+        lines = markdown_content.splitlines()
+        html_lines = []
+        in_list = False
+        in_table = False
+        table_header_seen = False
+
+        def close_list():
+            nonlocal in_list
+            if in_list:
+                html_lines.append("</ul>")
+                in_list = False
+
+        def close_table():
+            nonlocal in_table, table_header_seen
+            if in_table:
+                html_lines.append("</tbody></table>")
+                in_table = False
+                table_header_seen = False
+
+        for line in lines:
+            stripped = line.strip()
+
+            if not stripped:
+                close_list()
+                close_table()
+                continue
+
+            if stripped == "---":
+                close_list()
+                close_table()
+                html_lines.append("<hr>")
+                continue
+
+            if stripped.startswith("|") and stripped.endswith("|"):
+                close_list()
+                cells = [cell.strip() for cell in stripped.strip("|").split("|")]
+                if all(set(cell) <= {"-", ":"} for cell in cells):
+                    continue
+
+                if not in_table:
+                    html_lines.append("<table>")
+                    in_table = True
+                    table_header_seen = False
+
+                cell_html = "".join(
+                    f"<{'th' if not table_header_seen else 'td'}>{self._format_inline_text(cell)}</{'th' if not table_header_seen else 'td'}>"
+                    for cell in cells
+                )
+                if not table_header_seen:
+                    html_lines.append(f"<thead><tr>{cell_html}</tr></thead><tbody>")
+                    table_header_seen = True
+                else:
+                    html_lines.append(f"<tr>{cell_html}</tr>")
+                continue
+
+            close_table()
+
+            if stripped.startswith("# "):
+                close_list()
+                html_lines.append(f"<h1>{self._format_inline_text(stripped[2:])}</h1>")
+            elif stripped.startswith("## "):
+                close_list()
+                html_lines.append(f"<h2>{self._format_inline_text(stripped[3:])}</h2>")
+            elif stripped.startswith("### "):
+                close_list()
+                html_lines.append(f"<h3>{self._format_inline_text(stripped[4:])}</h3>")
+            elif stripped.startswith("- "):
+                if not in_list:
+                    html_lines.append("<ul>")
+                    in_list = True
+                html_lines.append(f"<li>{self._format_inline_text(stripped[2:])}</li>")
+            else:
+                close_list()
+                html_lines.append(f"<p>{self._format_inline_text(stripped)}</p>")
+
+        close_list()
+        close_table()
+        return "\n".join(f"    {line}" for line in html_lines)
+
+    def _format_inline_text(self, text):
+        escaped = html.escape(text)
+        escaped = re.sub(
+            r"\[([^\]]+)\]\(([^)]+)\)",
+            lambda match: (
+                f'<a href="{html.escape(match.group(2), quote=True)}" '
+                f'target="_blank" rel="noopener noreferrer">{match.group(1)}</a>'
+            ),
+            escaped,
+        )
+        escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
+        escaped = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", escaped)
+        return escaped
     
     def _has_valid_market_data(self):
         return any(
@@ -413,10 +661,16 @@ class ReportGenerator:
         os.makedirs(reports_dir, exist_ok=True)
         
         report_content = self.generate_report()
-        filename = self.timestamp.strftime("morning_brief_%Y%m%d_%H%M%S.md")
-        filepath = os.path.join(reports_dir, filename)
+        base_filename = self.timestamp.strftime("morning_brief_%Y%m%d_%H%M%S")
+        filepath = os.path.join(reports_dir, f"{base_filename}.md")
+        html_filepath = os.path.join(reports_dir, f"{base_filename}.html")
         
         with open(filepath, 'w', encoding='utf-8') as f:
             f.write(report_content)
+
+        with open(html_filepath, 'w', encoding='utf-8') as f:
+            f.write(self.generate_html_report(report_content))
+
+        self.last_html_path = html_filepath
         
         return filepath
