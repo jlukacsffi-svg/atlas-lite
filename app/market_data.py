@@ -5,6 +5,7 @@ import io
 import json
 import logging
 import os
+import time
 import urllib.request
 from pathlib import Path
 
@@ -16,6 +17,10 @@ YAHOO_CHART_URL = (
     "https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
     "?range=2d&interval=1d&includePrePost=false"
 )
+YFINANCE_TIMEOUT_SECONDS = 1
+YFINANCE_INFO_TIMEOUT_SECONDS = 1
+YFINANCE_FAILURE_LIMIT = 2
+YAHOO_FALLBACK_TIMEOUT_SECONDS = 6
 
 
 def _configure_logger():
@@ -26,7 +31,7 @@ def _configure_logger():
     handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)s %(message)s"))
     logger.addHandler(handler)
-    logger.setLevel(logging.WARNING)
+    logger.setLevel(logging.INFO)
     logger.propagate = False
     return logger
 
@@ -45,6 +50,19 @@ class MarketDataFetcher:
         """
         self.watchlist = watchlist
         self.logger = logger
+        self.yfinance_failures = 0
+        self.yfinance_disabled = False
+
+    def _note_yfinance_failure(self, ticker, reason):
+        self.yfinance_failures += 1
+        self.logger.warning("yfinance failed for %s: %s", ticker, reason)
+
+        if self.yfinance_failures >= YFINANCE_FAILURE_LIMIT:
+            self.yfinance_disabled = True
+            self.logger.warning(
+                "Disabling yfinance for the rest of this run after %d failures",
+                self.yfinance_failures,
+            )
 
     def _placeholder_record(self, status='unavailable'):
         return {
@@ -66,14 +84,42 @@ class MarketDataFetcher:
         }
 
     def _run_yfinance_history(self, ticker):
+        start = time.monotonic()
         stderr_buffer = io.StringIO()
         with contextlib.redirect_stderr(stderr_buffer):
             stock = yf.Ticker(ticker)
-            hist = stock.history(period='2d')
+            hist = stock.history(period='2d', timeout=YFINANCE_TIMEOUT_SECONDS)
+
+        elapsed = time.monotonic() - start
+        self.logger.info("yfinance history completed for %s in %.2fs", ticker, elapsed)
+
         stderr_text = stderr_buffer.getvalue().strip()
         if stderr_text:
             self.logger.warning("yfinance stderr for %s: %s", ticker, stderr_text.replace('\n', ' | '))
         return hist
+
+    def _run_yfinance_info(self, ticker):
+        start = time.monotonic()
+        stock_info = yf.Ticker(ticker).get_info(timeout=YFINANCE_INFO_TIMEOUT_SECONDS)
+        elapsed = time.monotonic() - start
+        self.logger.info("yfinance info completed for %s in %.2fs", ticker, elapsed)
+        return stock_info
+
+    def _fetch_yahoo_fallback_record(self, ticker):
+        raw = self._fetch_yahoo_raw_response(ticker)
+        if raw is not None:
+            parsed = self._parse_yahoo_chart_json(raw, ticker)
+            if parsed is not None:
+                return parsed
+        return self._placeholder_record()
+
+    def _fetch_yahoo_fallback_summary(self, idx):
+        raw = self._fetch_yahoo_raw_response(idx)
+        if raw is not None:
+            parsed = self._parse_yahoo_chart_json(raw, idx)
+            if parsed is not None:
+                return parsed
+        return self._placeholder_summary()
 
     def _fetch_yahoo_raw_response(self, ticker):
         url = YAHOO_CHART_URL.format(ticker=ticker)
@@ -86,8 +132,11 @@ class MarketDataFetcher:
         )
 
         try:
-            with urllib.request.urlopen(request, timeout=10) as response:
+            start = time.monotonic()
+            with urllib.request.urlopen(request, timeout=YAHOO_FALLBACK_TIMEOUT_SECONDS) as response:
                 raw = response.read().decode('utf-8', errors='replace')
+                elapsed = time.monotonic() - start
+                self.logger.info("Yahoo fallback completed for %s in %.2fs", ticker, elapsed)
                 self.logger.debug("Raw response body for %s: %s", ticker, raw)
                 return raw
         except Exception as exc:
@@ -199,18 +248,17 @@ class MarketDataFetcher:
         self.logger.info("Fetching data for ticker %s", ticker)
         self.logger.debug("Calling yfinance: yf.Ticker(%r).history(period='2d')", ticker)
 
+        if self.yfinance_disabled:
+            self.logger.info("Skipping yfinance for %s because it is disabled for this run", ticker)
+            return self._fetch_yahoo_fallback_record(ticker)
+
         try:
             hist = self._run_yfinance_history(ticker)
             self.logger.debug("yfinance history rows for %s: %s", ticker, len(hist))
 
             if len(hist) < 1:
-                self.logger.warning("Empty yfinance history for %s", ticker)
-                raw = self._fetch_yahoo_raw_response(ticker)
-                if raw is not None:
-                    parsed = self._parse_yahoo_chart_json(raw, ticker)
-                    if parsed is not None:
-                        return parsed
-                return self._placeholder_record()
+                self._note_yfinance_failure(ticker, "empty history")
+                return self._fetch_yahoo_fallback_record(ticker)
 
             current_price = hist['Close'].iloc[-1]
             previous_close = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
@@ -220,8 +268,13 @@ class MarketDataFetcher:
             # Try to get company name from yfinance info
             company_name = ticker
             try:
-                stock_info = yf.Ticker(ticker).info
-                company_name = stock_info.get('longName') or stock_info.get('shortName') or stock_info.get('symbol') or ticker
+                stock_info = self._run_yfinance_info(ticker) or {}
+                company_name = (
+                    stock_info.get('longName')
+                    or stock_info.get('shortName')
+                    or stock_info.get('symbol')
+                    or ticker
+                )
             except Exception:
                 pass
 
@@ -241,12 +294,7 @@ class MarketDataFetcher:
                 exc,
                 exc_info=True,
             )
-            raw = self._fetch_yahoo_raw_response(ticker)
-            if raw is not None:
-                parsed = self._parse_yahoo_chart_json(raw, ticker)
-                if parsed is not None:
-                    return parsed
-            return self._placeholder_record()
+            return self._fetch_yahoo_fallback_record(ticker)
 
     def fetch_current_data(self):
         """
@@ -267,18 +315,17 @@ class MarketDataFetcher:
         self.logger.info("Fetching market summary for index %s", idx)
         self.logger.debug("Calling yfinance: yf.Ticker(%r).history(period='2d')", idx)
 
+        if self.yfinance_disabled:
+            self.logger.info("Skipping yfinance for index %s because it is disabled for this run", idx)
+            return self._fetch_yahoo_fallback_summary(idx)
+
         try:
             hist = self._run_yfinance_history(idx)
             self.logger.debug("yfinance history rows for %s: %s", idx, len(hist))
 
             if len(hist) < 1:
-                self.logger.warning("Empty yfinance history for index %s", idx)
-                raw = self._fetch_yahoo_raw_response(idx)
-                if raw is not None:
-                    parsed = self._parse_yahoo_chart_json(raw, idx)
-                    if parsed is not None:
-                        return parsed
-                return self._placeholder_summary()
+                self._note_yfinance_failure(idx, "empty history")
+                return self._fetch_yahoo_fallback_summary(idx)
 
             current_price = hist['Close'].iloc[-1]
             previous_close = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
@@ -298,12 +345,7 @@ class MarketDataFetcher:
                 exc,
                 exc_info=True,
             )
-            raw = self._fetch_yahoo_raw_response(idx)
-            if raw is not None:
-                parsed = self._parse_yahoo_chart_json(raw, idx)
-                if parsed is not None:
-                    return parsed
-            return self._placeholder_summary()
+            return self._fetch_yahoo_fallback_summary(idx)
 
     def get_market_summary(self):
         """

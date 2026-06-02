@@ -72,6 +72,8 @@ Atlas-lite/
 - No brokerage connections
 - Data is fetched from Yahoo Finance via yfinance
 - Uses Yahoo Finance fallback data when yfinance history is unavailable
+- Skips yfinance for the rest of a run after repeated yfinance failures, then uses the Yahoo fallback directly
+- Fetch diagnostics are written to `logs/atlas_diagnostics.log`
 - Reports are generated in markdown format for easy sharing and viewing
 
 ## License

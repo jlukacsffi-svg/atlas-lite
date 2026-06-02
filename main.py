@@ -6,8 +6,8 @@ A lightweight market monitoring tool that generates daily executive briefs
 for a curated watchlist of stocks.
 """
 
-import sys
 import os
+import sys
 import urllib.request
 from pathlib import Path
 
@@ -30,10 +30,10 @@ def verify_internet_connectivity(timeout=5):
         try:
             with urllib.request.urlopen(url, timeout=timeout) as response:
                 if response.status == 200:
-                    print(f"🌐 Connectivity check passed for {url}")
+                    print(f"[ok] Connectivity check passed for {url}")
                     return True
         except Exception as exc:
-            print(f"⚠️ Connectivity check failed for {url}: {exc}")
+            print(f"[warning] Connectivity check failed for {url}: {exc}")
 
     return False
 
@@ -51,7 +51,7 @@ WATCHLIST = [
     # Finance/Data
     'PLTR',
     # Market Indices
-    'SPY', 'QQQ'
+    'SPY', 'QQQ',
 ]
 
 
@@ -61,41 +61,39 @@ def main():
     print("Atlas Lite - Morning Executive Brief Generator")
     print("=" * 60)
     print()
-    
-    print("📊 Fetching market data...")
+
+    print("[market] Fetching market data...")
     os.makedirs(LOG_DIR, exist_ok=True)
     if not verify_internet_connectivity():
-        print("⚠️ Internet unavailable. Yahoo fallback may be used where needed.")
+        print("[warning] Internet unavailable. Yahoo fallback may be used where needed.")
 
-    # Initialize the market data fetcher
     fetcher = MarketDataFetcher(WATCHLIST)
 
     try:
-        # Fetch data
         market_data = fetcher.fetch_current_data()
         market_summary = fetcher.get_market_summary()
-        
+
         available_count = sum(
             1 for data in market_data.values() if data.get('status') == 'available'
         )
         unavailable_count = len(market_data) - available_count
-        print(f"✓ Market data fetch complete. {available_count} available, {unavailable_count} unavailable.")
-        
+        print(f"[ok] Market data fetch complete. {available_count} available, {unavailable_count} unavailable.")
+
         if available_count == 0:
-            print("⚠️  Market data unavailable for this run. Generating fallback report.")
-        
+            print("[warning] Market data unavailable for this run. Generating fallback report.")
+
         print()
-        print("📝 Generating report...")
-        
+        print("[report] Generating report...")
+
         generator = ReportGenerator(market_data, market_summary)
         report_path = generator.save_report()
-        
-        print(f"✓ Report saved to: {report_path}")
-        print("✓ Report generation complete.")
+
+        print(f"[ok] Report saved to: {report_path}")
+        print("[ok] Report generation complete.")
         return 0
-        
+
     except Exception as e:
-        print(f"❌ Error: {e}")
+        print(f"[error] {e}")
         import traceback
         traceback.print_exc()
         return 1

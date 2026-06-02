@@ -2,6 +2,7 @@
 
 import json
 import logging
+import time
 import urllib.parse
 import urllib.request
 
@@ -29,7 +30,7 @@ SECTOR_KEYWORDS = {
 class NewsFetcher:
     """Fetch recent public finance headlines for watchlist tickers."""
 
-    def __init__(self, max_headlines=3, search_headlines=10, timeout=8):
+    def __init__(self, max_headlines=3, search_headlines=10, timeout=5):
         self.max_headlines = max_headlines
         self.search_headlines = search_headlines
         self.timeout = timeout
@@ -51,8 +52,11 @@ class NewsFetcher:
         )
 
         try:
+            start = time.monotonic()
             with urllib.request.urlopen(request, timeout=self.timeout) as response:
                 payload = json.loads(response.read().decode("utf-8", errors="replace"))
+                elapsed = time.monotonic() - start
+                self.logger.info("News fetch completed for %s in %.2fs", ticker, elapsed)
         except Exception as exc:
             self.logger.warning("Unable to retrieve news for %s: %s", ticker, exc)
             return []
