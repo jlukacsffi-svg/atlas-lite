@@ -97,8 +97,11 @@ def main():
         print("[email] Checking email delivery settings...")
         email_delivery = EmailDelivery()
         if email_delivery.config.enabled:
-            email_delivery.send_report(report_path, generator.last_html_path)
-            print("[ok] Report email sent.")
+            try:
+                email_delivery.send_report(report_path, generator.last_html_path)
+                print("[ok] Report email sent.")
+            except Exception as email_error:
+                print(f"[warning] Email delivery failed: {email_error}")
         else:
             print("[email] Email delivery disabled.")
 

@@ -43,7 +43,7 @@ class EmailConfig:
         self.smtp_host = os.getenv("ATLAS_SMTP_HOST", "").strip()
         self.smtp_port = int(os.getenv("ATLAS_SMTP_PORT", "587"))
         self.smtp_user = os.getenv("ATLAS_SMTP_USER", "").strip()
-        self.smtp_password = os.getenv("ATLAS_SMTP_PASSWORD", "")
+        self.smtp_password = os.getenv("ATLAS_SMTP_PASSWORD", "").replace(" ", "")
         self.sender = os.getenv("ATLAS_EMAIL_FROM", self.smtp_user).strip()
         self.recipients = self._split_addresses(os.getenv("ATLAS_EMAIL_TO", ""))
         self.use_ssl = os.getenv("ATLAS_SMTP_USE_SSL", "").strip().lower() in TRUE_VALUES
