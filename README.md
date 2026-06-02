@@ -9,6 +9,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Adds recent news headlines for major watchlist movers
 - Generates a rule-based executive summary of market tone, leaders, risks, and volatility
 - Generates Morning Executive Brief reports in markdown and HTML formats
+- Supports Windows scheduled daily execution
 - Saves reports to the `reports/` folder with timestamps
 
 ## Watchlist
@@ -57,7 +58,37 @@ Each run writes both:
 - `morning_brief_YYYYMMDD_HHMMSS.md`
 - `morning_brief_YYYYMMDD_HHMMSS.html`
 
+## Scheduled Execution
+
+Atlas includes PowerShell scripts for Windows Task Scheduler.
+
+To test the scheduled runner manually:
+
+```powershell
+.\scripts\run_atlas_daily.ps1
+```
+
+To create or update a daily scheduled task at 7:00 AM:
+
+```powershell
+.\scripts\setup_windows_scheduled_task.ps1
+```
+
+To use a different time:
+
+```powershell
+.\scripts\setup_windows_scheduled_task.ps1 -RunTime "06:30"
+```
+
+Scheduled run logs are written to:
+
+```text
+logs/scheduled_run_YYYYMMDD_HHMMSS.log
+```
+
 ## Project Structure
+
+The `scripts/` folder contains Windows scheduled execution helpers.
 
 ```
 Atlas-lite/
