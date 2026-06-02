@@ -4,6 +4,8 @@ Atlas Lite is the first working prototype of Atlas Capital Research.
 
 It generates Morning Executive Brief markdown reports for a growth-focused stock watchlist.
 
+For broader project context, long-term vision, future autonomy levels, scoring plans, and environment notes, read `PROJECT_BRIEF.md`.
+
 ## Current status
 
 - v1.0 works locally.
