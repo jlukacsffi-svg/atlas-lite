@@ -6,6 +6,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 
 - Loads a structured security universe with sector, category, and notes metadata
 - Calculates transparent Atlas Scoring Engine v1 rankings
+- Saves structured historical research snapshots for comparison over time
 - Monitors a watchlist of major tech, defense, and market index stocks
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
@@ -46,6 +47,18 @@ Higher scores are better. A higher Risk Score means a stronger risk profile, not
 
 The current component scores are manual v1 inputs stored in `data/security_universe.json`. They are intended to be transparent, reviewable seed values that can later be supported or replaced by automated fundamental data.
 
+## Research Memory
+
+Each run saves a structured JSON snapshot containing market data, security metadata, and Atlas scores.
+
+Snapshots are written to:
+
+```text
+research_archive/snapshot_YYYYMMDD_HHMMSS.json
+```
+
+The archive is generated locally and ignored by Git. The Morning Executive Brief compares the current run with the most recent prior snapshot.
+
 - **Tech Giants**: NVDA, AMD, MSFT, AMZN, GOOGL, META
 - **Semiconductors**: AVGO, TSM, ARM
 - **Defense/Aerospace**: LMT, NOC, RTX
@@ -62,10 +75,11 @@ Each Morning Executive Brief includes:
 3. **Market Summary** - Overview of major indices
 4. **Watchlist Summary** - Current prices and performance
 5. **Atlas Scoring Summary** - Weighted company rankings
-6. **Top Movers** - Best and worst performing stocks
-7. **News Highlights** - Recent headlines for stocks moving more than 2%
-8. **Potential Opportunities** - Notable price changes
-9. **Risks To Watch** - Key considerations
+6. **Research Memory** - Changes since the most recent structured snapshot
+7. **Top Movers** - Best and worst performing stocks
+8. **News Highlights** - Recent headlines for stocks moving more than 2%
+9. **Potential Opportunities** - Notable price changes
+10. **Risks To Watch** - Key considerations
 
 ## Installation
 

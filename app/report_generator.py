@@ -11,16 +11,18 @@ from app.scoring import ScoringEngine
 class ReportGenerator:
     """Generate markdown reports from market data"""
     
-    def __init__(self, market_data, market_summary):
+    def __init__(self, market_data, market_summary, previous_snapshot=None):
         """
         Initialize the report generator
         
         Args:
             market_data (dict): Market data from MarketDataFetcher
             market_summary (dict): Market summary with indices
+            previous_snapshot (dict): Optional prior structured research snapshot
         """
         self.market_data = market_data or {}
         self.market_summary = market_summary or {}
+        self.previous_snapshot = previous_snapshot
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
         self.scoring_engine = ScoringEngine()
@@ -59,6 +61,9 @@ class ReportGenerator:
 
         # Scoring Summary
         report.append(self._generate_scoring_summary())
+
+        # Research Memory
+        report.append(self._generate_research_memory())
         
         # Top Movers
         report.append(self._generate_top_movers())
@@ -572,6 +577,80 @@ class ReportGenerator:
                 f"{scores['growth']:.0f} | {scores['quality']:.0f} | {scores['moat']:.0f} | "
                 f"{scores['momentum']:.0f} | {scores['risk']:.0f} |"
             )
+
+        return "\n".join(section) + "\n"
+
+    def _generate_research_memory(self):
+        """Generate comparison with the most recent prior research snapshot"""
+        section = ["## Research Memory\n"]
+
+        if not self.previous_snapshot:
+            section.append(
+                "No prior structured snapshot is available. This run establishes the research-memory baseline.\n"
+            )
+            return "\n".join(section) + "\n"
+
+        prior_generated_at = self.previous_snapshot.get("generated_at", "unknown time")
+        prior_securities = self.previous_snapshot.get("securities", {})
+        comparisons = []
+        score_changes = []
+
+        for ticker, data in self.market_data.items():
+            prior = prior_securities.get(ticker)
+            if not prior:
+                continue
+
+            current_price = data.get("price")
+            prior_price = prior.get("price")
+            price_change_pct = None
+            if current_price is not None and prior_price not in (None, 0):
+                price_change_pct = ((current_price - prior_price) / prior_price) * 100
+
+            current_score = None
+            if data.get("scores"):
+                current_score = self.scoring_engine.score(data["scores"])
+            prior_score = prior.get("total_score")
+            score_change = None
+            if current_score is not None and prior_score is not None:
+                score_change = current_score - prior_score
+
+            comparisons.append((ticker, price_change_pct))
+            if score_change is not None and abs(score_change) >= 0.05:
+                score_changes.append((ticker, score_change, current_score))
+
+        valid_price_changes = [
+            (ticker, change)
+            for ticker, change in comparisons
+            if change is not None and abs(change) >= 0.01
+        ]
+
+        section.append(f"Compared with the prior snapshot from `{prior_generated_at}`.\n")
+
+        if valid_price_changes:
+            largest_moves = sorted(
+                valid_price_changes,
+                key=lambda item: abs(item[1]),
+                reverse=True,
+            )[:5]
+            section.append("Largest price changes since the prior snapshot:\n")
+            for ticker, change in largest_moves:
+                section.append(f"- **{ticker}**: {change:+.2f}%")
+        else:
+            section.append("No meaningful price changes since the prior snapshot.\n")
+
+        section.append("")
+        if score_changes:
+            section.append("Score changes since the prior snapshot:\n")
+            for ticker, change, current_score in sorted(
+                score_changes,
+                key=lambda item: abs(item[1]),
+                reverse=True,
+            ):
+                section.append(
+                    f"- **{ticker}**: {change:+.1f} points to {current_score:.1f}"
+                )
+        else:
+            section.append("No Atlas score changes since the prior snapshot.\n")
 
         return "\n".join(section) + "\n"
 

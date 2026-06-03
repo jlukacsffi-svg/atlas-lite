@@ -55,11 +55,13 @@ Completed Stage 2 foundations:
 - Sector, category, notes, and manual v1 score metadata.
 - Atlas Scoring Engine v1 weighted rankings.
 - Scoring Summary in Markdown and HTML reports.
+- Structured historical research snapshots.
+- Research Memory comparison in Markdown and HTML reports.
 - Validation and unit tests for universe and scores.
 
 Recommended next Stage 2 task:
 
-Add historical research memory by archiving structured daily snapshots of market data and scores.
+Add basic company profiles and begin automating selected score inputs with measurable market or fundamental data.
 
 ## Useful Files
 

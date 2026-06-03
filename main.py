@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from app.market_data import MarketDataFetcher
 from app.report_generator import ReportGenerator
 from app.email_delivery import EmailDelivery
+from app.research_memory import ResearchMemory
 from app.security_universe import SecurityUniverse
 
 LOG_DIR = Path(__file__).resolve().parent / "logs"
@@ -71,9 +72,16 @@ def main():
             print("[warning] Market data unavailable for this run. Generating fallback report.")
 
         print()
+        print("[memory] Updating research archive...")
+        memory = ResearchMemory()
+        previous_snapshot = memory.load_latest_snapshot()
+        snapshot_path = memory.save_snapshot(market_data, market_summary, universe.version)
+        print(f"[ok] Research snapshot saved to: {snapshot_path}")
+
+        print()
         print("[report] Generating report...")
 
-        generator = ReportGenerator(market_data, market_summary)
+        generator = ReportGenerator(market_data, market_summary, previous_snapshot=previous_snapshot)
         report_path = generator.save_report()
 
         print(f"[ok] Report saved to: {report_path}")
