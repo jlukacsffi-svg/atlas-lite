@@ -25,6 +25,10 @@ class ResearchMemoryTests(unittest.TestCase):
             self.assertEqual(loaded["generated_at"], "2026-06-02T08:30:00")
             self.assertEqual(loaded["universe_version"], "1.1")
             self.assertEqual(loaded["securities"]["AAA"]["total_score"], 50.0)
+            self.assertEqual(
+                loaded["securities"]["AAA"]["growth_metrics"]["source"],
+                "sec_companyfacts",
+            )
 
     def test_latest_snapshot_is_returned(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -65,7 +69,14 @@ class ResearchMemoryTests(unittest.TestCase):
                 "percent_change": 11.11,
                 "status": "available",
                 "source": "test",
-                "score_source": "manual_v1",
+                "score_source": "hybrid_v2",
+                "automated_scores": ["growth", "momentum"],
+                "growth_metrics": {
+                    "growth_score": 50.0,
+                    "revenue_growth": 0.0,
+                    "net_income_growth": 0.0,
+                    "source": "sec_companyfacts",
+                },
                 "scores": {
                     "growth": 50,
                     "quality": 50,

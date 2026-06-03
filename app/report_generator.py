@@ -65,6 +65,9 @@ class ReportGenerator:
         # Company Profiles
         report.append(self._generate_company_profile_highlights())
 
+        # Automated Growth
+        report.append(self._generate_growth_summary())
+
         # Automated Momentum
         report.append(self._generate_momentum_summary())
 
@@ -567,8 +570,9 @@ class ReportGenerator:
             return "\n".join(section) + "\n"
 
         section.append(
-            "Hybrid v1 scores: Growth, Quality, Moat, and Risk are manual seed inputs; "
-            "Momentum is calculated from recent market returns when data is available. "
+            "Hybrid v2 scores: Growth is calculated from SEC filing data and Momentum is "
+            "calculated from recent market returns when data is available. Quality, Moat, "
+            "and Risk remain manual seed inputs. "
             "Higher Risk Score means a stronger risk profile. "
             "Weights: Growth 40%, Quality 20%, Moat 15%, Momentum 15%, Risk 10%.\n"
         )
@@ -622,6 +626,45 @@ class ReportGenerator:
                 f"**Key Risk**: {profile.get('key_risk', 'Not yet documented.')}"
             )
             section.append("")
+
+        return "\n".join(section) + "\n"
+
+    def _generate_growth_summary(self):
+        """Generate auditable automated fundamental growth metrics"""
+        section = ["## Automated Growth\n"]
+        growth_rows = []
+
+        for ticker, data in self.market_data.items():
+            metrics = data.get('growth_metrics')
+            if not metrics or data.get('sector') == 'Benchmark ETF':
+                continue
+            growth_rows.append((ticker, metrics))
+
+        if not growth_rows:
+            section.append("Automated Growth data was unavailable for this run.\n")
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Growth Score is calculated from annual revenue growth and annual net-income "
+            "growth reported in SEC filings. Revenue growth is the primary input with a "
+            "70% weight; net-income growth has a 30% weight when available. "
+            "Manual seed Growth scores remain in use when a meaningful filing comparison "
+            "is unavailable.\n"
+        )
+        section.append("| Ticker | Growth Score | Revenue Growth | Net Income Growth | Latest Fiscal Year |")
+        section.append("|--------|--------------|----------------|-------------------|--------------------|")
+
+        for ticker, metrics in sorted(
+            growth_rows,
+            key=lambda item: item[1].get('growth_score', 0),
+            reverse=True,
+        ):
+            section.append(
+                f"| {ticker} | {metrics['growth_score']:.1f} | "
+                f"{self._format_optional_percent(metrics.get('revenue_growth'))} | "
+                f"{self._format_optional_percent(metrics.get('net_income_growth'))} | "
+                f"{metrics.get('latest_fiscal_year') or 'N/A'} |"
+            )
 
         return "\n".join(section) + "\n"
 

@@ -5,7 +5,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 ## Features
 
 - Loads a structured security universe with sector, category, notes, and company-profile metadata
-- Calculates transparent Atlas Scoring Engine v1 rankings with automated Momentum
+- Calculates transparent Atlas Scoring Engine v1 rankings with automated Growth and Momentum
 - Saves structured historical research snapshots for comparison over time
 - Monitors a watchlist of major tech, defense, and market index stocks
 - Fetches real-time market data using yfinance
@@ -46,11 +46,25 @@ Atlas calculates a weighted total score from 0-100:
 
 Higher scores are better. A higher Risk Score means a stronger risk profile, not more risk.
 
-Atlas currently uses a hybrid v1 scoring model:
+Atlas currently uses a hybrid v2 scoring model:
 
-- Growth, Quality, Moat, and Risk are manual seed inputs stored in `data/security_universe.json`.
+- Growth is calculated automatically from annual revenue and net-income growth reported in SEC filings.
 - Momentum is calculated automatically from recent market returns when Yahoo Finance history is available.
-- If Momentum history is unavailable, Atlas retains the manual seed Momentum score for that run.
+- Quality, Moat, and Risk remain manual seed inputs stored in `data/security_universe.json`.
+- If automated Growth or Momentum data is unavailable, Atlas retains the corresponding manual seed score for that run.
+
+The automated Growth Score uses annual filing comparisons from the SEC Company Facts API:
+
+- Revenue growth is the primary input with a 70% weight.
+- Net-income growth is a secondary input with a 30% weight when the prior year is positive.
+- Each available metric is converted to a bounded 0-100 score centered on 50.
+- The report displays the underlying growth rates and latest fiscal year so the input is auditable.
+
+```text
+Revenue metric score = 50 + (annual revenue growth * 2.0)
+Net-income metric score = 50 + (annual net-income growth * 1.0)
+Growth Score = weighted average of available metric scores, bounded from 0-100
+```
 
 The automated Momentum Score is centered on 50, uses 1-month and 3-month returns, and is bounded from 0-100:
 
@@ -89,12 +103,13 @@ Each Morning Executive Brief includes:
 4. **Watchlist Summary** - Current prices and performance
 5. **Atlas Scoring Summary** - Weighted company rankings
 6. **Company Profile Highlights** - Thesis, key driver, and key risk for top-ranked companies
-7. **Automated Momentum** - Momentum scores and recent return measurements
-8. **Research Memory** - Changes since the most recent structured snapshot
-9. **Top Movers** - Best and worst performing stocks
-10. **News Highlights** - Recent headlines for stocks moving more than 2%
-11. **Potential Opportunities** - Notable price changes
-12. **Risks To Watch** - Key considerations
+7. **Automated Growth** - SEC filing growth scores and underlying annual comparisons
+8. **Automated Momentum** - Momentum scores and recent return measurements
+9. **Research Memory** - Changes since the most recent structured snapshot
+10. **Top Movers** - Best and worst performing stocks
+11. **News Highlights** - Recent headlines for stocks moving more than 2%
+12. **Potential Opportunities** - Notable price changes
+13. **Risks To Watch** - Key considerations
 
 ## Installation
 
@@ -175,6 +190,14 @@ $env:ATLAS_SMTP_USE_SSL = "false"
 
 When enabled, Atlas attaches both the Markdown and HTML reports to the email.
 
+## SEC Growth Data
+
+Atlas identifies itself when requesting the official SEC Company Facts API. The default contact is the dedicated Atlas report email. To use a different SEC-compliant contact string:
+
+```powershell
+$env:ATLAS_SEC_USER_AGENT = "Atlas Capital Research contact@example.com"
+```
+
 If environment variables set in PowerShell are not visible to Atlas, create a local `.env` file in the project root. The `.env` file is ignored by Git and must not be committed.
 
 Example `.env`:
@@ -215,6 +238,7 @@ Atlas-lite/
 - No brokerage connections
 - Data is fetched from Yahoo Finance via yfinance
 - Uses Yahoo Finance fallback data when yfinance history is unavailable
+- Uses the official SEC Company Facts API for automated Growth measurements
 - Skips yfinance for the rest of a run after repeated yfinance failures, then uses the Yahoo fallback directly
 - Fetch diagnostics are written to `logs/atlas_diagnostics.log`
 - Reports are generated in markdown and HTML formats for easy sharing and viewing

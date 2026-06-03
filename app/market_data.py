@@ -11,6 +11,7 @@ from pathlib import Path
 
 import yfinance as yf
 
+from app.growth import GrowthEngine
 from app.momentum import MomentumEngine
 
 LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
@@ -53,6 +54,7 @@ class MarketDataFetcher:
         self.watchlist = watchlist
         self.universe = universe
         self.logger = logger
+        self.growth_engine = GrowthEngine()
         self.momentum_engine = MomentumEngine()
         self.yfinance_failures = 0
         self.yfinance_disabled = False
@@ -72,12 +74,28 @@ class MarketDataFetcher:
         record["scores"] = dict(security["scores"])
         record["score_source"] = security["score_source"]
         record["profile"] = dict(security.get("profile", {}))
+        automated_scores = []
+
+        if security["sector"] != "Benchmark ETF":
+            growth_metrics = self.growth_engine.fetch_metrics(ticker)
+            if growth_metrics and growth_metrics.get("growth_score") is not None:
+                record["growth_metrics"] = growth_metrics
+                record["scores"]["growth"] = growth_metrics["growth_score"]
+                automated_scores.append("growth")
 
         momentum_metrics = self.momentum_engine.fetch_metrics(ticker)
         if momentum_metrics and momentum_metrics.get("momentum_score") is not None:
             record["momentum_metrics"] = momentum_metrics
             record["scores"]["momentum"] = momentum_metrics["momentum_score"]
-            record["score_source"] = "hybrid_v1"
+            automated_scores.append("momentum")
+
+        if automated_scores:
+            record["automated_scores"] = automated_scores
+            record["score_source"] = (
+                "hybrid_v2"
+                if set(automated_scores) == {"growth", "momentum"}
+                else "hybrid_v1"
+            )
         return record
 
     def _note_yfinance_failure(self, ticker, reason):
