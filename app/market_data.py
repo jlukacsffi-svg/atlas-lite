@@ -41,7 +41,7 @@ logger = _configure_logger()
 class MarketDataFetcher:
     """Fetch market data for stocks using yfinance"""
 
-    def __init__(self, watchlist):
+    def __init__(self, watchlist, universe=None):
         """
         Initialize the fetcher with a watchlist
 
@@ -49,9 +49,24 @@ class MarketDataFetcher:
             watchlist (list): List of stock ticker symbols
         """
         self.watchlist = watchlist
+        self.universe = universe
         self.logger = logger
         self.yfinance_failures = 0
         self.yfinance_disabled = False
+
+    def _apply_universe_metadata(self, ticker, record):
+        if not self.universe:
+            return record
+
+        security = self.universe.get(ticker)
+        if not security:
+            return record
+
+        record["company_name"] = record.get("company_name") or security["company_name"]
+        record["sector"] = security["sector"]
+        record["category"] = security["category"]
+        record["notes"] = security["notes"]
+        return record
 
     def _note_yfinance_failure(self, ticker, reason):
         self.yfinance_failures += 1
@@ -250,7 +265,7 @@ class MarketDataFetcher:
 
         if self.yfinance_disabled:
             self.logger.info("Skipping yfinance for %s because it is disabled for this run", ticker)
-            return self._fetch_yahoo_fallback_record(ticker)
+            return self._apply_universe_metadata(ticker, self._fetch_yahoo_fallback_record(ticker))
 
         try:
             hist = self._run_yfinance_history(ticker)
@@ -258,7 +273,7 @@ class MarketDataFetcher:
 
             if len(hist) < 1:
                 self._note_yfinance_failure(ticker, "empty history")
-                return self._fetch_yahoo_fallback_record(ticker)
+                return self._apply_universe_metadata(ticker, self._fetch_yahoo_fallback_record(ticker))
 
             current_price = hist['Close'].iloc[-1]
             previous_close = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
@@ -278,7 +293,7 @@ class MarketDataFetcher:
             except Exception:
                 pass
 
-            return {
+            return self._apply_universe_metadata(ticker, {
                 'price': round(current_price, 2),
                 'previous_close': round(previous_close, 2),
                 'change': round(price_change, 2),
@@ -286,7 +301,7 @@ class MarketDataFetcher:
                 'company_name': company_name,
                 'status': 'available',
                 'source': 'yfinance',
-            }
+            })
         except Exception as exc:
             self.logger.error(
                 "Error fetching data for %s: %s",
@@ -294,7 +309,7 @@ class MarketDataFetcher:
                 exc,
                 exc_info=True,
             )
-            return self._fetch_yahoo_fallback_record(ticker)
+            return self._apply_universe_metadata(ticker, self._fetch_yahoo_fallback_record(ticker))
 
     def fetch_current_data(self):
         """

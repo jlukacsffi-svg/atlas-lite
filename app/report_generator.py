@@ -474,8 +474,8 @@ class ReportGenerator:
         section = ["## Watchlist Summary\n"]
         
         if self.market_data:
-            section.append("| Ticker | Price | Change | % Change |")
-            section.append("|--------|-------|--------|----------|")
+            section.append("| Ticker | Sector | Category | Price | Change | % Change |")
+            section.append("|--------|--------|----------|-------|--------|----------|")
             
             for ticker in sorted(self.market_data.keys()):
                 data = self.market_data[ticker]
@@ -484,10 +484,13 @@ class ReportGenerator:
                 pct = data.get('percent_change')
                 status = data.get('status')
                 company_name = data.get('company_name', ticker)
+                sector = data.get('sector', 'Unclassified')
+                category = data.get('category', 'Watchlist')
                 ticker_display = f"{ticker} ({company_name})" if company_name and company_name != ticker else ticker
                 direction = "📈" if status == 'available' and change >= 0 else "📉" if status == 'available' else ""
                 section.append(
-                    f"| {ticker_display} | {self._format_value(price, '${:.2f}') if price is not None else 'N/A'} | "
+                    f"| {ticker_display} | {sector} | {category} | "
+                    f"{self._format_value(price, '${:.2f}') if price is not None else 'N/A'} | "
                     f"{self._format_value(change)} | {self._format_value(pct, '{:+.2f}%')} {direction} |"
                 )
         else:

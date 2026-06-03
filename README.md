@@ -4,6 +4,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 
 ## Features
 
+- Loads a structured security universe with sector, category, and notes metadata
 - Monitors a watchlist of major tech, defense, and market index stocks
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
@@ -14,6 +15,20 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Saves reports to the `reports/` folder with timestamps
 
 ## Watchlist
+
+The active watchlist is loaded from:
+
+```text
+data/security_universe.json
+```
+
+Each security includes:
+
+- Ticker
+- Company name
+- Sector
+- Category: Core, Watchlist, Emerging, or Avoid
+- Notes
 
 - **Tech Giants**: NVDA, AMD, MSFT, AMZN, GOOGL, META
 - **Semiconductors**: AVGO, TSM, ARM

@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from app.market_data import MarketDataFetcher
 from app.report_generator import ReportGenerator
 from app.email_delivery import EmailDelivery
+from app.security_universe import SecurityUniverse
 
 LOG_DIR = Path(__file__).resolve().parent / "logs"
 
@@ -39,23 +40,6 @@ def verify_internet_connectivity(timeout=5):
     return False
 
 
-# Define the watchlist
-WATCHLIST = [
-    # Tech Giants
-    'NVDA', 'AMD', 'MSFT', 'AMZN', 'GOOGL', 'META',
-    # Semiconductors
-    'AVGO', 'TSM', 'ARM',
-    # Defense/Aerospace
-    'LMT', 'NOC', 'RTX',
-    # Cybersecurity
-    'CRWD', 'PANW',
-    # Finance/Data
-    'PLTR',
-    # Market Indices
-    'SPY', 'QQQ',
-]
-
-
 def main():
     """Main entry point for the application"""
     print("=" * 60)
@@ -68,9 +52,12 @@ def main():
     if not verify_internet_connectivity():
         print("[warning] Internet unavailable. Yahoo fallback may be used where needed.")
 
-    fetcher = MarketDataFetcher(WATCHLIST)
-
     try:
+        universe = SecurityUniverse()
+        watchlist = universe.tickers()
+        print(f"[universe] Loaded {len(watchlist)} active securities from universe v{universe.version}.")
+
+        fetcher = MarketDataFetcher(watchlist, universe=universe)
         market_data = fetcher.fetch_current_data()
         market_summary = fetcher.get_market_summary()
 
