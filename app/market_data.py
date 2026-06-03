@@ -66,6 +66,8 @@ class MarketDataFetcher:
         record["sector"] = security["sector"]
         record["category"] = security["category"]
         record["notes"] = security["notes"]
+        record["scores"] = dict(security["scores"])
+        record["score_source"] = security["score_source"]
         return record
 
     def _note_yfinance_failure(self, ticker, reason):

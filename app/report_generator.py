@@ -5,6 +5,7 @@ import html
 import re
 
 from app.news_data import NewsFetcher
+from app.scoring import ScoringEngine
 
 
 class ReportGenerator:
@@ -22,6 +23,7 @@ class ReportGenerator:
         self.market_summary = market_summary or {}
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
+        self.scoring_engine = ScoringEngine()
         self.last_html_path = None
     
     def generate_report(self):
@@ -54,6 +56,9 @@ class ReportGenerator:
         
         # Watchlist Summary
         report.append(self._generate_watchlist_summary())
+
+        # Scoring Summary
+        report.append(self._generate_scoring_summary())
         
         # Top Movers
         report.append(self._generate_top_movers())
@@ -474,8 +479,8 @@ class ReportGenerator:
         section = ["## Watchlist Summary\n"]
         
         if self.market_data:
-            section.append("| Ticker | Sector | Category | Price | Change | % Change |")
-            section.append("|--------|--------|----------|-------|--------|----------|")
+            section.append("| Ticker | Sector | Category | Score | Price | Change | % Change |")
+            section.append("|--------|--------|----------|-------|-------|--------|----------|")
             
             for ticker in sorted(self.market_data.keys()):
                 data = self.market_data[ticker]
@@ -486,10 +491,11 @@ class ReportGenerator:
                 company_name = data.get('company_name', ticker)
                 sector = data.get('sector', 'Unclassified')
                 category = data.get('category', 'Watchlist')
+                total_score = self._score_data(data)
                 ticker_display = f"{ticker} ({company_name})" if company_name and company_name != ticker else ticker
                 direction = "📈" if status == 'available' and change >= 0 else "📉" if status == 'available' else ""
                 section.append(
-                    f"| {ticker_display} | {sector} | {category} | "
+                    f"| {ticker_display} | {sector} | {category} | {total_score} | "
                     f"{self._format_value(price, '${:.2f}') if price is not None else 'N/A'} | "
                     f"{self._format_value(change)} | {self._format_value(pct, '{:+.2f}%')} {direction} |"
                 )
@@ -526,6 +532,47 @@ class ReportGenerator:
         for ticker, data in sorted_data[-3:]:
             section.append(f"- **{ticker}**: {data['percent_change']:+.2f}% (${data['price']})")
         
+        return "\n".join(section) + "\n"
+
+    def _score_data(self, data):
+        scores = data.get('scores')
+        if not scores:
+            return "N/A"
+        return f"{self.scoring_engine.score(scores):.1f}"
+
+    def _generate_scoring_summary(self):
+        """Generate transparent weighted score rankings"""
+        section = ["## Atlas Scoring Summary\n"]
+        scored = []
+
+        for ticker, data in self.market_data.items():
+            scores = data.get('scores')
+            if not scores or data.get('sector') == 'Benchmark ETF':
+                continue
+            scored.append((ticker, data, self.scoring_engine.score(scores)))
+
+        if not scored:
+            section.append("No company scores are available for this run.\n")
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Manual v1 scores. Higher Risk Score means a stronger risk profile. "
+            "Weights: Growth 40%, Quality 20%, Moat 15%, Momentum 15%, Risk 10%.\n"
+        )
+        section.append("| Rank | Ticker | Total | Growth | Quality | Moat | Momentum | Risk |")
+        section.append("|------|--------|-------|--------|---------|------|----------|------|")
+
+        for rank, (ticker, data, total_score) in enumerate(
+            sorted(scored, key=lambda x: x[2], reverse=True),
+            start=1,
+        ):
+            scores = data['scores']
+            section.append(
+                f"| {rank} | {ticker} | {total_score:.1f} | "
+                f"{scores['growth']:.0f} | {scores['quality']:.0f} | {scores['moat']:.0f} | "
+                f"{scores['momentum']:.0f} | {scores['risk']:.0f} |"
+            )
+
         return "\n".join(section) + "\n"
 
     def _get_significant_movers(self, threshold=2, limit=6):

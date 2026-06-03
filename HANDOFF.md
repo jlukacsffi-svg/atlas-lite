@@ -49,25 +49,17 @@ Never commit `.env`.
 
 Stage 2: Research Memory And Scoring.
 
-Recommended first Stage 2 task:
+Completed Stage 2 foundations:
 
-Design and implement a simple security-universe configuration that supports:
+- Structured security-universe configuration.
+- Sector, category, notes, and manual v1 score metadata.
+- Atlas Scoring Engine v1 weighted rankings.
+- Scoring Summary in Markdown and HTML reports.
+- Validation and unit tests for universe and scores.
 
-- Ticker.
-- Company name.
-- Sector.
-- Watchlist category: Core, Watchlist, Emerging, or Avoid.
-- Optional notes.
+Recommended next Stage 2 task:
 
-After the security universe exists, build Atlas Scoring Engine v1:
-
-- Growth Score: 40%.
-- Quality Score: 20%.
-- Moat Score: 15%.
-- Momentum Score: 15%.
-- Risk Score: 10%.
-
-Keep the first scoring version simple, transparent, and reviewable.
+Add historical research memory by archiving structured daily snapshots of market data and scores.
 
 ## Useful Files
 
@@ -80,4 +72,3 @@ Keep the first scoring version simple, transparent, and reviewable.
 - `main.py`: daily report execution flow.
 - `scripts/run_atlas_daily.ps1`: scheduled runner.
 - `scripts/setup_windows_scheduled_task.ps1`: Windows Scheduled Task setup.
-

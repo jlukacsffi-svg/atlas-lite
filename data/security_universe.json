@@ -1,124 +1,158 @@
 {
-  "version": "1.0",
+  "version": "1.1",
   "securities": [
     {
       "ticker": "NVDA",
       "company_name": "NVIDIA Corporation",
       "sector": "AI & Semiconductors",
       "category": "Core",
-      "notes": "Core AI infrastructure leader."
+      "notes": "Core AI infrastructure leader.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 95, "quality": 90, "moat": 95, "momentum": 90, "risk": 65}
     },
     {
       "ticker": "AMD",
       "company_name": "Advanced Micro Devices, Inc.",
       "sector": "AI & Semiconductors",
       "category": "Watchlist",
-      "notes": "AI accelerator and CPU competitor."
+      "notes": "AI accelerator and CPU competitor.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 85, "quality": 75, "moat": 75, "momentum": 75, "risk": 60}
     },
     {
       "ticker": "MSFT",
       "company_name": "Microsoft Corporation",
       "sector": "Cloud Platforms",
       "category": "Core",
-      "notes": "Cloud and enterprise AI platform."
+      "notes": "Cloud and enterprise AI platform.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 85, "quality": 95, "moat": 95, "momentum": 80, "risk": 85}
     },
     {
       "ticker": "AMZN",
       "company_name": "Amazon.com, Inc.",
       "sector": "Cloud Platforms",
       "category": "Core",
-      "notes": "AWS cloud platform and AI infrastructure."
+      "notes": "AWS cloud platform and AI infrastructure.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 82, "quality": 88, "moat": 92, "momentum": 75, "risk": 78}
     },
     {
       "ticker": "GOOGL",
       "company_name": "Alphabet Inc.",
       "sector": "Cloud Platforms",
       "category": "Core",
-      "notes": "AI research, advertising, and cloud platform."
+      "notes": "AI research, advertising, and cloud platform.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 80, "quality": 92, "moat": 92, "momentum": 72, "risk": 82}
     },
     {
       "ticker": "META",
       "company_name": "Meta Platforms, Inc.",
       "sector": "Cloud Platforms",
       "category": "Watchlist",
-      "notes": "AI-driven advertising and consumer platforms."
+      "notes": "AI-driven advertising and consumer platforms.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 88, "moat": 88, "momentum": 68, "risk": 75}
     },
     {
       "ticker": "AVGO",
       "company_name": "Broadcom Inc.",
       "sector": "AI & Semiconductors",
       "category": "Core",
-      "notes": "Custom silicon, networking, and infrastructure software."
+      "notes": "Custom silicon, networking, and infrastructure software.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 88, "quality": 90, "moat": 90, "momentum": 85, "risk": 72}
     },
     {
       "ticker": "TSM",
       "company_name": "Taiwan Semiconductor Manufacturing Company Limited",
       "sector": "AI & Semiconductors",
       "category": "Core",
-      "notes": "Leading advanced semiconductor foundry."
+      "notes": "Leading advanced semiconductor foundry.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 86, "quality": 92, "moat": 95, "momentum": 82, "risk": 62}
     },
     {
       "ticker": "ARM",
       "company_name": "Arm Holdings plc",
       "sector": "AI & Semiconductors",
       "category": "Watchlist",
-      "notes": "CPU architecture and semiconductor IP."
+      "notes": "CPU architecture and semiconductor IP.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 90, "quality": 78, "moat": 88, "momentum": 80, "risk": 55}
     },
     {
       "ticker": "LMT",
       "company_name": "Lockheed Martin Corporation",
       "sector": "Defense & Aerospace",
       "category": "Watchlist",
-      "notes": "Major defense prime contractor."
+      "notes": "Major defense prime contractor.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 55, "quality": 82, "moat": 88, "momentum": 55, "risk": 78}
     },
     {
       "ticker": "NOC",
       "company_name": "Northrop Grumman Corporation",
       "sector": "Defense & Aerospace",
       "category": "Watchlist",
-      "notes": "Defense systems, space, and strategic platforms."
+      "notes": "Defense systems, space, and strategic platforms.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 82, "moat": 88, "momentum": 58, "risk": 75}
     },
     {
       "ticker": "RTX",
       "company_name": "RTX Corporation",
       "sector": "Defense & Aerospace",
       "category": "Watchlist",
-      "notes": "Aerospace systems, missiles, and defense electronics."
+      "notes": "Aerospace systems, missiles, and defense electronics.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 60, "quality": 80, "moat": 85, "momentum": 60, "risk": 72}
     },
     {
       "ticker": "CRWD",
       "company_name": "CrowdStrike Holdings, Inc.",
       "sector": "Cybersecurity",
       "category": "Watchlist",
-      "notes": "Cloud-native endpoint and identity security."
+      "notes": "Cloud-native endpoint and identity security.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 88, "quality": 82, "moat": 82, "momentum": 78, "risk": 60}
     },
     {
       "ticker": "PANW",
       "company_name": "Palo Alto Networks, Inc.",
       "sector": "Cybersecurity",
       "category": "Watchlist",
-      "notes": "Cybersecurity platform consolidation leader."
+      "notes": "Cybersecurity platform consolidation leader.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 85, "moat": 85, "momentum": 72, "risk": 68}
     },
     {
       "ticker": "PLTR",
       "company_name": "Palantir Technologies Inc.",
       "sector": "AI Software & Defense",
       "category": "Watchlist",
-      "notes": "AI software with government and commercial exposure."
+      "notes": "AI software with government and commercial exposure.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 92, "quality": 80, "moat": 82, "momentum": 88, "risk": 48}
     },
     {
       "ticker": "SPY",
       "company_name": "State Street SPDR S&P 500 ETF Trust",
       "sector": "Benchmark ETF",
       "category": "Core",
-      "notes": "Broad U.S. equity market benchmark."
+      "notes": "Broad U.S. equity market benchmark.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 65, "quality": 85, "moat": 75, "momentum": 70, "risk": 90}
     },
     {
       "ticker": "QQQ",
       "company_name": "Invesco QQQ Trust",
       "sector": "Benchmark ETF",
       "category": "Core",
-      "notes": "Growth and technology-heavy benchmark."
+      "notes": "Growth and technology-heavy benchmark.",
+      "score_source": "manual_v1",
+      "scores": {"growth": 75, "quality": 82, "moat": 78, "momentum": 76, "risk": 78}
     }
   ]
 }

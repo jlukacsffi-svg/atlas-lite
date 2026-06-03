@@ -7,7 +7,8 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_UNIVERSE_PATH = PROJECT_ROOT / "data" / "security_universe.json"
 ALLOWED_CATEGORIES = {"Core", "Watchlist", "Emerging", "Avoid"}
-REQUIRED_FIELDS = {"ticker", "company_name", "sector", "category", "notes"}
+SCORE_COMPONENTS = {"growth", "quality", "moat", "momentum", "risk"}
+REQUIRED_FIELDS = {"ticker", "company_name", "sector", "category", "notes", "scores"}
 
 
 class SecurityUniverse:
@@ -43,6 +44,7 @@ class SecurityUniverse:
 
             ticker = str(security["ticker"]).strip().upper()
             category = str(security["category"]).strip()
+            scores = security["scores"]
 
             if not ticker:
                 raise ValueError(f"Security universe entry {index} has an empty ticker")
@@ -53,6 +55,23 @@ class SecurityUniverse:
                     f"Invalid category for {ticker}: {category}. "
                     f"Allowed categories: {', '.join(sorted(ALLOWED_CATEGORIES))}"
                 )
+            if not isinstance(scores, dict):
+                raise ValueError(f"Scores for {ticker} must be an object")
+
+            missing_scores = SCORE_COMPONENTS - scores.keys()
+            if missing_scores:
+                raise ValueError(
+                    f"Scores for {ticker} are missing: {', '.join(sorted(missing_scores))}"
+                )
+
+            normalized_scores = {}
+            for component in sorted(SCORE_COMPONENTS):
+                value = scores[component]
+                if not isinstance(value, (int, float)) or isinstance(value, bool):
+                    raise ValueError(f"Score {component} for {ticker} must be numeric")
+                if not 0 <= value <= 100:
+                    raise ValueError(f"Score {component} for {ticker} must be between 0 and 100")
+                normalized_scores[component] = float(value)
 
             normalized_security = {
                 "ticker": ticker,
@@ -60,6 +79,8 @@ class SecurityUniverse:
                 "sector": str(security["sector"]).strip(),
                 "category": category,
                 "notes": str(security["notes"]).strip(),
+                "scores": normalized_scores,
+                "score_source": str(security.get("score_source", "manual_v1")).strip() or "manual_v1",
             }
             normalized.append(normalized_security)
             seen_tickers.add(ticker)
@@ -80,4 +101,3 @@ class SecurityUniverse:
 
     def get(self, ticker):
         return self._by_ticker.get(str(ticker).strip().upper())
-

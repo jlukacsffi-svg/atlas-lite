@@ -5,6 +5,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 ## Features
 
 - Loads a structured security universe with sector, category, and notes metadata
+- Calculates transparent Atlas Scoring Engine v1 rankings
 - Monitors a watchlist of major tech, defense, and market index stocks
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
@@ -29,6 +30,21 @@ Each security includes:
 - Sector
 - Category: Core, Watchlist, Emerging, or Avoid
 - Notes
+- Manual v1 component scores
+
+## Atlas Scoring Engine v1
+
+Atlas calculates a weighted total score from 0-100:
+
+- Growth Score: 40%
+- Quality Score: 20%
+- Moat Score: 15%
+- Momentum Score: 15%
+- Risk Score: 10%
+
+Higher scores are better. A higher Risk Score means a stronger risk profile, not more risk.
+
+The current component scores are manual v1 inputs stored in `data/security_universe.json`. They are intended to be transparent, reviewable seed values that can later be supported or replaced by automated fundamental data.
 
 - **Tech Giants**: NVDA, AMD, MSFT, AMZN, GOOGL, META
 - **Semiconductors**: AVGO, TSM, ARM
@@ -45,10 +61,11 @@ Each Morning Executive Brief includes:
 2. **Executive Summary** - Concise readout of market tone, leaders, risks, and volatility
 3. **Market Summary** - Overview of major indices
 4. **Watchlist Summary** - Current prices and performance
-5. **Top Movers** - Best and worst performing stocks
-6. **News Highlights** - Recent headlines for stocks moving more than 2%
-7. **Potential Opportunities** - Notable price changes
-8. **Risks To Watch** - Key considerations
+5. **Atlas Scoring Summary** - Weighted company rankings
+6. **Top Movers** - Best and worst performing stocks
+7. **News Highlights** - Recent headlines for stocks moving more than 2%
+8. **Potential Opportunities** - Notable price changes
+9. **Risks To Watch** - Key considerations
 
 ## Installation
 

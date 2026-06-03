@@ -12,7 +12,7 @@ class SecurityUniverseTests(unittest.TestCase):
     def test_default_universe_loads_current_watchlist(self):
         universe = SecurityUniverse()
 
-        self.assertEqual(universe.version, "1.0")
+        self.assertEqual(universe.version, "1.1")
         self.assertEqual(len(universe.tickers()), 17)
         self.assertIn("NVDA", universe.tickers())
         self.assertEqual(universe.get("NVDA")["category"], "Core")
@@ -42,6 +42,13 @@ class SecurityUniverseTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Invalid category"):
             self._load_temp_universe([self._security("AAA", "Unknown")])
 
+    def test_score_outside_range_is_rejected(self):
+        security = self._security("AAA", "Core")
+        security["scores"]["growth"] = 101
+
+        with self.assertRaisesRegex(ValueError, "between 0 and 100"):
+            self._load_temp_universe([security])
+
     def _load_temp_universe(self, securities):
         temp_dir = tempfile.TemporaryDirectory()
         self.addCleanup(temp_dir.cleanup)
@@ -59,6 +66,13 @@ class SecurityUniverseTests(unittest.TestCase):
             "sector": "Test Sector",
             "category": category,
             "notes": "Test notes",
+            "scores": {
+                "growth": 50,
+                "quality": 50,
+                "moat": 50,
+                "momentum": 50,
+                "risk": 50,
+            },
         }
 
 
