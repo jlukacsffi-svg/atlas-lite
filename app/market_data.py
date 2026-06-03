@@ -11,6 +11,8 @@ from pathlib import Path
 
 import yfinance as yf
 
+from app.momentum import MomentumEngine
+
 LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 LOG_FILE = LOG_DIR / "atlas_diagnostics.log"
 YAHOO_CHART_URL = (
@@ -51,6 +53,7 @@ class MarketDataFetcher:
         self.watchlist = watchlist
         self.universe = universe
         self.logger = logger
+        self.momentum_engine = MomentumEngine()
         self.yfinance_failures = 0
         self.yfinance_disabled = False
 
@@ -68,6 +71,13 @@ class MarketDataFetcher:
         record["notes"] = security["notes"]
         record["scores"] = dict(security["scores"])
         record["score_source"] = security["score_source"]
+        record["profile"] = dict(security.get("profile", {}))
+
+        momentum_metrics = self.momentum_engine.fetch_metrics(ticker)
+        if momentum_metrics and momentum_metrics.get("momentum_score") is not None:
+            record["momentum_metrics"] = momentum_metrics
+            record["scores"]["momentum"] = momentum_metrics["momentum_score"]
+            record["score_source"] = "hybrid_v1"
         return record
 
     def _note_yfinance_failure(self, ticker, reason):

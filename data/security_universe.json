@@ -1,5 +1,5 @@
 {
-  "version": "1.1",
+  "version": "1.2",
   "securities": [
     {
       "ticker": "NVDA",
@@ -7,6 +7,7 @@
       "sector": "AI & Semiconductors",
       "category": "Core",
       "notes": "Core AI infrastructure leader.",
+      "profile": {"thesis": "Core AI infrastructure leader with a broad accelerated-computing ecosystem.", "key_driver": "AI data-center demand and platform adoption.", "key_risk": "Valuation pressure, competition, and customer concentration."},
       "score_source": "manual_v1",
       "scores": {"growth": 95, "quality": 90, "moat": 95, "momentum": 90, "risk": 65}
     },
@@ -16,6 +17,7 @@
       "sector": "AI & Semiconductors",
       "category": "Watchlist",
       "notes": "AI accelerator and CPU competitor.",
+      "profile": {"thesis": "CPU and AI accelerator competitor with meaningful share-gain potential.", "key_driver": "Data-center CPU growth and AI accelerator adoption.", "key_risk": "Execution risk against larger entrenched competitors."},
       "score_source": "manual_v1",
       "scores": {"growth": 85, "quality": 75, "moat": 75, "momentum": 75, "risk": 60}
     },
@@ -25,6 +27,7 @@
       "sector": "Cloud Platforms",
       "category": "Core",
       "notes": "Cloud and enterprise AI platform.",
+      "profile": {"thesis": "Enterprise software and cloud platform positioned to monetize AI across a large installed base.", "key_driver": "Azure growth and paid adoption of AI-enabled products.", "key_risk": "Heavy capital spending and slower-than-expected AI monetization."},
       "score_source": "manual_v1",
       "scores": {"growth": 85, "quality": 95, "moat": 95, "momentum": 80, "risk": 85}
     },
@@ -34,6 +37,7 @@
       "sector": "Cloud Platforms",
       "category": "Core",
       "notes": "AWS cloud platform and AI infrastructure.",
+      "profile": {"thesis": "Diversified commerce and cloud leader with AWS as a major AI infrastructure platform.", "key_driver": "AWS growth, margin expansion, and advertising strength.", "key_risk": "Capital intensity, regulation, and consumer demand sensitivity."},
       "score_source": "manual_v1",
       "scores": {"growth": 82, "quality": 88, "moat": 92, "momentum": 75, "risk": 78}
     },
@@ -43,6 +47,7 @@
       "sector": "Cloud Platforms",
       "category": "Core",
       "notes": "AI research, advertising, and cloud platform.",
+      "profile": {"thesis": "High-quality advertising and cloud business supported by leading AI research capabilities.", "key_driver": "Search resilience, cloud growth, and AI product monetization.", "key_risk": "AI disruption to search and regulatory pressure."},
       "score_source": "manual_v1",
       "scores": {"growth": 80, "quality": 92, "moat": 92, "momentum": 72, "risk": 82}
     },
@@ -52,6 +57,7 @@
       "sector": "Cloud Platforms",
       "category": "Watchlist",
       "notes": "AI-driven advertising and consumer platforms.",
+      "profile": {"thesis": "Large consumer platform using AI to improve advertising performance and engagement.", "key_driver": "Advertising efficiency and monetization of new AI experiences.", "key_risk": "Regulation, platform shifts, and elevated infrastructure spending."},
       "score_source": "manual_v1",
       "scores": {"growth": 78, "quality": 88, "moat": 88, "momentum": 68, "risk": 75}
     },
@@ -61,6 +67,7 @@
       "sector": "AI & Semiconductors",
       "category": "Core",
       "notes": "Custom silicon, networking, and infrastructure software.",
+      "profile": {"thesis": "Critical supplier of custom AI silicon, networking, and infrastructure software.", "key_driver": "Hyperscaler AI networking and custom accelerator demand.", "key_risk": "Customer concentration and integration complexity."},
       "score_source": "manual_v1",
       "scores": {"growth": 88, "quality": 90, "moat": 90, "momentum": 85, "risk": 72}
     },
@@ -70,6 +77,7 @@
       "sector": "AI & Semiconductors",
       "category": "Core",
       "notes": "Leading advanced semiconductor foundry.",
+      "profile": {"thesis": "Leading advanced-node foundry with a central role in global semiconductor manufacturing.", "key_driver": "Advanced-node demand from AI and high-performance computing.", "key_risk": "Geopolitical exposure and semiconductor-cycle volatility."},
       "score_source": "manual_v1",
       "scores": {"growth": 86, "quality": 92, "moat": 95, "momentum": 82, "risk": 62}
     },
@@ -79,6 +87,7 @@
       "sector": "AI & Semiconductors",
       "category": "Watchlist",
       "notes": "CPU architecture and semiconductor IP.",
+      "profile": {"thesis": "Semiconductor IP leader whose architecture is expanding beyond mobile into data centers and edge computing.", "key_driver": "Royalty growth and broader adoption of Arm-based computing.", "key_risk": "High valuation and dependence on licensee execution."},
       "score_source": "manual_v1",
       "scores": {"growth": 90, "quality": 78, "moat": 88, "momentum": 80, "risk": 55}
     },
@@ -88,6 +97,7 @@
       "sector": "Defense & Aerospace",
       "category": "Watchlist",
       "notes": "Major defense prime contractor.",
+      "profile": {"thesis": "Large defense prime with durable demand across aircraft, missiles, and space systems.", "key_driver": "Defense budgets and program backlog conversion.", "key_risk": "Program execution, fixed-price contracts, and budget timing."},
       "score_source": "manual_v1",
       "scores": {"growth": 55, "quality": 82, "moat": 88, "momentum": 55, "risk": 78}
     },
@@ -97,6 +107,7 @@
       "sector": "Defense & Aerospace",
       "category": "Watchlist",
       "notes": "Defense systems, space, and strategic platforms.",
+      "profile": {"thesis": "Strategic defense and space contractor with exposure to long-duration national-security programs.", "key_driver": "Space, missile defense, and strategic deterrence spending.", "key_risk": "Program cost overruns and government budget uncertainty."},
       "score_source": "manual_v1",
       "scores": {"growth": 62, "quality": 82, "moat": 88, "momentum": 58, "risk": 75}
     },
@@ -106,6 +117,7 @@
       "sector": "Defense & Aerospace",
       "category": "Watchlist",
       "notes": "Aerospace systems, missiles, and defense electronics.",
+      "profile": {"thesis": "Diversified aerospace and defense supplier with commercial recovery and missile-system demand.", "key_driver": "Commercial aerospace aftermarket and defense backlog.", "key_risk": "Manufacturing quality issues and supply-chain execution."},
       "score_source": "manual_v1",
       "scores": {"growth": 60, "quality": 80, "moat": 85, "momentum": 60, "risk": 72}
     },
@@ -115,6 +127,7 @@
       "sector": "Cybersecurity",
       "category": "Watchlist",
       "notes": "Cloud-native endpoint and identity security.",
+      "profile": {"thesis": "Cloud-native security platform with strong endpoint, identity, and threat-intelligence positioning.", "key_driver": "Platform consolidation and expanding module adoption.", "key_risk": "Competitive pressure, valuation, and operational incidents."},
       "score_source": "manual_v1",
       "scores": {"growth": 88, "quality": 82, "moat": 82, "momentum": 78, "risk": 60}
     },
@@ -124,6 +137,7 @@
       "sector": "Cybersecurity",
       "category": "Watchlist",
       "notes": "Cybersecurity platform consolidation leader.",
+      "profile": {"thesis": "Broad cybersecurity platform positioned to benefit from enterprise vendor consolidation.", "key_driver": "Next-generation security platform adoption and recurring revenue.", "key_risk": "Transition execution and intense security-market competition."},
       "score_source": "manual_v1",
       "scores": {"growth": 78, "quality": 85, "moat": 85, "momentum": 72, "risk": 68}
     },
@@ -133,6 +147,7 @@
       "sector": "AI Software & Defense",
       "category": "Watchlist",
       "notes": "AI software with government and commercial exposure.",
+      "profile": {"thesis": "AI software platform with differentiated government relationships and growing commercial adoption.", "key_driver": "Commercial customer growth and production AI deployments.", "key_risk": "Valuation, deal concentration, and expectations risk."},
       "score_source": "manual_v1",
       "scores": {"growth": 92, "quality": 80, "moat": 82, "momentum": 88, "risk": 48}
     },
@@ -142,6 +157,7 @@
       "sector": "Benchmark ETF",
       "category": "Core",
       "notes": "Broad U.S. equity market benchmark.",
+      "profile": {"thesis": "Broad benchmark for large-cap U.S. equity performance.", "key_driver": "U.S. corporate earnings and broad market liquidity.", "key_risk": "Market-wide valuation compression and macroeconomic weakness."},
       "score_source": "manual_v1",
       "scores": {"growth": 65, "quality": 85, "moat": 75, "momentum": 70, "risk": 90}
     },
@@ -151,6 +167,7 @@
       "sector": "Benchmark ETF",
       "category": "Core",
       "notes": "Growth and technology-heavy benchmark.",
+      "profile": {"thesis": "Growth-oriented benchmark concentrated in large technology and innovation companies.", "key_driver": "Technology earnings growth and investor risk appetite.", "key_risk": "Concentration and sensitivity to interest rates."},
       "score_source": "manual_v1",
       "scores": {"growth": 75, "quality": 82, "moat": 78, "momentum": 76, "risk": 78}
     }

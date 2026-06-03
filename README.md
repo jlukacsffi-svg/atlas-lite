@@ -4,8 +4,8 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 
 ## Features
 
-- Loads a structured security universe with sector, category, and notes metadata
-- Calculates transparent Atlas Scoring Engine v1 rankings
+- Loads a structured security universe with sector, category, notes, and company-profile metadata
+- Calculates transparent Atlas Scoring Engine v1 rankings with automated Momentum
 - Saves structured historical research snapshots for comparison over time
 - Monitors a watchlist of major tech, defense, and market index stocks
 - Fetches real-time market data using yfinance
@@ -31,7 +31,8 @@ Each security includes:
 - Sector
 - Category: Core, Watchlist, Emerging, or Avoid
 - Notes
-- Manual v1 component scores
+- Basic company profile: thesis, key driver, and key risk
+- Manual v1 component scores used as transparent seed values
 
 ## Atlas Scoring Engine v1
 
@@ -45,7 +46,19 @@ Atlas calculates a weighted total score from 0-100:
 
 Higher scores are better. A higher Risk Score means a stronger risk profile, not more risk.
 
-The current component scores are manual v1 inputs stored in `data/security_universe.json`. They are intended to be transparent, reviewable seed values that can later be supported or replaced by automated fundamental data.
+Atlas currently uses a hybrid v1 scoring model:
+
+- Growth, Quality, Moat, and Risk are manual seed inputs stored in `data/security_universe.json`.
+- Momentum is calculated automatically from recent market returns when Yahoo Finance history is available.
+- If Momentum history is unavailable, Atlas retains the manual seed Momentum score for that run.
+
+The automated Momentum Score is centered on 50, uses 1-month and 3-month returns, and is bounded from 0-100:
+
+```text
+50 + (1-month return * 1.5) + (3-month return * 0.75)
+```
+
+The report also displays 1-month, 3-month, and 6-month returns so the automated input is auditable.
 
 ## Research Memory
 
@@ -75,11 +88,13 @@ Each Morning Executive Brief includes:
 3. **Market Summary** - Overview of major indices
 4. **Watchlist Summary** - Current prices and performance
 5. **Atlas Scoring Summary** - Weighted company rankings
-6. **Research Memory** - Changes since the most recent structured snapshot
-7. **Top Movers** - Best and worst performing stocks
-8. **News Highlights** - Recent headlines for stocks moving more than 2%
-9. **Potential Opportunities** - Notable price changes
-10. **Risks To Watch** - Key considerations
+6. **Company Profile Highlights** - Thesis, key driver, and key risk for top-ranked companies
+7. **Automated Momentum** - Momentum scores and recent return measurements
+8. **Research Memory** - Changes since the most recent structured snapshot
+9. **Top Movers** - Best and worst performing stocks
+10. **News Highlights** - Recent headlines for stocks moving more than 2%
+11. **Potential Opportunities** - Notable price changes
+12. **Risks To Watch** - Key considerations
 
 ## Installation
 

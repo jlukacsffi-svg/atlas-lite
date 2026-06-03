@@ -62,6 +62,12 @@ class ReportGenerator:
         # Scoring Summary
         report.append(self._generate_scoring_summary())
 
+        # Company Profiles
+        report.append(self._generate_company_profile_highlights())
+
+        # Automated Momentum
+        report.append(self._generate_momentum_summary())
+
         # Research Memory
         report.append(self._generate_research_memory())
         
@@ -561,7 +567,9 @@ class ReportGenerator:
             return "\n".join(section) + "\n"
 
         section.append(
-            "Manual v1 scores. Higher Risk Score means a stronger risk profile. "
+            "Hybrid v1 scores: Growth, Quality, Moat, and Risk are manual seed inputs; "
+            "Momentum is calculated from recent market returns when data is available. "
+            "Higher Risk Score means a stronger risk profile. "
             "Weights: Growth 40%, Quality 20%, Moat 15%, Momentum 15%, Risk 10%.\n"
         )
         section.append("| Rank | Ticker | Total | Growth | Quality | Moat | Momentum | Risk |")
@@ -579,6 +587,81 @@ class ReportGenerator:
             )
 
         return "\n".join(section) + "\n"
+
+    def _generate_company_profile_highlights(self):
+        """Generate concise profiles for the highest-ranked companies"""
+        section = ["## Company Profile Highlights\n"]
+        ranked = []
+
+        for ticker, data in self.market_data.items():
+            if data.get('sector') == 'Benchmark ETF' or not data.get('scores'):
+                continue
+            ranked.append((ticker, data, self.scoring_engine.score(data['scores'])))
+
+        if not ranked:
+            section.append("No company profiles are available for this run.\n")
+            return "\n".join(section) + "\n"
+
+        for ticker, data, total_score in sorted(
+            ranked,
+            key=lambda item: item[2],
+            reverse=True,
+        )[:5]:
+            profile = data.get('profile') or {}
+            section.append(f"### {ticker}: {data.get('company_name', ticker)}")
+            section.append(
+                f"- **Sector**: {data.get('sector', 'Unclassified')} | "
+                f"**Category**: {data.get('category', 'Watchlist')} | "
+                f"**Atlas Score**: {total_score:.1f}"
+            )
+            section.append(
+                f"- **Thesis**: {profile.get('thesis', data.get('notes', 'No profile notes available.'))}"
+            )
+            section.append(
+                f"- **Key Driver**: {profile.get('key_driver', 'Not yet documented.')} | "
+                f"**Key Risk**: {profile.get('key_risk', 'Not yet documented.')}"
+            )
+            section.append("")
+
+        return "\n".join(section) + "\n"
+
+    def _generate_momentum_summary(self):
+        """Generate auditable automated momentum metrics"""
+        section = ["## Automated Momentum\n"]
+        momentum_rows = []
+
+        for ticker, data in self.market_data.items():
+            metrics = data.get('momentum_metrics')
+            if not metrics or data.get('sector') == 'Benchmark ETF':
+                continue
+            momentum_rows.append((ticker, metrics))
+
+        if not momentum_rows:
+            section.append("Automated momentum data was unavailable for this run.\n")
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Momentum Score is calculated from 1-month and 3-month returns and bounded from 0-100.\n"
+        )
+        section.append("| Ticker | Momentum Score | 1M Return | 3M Return | 6M Return |")
+        section.append("|--------|----------------|-----------|-----------|-----------|")
+
+        for ticker, metrics in sorted(
+            momentum_rows,
+            key=lambda item: item[1].get('momentum_score', 0),
+            reverse=True,
+        ):
+            section.append(
+                f"| {ticker} | {metrics['momentum_score']:.1f} | "
+                f"{self._format_optional_percent(metrics.get('return_1m'))} | "
+                f"{self._format_optional_percent(metrics.get('return_3m'))} | "
+                f"{self._format_optional_percent(metrics.get('return_6m'))} |"
+            )
+
+        return "\n".join(section) + "\n"
+
+    def _format_optional_percent(self, value):
+        return f"{value:+.2f}%" if value is not None else "N/A"
 
     def _generate_research_memory(self):
         """Generate comparison with the most recent prior research snapshot"""

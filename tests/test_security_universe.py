@@ -12,11 +12,12 @@ class SecurityUniverseTests(unittest.TestCase):
     def test_default_universe_loads_current_watchlist(self):
         universe = SecurityUniverse()
 
-        self.assertEqual(universe.version, "1.1")
+        self.assertEqual(universe.version, "1.2")
         self.assertEqual(len(universe.tickers()), 17)
         self.assertIn("NVDA", universe.tickers())
         self.assertEqual(universe.get("NVDA")["category"], "Core")
         self.assertEqual(universe.get("CRWD")["sector"], "Cybersecurity")
+        self.assertIn("key_risk", universe.get("NVDA")["profile"])
 
     def test_avoid_securities_are_excluded_by_default(self):
         universe = self._load_temp_universe(
@@ -66,6 +67,11 @@ class SecurityUniverseTests(unittest.TestCase):
             "sector": "Test Sector",
             "category": category,
             "notes": "Test notes",
+            "profile": {
+                "thesis": "Test thesis",
+                "key_driver": "Test driver",
+                "key_risk": "Test risk",
+            },
             "scores": {
                 "growth": 50,
                 "quality": 50,

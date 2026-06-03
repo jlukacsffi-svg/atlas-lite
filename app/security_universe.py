@@ -9,6 +9,7 @@ DEFAULT_UNIVERSE_PATH = PROJECT_ROOT / "data" / "security_universe.json"
 ALLOWED_CATEGORIES = {"Core", "Watchlist", "Emerging", "Avoid"}
 SCORE_COMPONENTS = {"growth", "quality", "moat", "momentum", "risk"}
 REQUIRED_FIELDS = {"ticker", "company_name", "sector", "category", "notes", "scores"}
+PROFILE_FIELDS = {"thesis", "key_driver", "key_risk"}
 
 
 class SecurityUniverse:
@@ -45,6 +46,7 @@ class SecurityUniverse:
             ticker = str(security["ticker"]).strip().upper()
             category = str(security["category"]).strip()
             scores = security["scores"]
+            profile = security.get("profile", {})
 
             if not ticker:
                 raise ValueError(f"Security universe entry {index} has an empty ticker")
@@ -57,6 +59,15 @@ class SecurityUniverse:
                 )
             if not isinstance(scores, dict):
                 raise ValueError(f"Scores for {ticker} must be an object")
+            if not isinstance(profile, dict):
+                raise ValueError(f"Profile for {ticker} must be an object")
+
+            missing_profile_fields = PROFILE_FIELDS - profile.keys()
+            if missing_profile_fields:
+                raise ValueError(
+                    f"Profile for {ticker} is missing: "
+                    f"{', '.join(sorted(missing_profile_fields))}"
+                )
 
             missing_scores = SCORE_COMPONENTS - scores.keys()
             if missing_scores:
@@ -79,6 +90,10 @@ class SecurityUniverse:
                 "sector": str(security["sector"]).strip(),
                 "category": category,
                 "notes": str(security["notes"]).strip(),
+                "profile": {
+                    field: str(profile[field]).strip()
+                    for field in sorted(PROFILE_FIELDS)
+                },
                 "scores": normalized_scores,
                 "score_source": str(security.get("score_source", "manual_v1")).strip() or "manual_v1",
             }

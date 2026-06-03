@@ -52,8 +52,11 @@ Stage 2: Research Memory And Scoring.
 Completed Stage 2 foundations:
 
 - Structured security-universe configuration.
-- Sector, category, notes, and manual v1 score metadata.
+- Sector, category, notes, and structured company-profile metadata.
 - Atlas Scoring Engine v1 weighted rankings.
+- Hybrid v1 scoring with automatically calculated Momentum.
+- Auditable 1-month, 3-month, and 6-month Momentum measurements.
+- Company Profile Highlights and Automated Momentum report sections.
 - Scoring Summary in Markdown and HTML reports.
 - Structured historical research snapshots.
 - Research Memory comparison in Markdown and HTML reports.
@@ -61,7 +64,7 @@ Completed Stage 2 foundations:
 
 Recommended next Stage 2 task:
 
-Add basic company profiles and begin automating selected score inputs with measurable market or fundamental data.
+Begin automating selected fundamental score inputs with measurable financial data, starting with Growth or Quality.
 
 ## Useful Files
 
@@ -70,7 +73,9 @@ Add basic company profiles and begin automating selected score inputs with measu
 - `AGENTS.md`: Codex working instructions.
 - `app/email_delivery.py`: optional email delivery and `.env` loading.
 - `app/market_data.py`: market data retrieval and fallback behavior.
+- `app/momentum.py`: automated return measurement and Momentum scoring.
 - `app/report_generator.py`: Markdown and HTML report generation.
+- `data/security_universe.json`: company profiles and manual seed scores.
 - `main.py`: daily report execution flow.
 - `scripts/run_atlas_daily.ps1`: scheduled runner.
 - `scripts/setup_windows_scheduled_task.ps1`: Windows Scheduled Task setup.

@@ -23,6 +23,8 @@ SNAPSHOT_FIELDS = [
     "source",
     "scores",
     "score_source",
+    "profile",
+    "momentum_metrics",
 ]
 
 
