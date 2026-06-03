@@ -12,7 +12,7 @@ The near-term mission is not to trade. The near-term mission is to become a depe
 
 ## Stage 1: Reliable Daily Briefing
 
-Current phase.
+Complete.
 
 Goal: make Atlas Lite consistently useful every day.
 
@@ -33,6 +33,8 @@ Success test:
 Atlas produces a useful daily brief without babysitting.
 
 ## Stage 2: Research Memory And Scoring
+
+Current phase.
 
 Goal: Atlas starts remembering and ranking securities.
 
@@ -166,4 +168,3 @@ Capabilities:
 4. Add portfolio awareness.
 5. Add paper trading.
 6. Discuss real trading only after Atlas has proven reliability and discipline.
-
