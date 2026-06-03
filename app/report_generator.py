@@ -68,6 +68,9 @@ class ReportGenerator:
         # Automated Growth
         report.append(self._generate_growth_summary())
 
+        # Automated Quality
+        report.append(self._generate_quality_summary())
+
         # Automated Momentum
         report.append(self._generate_momentum_summary())
 
@@ -570,9 +573,9 @@ class ReportGenerator:
             return "\n".join(section) + "\n"
 
         section.append(
-            "Hybrid v2 scores: Growth is calculated from SEC filing data and Momentum is "
-            "calculated from recent market returns when data is available. Quality, Moat, "
-            "and Risk remain manual seed inputs. "
+            "Hybrid v3 scores: Growth and Quality are calculated from SEC filing data, and "
+            "Momentum is calculated from recent market returns when data is available. "
+            "Moat and Risk remain manual seed inputs. "
             "Higher Risk Score means a stronger risk profile. "
             "Weights: Growth 40%, Quality 20%, Moat 15%, Momentum 15%, Risk 10%.\n"
         )
@@ -663,6 +666,50 @@ class ReportGenerator:
                 f"| {ticker} | {metrics['growth_score']:.1f} | "
                 f"{self._format_optional_percent(metrics.get('revenue_growth'))} | "
                 f"{self._format_optional_percent(metrics.get('net_income_growth'))} | "
+                f"{metrics.get('latest_fiscal_year') or 'N/A'} |"
+            )
+
+        return "\n".join(section) + "\n"
+
+    def _generate_quality_summary(self):
+        """Generate auditable automated fundamental quality metrics"""
+        section = ["## Automated Quality\n"]
+        quality_rows = []
+
+        for ticker, data in self.market_data.items():
+            metrics = data.get('quality_metrics')
+            if not metrics or data.get('sector') == 'Benchmark ETF':
+                continue
+            quality_rows.append((ticker, metrics))
+
+        if not quality_rows:
+            section.append("Automated Quality data was unavailable for this run.\n")
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Quality Score is calculated from net margin, operating cash-flow margin, and "
+            "free-cash-flow margin reported in the same annual SEC filing period. Manual "
+            "seed Quality scores remain in use when meaningful filing metrics are unavailable.\n"
+        )
+        section.append(
+            "| Ticker | Quality Score | Net Margin | Operating Cash Flow Margin | "
+            "Free Cash Flow Margin | Latest Fiscal Year |"
+        )
+        section.append(
+            "|--------|---------------|------------|----------------------------|"
+            "-----------------------|--------------------|"
+        )
+
+        for ticker, metrics in sorted(
+            quality_rows,
+            key=lambda item: item[1].get('quality_score', 0),
+            reverse=True,
+        ):
+            section.append(
+                f"| {ticker} | {metrics['quality_score']:.1f} | "
+                f"{self._format_optional_percent(metrics.get('net_margin'))} | "
+                f"{self._format_optional_percent(metrics.get('operating_cash_flow_margin'))} | "
+                f"{self._format_optional_percent(metrics.get('free_cash_flow_margin'))} | "
                 f"{metrics.get('latest_fiscal_year') or 'N/A'} |"
             )
 

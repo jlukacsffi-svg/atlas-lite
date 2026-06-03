@@ -29,6 +29,10 @@ class ResearchMemoryTests(unittest.TestCase):
                 loaded["securities"]["AAA"]["growth_metrics"]["source"],
                 "sec_companyfacts",
             )
+            self.assertEqual(
+                loaded["securities"]["AAA"]["quality_metrics"]["source"],
+                "sec_companyfacts",
+            )
 
     def test_latest_snapshot_is_returned(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -69,12 +73,19 @@ class ResearchMemoryTests(unittest.TestCase):
                 "percent_change": 11.11,
                 "status": "available",
                 "source": "test",
-                "score_source": "hybrid_v2",
-                "automated_scores": ["growth", "momentum"],
+                "score_source": "hybrid_v3",
+                "automated_scores": ["growth", "quality", "momentum"],
                 "growth_metrics": {
                     "growth_score": 50.0,
                     "revenue_growth": 0.0,
                     "net_income_growth": 0.0,
+                    "source": "sec_companyfacts",
+                },
+                "quality_metrics": {
+                    "quality_score": 50.0,
+                    "net_margin": 0.0,
+                    "operating_cash_flow_margin": 0.0,
+                    "free_cash_flow_margin": 0.0,
                     "source": "sec_companyfacts",
                 },
                 "scores": {

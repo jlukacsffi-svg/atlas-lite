@@ -5,7 +5,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 ## Features
 
 - Loads a structured security universe with sector, category, notes, and company-profile metadata
-- Calculates transparent Atlas Scoring Engine v1 rankings with automated Growth and Momentum
+- Calculates transparent Atlas Scoring Engine v1 rankings with automated Growth, Quality, and Momentum
 - Saves structured historical research snapshots for comparison over time
 - Monitors a watchlist of major tech, defense, and market index stocks
 - Fetches real-time market data using yfinance
@@ -46,12 +46,13 @@ Atlas calculates a weighted total score from 0-100:
 
 Higher scores are better. A higher Risk Score means a stronger risk profile, not more risk.
 
-Atlas currently uses a hybrid v2 scoring model:
+Atlas currently uses a hybrid v3 scoring model:
 
 - Growth is calculated automatically from annual revenue and net-income growth reported in SEC filings.
+- Quality is calculated automatically from annual profitability and cash-generation margins reported in SEC filings.
 - Momentum is calculated automatically from recent market returns when Yahoo Finance history is available.
-- Quality, Moat, and Risk remain manual seed inputs stored in `data/security_universe.json`.
-- If automated Growth or Momentum data is unavailable, Atlas retains the corresponding manual seed score for that run.
+- Moat and Risk remain manual seed inputs stored in `data/security_universe.json`.
+- If automated Growth, Quality, or Momentum data is unavailable, Atlas retains the corresponding manual seed score for that run.
 
 The automated Growth Score uses annual filing comparisons from the SEC Company Facts API:
 
@@ -64,6 +65,20 @@ The automated Growth Score uses annual filing comparisons from the SEC Company F
 Revenue metric score = 50 + (annual revenue growth * 2.0)
 Net-income metric score = 50 + (annual net-income growth * 1.0)
 Growth Score = weighted average of available metric scores, bounded from 0-100
+```
+
+The automated Quality Score uses metrics from the same annual SEC filing period:
+
+- Net margin: 40% weight
+- Operating cash-flow margin: 35% weight
+- Free-cash-flow margin: 25% weight
+- Available metric weights are renormalized when a filing metric is unavailable.
+
+```text
+Net-margin score = 50 + (net margin * 2.0)
+Operating cash-flow margin score = 50 + (operating cash-flow margin * 1.5)
+Free-cash-flow margin score = 50 + (free-cash-flow margin * 2.0)
+Quality Score = weighted average of available metric scores, bounded from 0-100
 ```
 
 The automated Momentum Score is centered on 50, uses 1-month and 3-month returns, and is bounded from 0-100:
@@ -104,12 +119,13 @@ Each Morning Executive Brief includes:
 5. **Atlas Scoring Summary** - Weighted company rankings
 6. **Company Profile Highlights** - Thesis, key driver, and key risk for top-ranked companies
 7. **Automated Growth** - SEC filing growth scores and underlying annual comparisons
-8. **Automated Momentum** - Momentum scores and recent return measurements
-9. **Research Memory** - Changes since the most recent structured snapshot
-10. **Top Movers** - Best and worst performing stocks
-11. **News Highlights** - Recent headlines for stocks moving more than 2%
-12. **Potential Opportunities** - Notable price changes
-13. **Risks To Watch** - Key considerations
+8. **Automated Quality** - SEC filing profitability and cash-generation measurements
+9. **Automated Momentum** - Momentum scores and recent return measurements
+10. **Research Memory** - Changes since the most recent structured snapshot
+11. **Top Movers** - Best and worst performing stocks
+12. **News Highlights** - Recent headlines for stocks moving more than 2%
+13. **Potential Opportunities** - Notable price changes
+14. **Risks To Watch** - Key considerations
 
 ## Installation
 
@@ -238,7 +254,7 @@ Atlas-lite/
 - No brokerage connections
 - Data is fetched from Yahoo Finance via yfinance
 - Uses Yahoo Finance fallback data when yfinance history is unavailable
-- Uses the official SEC Company Facts API for automated Growth measurements
+- Uses the official SEC Company Facts API for automated Growth and Quality measurements
 - Skips yfinance for the rest of a run after repeated yfinance failures, then uses the Yahoo fallback directly
 - Fetch diagnostics are written to `logs/atlas_diagnostics.log`
 - Reports are generated in markdown and HTML formats for easy sharing and viewing

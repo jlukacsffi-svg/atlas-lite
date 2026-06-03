@@ -37,6 +37,38 @@ class GrowthEngineTests(unittest.TestCase):
         self.assertEqual(current["value"], 120)
         self.assertEqual(prior["value"], 105)
 
+    def test_latest_annual_pair_prefers_most_recent_supported_tag(self):
+        older_tag = REVENUE_TAGS[0][1]
+        newer_tag = REVENUE_TAGS[1][1]
+        payload = {
+            "facts": {
+                "us-gaap": {
+                    older_tag: {
+                        "units": {
+                            "USD": [
+                                self._entry(2022, 100, "2023-01-01", "2022-12-31"),
+                                self._entry(2023, 110, "2024-01-01", "2023-12-31"),
+                            ]
+                        }
+                    },
+                    newer_tag: {
+                        "units": {
+                            "USD": [
+                                self._entry(2024, 120, "2025-01-01", "2024-12-31"),
+                                self._entry(2025, 140, "2026-01-01", "2025-12-31"),
+                            ]
+                        }
+                    },
+                }
+            }
+        }
+
+        current, prior = self.engine._latest_annual_pair(payload, REVENUE_TAGS)
+
+        self.assertEqual(current["tag"], newer_tag)
+        self.assertEqual(current["value"], 140)
+        self.assertEqual(prior["value"], 120)
+
     def test_growth_rate_rejects_non_positive_prior_net_income(self):
         pair = (
             {"value": 10},

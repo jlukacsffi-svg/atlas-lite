@@ -37,14 +37,20 @@ class GrowthEngine:
         self._ticker_ciks = None
 
     def fetch_metrics(self, ticker):
-        cik = self._get_cik(ticker)
-        if not cik:
-            return None
-
-        payload = self._fetch_json(SEC_COMPANY_FACTS_URL.format(cik=cik))
+        payload = self.fetch_company_facts(ticker)
         if not payload:
             return None
 
+        return self.metrics_from_payload(payload)
+
+    def fetch_company_facts(self, ticker):
+        cik = self._get_cik(ticker)
+        if not cik:
+            return None
+        return self._fetch_json(SEC_COMPANY_FACTS_URL.format(cik=cik))
+
+    def metrics_from_payload(self, payload):
+        """Build Growth metrics from an already retrieved SEC Company Facts payload."""
         revenue = self._latest_annual_pair(payload, REVENUE_TAGS)
         net_income = self._latest_annual_pair(payload, NET_INCOME_TAGS)
         revenue_growth = self._growth_rate(revenue)
@@ -120,44 +126,62 @@ class GrowthEngine:
             return None
 
     def _latest_annual_pair(self, payload, tag_candidates):
-        facts = payload.get("facts", {})
-
+        candidate_pairs = []
         for namespace, tag in tag_candidates:
-            fact = facts.get(namespace, {}).get(tag)
-            if not fact:
-                continue
+            annual_entries = self._annual_entries(payload, namespace, tag)
+            if len(annual_entries) >= 2:
+                candidate_pairs.append((annual_entries[0], annual_entries[1]))
+        if not candidate_pairs:
+            return None
+        return max(candidate_pairs, key=lambda pair: pair[0]["end"])
 
-            units = fact.get("units", {})
-            entries = units.get("USD") or units.get("USD/shares") or []
-            annual_entries = [
-                {
-                    "fy": entry.get("fy"),
-                    "value": entry.get("val"),
-                    "filed": entry.get("filed", ""),
-                    "form": entry.get("form"),
-                    "start": entry.get("start"),
-                    "end": entry.get("end"),
-                    "tag": tag,
-                }
-                for entry in entries
-                if entry.get("form") in ANNUAL_FORMS
-                and entry.get("fp") == "FY"
-                and isinstance(entry.get("fy"), int)
-                and isinstance(entry.get("val"), (int, float))
-                and self._is_annual_duration(entry)
-            ]
-
-            by_period_end = {}
+    def _latest_annual_value(self, payload, tag_candidates, period_end=None):
+        candidates = []
+        for namespace, tag in tag_candidates:
+            annual_entries = self._annual_entries(payload, namespace, tag)
             for entry in annual_entries:
-                current = by_period_end.get(entry["end"])
-                if current is None or entry["filed"] > current["filed"]:
-                    by_period_end[entry["end"]] = entry
+                if period_end is None or entry["end"] == period_end:
+                    candidates.append(entry)
+        if not candidates:
+            return None
+        return max(candidates, key=lambda entry: (entry["end"], entry["filed"]))
 
-            period_ends = sorted(by_period_end, reverse=True)
-            if len(period_ends) >= 2:
-                return by_period_end[period_ends[0]], by_period_end[period_ends[1]]
+    def _annual_entries(self, payload, namespace, tag):
+        facts = payload.get("facts", {})
+        fact = facts.get(namespace, {}).get(tag)
+        if not fact:
+            return []
 
-        return None
+        units = fact.get("units", {})
+        entries = units.get("USD") or units.get("USD/shares") or []
+        annual_entries = [
+            {
+                "fy": entry.get("fy"),
+                "value": entry.get("val"),
+                "filed": entry.get("filed", ""),
+                "form": entry.get("form"),
+                "start": entry.get("start"),
+                "end": entry.get("end"),
+                "tag": tag,
+            }
+            for entry in entries
+            if entry.get("form") in ANNUAL_FORMS
+            and entry.get("fp") == "FY"
+            and isinstance(entry.get("fy"), int)
+            and isinstance(entry.get("val"), (int, float))
+            and self._is_annual_duration(entry)
+        ]
+
+        by_period_end = {}
+        for entry in annual_entries:
+            current = by_period_end.get(entry["end"])
+            if current is None or entry["filed"] > current["filed"]:
+                by_period_end[entry["end"]] = entry
+
+        return [
+            by_period_end[period_end]
+            for period_end in sorted(by_period_end, reverse=True)
+        ]
 
     def _is_annual_duration(self, entry):
         start = entry.get("start")

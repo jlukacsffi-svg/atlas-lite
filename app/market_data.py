@@ -13,6 +13,7 @@ import yfinance as yf
 
 from app.growth import GrowthEngine
 from app.momentum import MomentumEngine
+from app.quality import QualityEngine
 
 LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
 LOG_FILE = LOG_DIR / "atlas_diagnostics.log"
@@ -56,6 +57,7 @@ class MarketDataFetcher:
         self.logger = logger
         self.growth_engine = GrowthEngine()
         self.momentum_engine = MomentumEngine()
+        self.quality_engine = QualityEngine()
         self.yfinance_failures = 0
         self.yfinance_disabled = False
 
@@ -77,11 +79,19 @@ class MarketDataFetcher:
         automated_scores = []
 
         if security["sector"] != "Benchmark ETF":
-            growth_metrics = self.growth_engine.fetch_metrics(ticker)
-            if growth_metrics and growth_metrics.get("growth_score") is not None:
-                record["growth_metrics"] = growth_metrics
-                record["scores"]["growth"] = growth_metrics["growth_score"]
-                automated_scores.append("growth")
+            company_facts = self.growth_engine.fetch_company_facts(ticker)
+            if company_facts:
+                growth_metrics = self.growth_engine.metrics_from_payload(company_facts)
+                if growth_metrics and growth_metrics.get("growth_score") is not None:
+                    record["growth_metrics"] = growth_metrics
+                    record["scores"]["growth"] = growth_metrics["growth_score"]
+                    automated_scores.append("growth")
+
+                quality_metrics = self.quality_engine.metrics_from_payload(company_facts)
+                if quality_metrics and quality_metrics.get("quality_score") is not None:
+                    record["quality_metrics"] = quality_metrics
+                    record["scores"]["quality"] = quality_metrics["quality_score"]
+                    automated_scores.append("quality")
 
         momentum_metrics = self.momentum_engine.fetch_metrics(ticker)
         if momentum_metrics and momentum_metrics.get("momentum_score") is not None:
@@ -91,11 +101,8 @@ class MarketDataFetcher:
 
         if automated_scores:
             record["automated_scores"] = automated_scores
-            record["score_source"] = (
-                "hybrid_v2"
-                if set(automated_scores) == {"growth", "momentum"}
-                else "hybrid_v1"
-            )
+            automated_count = len(automated_scores)
+            record["score_source"] = f"hybrid_v{automated_count}"
         return record
 
     def _note_yfinance_failure(self, ticker, reason):

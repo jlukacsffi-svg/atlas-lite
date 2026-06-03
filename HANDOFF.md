@@ -54,10 +54,11 @@ Completed Stage 2 foundations:
 - Structured security-universe configuration.
 - Sector, category, notes, and structured company-profile metadata.
 - Atlas Scoring Engine v1 weighted rankings.
-- Hybrid v2 scoring with automatically calculated Growth and Momentum.
+- Hybrid v3 scoring with automatically calculated Growth, Quality, and Momentum.
 - Auditable annual revenue and net-income Growth measurements from SEC filings.
+- Auditable net-margin, operating cash-flow margin, and free-cash-flow margin Quality measurements.
 - Auditable 1-month, 3-month, and 6-month Momentum measurements.
-- Company Profile Highlights, Automated Growth, and Automated Momentum report sections.
+- Company Profile Highlights, Automated Growth, Automated Quality, and Automated Momentum report sections.
 - Scoring Summary in Markdown and HTML reports.
 - Structured historical research snapshots.
 - Research Memory comparison in Markdown and HTML reports.
@@ -65,7 +66,7 @@ Completed Stage 2 foundations:
 
 Recommended next Stage 2 task:
 
-Begin automating Quality with measurable financial data, then expand the security universe.
+Expand the security universe toward the 100-150 security target and begin earnings-calendar tracking.
 
 ## Useful Files
 
@@ -76,6 +77,7 @@ Begin automating Quality with measurable financial data, then expand the securit
 - `app/growth.py`: SEC filing measurement and automated Growth scoring.
 - `app/market_data.py`: market data retrieval and fallback behavior.
 - `app/momentum.py`: automated return measurement and Momentum scoring.
+- `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.
 - `app/report_generator.py`: Markdown and HTML report generation.
 - `data/security_universe.json`: company profiles and manual seed scores.
 - `main.py`: daily report execution flow.

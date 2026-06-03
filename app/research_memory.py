@@ -26,6 +26,7 @@ SNAPSHOT_FIELDS = [
     "automated_scores",
     "profile",
     "growth_metrics",
+    "quality_metrics",
     "momentum_metrics",
 ]
 

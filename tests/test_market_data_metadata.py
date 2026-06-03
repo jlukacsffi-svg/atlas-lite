@@ -37,21 +37,24 @@ class _MetricsEngine:
 
 
 class MarketDataMetadataTests(unittest.TestCase):
-    def test_growth_and_momentum_create_hybrid_v2_score(self):
+    def test_growth_quality_and_momentum_create_hybrid_v3_score(self):
         fetcher = MarketDataFetcher(["AAA"], universe=_Universe())
-        fetcher.growth_engine = _MetricsEngine({"growth_score": 75.0})
+        fetcher.growth_engine.fetch_company_facts = lambda ticker: {"facts": {}}
+        fetcher.growth_engine.metrics_from_payload = lambda payload: {"growth_score": 75.0}
+        fetcher.quality_engine.metrics_from_payload = lambda payload: {"quality_score": 85.0}
         fetcher.momentum_engine = _MetricsEngine({"momentum_score": 65.0})
 
         record = fetcher._apply_universe_metadata("AAA", {"company_name": "AAA"})
 
         self.assertEqual(record["scores"]["growth"], 75.0)
+        self.assertEqual(record["scores"]["quality"], 85.0)
         self.assertEqual(record["scores"]["momentum"], 65.0)
-        self.assertEqual(record["automated_scores"], ["growth", "momentum"])
-        self.assertEqual(record["score_source"], "hybrid_v2")
+        self.assertEqual(record["automated_scores"], ["growth", "quality", "momentum"])
+        self.assertEqual(record["score_source"], "hybrid_v3")
 
     def test_manual_growth_is_retained_when_growth_data_is_unavailable(self):
         fetcher = MarketDataFetcher(["AAA"], universe=_Universe())
-        fetcher.growth_engine = _MetricsEngine({})
+        fetcher.growth_engine.fetch_company_facts = lambda ticker: None
         fetcher.momentum_engine = _MetricsEngine({"momentum_score": 65.0})
 
         record = fetcher._apply_universe_metadata("AAA", {})
