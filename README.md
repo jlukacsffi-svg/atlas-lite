@@ -6,6 +6,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 
 - Loads a structured security universe with sector, category, notes, and company-profile metadata
 - Calculates transparent Atlas Scoring Engine v1 rankings with automated Growth, Quality, and Momentum
+- Caches SEC Company Facts locally to make repeated daily runs faster and more resilient
 - Saves structured historical research snapshots for comparison over time
 - Monitors a 56-security universe across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs
 - Fetches real-time market data using yfinance
@@ -206,13 +207,21 @@ $env:ATLAS_SMTP_USE_SSL = "false"
 
 When enabled, Atlas attaches both the Markdown and HTML reports to the email.
 
-## SEC Growth Data
+## SEC Growth And Quality Data
 
 Atlas identifies itself when requesting the official SEC Company Facts API. The default contact is the dedicated Atlas report email. To use a different SEC-compliant contact string:
 
 ```powershell
 $env:ATLAS_SEC_USER_AGENT = "Atlas Capital Research contact@example.com"
 ```
+
+SEC data is cached locally in:
+
+```text
+data_cache/sec/
+```
+
+The ticker-to-CIK map is cached for 30 days. Company Facts filings are cached for 7 days. If a fresh SEC request fails, Atlas may use a stale local cache rather than dropping automated Growth and Quality scores for that run. The `data_cache/` folder is ignored by Git.
 
 If environment variables set in PowerShell are not visible to Atlas, create a local `.env` file in the project root. The `.env` file is ignored by Git and must not be committed.
 
@@ -255,6 +264,7 @@ Atlas-lite/
 - Data is fetched from Yahoo Finance via yfinance
 - Uses Yahoo Finance fallback data when yfinance history is unavailable
 - Uses the official SEC Company Facts API for automated Growth and Quality measurements
+- Caches SEC Company Facts locally in `data_cache/sec/`
 - Skips yfinance for the rest of a run after repeated yfinance failures, then uses the Yahoo fallback directly
 - Fetch diagnostics are written to `logs/atlas_diagnostics.log`
 - Reports are generated in markdown and HTML formats for easy sharing and viewing

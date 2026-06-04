@@ -4,6 +4,7 @@
 logs/
 reports/
 research_archive/
+data_cache/
 
 .vscode/
 

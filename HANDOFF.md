@@ -56,6 +56,7 @@ Completed Stage 2 foundations:
 - Sector, category, notes, and structured company-profile metadata.
 - Atlas Scoring Engine v1 weighted rankings.
 - Hybrid v3 scoring with automatically calculated Growth, Quality, and Momentum.
+- Local SEC Company Facts caching in `data_cache/sec/` for faster and more resilient runs.
 - Auditable annual revenue and net-income Growth measurements from SEC filings.
 - Auditable net-margin, operating cash-flow margin, and free-cash-flow margin Quality measurements.
 - Auditable 1-month, 3-month, and 6-month Momentum measurements.
@@ -76,6 +77,7 @@ Continue expanding the universe toward the 100-150 security target, then begin e
 - `AGENTS.md`: Codex working instructions.
 - `app/email_delivery.py`: optional email delivery and `.env` loading.
 - `app/growth.py`: SEC filing measurement and automated Growth scoring.
+- `data_cache/sec/`: ignored local cache for SEC ticker maps and Company Facts payloads.
 - `app/market_data.py`: market data retrieval and fallback behavior.
 - `app/momentum.py`: automated return measurement and Momentum scoring.
 - `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.

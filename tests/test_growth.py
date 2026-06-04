@@ -1,6 +1,8 @@
 """Tests for automated Atlas fundamental Growth measurement."""
 
 import unittest
+import tempfile
+from pathlib import Path
 
 from app.growth import GrowthEngine, NET_INCOME_TAGS, REVENUE_TAGS
 
@@ -79,7 +81,7 @@ class GrowthEngineTests(unittest.TestCase):
 
     def test_fetch_metrics_builds_auditable_result(self):
         self.engine._ticker_ciks = {"AAA": "0000000001"}
-        self.engine._fetch_json = lambda url: self._company_facts(
+        self.engine._fetch_json_cached = lambda url, cache_filename, max_age_days: self._company_facts(
             revenue_entries=[
                 self._entry(2024, 100, "2025-01-01", "2024-12-31"),
                 self._entry(2025, 120, "2026-01-01", "2025-12-31"),
@@ -97,6 +99,43 @@ class GrowthEngineTests(unittest.TestCase):
         self.assertEqual(metrics["net_income_growth"], 40.0)
         self.assertEqual(metrics["latest_fiscal_year"], 2025)
         self.assertEqual(metrics["source"], "sec_companyfacts")
+
+    def test_fetch_json_cached_uses_fresh_cache(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            engine = GrowthEngine(cache_dir=temp_dir)
+            cache_path = Path(temp_dir) / "fresh.json"
+            cache_path.write_text('{"cached": true}', encoding="utf-8")
+            engine._fetch_json_uncached = lambda url: self.fail("network should not be called")
+
+            payload = engine._fetch_json_cached("https://example.test", "fresh.json", 7)
+
+            self.assertEqual(payload, {"cached": True})
+
+    def test_fetch_json_cached_writes_successful_fetch(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            engine = GrowthEngine(cache_dir=temp_dir)
+            engine._fetch_json_uncached = lambda url: {"fresh": True}
+
+            payload = engine._fetch_json_cached("https://example.test", "fresh.json", 7)
+
+            self.assertEqual(payload, {"fresh": True})
+            self.assertEqual(
+                (Path(temp_dir) / "fresh.json").read_text(encoding="utf-8"),
+                '{"fresh": true}',
+            )
+
+    def test_fetch_json_cached_uses_stale_cache_after_fetch_failure(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            engine = GrowthEngine(cache_dir=temp_dir)
+            cache_path = Path(temp_dir) / "stale.json"
+            cache_path.write_text('{"stale": true}', encoding="utf-8")
+            cache_path.touch()
+            engine._cache_is_fresh = lambda path, max_age_days: False
+            engine._fetch_json_uncached = lambda url: None
+
+            payload = engine._fetch_json_cached("https://example.test", "stale.json", 7)
+
+            self.assertEqual(payload, {"stale": True})
 
     def _company_facts(self, revenue_entries=None, net_income_entries=None):
         revenue_tag = REVENUE_TAGS[0][1]

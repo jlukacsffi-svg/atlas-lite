@@ -6,12 +6,17 @@ import os
 import time
 import urllib.request
 from datetime import date
+from pathlib import Path
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_SEC_CACHE_DIR = PROJECT_ROOT / "data_cache" / "sec"
 SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 SEC_COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 SEC_TIMEOUT_SECONDS = 10
 SEC_REQUEST_DELAY_SECONDS = 0.12
+TICKER_MAP_CACHE_DAYS = 30
+COMPANY_FACTS_CACHE_DAYS = 7
 ANNUAL_FORMS = {"10-K", "10-K/A", "20-F", "20-F/A", "40-F", "40-F/A"}
 REVENUE_TAGS = (
     ("us-gaap", "RevenueFromContractWithCustomerExcludingAssessedTax"),
@@ -28,12 +33,13 @@ NET_INCOME_TAGS = (
 class GrowthEngine:
     """Fetch annual filing metrics and convert them into a 0-100 Growth score."""
 
-    def __init__(self):
+    def __init__(self, cache_dir=DEFAULT_SEC_CACHE_DIR):
         self.logger = logging.getLogger(__name__)
         self.user_agent = os.getenv(
             "ATLAS_SEC_USER_AGENT",
             "Atlas Capital Research atlas.capital.reports@gmail.com",
         )
+        self.cache_dir = Path(cache_dir)
         self._ticker_ciks = None
 
     def fetch_metrics(self, ticker):
@@ -47,7 +53,11 @@ class GrowthEngine:
         cik = self._get_cik(ticker)
         if not cik:
             return None
-        return self._fetch_json(SEC_COMPANY_FACTS_URL.format(cik=cik))
+        return self._fetch_json_cached(
+            SEC_COMPANY_FACTS_URL.format(cik=cik),
+            f"companyfacts_{cik}.json",
+            COMPANY_FACTS_CACHE_DAYS,
+        )
 
     def metrics_from_payload(self, payload):
         """Build Growth metrics from an already retrieved SEC Company Facts payload."""
@@ -96,7 +106,11 @@ class GrowthEngine:
 
     def _get_cik(self, ticker):
         if self._ticker_ciks is None:
-            payload = self._fetch_json(SEC_TICKERS_URL)
+            payload = self._fetch_json_cached(
+                SEC_TICKERS_URL,
+                "company_tickers.json",
+                TICKER_MAP_CACHE_DAYS,
+            )
             if not payload:
                 self._ticker_ciks = {}
             else:
@@ -106,7 +120,25 @@ class GrowthEngine:
                 }
         return self._ticker_ciks.get(str(ticker).upper())
 
-    def _fetch_json(self, url):
+    def _fetch_json_cached(self, url, cache_filename, max_age_days):
+        cache_path = self.cache_dir / cache_filename
+        cached_payload = self._read_cached_json(cache_path)
+
+        if cached_payload is not None and self._cache_is_fresh(cache_path, max_age_days):
+            self.logger.info("SEC cache hit: %s", cache_path)
+            return cached_payload
+
+        payload = self._fetch_json_uncached(url)
+        if payload is not None:
+            self._write_cached_json(cache_path, payload)
+            return payload
+
+        if cached_payload is not None:
+            self.logger.warning("Using stale SEC cache after fetch failure: %s", cache_path)
+            return cached_payload
+        return None
+
+    def _fetch_json_uncached(self, url):
         request = urllib.request.Request(
             url,
             headers={
@@ -124,6 +156,31 @@ class GrowthEngine:
         except Exception as exc:
             self.logger.warning("Unable to retrieve SEC data from %s: %s", url, exc)
             return None
+
+    def _read_cached_json(self, cache_path):
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except FileNotFoundError:
+            return None
+        except Exception as exc:
+            self.logger.warning("Unable to read SEC cache %s: %s", cache_path, exc)
+            return None
+
+    def _write_cached_json(self, cache_path, payload):
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(cache_path, "w", encoding="utf-8") as f:
+                json.dump(payload, f)
+        except Exception as exc:
+            self.logger.warning("Unable to write SEC cache %s: %s", cache_path, exc)
+
+    def _cache_is_fresh(self, cache_path, max_age_days):
+        try:
+            age_seconds = time.time() - cache_path.stat().st_mtime
+        except FileNotFoundError:
+            return False
+        return age_seconds <= max_age_days * 24 * 60 * 60
 
     def _latest_annual_pair(self, payload, tag_candidates):
         candidate_pairs = []
