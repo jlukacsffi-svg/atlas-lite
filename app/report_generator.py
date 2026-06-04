@@ -11,7 +11,14 @@ from app.scoring import ScoringEngine
 class ReportGenerator:
     """Generate markdown reports from market data"""
     
-    def __init__(self, market_data, market_summary, previous_snapshot=None, earnings_events=None):
+    def __init__(
+        self,
+        market_data,
+        market_summary,
+        previous_snapshot=None,
+        earnings_events=None,
+        analyst_actions=None,
+    ):
         """
         Initialize the report generator
         
@@ -20,11 +27,13 @@ class ReportGenerator:
             market_summary (dict): Market summary with indices
             previous_snapshot (dict): Optional prior structured research snapshot
             earnings_events (list): Optional upcoming earnings events
+            analyst_actions (list): Optional analyst-action headlines
         """
         self.market_data = market_data or {}
         self.market_summary = market_summary or {}
         self.previous_snapshot = previous_snapshot
         self.earnings_events = earnings_events or []
+        self.analyst_actions = analyst_actions or []
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
         self.scoring_engine = ScoringEngine()
@@ -87,6 +96,9 @@ class ReportGenerator:
 
         # News Highlights
         report.append(self._generate_news_highlights())
+
+        # Analyst Actions
+        report.append(self._generate_analyst_actions())
         
         # Potential Opportunities
         report.append(self._generate_opportunities())
@@ -911,6 +923,36 @@ class ReportGenerator:
             section.append("")
 
         return "\n".join(section) + "\n"
+
+    def _generate_analyst_actions(self):
+        """Generate analyst-action headline section"""
+        section = ["## Analyst Actions\n"]
+
+        if not self.analyst_actions:
+            section.append("No recent analyst-action headlines found for the Atlas universe.\n")
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Recent analyst-action headlines found for Atlas universe companies. "
+            "This is headline-based tracking, not a full structured ratings database.\n"
+        )
+        section.append("| Ticker | Action Signal | Headline | Publisher |")
+        section.append("|--------|---------------|----------|-----------|")
+
+        for action in self.analyst_actions:
+            title = self._format_table_text(action.get("title", "N/A"))
+            url = action.get("url", "")
+            headline = f"[{title}]({url})" if url else title
+            section.append(
+                f"| {self._format_table_text(action.get('ticker', 'N/A'))} | "
+                f"{self._format_table_text(action.get('action_type', 'N/A'))} | "
+                f"{headline} | {self._format_table_text(action.get('publisher', 'Unknown publisher'))} |"
+            )
+
+        return "\n".join(section) + "\n"
+
+    def _format_table_text(self, value):
+        return str(value).replace("|", "/").replace("\n", " ").strip()
     
     def _generate_opportunities(self):
         """Generate potential opportunities section"""

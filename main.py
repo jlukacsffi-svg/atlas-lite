@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from app.market_data import MarketDataFetcher
 from app.report_generator import ReportGenerator
 from app.email_delivery import EmailDelivery
+from app.analyst_actions import AnalystActionTracker
 from app.earnings_calendar import EarningsCalendar
 from app.research_memory import ResearchMemory
 from app.security_universe import SecurityUniverse
@@ -83,6 +84,16 @@ def main():
             print(f"[warning] Earnings calendar unavailable: {earnings_error}")
 
         print()
+        print("[analysts] Checking analyst actions...")
+        try:
+            analyst_tracker = AnalystActionTracker()
+            analyst_actions = analyst_tracker.fetch_actions(market_data)
+            print(f"[ok] Found {len(analyst_actions)} recent analyst-action headlines.")
+        except Exception as analyst_error:
+            analyst_actions = []
+            print(f"[warning] Analyst-action tracking unavailable: {analyst_error}")
+
+        print()
         print("[memory] Updating research archive...")
         memory = ResearchMemory()
         previous_snapshot = memory.load_latest_snapshot()
@@ -97,6 +108,7 @@ def main():
             market_summary,
             previous_snapshot=previous_snapshot,
             earnings_events=earnings_events,
+            analyst_actions=analyst_actions,
         )
         report_path = generator.save_report()
 

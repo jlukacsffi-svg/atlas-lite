@@ -8,6 +8,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Calculates transparent Atlas Scoring Engine v1 rankings with automated Growth, Quality, and Momentum
 - Caches SEC Company Facts locally to make repeated daily runs faster and more resilient
 - Tracks upcoming earnings events for Atlas universe securities
+- Tracks recent analyst-action headlines for upgrades, downgrades, initiations, and price-target changes
 - Saves structured historical research snapshots for comparison over time
 - Monitors a 56-security universe across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs
 - Fetches real-time market data using yfinance
@@ -127,8 +128,9 @@ Each Morning Executive Brief includes:
 11. **Research Memory** - Changes since the most recent structured snapshot
 12. **Top Movers** - Best and worst performing stocks
 13. **News Highlights** - Recent headlines for stocks moving more than 2%
-14. **Potential Opportunities** - Notable price changes
-15. **Risks To Watch** - Key considerations
+14. **Analyst Actions** - Recent analyst-action headlines for Atlas universe companies
+15. **Potential Opportunities** - Notable price changes
+16. **Risks To Watch** - Key considerations
 
 ## Installation
 
@@ -237,6 +239,18 @@ data_cache/earnings/
 
 Daily earnings calendar payloads are cached for 18 hours. If a fresh request fails, Atlas may use a stale local cache so the report can still include the most recent known earnings calendar context. The `data_cache/` folder is ignored by Git.
 
+## Analyst Action Data
+
+Atlas tracks recent analyst-action signals by scanning finance headlines for terms such as upgrades, downgrades, initiations, reiterations, and price-target changes. This is headline-based tracking, not a full structured analyst-ratings database.
+
+Analyst-action headline data is cached locally in:
+
+```text
+data_cache/analyst_actions/
+```
+
+Per-security analyst-action headline results are cached for 12 hours. If a fresh request fails, Atlas may use a stale local cache so the report can still include the most recent known analyst-action context. The `data_cache/` folder is ignored by Git.
+
 If environment variables set in PowerShell are not visible to Atlas, create a local `.env` file in the project root. The `.env` file is ignored by Git and must not be committed.
 
 Example `.env`:
@@ -280,6 +294,7 @@ Atlas-lite/
 - Uses the official SEC Company Facts API for automated Growth and Quality measurements
 - Caches SEC Company Facts locally in `data_cache/sec/`
 - Caches Nasdaq earnings calendar data locally in `data_cache/earnings/`
+- Caches analyst-action headline data locally in `data_cache/analyst_actions/`
 - Skips yfinance for the rest of a run after repeated yfinance failures, then uses the Yahoo fallback directly
 - Fetch diagnostics are written to `logs/atlas_diagnostics.log`
 - Reports are generated in markdown and HTML formats for easy sharing and viewing
