@@ -9,6 +9,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Caches SEC Company Facts locally to make repeated daily runs faster and more resilient
 - Tracks upcoming earnings events for Atlas universe securities
 - Tracks recent analyst-action headlines for upgrades, downgrades, initiations, and price-target changes
+- Tracks recent SEC Form 4 insider transactions for Atlas universe companies
 - Saves structured historical research snapshots for comparison over time
 - Monitors a 56-security universe across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs
 - Fetches real-time market data using yfinance
@@ -129,8 +130,9 @@ Each Morning Executive Brief includes:
 12. **Top Movers** - Best and worst performing stocks
 13. **News Highlights** - Recent headlines for stocks moving more than 2%
 14. **Analyst Actions** - Recent analyst-action headlines for Atlas universe companies
-15. **Potential Opportunities** - Notable price changes
-16. **Risks To Watch** - Key considerations
+15. **Insider Transactions** - Recent SEC Form 4 non-derivative transactions
+16. **Potential Opportunities** - Notable price changes
+17. **Risks To Watch** - Key considerations
 
 ## Installation
 
@@ -251,6 +253,18 @@ data_cache/analyst_actions/
 
 Per-security analyst-action headline results are cached for 12 hours. If a fresh request fails, Atlas may use a stale local cache so the report can still include the most recent known analyst-action context. The `data_cache/` folder is ignored by Git.
 
+## Insider Transaction Data
+
+Atlas tracks recent insider transactions by scanning SEC company submissions for Form 4 and Form 4/A filings, then reading the raw ownership filing XML when available. The report currently displays non-derivative transactions such as purchases, sales, awards, option exercises, gifts, and tax-withholding dispositions.
+
+Insider transaction data is cached locally in:
+
+```text
+data_cache/insider_transactions/
+```
+
+SEC company submissions are cached for 12 hours. Raw Form 4 filing XML is cached for 30 days. If a fresh request fails, Atlas may use stale local cache data so the report can still include the most recent known insider-transaction context. The `data_cache/` folder is ignored by Git.
+
 If environment variables set in PowerShell are not visible to Atlas, create a local `.env` file in the project root. The `.env` file is ignored by Git and must not be committed.
 
 Example `.env`:
@@ -295,6 +309,7 @@ Atlas-lite/
 - Caches SEC Company Facts locally in `data_cache/sec/`
 - Caches Nasdaq earnings calendar data locally in `data_cache/earnings/`
 - Caches analyst-action headline data locally in `data_cache/analyst_actions/`
+- Caches SEC insider-transaction data locally in `data_cache/insider_transactions/`
 - Skips yfinance for the rest of a run after repeated yfinance failures, then uses the Yahoo fallback directly
 - Fetch diagnostics are written to `logs/atlas_diagnostics.log`
 - Reports are generated in markdown and HTML formats for easy sharing and viewing

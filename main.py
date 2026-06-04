@@ -19,6 +19,7 @@ from app.report_generator import ReportGenerator
 from app.email_delivery import EmailDelivery
 from app.analyst_actions import AnalystActionTracker
 from app.earnings_calendar import EarningsCalendar
+from app.insider_transactions import InsiderTransactionTracker
 from app.research_memory import ResearchMemory
 from app.security_universe import SecurityUniverse
 
@@ -94,6 +95,16 @@ def main():
             print(f"[warning] Analyst-action tracking unavailable: {analyst_error}")
 
         print()
+        print("[insiders] Checking insider transactions...")
+        try:
+            insider_tracker = InsiderTransactionTracker()
+            insider_transactions = insider_tracker.fetch_transactions(market_data)
+            print(f"[ok] Found {len(insider_transactions)} recent insider transactions.")
+        except Exception as insider_error:
+            insider_transactions = []
+            print(f"[warning] Insider-transaction tracking unavailable: {insider_error}")
+
+        print()
         print("[memory] Updating research archive...")
         memory = ResearchMemory()
         previous_snapshot = memory.load_latest_snapshot()
@@ -109,6 +120,7 @@ def main():
             previous_snapshot=previous_snapshot,
             earnings_events=earnings_events,
             analyst_actions=analyst_actions,
+            insider_transactions=insider_transactions,
         )
         report_path = generator.save_report()
 

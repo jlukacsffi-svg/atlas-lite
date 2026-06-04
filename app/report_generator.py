@@ -18,6 +18,7 @@ class ReportGenerator:
         previous_snapshot=None,
         earnings_events=None,
         analyst_actions=None,
+        insider_transactions=None,
     ):
         """
         Initialize the report generator
@@ -28,12 +29,14 @@ class ReportGenerator:
             previous_snapshot (dict): Optional prior structured research snapshot
             earnings_events (list): Optional upcoming earnings events
             analyst_actions (list): Optional analyst-action headlines
+            insider_transactions (list): Optional SEC Form 4 transactions
         """
         self.market_data = market_data or {}
         self.market_summary = market_summary or {}
         self.previous_snapshot = previous_snapshot
         self.earnings_events = earnings_events or []
         self.analyst_actions = analyst_actions or []
+        self.insider_transactions = insider_transactions or []
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
         self.scoring_engine = ScoringEngine()
@@ -99,6 +102,9 @@ class ReportGenerator:
 
         # Analyst Actions
         report.append(self._generate_analyst_actions())
+
+        # Insider Transactions
+        report.append(self._generate_insider_transactions())
         
         # Potential Opportunities
         report.append(self._generate_opportunities())
@@ -953,6 +959,49 @@ class ReportGenerator:
 
     def _format_table_text(self, value):
         return str(value).replace("|", "/").replace("\n", " ").strip()
+
+    def _generate_insider_transactions(self):
+        """Generate recent SEC Form 4 insider transaction section"""
+        section = ["## Insider Transactions\n"]
+
+        if not self.insider_transactions:
+            section.append("No recent SEC Form 4 transactions found for the Atlas universe.\n")
+            return "\n".join(section) + "\n"
+
+        section.append("Recent SEC Form 4 non-derivative transactions found for Atlas universe companies:\n")
+        section.append("| Date | Ticker | Insider | Action | A/D | Shares | Price | Value | Filing |")
+        section.append("|------|--------|---------|--------|-----|--------|-------|-------|--------|")
+
+        for transaction in self.insider_transactions:
+            filing_url = transaction.get("filing_url", "")
+            filing_link = f"[SEC filing]({filing_url})" if filing_url else "SEC filing"
+            owner = transaction.get("owner_name", "Unknown owner")
+            owner_title = transaction.get("owner_title")
+            if owner_title and owner_title != "N/A":
+                owner = f"{owner} ({owner_title})"
+            section.append(
+                f"| {self._format_table_text(transaction.get('transaction_date', 'N/A'))} | "
+                f"{self._format_table_text(transaction.get('ticker', 'N/A'))} | "
+                f"{self._format_table_text(owner)} | "
+                f"{self._format_table_text(transaction.get('transaction_label', 'N/A'))} | "
+                f"{self._format_table_text(transaction.get('acquired_disposed', 'N/A'))} | "
+                f"{self._format_number(transaction.get('shares'))} | "
+                f"{self._format_currency(transaction.get('price'))} | "
+                f"{self._format_currency(transaction.get('total_value'), decimals=0)} | "
+                f"{filing_link} |"
+            )
+
+        return "\n".join(section) + "\n"
+
+    def _format_number(self, value):
+        if value is None:
+            return "N/A"
+        return f"{value:,.0f}"
+
+    def _format_currency(self, value, decimals=2):
+        if value is None:
+            return "N/A"
+        return f"${value:,.{decimals}f}"
     
     def _generate_opportunities(self):
         """Generate potential opportunities section"""

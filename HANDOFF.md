@@ -59,10 +59,11 @@ Completed Stage 2 foundations:
 - Local SEC Company Facts caching in `data_cache/sec/` for faster and more resilient runs.
 - Upcoming earnings tracking with local Nasdaq calendar caching in `data_cache/earnings/`.
 - Analyst-action headline tracking with local cache in `data_cache/analyst_actions/`.
+- Insider-transaction tracking from SEC Form 4 filings with local cache in `data_cache/insider_transactions/`.
 - Auditable annual revenue and net-income Growth measurements from SEC filings.
 - Auditable net-margin, operating cash-flow margin, and free-cash-flow margin Quality measurements.
 - Auditable 1-month, 3-month, and 6-month Momentum measurements.
-- Company Profile Highlights, Upcoming Earnings, Analyst Actions, Automated Growth, Automated Quality, and Automated Momentum report sections.
+- Company Profile Highlights, Upcoming Earnings, Analyst Actions, Insider Transactions, Automated Growth, Automated Quality, and Automated Momentum report sections.
 - Scoring Summary in Markdown and HTML reports.
 - Structured historical research snapshots.
 - Research Memory comparison in Markdown and HTML reports.
@@ -70,7 +71,7 @@ Completed Stage 2 foundations:
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then begin insider-transaction tracking.
+Continue expanding the universe toward the 100-150 security target, then begin sector scoring or watchlist ranking.
 
 ## Useful Files
 
@@ -81,9 +82,11 @@ Continue expanding the universe toward the 100-150 security target, then begin i
 - `app/email_delivery.py`: optional email delivery and `.env` loading.
 - `app/earnings_calendar.py`: Nasdaq earnings-calendar retrieval and local caching.
 - `app/growth.py`: SEC filing measurement and automated Growth scoring.
+- `app/insider_transactions.py`: SEC Form 4 retrieval, XML parsing, and local caching.
 - `data_cache/analyst_actions/`: ignored local cache for analyst-action headline payloads.
 - `data_cache/sec/`: ignored local cache for SEC ticker maps and Company Facts payloads.
 - `data_cache/earnings/`: ignored local cache for Nasdaq earnings-calendar payloads.
+- `data_cache/insider_transactions/`: ignored local cache for SEC submissions and Form 4 XML.
 - `app/market_data.py`: market data retrieval and fallback behavior.
 - `app/momentum.py`: automated return measurement and Momentum scoring.
 - `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.
