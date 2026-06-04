@@ -1,5 +1,5 @@
 {
-  "version": "1.2",
+  "version": "1.3",
   "securities": [
     {
       "ticker": "NVDA",
@@ -20,6 +20,126 @@
       "profile": {"thesis": "CPU and AI accelerator competitor with meaningful share-gain potential.", "key_driver": "Data-center CPU growth and AI accelerator adoption.", "key_risk": "Execution risk against larger entrenched competitors."},
       "score_source": "manual_v1",
       "scores": {"growth": 85, "quality": 75, "moat": 75, "momentum": 75, "risk": 60}
+    },
+    {
+      "ticker": "AVGO",
+      "company_name": "Broadcom Inc.",
+      "sector": "AI & Semiconductors",
+      "category": "Core",
+      "notes": "Custom silicon, networking, and infrastructure software.",
+      "profile": {"thesis": "Critical supplier of custom AI silicon, networking, and infrastructure software.", "key_driver": "Hyperscaler AI networking and custom accelerator demand.", "key_risk": "Customer concentration and integration complexity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 88, "quality": 90, "moat": 90, "momentum": 85, "risk": 72}
+    },
+    {
+      "ticker": "TSM",
+      "company_name": "Taiwan Semiconductor Manufacturing Company Limited",
+      "sector": "AI & Semiconductors",
+      "category": "Core",
+      "notes": "Leading advanced semiconductor foundry.",
+      "profile": {"thesis": "Leading advanced-node foundry with a central role in global semiconductor manufacturing.", "key_driver": "Advanced-node demand from AI and high-performance computing.", "key_risk": "Geopolitical exposure and semiconductor-cycle volatility."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 86, "quality": 92, "moat": 95, "momentum": 82, "risk": 62}
+    },
+    {
+      "ticker": "ARM",
+      "company_name": "Arm Holdings plc",
+      "sector": "AI & Semiconductors",
+      "category": "Watchlist",
+      "notes": "CPU architecture and semiconductor IP.",
+      "profile": {"thesis": "Semiconductor IP leader whose architecture is expanding beyond mobile into data centers and edge computing.", "key_driver": "Royalty growth and broader adoption of Arm-based computing.", "key_risk": "High valuation and dependence on licensee execution."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 90, "quality": 78, "moat": 88, "momentum": 80, "risk": 55}
+    },
+    {
+      "ticker": "ASML",
+      "company_name": "ASML Holding N.V.",
+      "sector": "AI & Semiconductors",
+      "category": "Core",
+      "notes": "EUV lithography equipment leader.",
+      "profile": {"thesis": "Near-monopoly supplier of EUV lithography tools required for leading-edge chips.", "key_driver": "Advanced-node fab spending and EUV system demand.", "key_risk": "Export controls, cyclicality, and customer concentration."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 92, "moat": 96, "momentum": 70, "risk": 68}
+    },
+    {
+      "ticker": "MU",
+      "company_name": "Micron Technology, Inc.",
+      "sector": "AI & Semiconductors",
+      "category": "Watchlist",
+      "notes": "Memory and storage supplier with AI data-center exposure.",
+      "profile": {"thesis": "Memory-cycle beneficiary with high-bandwidth memory exposure to AI infrastructure.", "key_driver": "HBM demand, DRAM pricing, and data-center memory growth.", "key_risk": "Commodity cycles and volatile margins."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 62, "moat": 62, "momentum": 72, "risk": 48}
+    },
+    {
+      "ticker": "MRVL",
+      "company_name": "Marvell Technology, Inc.",
+      "sector": "AI & Semiconductors",
+      "category": "Watchlist",
+      "notes": "Data infrastructure semiconductor supplier.",
+      "profile": {"thesis": "Custom silicon, networking, and data-infrastructure chip supplier positioned for AI buildouts.", "key_driver": "AI networking and custom compute design wins.", "key_risk": "Execution risk and cyclical semiconductor demand."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 82, "quality": 68, "moat": 72, "momentum": 72, "risk": 52}
+    },
+    {
+      "ticker": "QCOM",
+      "company_name": "QUALCOMM Incorporated",
+      "sector": "AI & Semiconductors",
+      "category": "Watchlist",
+      "notes": "Mobile, edge AI, and connectivity chip leader.",
+      "profile": {"thesis": "Connectivity and mobile chip leader with optionality in edge AI, automotive, and IoT.", "key_driver": "Premium handset cycles and diversification beyond smartphones.", "key_risk": "Handset dependence and customer concentration."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 65, "quality": 86, "moat": 82, "momentum": 62, "risk": 70}
+    },
+    {
+      "ticker": "AMAT",
+      "company_name": "Applied Materials, Inc.",
+      "sector": "AI & Semiconductors",
+      "category": "Watchlist",
+      "notes": "Semiconductor manufacturing equipment supplier.",
+      "profile": {"thesis": "Broad semiconductor equipment supplier tied to global fab capacity and process complexity.", "key_driver": "Leading-edge and specialty-node equipment demand.", "key_risk": "Semiconductor capex cycles and export restrictions."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 66, "quality": 86, "moat": 82, "momentum": 62, "risk": 68}
+    },
+    {
+      "ticker": "LRCX",
+      "company_name": "Lam Research Corporation",
+      "sector": "AI & Semiconductors",
+      "category": "Watchlist",
+      "notes": "Wafer fabrication equipment supplier.",
+      "profile": {"thesis": "Critical etch and deposition equipment supplier with exposure to memory and leading-edge logic.", "key_driver": "Memory recovery and process-complexity growth.", "key_risk": "Memory capex cyclicality and China restrictions."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 64, "quality": 88, "moat": 84, "momentum": 62, "risk": 66}
+    },
+    {
+      "ticker": "KLAC",
+      "company_name": "KLA Corporation",
+      "sector": "AI & Semiconductors",
+      "category": "Watchlist",
+      "notes": "Process control and semiconductor inspection leader.",
+      "profile": {"thesis": "Process-control leader benefiting from rising chip complexity and yield-management needs.", "key_driver": "Advanced-node inspection and metrology demand.", "key_risk": "Capex cyclicality and export controls."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 68, "quality": 90, "moat": 88, "momentum": 66, "risk": 68}
+    },
+    {
+      "ticker": "INTC",
+      "company_name": "Intel Corporation",
+      "sector": "AI & Semiconductors",
+      "category": "Emerging",
+      "notes": "Turnaround foundry and processor company.",
+      "profile": {"thesis": "Turnaround candidate with foundry ambitions and domestic manufacturing support.", "key_driver": "Process-roadmap execution and foundry customer wins.", "key_risk": "Execution delays, margin pressure, and competitive losses."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 45, "quality": 45, "moat": 58, "momentum": 42, "risk": 40}
+    },
+    {
+      "ticker": "ON",
+      "company_name": "ON Semiconductor Corporation",
+      "sector": "AI & Semiconductors",
+      "category": "Watchlist",
+      "notes": "Power and sensing semiconductor supplier.",
+      "profile": {"thesis": "Power semiconductor supplier exposed to automotive electrification and industrial automation.", "key_driver": "Silicon carbide adoption and industrial demand recovery.", "key_risk": "Auto-cycle weakness and pricing pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 60, "quality": 78, "moat": 68, "momentum": 50, "risk": 58}
     },
     {
       "ticker": "MSFT",
@@ -62,34 +182,94 @@
       "scores": {"growth": 78, "quality": 88, "moat": 88, "momentum": 68, "risk": 75}
     },
     {
-      "ticker": "AVGO",
-      "company_name": "Broadcom Inc.",
-      "sector": "AI & Semiconductors",
-      "category": "Core",
-      "notes": "Custom silicon, networking, and infrastructure software.",
-      "profile": {"thesis": "Critical supplier of custom AI silicon, networking, and infrastructure software.", "key_driver": "Hyperscaler AI networking and custom accelerator demand.", "key_risk": "Customer concentration and integration complexity."},
-      "score_source": "manual_v1",
-      "scores": {"growth": 88, "quality": 90, "moat": 90, "momentum": 85, "risk": 72}
-    },
-    {
-      "ticker": "TSM",
-      "company_name": "Taiwan Semiconductor Manufacturing Company Limited",
-      "sector": "AI & Semiconductors",
-      "category": "Core",
-      "notes": "Leading advanced semiconductor foundry.",
-      "profile": {"thesis": "Leading advanced-node foundry with a central role in global semiconductor manufacturing.", "key_driver": "Advanced-node demand from AI and high-performance computing.", "key_risk": "Geopolitical exposure and semiconductor-cycle volatility."},
-      "score_source": "manual_v1",
-      "scores": {"growth": 86, "quality": 92, "moat": 95, "momentum": 82, "risk": 62}
-    },
-    {
-      "ticker": "ARM",
-      "company_name": "Arm Holdings plc",
-      "sector": "AI & Semiconductors",
+      "ticker": "ORCL",
+      "company_name": "Oracle Corporation",
+      "sector": "Cloud Platforms",
       "category": "Watchlist",
-      "notes": "CPU architecture and semiconductor IP.",
-      "profile": {"thesis": "Semiconductor IP leader whose architecture is expanding beyond mobile into data centers and edge computing.", "key_driver": "Royalty growth and broader adoption of Arm-based computing.", "key_risk": "High valuation and dependence on licensee execution."},
+      "notes": "Enterprise database, applications, and cloud infrastructure provider.",
+      "profile": {"thesis": "Enterprise software incumbent with growing cloud infrastructure relevance.", "key_driver": "Oracle Cloud Infrastructure growth and AI workload wins.", "key_risk": "Debt load, cloud competition, and execution risk."},
       "score_source": "manual_v1",
-      "scores": {"growth": 90, "quality": 78, "moat": 88, "momentum": 80, "risk": 55}
+      "scores": {"growth": 68, "quality": 82, "moat": 82, "momentum": 68, "risk": 65}
+    },
+    {
+      "ticker": "CRM",
+      "company_name": "Salesforce, Inc.",
+      "sector": "Software",
+      "category": "Watchlist",
+      "notes": "Enterprise customer relationship management platform.",
+      "profile": {"thesis": "CRM platform leader with AI-assisted enterprise workflow monetization potential.", "key_driver": "Margin discipline, AI features, and platform expansion.", "key_risk": "Slower enterprise software spending and competitive pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 82, "moat": 80, "momentum": 58, "risk": 70}
+    },
+    {
+      "ticker": "NOW",
+      "company_name": "ServiceNow, Inc.",
+      "sector": "Software",
+      "category": "Watchlist",
+      "notes": "Enterprise workflow and automation software platform.",
+      "profile": {"thesis": "Workflow automation platform with durable enterprise demand and AI augmentation potential.", "key_driver": "Large-deal growth and AI workflow adoption.", "key_risk": "Premium valuation and enterprise budget cycles."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 86, "moat": 84, "momentum": 70, "risk": 66}
+    },
+    {
+      "ticker": "ADBE",
+      "company_name": "Adobe Inc.",
+      "sector": "Software",
+      "category": "Watchlist",
+      "notes": "Creative and document software platform.",
+      "profile": {"thesis": "Creative software incumbent with AI tools that can defend and expand professional workflows.", "key_driver": "Firefly monetization and Creative Cloud retention.", "key_risk": "AI-native competition and subscription-growth slowdown."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 90, "moat": 86, "momentum": 50, "risk": 70}
+    },
+    {
+      "ticker": "SNOW",
+      "company_name": "Snowflake Inc.",
+      "sector": "Software",
+      "category": "Emerging",
+      "notes": "Cloud data platform.",
+      "profile": {"thesis": "Cloud data platform positioned for analytics and AI data workloads.", "key_driver": "Consumption growth and enterprise data-platform adoption.", "key_risk": "Consumption volatility, competition, and valuation."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 62, "moat": 72, "momentum": 55, "risk": 48}
+    },
+    {
+      "ticker": "DDOG",
+      "company_name": "Datadog, Inc.",
+      "sector": "Software",
+      "category": "Emerging",
+      "notes": "Cloud observability and security platform.",
+      "profile": {"thesis": "Cloud observability platform with expansion paths into security and developer operations.", "key_driver": "Cloud workload growth and platform consolidation.", "key_risk": "Usage sensitivity and competition from hyperscalers."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 82, "quality": 70, "moat": 72, "momentum": 62, "risk": 52}
+    },
+    {
+      "ticker": "NET",
+      "company_name": "Cloudflare, Inc.",
+      "sector": "Software",
+      "category": "Emerging",
+      "notes": "Edge network, security, and developer platform.",
+      "profile": {"thesis": "Global edge network platform with security, performance, and developer-service optionality.", "key_driver": "Enterprise adoption and security platform expansion.", "key_risk": "Profitability expectations and intense competition."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 82, "quality": 62, "moat": 74, "momentum": 60, "risk": 48}
+    },
+    {
+      "ticker": "AI",
+      "company_name": "C3.ai, Inc.",
+      "sector": "AI Software & Defense",
+      "category": "Emerging",
+      "notes": "Enterprise AI application software company.",
+      "profile": {"thesis": "Speculative enterprise AI software company with upside if commercial adoption accelerates.", "key_driver": "Subscription growth and repeatable enterprise deployments.", "key_risk": "Losses, customer concentration, and uncertain moat."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 70, "quality": 35, "moat": 45, "momentum": 50, "risk": 25}
+    },
+    {
+      "ticker": "PLTR",
+      "company_name": "Palantir Technologies Inc.",
+      "sector": "AI Software & Defense",
+      "category": "Watchlist",
+      "notes": "AI software with government and commercial exposure.",
+      "profile": {"thesis": "AI software platform with differentiated government relationships and growing commercial adoption.", "key_driver": "Commercial customer growth and production AI deployments.", "key_risk": "Valuation, deal concentration, and expectations risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 92, "quality": 80, "moat": 82, "momentum": 88, "risk": 48}
     },
     {
       "ticker": "LMT",
@@ -122,6 +302,76 @@
       "scores": {"growth": 60, "quality": 80, "moat": 85, "momentum": 60, "risk": 72}
     },
     {
+      "ticker": "GD",
+      "company_name": "General Dynamics Corporation",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Defense prime and business jet manufacturer.",
+      "profile": {"thesis": "Defense prime with exposure to submarines, combat systems, IT services, and Gulfstream aircraft.", "key_driver": "Defense backlog, shipbuilding demand, and Gulfstream deliveries.", "key_risk": "Program execution and business-jet cycle risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 80, "moat": 84, "momentum": 58, "risk": 74}
+    },
+    {
+      "ticker": "BA",
+      "company_name": "The Boeing Company",
+      "sector": "Defense & Aerospace",
+      "category": "Emerging",
+      "notes": "Commercial aerospace and defense manufacturer under turnaround.",
+      "profile": {"thesis": "Aerospace turnaround candidate with large backlog but significant operational repair work ahead.", "key_driver": "Production stabilization and commercial aircraft deliveries.", "key_risk": "Quality issues, cash burn, and regulatory constraints."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 55, "quality": 30, "moat": 76, "momentum": 42, "risk": 28}
+    },
+    {
+      "ticker": "HII",
+      "company_name": "Huntington Ingalls Industries, Inc.",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Military shipbuilding and defense services provider.",
+      "profile": {"thesis": "Specialized shipbuilder with strategic naval programs and limited direct competition.", "key_driver": "Navy shipbuilding demand and program funding.", "key_risk": "Labor constraints and fixed-price execution risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 50, "quality": 72, "moat": 82, "momentum": 48, "risk": 66}
+    },
+    {
+      "ticker": "KTOS",
+      "company_name": "Kratos Defense & Security Solutions, Inc.",
+      "sector": "Defense & Aerospace",
+      "category": "Emerging",
+      "notes": "Unmanned systems, satellite, and defense technology company.",
+      "profile": {"thesis": "Growth-oriented defense technology company with exposure to drones and tactical systems.", "key_driver": "Unmanned aircraft programs and defense modernization.", "key_risk": "Profitability, contract timing, and execution volatility."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 50, "moat": 60, "momentum": 62, "risk": 42}
+    },
+    {
+      "ticker": "AVAV",
+      "company_name": "AeroVironment, Inc.",
+      "sector": "Defense & Aerospace",
+      "category": "Emerging",
+      "notes": "Unmanned aircraft and loitering munition supplier.",
+      "profile": {"thesis": "Unmanned systems specialist with strong alignment to battlefield drone demand.", "key_driver": "Loitering munition and small UAS orders.", "key_risk": "Contract lumpiness and elevated expectations."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 80, "quality": 58, "moat": 62, "momentum": 68, "risk": 45}
+    },
+    {
+      "ticker": "TXT",
+      "company_name": "Textron Inc.",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Aviation, defense, and industrial manufacturer.",
+      "profile": {"thesis": "Diversified aerospace and defense manufacturer with aviation and rotorcraft exposure.", "key_driver": "Business jet demand and defense aviation programs.", "key_risk": "Cyclical end markets and program execution."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 52, "quality": 72, "moat": 68, "momentum": 50, "risk": 66}
+    },
+    {
+      "ticker": "HEI",
+      "company_name": "HEICO Corporation",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Aerospace components and defense electronics supplier.",
+      "profile": {"thesis": "High-quality aerospace supplier with aftermarket, defense electronics, and acquisition-led growth.", "key_driver": "Commercial aerospace aftermarket and disciplined acquisitions.", "key_risk": "Valuation and integration risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 72, "quality": 86, "moat": 78, "momentum": 66, "risk": 62}
+    },
+    {
       "ticker": "CRWD",
       "company_name": "CrowdStrike Holdings, Inc.",
       "sector": "Cybersecurity",
@@ -142,18 +392,98 @@
       "scores": {"growth": 78, "quality": 85, "moat": 85, "momentum": 72, "risk": 68}
     },
     {
-      "ticker": "PLTR",
-      "company_name": "Palantir Technologies Inc.",
-      "sector": "AI Software & Defense",
+      "ticker": "FTNT",
+      "company_name": "Fortinet, Inc.",
+      "sector": "Cybersecurity",
       "category": "Watchlist",
-      "notes": "AI software with government and commercial exposure.",
-      "profile": {"thesis": "AI software platform with differentiated government relationships and growing commercial adoption.", "key_driver": "Commercial customer growth and production AI deployments.", "key_risk": "Valuation, deal concentration, and expectations risk."},
+      "notes": "Network security appliance and platform company.",
+      "profile": {"thesis": "Network-security leader with strong margins and a large installed hardware base.", "key_driver": "Security fabric adoption and firewall refresh cycles.", "key_risk": "Hardware cycle weakness and pricing competition."},
       "score_source": "manual_v1",
-      "scores": {"growth": 92, "quality": 80, "moat": 82, "momentum": 88, "risk": 48}
+      "scores": {"growth": 62, "quality": 88, "moat": 80, "momentum": 58, "risk": 70}
+    },
+    {
+      "ticker": "ZS",
+      "company_name": "Zscaler, Inc.",
+      "sector": "Cybersecurity",
+      "category": "Watchlist",
+      "notes": "Zero-trust cloud security platform.",
+      "profile": {"thesis": "Cloud-native zero-trust security platform aligned with distributed enterprise networks.", "key_driver": "Secure access service edge adoption and large enterprise expansion.", "key_risk": "Sales execution and valuation sensitivity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 68, "moat": 74, "momentum": 60, "risk": 52}
+    },
+    {
+      "ticker": "OKTA",
+      "company_name": "Okta, Inc.",
+      "sector": "Cybersecurity",
+      "category": "Watchlist",
+      "notes": "Identity and access management platform.",
+      "profile": {"thesis": "Identity platform with relevance to zero-trust architectures and enterprise access control.", "key_driver": "Customer identity growth and enterprise identity consolidation.", "key_risk": "Security incidents, integration issues, and competition."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 55, "moat": 62, "momentum": 48, "risk": 45}
+    },
+    {
+      "ticker": "S",
+      "company_name": "SentinelOne, Inc.",
+      "sector": "Cybersecurity",
+      "category": "Emerging",
+      "notes": "Endpoint security and AI security operations platform.",
+      "profile": {"thesis": "Emerging endpoint and security-operations platform with AI-driven automation pitch.", "key_driver": "Enterprise expansion and path to profitability.", "key_risk": "Losses and competition from larger platforms."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 72, "quality": 38, "moat": 52, "momentum": 50, "risk": 32}
+    },
+    {
+      "ticker": "ROK",
+      "company_name": "Rockwell Automation, Inc.",
+      "sector": "Robotics & Automation",
+      "category": "Watchlist",
+      "notes": "Industrial automation and control systems provider.",
+      "profile": {"thesis": "Industrial automation incumbent with exposure to factory modernization.", "key_driver": "Manufacturing automation demand and software attach rates.", "key_risk": "Industrial cycle weakness and execution risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 50, "quality": 78, "moat": 76, "momentum": 45, "risk": 64}
+    },
+    {
+      "ticker": "CGNX",
+      "company_name": "Cognex Corporation",
+      "sector": "Robotics & Automation",
+      "category": "Watchlist",
+      "notes": "Machine vision and industrial barcode reader company.",
+      "profile": {"thesis": "Machine vision specialist tied to factory automation, logistics, and industrial quality-control workflows.", "key_driver": "Industrial automation recovery and machine-vision adoption.", "key_risk": "Cyclical factory spending and competition in vision systems."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 52, "quality": 78, "moat": 70, "momentum": 48, "risk": 62}
+    },
+    {
+      "ticker": "SYM",
+      "company_name": "Symbotic Inc.",
+      "sector": "Robotics & Automation",
+      "category": "Emerging",
+      "notes": "Warehouse automation systems company.",
+      "profile": {"thesis": "Warehouse automation company with large-scale logistics robotics potential.", "key_driver": "Deployment pace and customer expansion beyond anchor accounts.", "key_risk": "Customer concentration, execution complexity, and profitability."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 85, "quality": 42, "moat": 58, "momentum": 55, "risk": 30}
+    },
+    {
+      "ticker": "TER",
+      "company_name": "Teradyne, Inc.",
+      "sector": "Robotics & Automation",
+      "category": "Watchlist",
+      "notes": "Semiconductor test equipment and collaborative robotics supplier.",
+      "profile": {"thesis": "Semiconductor test equipment company with robotics optionality through Universal Robots.", "key_driver": "Semiconductor test demand and robotics recovery.", "key_risk": "Semiconductor cycle and robotics adoption pace."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 76, "moat": 68, "momentum": 55, "risk": 60}
+    },
+    {
+      "ticker": "ISRG",
+      "company_name": "Intuitive Surgical, Inc.",
+      "sector": "Robotics & Automation",
+      "category": "Core",
+      "notes": "Robotic-assisted surgery platform leader.",
+      "profile": {"thesis": "Robotic surgery platform leader with recurring instrument revenue and strong installed-base economics.", "key_driver": "Procedure growth and new system adoption.", "key_risk": "Procedure slowdowns, competition, and regulatory constraints."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 75, "quality": 90, "moat": 90, "momentum": 68, "risk": 74}
     },
     {
       "ticker": "SPY",
-      "company_name": "State Street SPDR S&P 500 ETF Trust",
+      "company_name": "SPDR S&P 500 ETF Trust",
       "sector": "Benchmark ETF",
       "category": "Core",
       "notes": "Broad U.S. equity market benchmark.",
@@ -170,6 +500,66 @@
       "profile": {"thesis": "Growth-oriented benchmark concentrated in large technology and innovation companies.", "key_driver": "Technology earnings growth and investor risk appetite.", "key_risk": "Concentration and sensitivity to interest rates."},
       "score_source": "manual_v1",
       "scores": {"growth": 75, "quality": 82, "moat": 78, "momentum": 76, "risk": 78}
+    },
+    {
+      "ticker": "VGT",
+      "company_name": "Vanguard Information Technology ETF",
+      "sector": "Benchmark ETF",
+      "category": "Core",
+      "notes": "Broad information technology ETF benchmark.",
+      "profile": {"thesis": "Technology-sector benchmark for comparing Atlas technology exposure.", "key_driver": "Large-cap technology earnings and sector flows.", "key_risk": "Technology valuation compression and concentration."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 72, "quality": 82, "moat": 75, "momentum": 72, "risk": 76}
+    },
+    {
+      "ticker": "BOTZ",
+      "company_name": "Global X Robotics & Artificial Intelligence ETF",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Robotics and artificial intelligence thematic ETF.",
+      "profile": {"thesis": "Thematic benchmark for robotics and AI hardware exposure.", "key_driver": "Automation demand and AI infrastructure investment.", "key_risk": "Theme concentration and ETF constituent quality."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 68, "quality": 70, "moat": 62, "momentum": 62, "risk": 60}
+    },
+    {
+      "ticker": "ROBO",
+      "company_name": "ROBO Global Robotics and Automation Index ETF",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Robotics and automation thematic ETF.",
+      "profile": {"thesis": "Automation-themed ETF useful as a robotics sector benchmark.", "key_driver": "Industrial automation and robotics adoption.", "key_risk": "Theme cyclicality and broad constituent dispersion."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 70, "moat": 60, "momentum": 58, "risk": 62}
+    },
+    {
+      "ticker": "CIBR",
+      "company_name": "First Trust NASDAQ Cybersecurity ETF",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Cybersecurity sector ETF benchmark.",
+      "profile": {"thesis": "Cybersecurity ETF benchmark for comparing security software and infrastructure names.", "key_driver": "Enterprise security spending and sector flows.", "key_risk": "Software valuation compression and constituent concentration."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 65, "quality": 76, "moat": 66, "momentum": 62, "risk": 66}
+    },
+    {
+      "ticker": "SMH",
+      "company_name": "VanEck Semiconductor ETF",
+      "sector": "Benchmark ETF",
+      "category": "Core",
+      "notes": "Semiconductor sector ETF benchmark.",
+      "profile": {"thesis": "Semiconductor ETF benchmark for AI chip and equipment exposure.", "key_driver": "Semiconductor earnings, AI demand, and sector flows.", "key_risk": "Cycle downturns and concentration in leading chipmakers."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 75, "quality": 82, "moat": 76, "momentum": 74, "risk": 68}
+    },
+    {
+      "ticker": "SOXX",
+      "company_name": "iShares Semiconductor ETF",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Semiconductor sector ETF benchmark.",
+      "profile": {"thesis": "Alternative semiconductor ETF benchmark for monitoring chip-sector breadth.", "key_driver": "Semiconductor-cycle strength and AI infrastructure spend.", "key_risk": "Cyclicality and valuation compression."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 72, "quality": 80, "moat": 74, "momentum": 72, "risk": 68}
     }
   ]
 }

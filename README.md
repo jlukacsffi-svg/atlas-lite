@@ -7,7 +7,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Loads a structured security universe with sector, category, notes, and company-profile metadata
 - Calculates transparent Atlas Scoring Engine v1 rankings with automated Growth, Quality, and Momentum
 - Saves structured historical research snapshots for comparison over time
-- Monitors a watchlist of major tech, defense, and market index stocks
+- Monitors a 56-security universe across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
 - Generates a rule-based executive summary of market tone, leaders, risks, and volatility
@@ -16,9 +16,9 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Supports optional SMTP email delivery using environment variables
 - Saves reports to the `reports/` folder with timestamps
 
-## Watchlist
+## Security Universe
 
-The active watchlist is loaded from:
+The active security universe is loaded from:
 
 ```text
 data/security_universe.json
@@ -101,12 +101,12 @@ research_archive/snapshot_YYYYMMDD_HHMMSS.json
 
 The archive is generated locally and ignored by Git. The Morning Executive Brief compares the current run with the most recent prior snapshot.
 
-- **Tech Giants**: NVDA, AMD, MSFT, AMZN, GOOGL, META
-- **Semiconductors**: AVGO, TSM, ARM
-- **Defense/Aerospace**: LMT, NOC, RTX
-- **Cybersecurity**: CRWD, PANW
-- **Finance/Data**: PLTR
-- **Market Indices**: SPY, QQQ
+- **AI & Semiconductors**: NVDA, AMD, AVGO, TSM, ARM, ASML, MU, MRVL, QCOM, AMAT, LRCX, KLAC, INTC, ON
+- **Cloud Platforms / Software / AI Software**: MSFT, AMZN, GOOGL, META, ORCL, CRM, NOW, ADBE, SNOW, DDOG, NET, AI, PLTR
+- **Defense & Aerospace**: LMT, NOC, RTX, GD, BA, HII, KTOS, AVAV, TXT, HEI
+- **Cybersecurity**: CRWD, PANW, FTNT, ZS, OKTA, S
+- **Robotics & Automation**: ROK, CGNX, SYM, TER, ISRG
+- **Benchmark ETFs**: SPY, QQQ, VGT, BOTZ, ROBO, CIBR, SMH, SOXX
 
 ## Report Contents
 
