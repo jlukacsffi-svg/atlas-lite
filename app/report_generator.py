@@ -11,7 +11,7 @@ from app.scoring import ScoringEngine
 class ReportGenerator:
     """Generate markdown reports from market data"""
     
-    def __init__(self, market_data, market_summary, previous_snapshot=None):
+    def __init__(self, market_data, market_summary, previous_snapshot=None, earnings_events=None):
         """
         Initialize the report generator
         
@@ -19,10 +19,12 @@ class ReportGenerator:
             market_data (dict): Market data from MarketDataFetcher
             market_summary (dict): Market summary with indices
             previous_snapshot (dict): Optional prior structured research snapshot
+            earnings_events (list): Optional upcoming earnings events
         """
         self.market_data = market_data or {}
         self.market_summary = market_summary or {}
         self.previous_snapshot = previous_snapshot
+        self.earnings_events = earnings_events or []
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
         self.scoring_engine = ScoringEngine()
@@ -55,6 +57,9 @@ class ReportGenerator:
 
         # Market Summary
         report.append(self._generate_market_summary())
+
+        # Upcoming Earnings
+        report.append(self._generate_upcoming_earnings())
         
         # Watchlist Summary
         report.append(self._generate_watchlist_summary())
@@ -489,6 +494,28 @@ class ReportGenerator:
         else:
             section.append("Unable to fetch market summary data at this time.\n")
         
+        return "\n".join(section) + "\n"
+
+    def _generate_upcoming_earnings(self):
+        """Generate upcoming earnings section"""
+        section = ["## Upcoming Earnings\n"]
+
+        if not self.earnings_events:
+            section.append("No Atlas universe earnings events found in the next 7 days.\n")
+            return "\n".join(section) + "\n"
+
+        section.append("Upcoming Atlas universe earnings events in the next 7 days:\n")
+        section.append("| Date | Ticker | Company | Time | Fiscal Quarter | EPS Forecast | Last Year EPS |")
+        section.append("|------|--------|---------|------|----------------|--------------|---------------|")
+
+        for event in sorted(self.earnings_events, key=lambda item: (item.get("date", ""), item.get("ticker", ""))):
+            section.append(
+                f"| {event.get('date', 'N/A')} | {event.get('ticker', 'N/A')} | "
+                f"{event.get('company_name', 'N/A')} | {event.get('time', 'N/A')} | "
+                f"{event.get('fiscal_quarter_ending', 'N/A')} | {event.get('eps_forecast', 'N/A')} | "
+                f"{event.get('last_year_eps', 'N/A')} |"
+            )
+
         return "\n".join(section) + "\n"
     
     def _generate_watchlist_summary(self):

@@ -57,10 +57,11 @@ Completed Stage 2 foundations:
 - Atlas Scoring Engine v1 weighted rankings.
 - Hybrid v3 scoring with automatically calculated Growth, Quality, and Momentum.
 - Local SEC Company Facts caching in `data_cache/sec/` for faster and more resilient runs.
+- Upcoming earnings tracking with local Nasdaq calendar caching in `data_cache/earnings/`.
 - Auditable annual revenue and net-income Growth measurements from SEC filings.
 - Auditable net-margin, operating cash-flow margin, and free-cash-flow margin Quality measurements.
 - Auditable 1-month, 3-month, and 6-month Momentum measurements.
-- Company Profile Highlights, Automated Growth, Automated Quality, and Automated Momentum report sections.
+- Company Profile Highlights, Upcoming Earnings, Automated Growth, Automated Quality, and Automated Momentum report sections.
 - Scoring Summary in Markdown and HTML reports.
 - Structured historical research snapshots.
 - Research Memory comparison in Markdown and HTML reports.
@@ -68,7 +69,7 @@ Completed Stage 2 foundations:
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then begin earnings-calendar tracking.
+Continue expanding the universe toward the 100-150 security target, then begin analyst-rating-change tracking.
 
 ## Useful Files
 
@@ -76,8 +77,10 @@ Continue expanding the universe toward the 100-150 security target, then begin e
 - `PROJECT_BRIEF.md`: project vision and constraints.
 - `AGENTS.md`: Codex working instructions.
 - `app/email_delivery.py`: optional email delivery and `.env` loading.
+- `app/earnings_calendar.py`: Nasdaq earnings-calendar retrieval and local caching.
 - `app/growth.py`: SEC filing measurement and automated Growth scoring.
 - `data_cache/sec/`: ignored local cache for SEC ticker maps and Company Facts payloads.
+- `data_cache/earnings/`: ignored local cache for Nasdaq earnings-calendar payloads.
 - `app/market_data.py`: market data retrieval and fallback behavior.
 - `app/momentum.py`: automated return measurement and Momentum scoring.
 - `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.

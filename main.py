@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 from app.market_data import MarketDataFetcher
 from app.report_generator import ReportGenerator
 from app.email_delivery import EmailDelivery
+from app.earnings_calendar import EarningsCalendar
 from app.research_memory import ResearchMemory
 from app.security_universe import SecurityUniverse
 
@@ -72,6 +73,16 @@ def main():
             print("[warning] Market data unavailable for this run. Generating fallback report.")
 
         print()
+        print("[earnings] Checking upcoming earnings...")
+        try:
+            earnings_calendar = EarningsCalendar()
+            earnings_events = earnings_calendar.fetch_upcoming(watchlist)
+            print(f"[ok] Found {len(earnings_events)} upcoming Atlas earnings events.")
+        except Exception as earnings_error:
+            earnings_events = []
+            print(f"[warning] Earnings calendar unavailable: {earnings_error}")
+
+        print()
         print("[memory] Updating research archive...")
         memory = ResearchMemory()
         previous_snapshot = memory.load_latest_snapshot()
@@ -81,7 +92,12 @@ def main():
         print()
         print("[report] Generating report...")
 
-        generator = ReportGenerator(market_data, market_summary, previous_snapshot=previous_snapshot)
+        generator = ReportGenerator(
+            market_data,
+            market_summary,
+            previous_snapshot=previous_snapshot,
+            earnings_events=earnings_events,
+        )
         report_path = generator.save_report()
 
         print(f"[ok] Report saved to: {report_path}")
