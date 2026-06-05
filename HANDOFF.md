@@ -70,12 +70,13 @@ Completed Stage 2 foundations:
 - Scoring Summary in Markdown and HTML reports.
 - Structured historical research snapshots.
 - Local research archive index in `research_archive/archive_index.json` and `research_archive/archive_index.md`.
+- Weekly research summary generator powered by the local archive index.
 - Research Memory comparison in Markdown and HTML reports.
 - Validation and unit tests for universe and scores.
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then add a simple weekly summary generator.
+Continue expanding the universe toward the 100-150 security target, then decide whether to automate weekly summary scheduling/email delivery.
 
 ## Useful Files
 
@@ -95,7 +96,9 @@ Continue expanding the universe toward the 100-150 security target, then add a s
 - `app/momentum.py`: automated return measurement and Momentum scoring.
 - `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.
 - `app/report_generator.py`: Markdown and HTML report generation.
+- `app/weekly_summary.py`: weekly summary generation from the local research archive index.
 - `data/security_universe.json`: company profiles and manual seed scores.
 - `main.py`: daily report execution flow.
+- `weekly_summary.py`: command-line entry point for weekly summaries.
 - `scripts/run_atlas_daily.ps1`: scheduled runner.
 - `scripts/setup_windows_scheduled_task.ps1`: Windows Scheduled Task setup.

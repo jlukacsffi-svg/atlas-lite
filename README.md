@@ -14,6 +14,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Tracks recent SEC Form 4 insider transactions for Atlas universe companies
 - Saves structured historical research snapshots for comparison over time
 - Maintains a local research archive index for recent snapshots and reports
+- Generates weekly research summaries from the local archive index
 - Monitors a 56-security universe across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
@@ -172,6 +173,17 @@ Each run writes both:
 
 - `morning_brief_YYYYMMDD_HHMMSS.md`
 - `morning_brief_YYYYMMDD_HHMMSS.html`
+
+To generate a weekly research summary from the local archive index:
+
+```bash
+py -3.12 weekly_summary.py
+```
+
+Weekly summaries are saved to the `reports/` folder:
+
+- `weekly_summary_YYYYMMDD_HHMMSS.md`
+- `weekly_summary_YYYYMMDD_HHMMSS.html`
 
 ## Scheduled Execution
 
