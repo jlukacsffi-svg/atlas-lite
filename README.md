@@ -13,6 +13,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Tracks recent analyst-action headlines for upgrades, downgrades, initiations, and price-target changes
 - Tracks recent SEC Form 4 insider transactions for Atlas universe companies
 - Saves structured historical research snapshots for comparison over time
+- Maintains a local research archive index for recent snapshots and reports
 - Monitors a 56-security universe across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
@@ -106,6 +107,15 @@ research_archive/snapshot_YYYYMMDD_HHMMSS.json
 ```
 
 The archive is generated locally and ignored by Git. The Morning Executive Brief compares the current run with the most recent prior snapshot.
+
+Each run also updates:
+
+```text
+research_archive/archive_index.json
+research_archive/archive_index.md
+```
+
+The archive index keeps recent run metadata together, including snapshot links, report links, top movers, and score leaders. It is local-only and ignored by Git.
 
 - **AI & Semiconductors**: NVDA, AMD, AVGO, TSM, ARM, ASML, MU, MRVL, QCOM, AMAT, LRCX, KLAC, INTC, ON
 - **Cloud Platforms / Software / AI Software**: MSFT, AMZN, GOOGL, META, ORCL, CRM, NOW, ADBE, SNOW, DDOG, NET, AI, PLTR

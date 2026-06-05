@@ -128,6 +128,14 @@ def main():
         if generator.last_html_path:
             print(f"[ok] HTML report saved to: {generator.last_html_path}")
 
+        index_path = memory.update_archive_index(
+            snapshot_path=snapshot_path,
+            report_path=report_path,
+            html_report_path=generator.last_html_path,
+        )
+        if index_path:
+            print(f"[ok] Research archive index updated: {index_path}")
+
         print()
         print("[email] Checking email delivery settings...")
         email_delivery = EmailDelivery()

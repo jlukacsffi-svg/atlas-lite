@@ -69,12 +69,13 @@ Completed Stage 2 foundations:
 - Sector Scorecard, Atlas Priority Ranking, Watchlist Change Recommendations, Company Profile Highlights, Upcoming Earnings, Analyst Actions, Insider Transactions, Automated Growth, Automated Quality, and Automated Momentum report sections.
 - Scoring Summary in Markdown and HTML reports.
 - Structured historical research snapshots.
+- Local research archive index in `research_archive/archive_index.json` and `research_archive/archive_index.md`.
 - Research Memory comparison in Markdown and HTML reports.
 - Validation and unit tests for universe and scores.
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then add a simple research archive index for easier historical review.
+Continue expanding the universe toward the 100-150 security target, then add a simple weekly summary generator.
 
 ## Useful Files
 
