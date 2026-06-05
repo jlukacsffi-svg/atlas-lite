@@ -16,7 +16,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Maintains a local research archive index for recent snapshots and reports
 - Generates weekly research summaries from the local archive index
 - Supports optional email delivery for daily briefs and weekly summaries
-- Monitors a 76-security universe across AI infrastructure, AI power, cloud/software, defense, cybersecurity, robotics, and ETFs
+- Monitors a 100-security universe across AI infrastructure, AI power, cloud/software, defense, cybersecurity, robotics, healthcare, financials, consumer platforms, and ETFs
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
 - Generates a rule-based executive summary of market tone, sector strength, priority names, catalysts, risks, and volatility
@@ -122,11 +122,15 @@ The archive index keeps recent run metadata together, including snapshot links, 
 - **AI & Semiconductors**: NVDA, AMD, AVGO, TSM, ARM, ASML, MU, MRVL, QCOM, AMAT, LRCX, KLAC, INTC, ON
 - **AI Networking & Infrastructure**: ANET, DELL, VRT
 - **AI Power & Energy**: ETN, CEG, VST, GEV
+- **Energy & Power**: NEE, FSLR, ENPH, BE
 - **Cloud Platforms / Software / AI Software**: MSFT, AMZN, GOOGL, META, ORCL, CRM, NOW, ADBE, SNOW, DDOG, NET, AI, PLTR
+- **Financials & Fintech**: V, MA, JPM, COIN, HOOD, SOFI
 - **Defense & Aerospace**: LMT, NOC, RTX, GD, BA, HII, KTOS, AVAV, TXT, HEI, LHX, LDOS, BWXT, TDG, CW, MRCY
 - **Cybersecurity**: CRWD, PANW, FTNT, ZS, OKTA, S, QLYS, CHKP, TENB
 - **Software Expansion**: MDB, TEAM, HUBS, WDAY
 - **Robotics & Automation**: ROK, CGNX, SYM, TER, ISRG
+- **Healthcare & Life Sciences**: TMO, DHR, ABT, SYK, BSX, GEHC, VEEV, RXRX
+- **Consumer & Platforms**: NFLX, UBER, SHOP, MELI, COST, BKNG
 - **Benchmark ETFs**: SPY, QQQ, VGT, BOTZ, ROBO, CIBR, SMH, SOXX
 
 ## Report Contents

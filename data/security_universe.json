@@ -1,5 +1,5 @@
 {
-  "version": "1.4",
+  "version": "1.5",
   "securities": [
     {
       "ticker": "NVDA",
@@ -150,6 +150,46 @@
       "profile": {"thesis": "Power-generation and grid-equipment company exposed to electrification and grid modernization.", "key_driver": "Grid investment, gas turbine demand, and electrification projects.", "key_risk": "Execution risk, project cyclicality, and policy sensitivity."},
       "score_source": "manual_v1",
       "scores": {"growth": 72, "quality": 72, "moat": 74, "momentum": 78, "risk": 58}
+    },
+    {
+      "ticker": "NEE",
+      "company_name": "NextEra Energy, Inc.",
+      "sector": "Energy & Power",
+      "category": "Watchlist",
+      "notes": "Regulated utility and renewable power developer.",
+      "profile": {"thesis": "Large utility and renewable developer with relevance to electrification and power-demand growth.", "key_driver": "Grid investment, renewable development, and electricity demand growth.", "key_risk": "Interest-rate sensitivity, regulation, and project execution."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 74, "moat": 72, "momentum": 48, "risk": 68}
+    },
+    {
+      "ticker": "FSLR",
+      "company_name": "First Solar, Inc.",
+      "sector": "Energy & Power",
+      "category": "Watchlist",
+      "notes": "U.S.-based solar module manufacturer.",
+      "profile": {"thesis": "Solar manufacturer with differentiated thin-film technology and U.S. manufacturing exposure.", "key_driver": "Utility-scale solar demand, domestic manufacturing incentives, and contracted backlog.", "key_risk": "Policy changes, pricing pressure, and project timing."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 72, "quality": 70, "moat": 66, "momentum": 56, "risk": 52}
+    },
+    {
+      "ticker": "ENPH",
+      "company_name": "Enphase Energy, Inc.",
+      "sector": "Energy & Power",
+      "category": "Emerging",
+      "notes": "Solar microinverter and home energy technology company.",
+      "profile": {"thesis": "Distributed solar technology company with upside if residential solar demand recovers.", "key_driver": "Residential solar recovery, battery attach rates, and international expansion.", "key_risk": "Cyclical demand weakness, inventory corrections, and competition."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 48, "quality": 62, "moat": 62, "momentum": 38, "risk": 34}
+    },
+    {
+      "ticker": "BE",
+      "company_name": "Bloom Energy Corporation",
+      "sector": "Energy & Power",
+      "category": "Emerging",
+      "notes": "Fuel-cell power systems company with data-center relevance.",
+      "profile": {"thesis": "Distributed power company with potential relevance for data centers and resilient on-site generation.", "key_driver": "Commercial power deployments and data-center energy constraints.", "key_risk": "Profitability, technology adoption, and project concentration."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 66, "quality": 36, "moat": 48, "momentum": 52, "risk": 28}
     },
     {
       "ticker": "QCOM",
@@ -360,6 +400,66 @@
       "profile": {"thesis": "Global edge network platform with security, performance, and developer-service optionality.", "key_driver": "Enterprise adoption and security platform expansion.", "key_risk": "Profitability expectations and intense competition."},
       "score_source": "manual_v1",
       "scores": {"growth": 82, "quality": 62, "moat": 74, "momentum": 60, "risk": 48}
+    },
+    {
+      "ticker": "V",
+      "company_name": "Visa Inc.",
+      "sector": "Financials & Fintech",
+      "category": "Core",
+      "notes": "Global payments network.",
+      "profile": {"thesis": "Global payments network with durable scale advantages and cash-generation quality.", "key_driver": "Consumer spending, cross-border volume, and digital payment adoption.", "key_risk": "Regulation, network fees pressure, and payment-disruption risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 68, "quality": 94, "moat": 92, "momentum": 64, "risk": 82}
+    },
+    {
+      "ticker": "MA",
+      "company_name": "Mastercard Incorporated",
+      "sector": "Financials & Fintech",
+      "category": "Core",
+      "notes": "Global payments network.",
+      "profile": {"thesis": "Global payment-network leader with strong margins and secular digital-payment growth.", "key_driver": "Cross-border transactions, services revenue, and electronic payment penetration.", "key_risk": "Regulatory intervention and macro spending sensitivity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 70, "quality": 94, "moat": 92, "momentum": 66, "risk": 82}
+    },
+    {
+      "ticker": "JPM",
+      "company_name": "JPMorgan Chase & Co.",
+      "sector": "Financials & Fintech",
+      "category": "Core",
+      "notes": "Large diversified bank and capital markets institution.",
+      "profile": {"thesis": "High-quality diversified bank with scale advantages across consumer, commercial, and investment banking.", "key_driver": "Net interest income, credit quality, and capital markets activity.", "key_risk": "Credit cycle, regulation, and macroeconomic shocks."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 54, "quality": 84, "moat": 84, "momentum": 62, "risk": 74}
+    },
+    {
+      "ticker": "COIN",
+      "company_name": "Coinbase Global, Inc.",
+      "sector": "Financials & Fintech",
+      "category": "Emerging",
+      "notes": "Digital asset exchange and crypto infrastructure company.",
+      "profile": {"thesis": "Crypto infrastructure company with leverage to digital asset adoption and market activity.", "key_driver": "Crypto trading activity, custody growth, and regulatory clarity.", "key_risk": "Crypto volatility, regulation, and fee compression."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 76, "quality": 56, "moat": 66, "momentum": 74, "risk": 30}
+    },
+    {
+      "ticker": "HOOD",
+      "company_name": "Robinhood Markets, Inc.",
+      "sector": "Financials & Fintech",
+      "category": "Emerging",
+      "notes": "Consumer brokerage and financial app.",
+      "profile": {"thesis": "Consumer finance platform with optionality in brokerage, crypto, and banking-like services.", "key_driver": "User engagement, asset growth, and product expansion.", "key_risk": "Retail trading cycles, regulation, and competition."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 72, "quality": 54, "moat": 54, "momentum": 72, "risk": 34}
+    },
+    {
+      "ticker": "SOFI",
+      "company_name": "SoFi Technologies, Inc.",
+      "sector": "Financials & Fintech",
+      "category": "Emerging",
+      "notes": "Digital banking and lending platform.",
+      "profile": {"thesis": "Digital financial-services platform with member-growth and cross-sell potential.", "key_driver": "Deposit growth, lending demand, and financial-services product expansion.", "key_risk": "Credit risk, funding conditions, and competitive banking economics."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 70, "quality": 44, "moat": 48, "momentum": 62, "risk": 30}
     },
     {
       "ticker": "AI",
@@ -680,6 +780,146 @@
       "profile": {"thesis": "Robotic surgery platform leader with recurring instrument revenue and strong installed-base economics.", "key_driver": "Procedure growth and new system adoption.", "key_risk": "Procedure slowdowns, competition, and regulatory constraints."},
       "score_source": "manual_v1",
       "scores": {"growth": 75, "quality": 90, "moat": 90, "momentum": 68, "risk": 74}
+    },
+    {
+      "ticker": "TMO",
+      "company_name": "Thermo Fisher Scientific Inc.",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Life-sciences tools, diagnostics, and laboratory services provider.",
+      "profile": {"thesis": "Life-sciences tools leader with broad exposure to research, diagnostics, and bioproduction.", "key_driver": "Biopharma spending recovery and long-term demand for research tools.", "key_risk": "Biotech funding cycles and post-pandemic normalization."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 84, "moat": 84, "momentum": 48, "risk": 76}
+    },
+    {
+      "ticker": "DHR",
+      "company_name": "Danaher Corporation",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Life-sciences and diagnostics platform company.",
+      "profile": {"thesis": "High-quality life-sciences and diagnostics company with strong operating discipline.", "key_driver": "Bioprocessing recovery and life-sciences demand stabilization.", "key_risk": "End-market softness and acquisition integration risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 56, "quality": 86, "moat": 84, "momentum": 46, "risk": 76}
+    },
+    {
+      "ticker": "ABT",
+      "company_name": "Abbott Laboratories",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Core",
+      "notes": "Diversified medical devices, diagnostics, and nutrition company.",
+      "profile": {"thesis": "Diversified healthcare company with durable medical-device and diagnostics franchises.", "key_driver": "Medical-device growth and steady global healthcare demand.", "key_risk": "Product cycles, regulation, and diagnostics normalization."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 56, "quality": 82, "moat": 82, "momentum": 54, "risk": 80}
+    },
+    {
+      "ticker": "SYK",
+      "company_name": "Stryker Corporation",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Orthopedic implants, medical devices, and surgical technology.",
+      "profile": {"thesis": "Medical technology leader with strong orthopedic and surgical equipment franchises.", "key_driver": "Procedure volume growth and robotic-assisted orthopedic adoption.", "key_risk": "Valuation, procedure slowdowns, and device competition."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 64, "quality": 82, "moat": 80, "momentum": 62, "risk": 74}
+    },
+    {
+      "ticker": "BSX",
+      "company_name": "Boston Scientific Corporation",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Medical device company focused on interventional specialties.",
+      "profile": {"thesis": "Medical-device company with broad interventional procedure exposure and innovation pipeline.", "key_driver": "Procedure growth and new device launches.", "key_risk": "Product execution, reimbursement, and valuation."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 66, "quality": 78, "moat": 76, "momentum": 66, "risk": 70}
+    },
+    {
+      "ticker": "GEHC",
+      "company_name": "GE HealthCare Technologies Inc.",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Medical imaging, diagnostics, and healthcare technology company.",
+      "profile": {"thesis": "Healthcare technology company with imaging, diagnostics, and AI-enabled workflow potential.", "key_driver": "Imaging demand, hospital capital spending, and AI-assisted diagnostics.", "key_risk": "Hospital spending cycles and margin execution."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 56, "quality": 70, "moat": 68, "momentum": 52, "risk": 64}
+    },
+    {
+      "ticker": "VEEV",
+      "company_name": "Veeva Systems Inc.",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Cloud software for life-sciences companies.",
+      "profile": {"thesis": "Vertical software platform for life sciences with durable customer relationships.", "key_driver": "Life-sciences cloud adoption and product-suite expansion.", "key_risk": "Biopharma spending pressure and growth normalization."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 84, "moat": 78, "momentum": 50, "risk": 70}
+    },
+    {
+      "ticker": "RXRX",
+      "company_name": "Recursion Pharmaceuticals, Inc.",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Emerging",
+      "notes": "AI-enabled drug discovery company.",
+      "profile": {"thesis": "Speculative AI drug-discovery company with platform upside if clinical results validate the model.", "key_driver": "Pipeline progress, partnerships, and platform productivity.", "key_risk": "Clinical failure, cash burn, and early-stage biotechnology risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 70, "quality": 22, "moat": 48, "momentum": 44, "risk": 18}
+    },
+    {
+      "ticker": "NFLX",
+      "company_name": "Netflix, Inc.",
+      "sector": "Consumer & Platforms",
+      "category": "Watchlist",
+      "notes": "Global streaming entertainment platform.",
+      "profile": {"thesis": "Global streaming platform with scale advantages, pricing power, and advertising optionality.", "key_driver": "Subscriber growth, pricing, advertising, and content efficiency.", "key_risk": "Content costs, competition, and consumer subscription fatigue."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 70, "quality": 82, "moat": 82, "momentum": 70, "risk": 68}
+    },
+    {
+      "ticker": "UBER",
+      "company_name": "Uber Technologies, Inc.",
+      "sector": "Consumer & Platforms",
+      "category": "Watchlist",
+      "notes": "Mobility and delivery platform.",
+      "profile": {"thesis": "Global mobility and delivery platform with improving profitability and network effects.", "key_driver": "Trip growth, delivery profitability, and advertising/merchant services.", "key_risk": "Regulation, driver costs, and economic sensitivity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 74, "quality": 70, "moat": 76, "momentum": 68, "risk": 58}
+    },
+    {
+      "ticker": "SHOP",
+      "company_name": "Shopify Inc.",
+      "sector": "Consumer & Platforms",
+      "category": "Watchlist",
+      "notes": "Commerce software and merchant services platform.",
+      "profile": {"thesis": "Commerce platform enabling merchants across online, point-of-sale, and fulfillment workflows.", "key_driver": "Merchant growth, payments adoption, and operating leverage.", "key_risk": "E-commerce cyclicality, competition, and valuation."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 76, "quality": 72, "moat": 74, "momentum": 66, "risk": 54}
+    },
+    {
+      "ticker": "MELI",
+      "company_name": "MercadoLibre, Inc.",
+      "sector": "Consumer & Platforms",
+      "category": "Watchlist",
+      "notes": "Latin American commerce and fintech platform.",
+      "profile": {"thesis": "Latin American commerce and fintech leader with multiple growth engines.", "key_driver": "Marketplace growth, payments adoption, credit expansion, and logistics scale.", "key_risk": "Macroeconomic volatility, currency risk, and credit-cycle exposure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 78, "quality": 76, "moat": 82, "momentum": 70, "risk": 52}
+    },
+    {
+      "ticker": "COST",
+      "company_name": "Costco Wholesale Corporation",
+      "sector": "Consumer & Platforms",
+      "category": "Core",
+      "notes": "Membership warehouse retail model.",
+      "profile": {"thesis": "High-quality membership retailer with strong customer loyalty and defensive scale.", "key_driver": "Membership fee growth, traffic, and international expansion.", "key_risk": "Valuation and consumer spending pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 86, "moat": 86, "momentum": 66, "risk": 82}
+    },
+    {
+      "ticker": "BKNG",
+      "company_name": "Booking Holdings Inc.",
+      "sector": "Consumer & Platforms",
+      "category": "Watchlist",
+      "notes": "Online travel marketplace.",
+      "profile": {"thesis": "Online travel platform with global scale, strong cash generation, and marketplace economics.", "key_driver": "Travel demand, take rates, and direct booking efficiency.", "key_risk": "Travel cyclicality, regulation, and competition."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 60, "quality": 88, "moat": 82, "momentum": 62, "risk": 72}
     },
     {
       "ticker": "SPY",

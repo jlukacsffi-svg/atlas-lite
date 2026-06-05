@@ -12,8 +12,8 @@ class SecurityUniverseTests(unittest.TestCase):
     def test_default_universe_loads_current_watchlist(self):
         universe = SecurityUniverse()
 
-        self.assertEqual(universe.version, "1.4")
-        self.assertEqual(len(universe.tickers()), 76)
+        self.assertEqual(universe.version, "1.5")
+        self.assertEqual(len(universe.tickers()), 100)
         self.assertIn("NVDA", universe.tickers())
         self.assertIn("ASML", universe.tickers())
         self.assertIn("CGNX", universe.tickers())
@@ -23,6 +23,10 @@ class SecurityUniverseTests(unittest.TestCase):
         self.assertIn("VRT", universe.tickers())
         self.assertIn("BWXT", universe.tickers())
         self.assertIn("QLYS", universe.tickers())
+        self.assertIn("TMO", universe.tickers())
+        self.assertIn("V", universe.tickers())
+        self.assertIn("COST", universe.tickers())
+        self.assertIn("BE", universe.tickers())
         self.assertEqual(universe.get("NVDA")["category"], "Core")
         self.assertEqual(universe.get("CRWD")["sector"], "Cybersecurity")
         self.assertIn("key_risk", universe.get("NVDA")["profile"])
