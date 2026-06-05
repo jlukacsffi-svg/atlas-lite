@@ -79,6 +79,12 @@ class ReportGenerator:
         # Scoring Summary
         report.append(self._generate_scoring_summary())
 
+        # Sector Scorecard
+        report.append(self._generate_sector_scorecard())
+
+        # Priority Ranking
+        report.append(self._generate_priority_ranking())
+
         # Company Profiles
         report.append(self._generate_company_profile_highlights())
 
@@ -602,16 +608,19 @@ class ReportGenerator:
             return "N/A"
         return f"{self.scoring_engine.score(scores):.1f}"
 
-    def _generate_scoring_summary(self):
-        """Generate transparent weighted score rankings"""
-        section = ["## Atlas Scoring Summary\n"]
-        scored = []
-
+    def _scored_companies(self):
+        companies = []
         for ticker, data in self.market_data.items():
             scores = data.get('scores')
             if not scores or data.get('sector') == 'Benchmark ETF':
                 continue
-            scored.append((ticker, data, self.scoring_engine.score(scores)))
+            companies.append((ticker, data, self.scoring_engine.score(scores)))
+        return companies
+
+    def _generate_scoring_summary(self):
+        """Generate transparent weighted score rankings"""
+        section = ["## Atlas Scoring Summary\n"]
+        scored = self._scored_companies()
 
         if not scored:
             section.append("No company scores are available for this run.\n")
@@ -639,6 +648,119 @@ class ReportGenerator:
             )
 
         return "\n".join(section) + "\n"
+
+    def _generate_sector_scorecard(self):
+        """Generate sector-level score and performance summary"""
+        section = ["## Sector Scorecard\n"]
+        sector_groups = {}
+
+        for ticker, data, total_score in self._scored_companies():
+            sector = data.get('sector', 'Unclassified')
+            sector_groups.setdefault(sector, []).append((ticker, data, total_score))
+
+        if not sector_groups:
+            section.append("No sector scorecard is available for this run.\n")
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Sector averages use active Atlas companies only and exclude benchmark ETFs.\n"
+        )
+        section.append("| Rank | Sector | Securities | Avg Atlas Score | Avg Day Move | Top Ranked Name |")
+        section.append("|------|--------|------------|-----------------|--------------|-----------------|")
+
+        sector_rows = []
+        for sector, rows in sector_groups.items():
+            avg_score = sum(row[2] for row in rows) / len(rows)
+            day_moves = [
+                row[1].get('percent_change')
+                for row in rows
+                if row[1].get('percent_change') is not None
+            ]
+            avg_day_move = sum(day_moves) / len(day_moves) if day_moves else None
+            leader = max(rows, key=lambda row: row[2])
+            sector_rows.append((sector, rows, avg_score, avg_day_move, leader))
+
+        for rank, (sector, rows, avg_score, avg_day_move, leader) in enumerate(
+            sorted(sector_rows, key=lambda row: row[2], reverse=True),
+            start=1,
+        ):
+            section.append(
+                f"| {rank} | {self._format_table_text(sector)} | {len(rows)} | "
+                f"{avg_score:.1f} | {self._format_optional_percent(avg_day_move)} | "
+                f"{leader[0]} ({leader[2]:.1f}) |"
+            )
+
+        return "\n".join(section) + "\n"
+
+    def _generate_priority_ranking(self):
+        """Generate an actionable review-first watchlist ranking"""
+        section = ["## Atlas Priority Ranking\n"]
+        scored = self._scored_companies()
+
+        if not scored:
+            section.append("No priority ranking is available for this run.\n")
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Priority Score starts with the Atlas score and adds modest urgency for large price moves, "
+            "near-term earnings, analyst-action headlines, recent insider transactions, and Core status. "
+            "It is a research triage score, not a trading signal.\n"
+        )
+        section.append("| Rank | Ticker | Priority | Atlas Score | Day Move | Sector | Signals |")
+        section.append("|------|--------|----------|-------------|----------|--------|---------|")
+
+        rows = []
+        for ticker, data, total_score in scored:
+            priority_score, signals = self._priority_score(ticker, data, total_score)
+            rows.append((ticker, data, total_score, priority_score, signals))
+
+        for rank, (ticker, data, total_score, priority_score, signals) in enumerate(
+            sorted(rows, key=lambda row: row[3], reverse=True)[:12],
+            start=1,
+        ):
+            section.append(
+                f"| {rank} | {ticker} | {priority_score:.1f} | {total_score:.1f} | "
+                f"{self._format_optional_percent(data.get('percent_change'))} | "
+                f"{self._format_table_text(data.get('sector', 'Unclassified'))} | "
+                f"{self._format_table_text(', '.join(signals) if signals else 'Score only')} |"
+            )
+
+        return "\n".join(section) + "\n"
+
+    def _priority_score(self, ticker, data, total_score):
+        signals = []
+        priority_score = total_score
+
+        percent_change = data.get('percent_change')
+        if percent_change is not None and abs(percent_change) >= 2:
+            move_bonus = min(8, abs(percent_change))
+            priority_score += move_bonus
+            signals.append(f"{percent_change:+.1f}% move")
+
+        if ticker in self._event_tickers(self.earnings_events):
+            priority_score += 4
+            signals.append("earnings")
+
+        if ticker in self._event_tickers(self.analyst_actions):
+            priority_score += 3
+            signals.append("analyst action")
+
+        if ticker in self._event_tickers(self.insider_transactions):
+            priority_score += 2
+            signals.append("insider activity")
+
+        if data.get('category') == 'Core':
+            priority_score += 2
+            signals.append("Core")
+
+        return min(priority_score, 100), signals
+
+    def _event_tickers(self, events):
+        return {
+            str(event.get('ticker', '')).upper()
+            for event in events
+            if event.get('ticker')
+        }
 
     def _generate_company_profile_highlights(self):
         """Generate concise profiles for the highest-ranked companies"""

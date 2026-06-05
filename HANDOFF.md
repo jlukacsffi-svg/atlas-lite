@@ -55,6 +55,7 @@ Completed Stage 2 foundations:
 - Expanded Atlas Universe v1.3 with 56 securities across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs.
 - Sector, category, notes, and structured company-profile metadata.
 - Atlas Scoring Engine v1 weighted rankings.
+- Sector Scorecard and catalyst-aware Atlas Priority Ranking.
 - Hybrid v3 scoring with automatically calculated Growth, Quality, and Momentum.
 - Local SEC Company Facts caching in `data_cache/sec/` for faster and more resilient runs.
 - Upcoming earnings tracking with local Nasdaq calendar caching in `data_cache/earnings/`.
@@ -63,7 +64,7 @@ Completed Stage 2 foundations:
 - Auditable annual revenue and net-income Growth measurements from SEC filings.
 - Auditable net-margin, operating cash-flow margin, and free-cash-flow margin Quality measurements.
 - Auditable 1-month, 3-month, and 6-month Momentum measurements.
-- Company Profile Highlights, Upcoming Earnings, Analyst Actions, Insider Transactions, Automated Growth, Automated Quality, and Automated Momentum report sections.
+- Sector Scorecard, Atlas Priority Ranking, Company Profile Highlights, Upcoming Earnings, Analyst Actions, Insider Transactions, Automated Growth, Automated Quality, and Automated Momentum report sections.
 - Scoring Summary in Markdown and HTML reports.
 - Structured historical research snapshots.
 - Research Memory comparison in Markdown and HTML reports.
@@ -71,7 +72,7 @@ Completed Stage 2 foundations:
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then begin sector scoring or watchlist ranking.
+Continue expanding the universe toward the 100-150 security target, then improve the Executive Summary so it interprets earnings, analyst actions, insider activity, sector scores, and priority rankings together.
 
 ## Useful Files
 
