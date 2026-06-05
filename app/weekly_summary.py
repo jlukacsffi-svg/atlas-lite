@@ -57,6 +57,7 @@ class WeeklySummaryGenerator:
         report.append(self._generate_weekly_narrative(entries))
         report.append(self._generate_key_changes(entries))
         report.append(self._generate_sector_trends(entries))
+        report.append(self._generate_research_action_prompts(entries))
         report.append(self._generate_recurring_movers(entries))
         report.append(self._generate_score_leaders(entries))
         report.append(self._generate_run_log(entries))
@@ -242,6 +243,56 @@ class WeeklySummaryGenerator:
             lines.append(f"| {sector} | {avg_move:+.2f}% | {count} |")
         return "\n".join(lines) + "\n"
 
+    def _generate_research_action_prompts(self, entries):
+        snapshots = self._load_entry_snapshots(entries)
+        prompts = []
+
+        strongest_score = self._largest_positive_score_change(snapshots)
+        if strongest_score:
+            ticker, first_score, latest_score, delta = strongest_score
+            prompts.append(
+                f"Review {ticker}: score improved {delta:+.1f} points "
+                f"from {first_score:.1f} to {latest_score:.1f}; confirm whether the change reflects durable fundamentals."
+            )
+
+        weakest_score = self._largest_negative_score_change(snapshots)
+        if weakest_score:
+            ticker, first_score, latest_score, delta = weakest_score
+            prompts.append(
+                f"Challenge {ticker}: score declined {delta:+.1f} points "
+                f"from {first_score:.1f} to {latest_score:.1f}; identify whether this is temporary volatility or thesis damage."
+            )
+
+        recurring_mover = self._top_recurring_mover(entries)
+        if recurring_mover:
+            ticker, appearances, largest_move = recurring_mover
+            prompts.append(
+                f"Investigate {ticker}: appeared as a top mover {appearances} times; review catalysts behind the {largest_move:+.2f}% largest move."
+            )
+
+        sector_rows = self._sector_average_moves(snapshots)
+        if sector_rows:
+            weakest_sector = min(sector_rows, key=lambda item: item[1])
+            prompts.append(
+                f"Monitor {weakest_sector[0]}: weakest sector trend at {weakest_sector[1]:+.2f}% average movement; check for broad pressure or isolated names."
+            )
+
+        leader = self._top_score_leader(entries)
+        if leader:
+            ticker, appearances, avg_score = leader
+            prompts.append(
+                f"Maintain thesis file for {ticker}: appeared as a recurring score leader {appearances} times with an average score of {avg_score:.1f}."
+            )
+
+        lines = ["## Research Action Prompts\n"]
+        if not prompts:
+            lines.append("No research action prompts are available yet; more archive history is needed.\n")
+            return "\n".join(lines) + "\n"
+
+        for prompt in prompts[:6]:
+            lines.append(f"- {prompt}")
+        return "\n".join(lines) + "\n"
+
     def _coverage_sentence(self, entries):
         latest = entries[-1]
         available = latest.get("available_securities", 0)
@@ -295,6 +346,28 @@ class WeeklySummaryGenerator:
         return sentences or ["Score changes were positive but modest across available snapshots."]
 
     def _top_recurring_mover_sentence(self, entries):
+        recurring_mover = self._top_recurring_mover(entries)
+        if not recurring_mover:
+            return None
+
+        ticker, appearances, largest_move = recurring_mover
+        return (
+            f"Most persistent top mover: {ticker} appeared {appearances} times, "
+            f"with a largest move of {largest_move:+.2f}%."
+        )
+
+    def _score_leader_sentence(self, entries):
+        leader = self._top_score_leader(entries)
+        if not leader:
+            return None
+
+        ticker, appearances, avg_score = leader
+        return (
+            f"Most consistent score leader: {ticker} appeared {appearances} times "
+            f"with an average score of {avg_score:.1f}."
+        )
+
+    def _top_recurring_mover(self, entries):
         mover_counts = Counter()
         largest_moves = {}
 
@@ -313,12 +386,9 @@ class WeeklySummaryGenerator:
             return None
 
         ticker, appearances = mover_counts.most_common(1)[0]
-        return (
-            f"Most persistent top mover: {ticker} appeared {appearances} times, "
-            f"with a largest move of {largest_moves[ticker]:+.2f}%."
-        )
+        return ticker, appearances, largest_moves[ticker]
 
-    def _score_leader_sentence(self, entries):
+    def _top_score_leader(self, entries):
         scores_by_ticker = defaultdict(list)
 
         for entry in entries:
@@ -336,10 +406,19 @@ class WeeklySummaryGenerator:
             key=lambda item: (len(item[1]), sum(item[1]) / len(item[1])),
         )
         avg_score = sum(scores) / len(scores)
-        return (
-            f"Most consistent score leader: {ticker} appeared {len(scores)} times "
-            f"with an average score of {avg_score:.1f}."
-        )
+        return ticker, len(scores), avg_score
+
+    def _largest_positive_score_change(self, snapshots):
+        gains = [change for change in self._score_changes(snapshots) if change[3] > 0]
+        if not gains:
+            return None
+        return max(gains, key=lambda item: item[3])
+
+    def _largest_negative_score_change(self, snapshots):
+        declines = [change for change in self._score_changes(snapshots) if change[3] < 0]
+        if not declines:
+            return None
+        return min(declines, key=lambda item: item[3])
 
     def _score_changes(self, snapshots):
         if len(snapshots) < 2:

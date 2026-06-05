@@ -195,6 +195,7 @@ Each weekly summary includes:
 - What Changed This Week narrative
 - Key score changes across available snapshots
 - Sector trend shifts
+- Research action prompts
 - Recurring top movers
 - Recurring score leaders
 - Run log with links to daily reports
