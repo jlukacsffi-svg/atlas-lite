@@ -12,7 +12,7 @@ Atlas Lite now:
 - Tries yfinance first and falls back to Yahoo Finance.
 - Disables yfinance for the rest of a run after repeated failures.
 - Generates Markdown and HTML Morning Executive Brief reports.
-- Produces a rule-based Executive Summary.
+- Produces a rule-based Executive Summary that interprets market tone, sector strength, priority names, catalysts, risks, and volatility.
 - Adds News Highlights for major movers.
 - Identifies opportunities and risks.
 - Supports Windows scheduled execution.
@@ -56,6 +56,7 @@ Completed Stage 2 foundations:
 - Sector, category, notes, and structured company-profile metadata.
 - Atlas Scoring Engine v1 weighted rankings.
 - Sector Scorecard and catalyst-aware Atlas Priority Ranking.
+- Executive Summary integrates sector scores, priority rankings, earnings, analyst actions, insider activity, and major price moves.
 - Hybrid v3 scoring with automatically calculated Growth, Quality, and Momentum.
 - Local SEC Company Facts caching in `data_cache/sec/` for faster and more resilient runs.
 - Upcoming earnings tracking with local Nasdaq calendar caching in `data_cache/earnings/`.
@@ -72,7 +73,7 @@ Completed Stage 2 foundations:
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then improve the Executive Summary so it interprets earnings, analyst actions, insider activity, sector scores, and priority rankings together.
+Continue expanding the universe toward the 100-150 security target, then begin a simple Watchlist Change Recommendation section.
 
 ## Useful Files
 

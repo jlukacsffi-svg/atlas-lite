@@ -450,6 +450,51 @@ class ReportGenerator:
         else:
             section.append("- **Volatility**: no watchlist names moved more than 2%.")
 
+        sector_rows = self._sector_rows()
+        if sector_rows:
+            strongest_sector = max(sector_rows, key=lambda row: row["avg_score"])
+            weakest_day_sector = min(
+                [
+                    row for row in sector_rows
+                    if row["avg_day_move"] is not None
+                ],
+                key=lambda row: row["avg_day_move"],
+                default=None,
+            )
+            section.append(
+                f"- **Sector read**: {strongest_sector['sector']} has the highest average Atlas score "
+                f"at {strongest_sector['avg_score']:.1f}; "
+                f"{strongest_sector['leader'][0]} is its top-ranked name."
+            )
+            if weakest_day_sector and weakest_day_sector["avg_day_move"] <= -1:
+                section.append(
+                    f"- **Sector pressure**: {weakest_day_sector['sector']} is the weakest group today "
+                    f"at {weakest_day_sector['avg_day_move']:+.2f}% on average."
+                )
+
+        priority_rows = self._priority_rows(limit=3)
+        if priority_rows:
+            priority_text = ", ".join(
+                f"{ticker} ({priority_score:.1f})"
+                for ticker, _, _, priority_score, _ in priority_rows
+            )
+            section.append(f"- **Priority review**: start with {priority_text}.")
+
+        catalyst_counts = {
+            "earnings": len(self._event_tickers(self.earnings_events)),
+            "analyst actions": len(self._event_tickers(self.analyst_actions)),
+            "insider activity": len(self._event_tickers(self.insider_transactions)),
+        }
+        active_catalysts = [
+            f"{count} {label}"
+            for label, count in catalyst_counts.items()
+            if count
+        ]
+        if active_catalysts:
+            section.append(
+                f"- **Catalyst load**: Atlas found {', '.join(active_catalysts)} across the universe."
+            )
+
         if losers:
             downside_focus = ", ".join(
                 ticker for ticker, _ in sorted(
@@ -652,13 +697,9 @@ class ReportGenerator:
     def _generate_sector_scorecard(self):
         """Generate sector-level score and performance summary"""
         section = ["## Sector Scorecard\n"]
-        sector_groups = {}
+        sector_rows = self._sector_rows()
 
-        for ticker, data, total_score in self._scored_companies():
-            sector = data.get('sector', 'Unclassified')
-            sector_groups.setdefault(sector, []).append((ticker, data, total_score))
-
-        if not sector_groups:
+        if not sector_rows:
             section.append("No sector scorecard is available for this run.\n")
             return "\n".join(section) + "\n"
 
@@ -667,6 +708,23 @@ class ReportGenerator:
         )
         section.append("| Rank | Sector | Securities | Avg Atlas Score | Avg Day Move | Top Ranked Name |")
         section.append("|------|--------|------------|-----------------|--------------|-----------------|")
+
+        for rank, row in enumerate(sector_rows, start=1):
+            leader = row["leader"]
+            section.append(
+                f"| {rank} | {self._format_table_text(row['sector'])} | {row['count']} | "
+                f"{row['avg_score']:.1f} | {self._format_optional_percent(row['avg_day_move'])} | "
+                f"{leader[0]} ({leader[2]:.1f}) |"
+            )
+
+        return "\n".join(section) + "\n"
+
+    def _sector_rows(self):
+        sector_groups = {}
+
+        for ticker, data, total_score in self._scored_companies():
+            sector = data.get('sector', 'Unclassified')
+            sector_groups.setdefault(sector, []).append((ticker, data, total_score))
 
         sector_rows = []
         for sector, rows in sector_groups.items():
@@ -678,19 +736,17 @@ class ReportGenerator:
             ]
             avg_day_move = sum(day_moves) / len(day_moves) if day_moves else None
             leader = max(rows, key=lambda row: row[2])
-            sector_rows.append((sector, rows, avg_score, avg_day_move, leader))
-
-        for rank, (sector, rows, avg_score, avg_day_move, leader) in enumerate(
-            sorted(sector_rows, key=lambda row: row[2], reverse=True),
-            start=1,
-        ):
-            section.append(
-                f"| {rank} | {self._format_table_text(sector)} | {len(rows)} | "
-                f"{avg_score:.1f} | {self._format_optional_percent(avg_day_move)} | "
-                f"{leader[0]} ({leader[2]:.1f}) |"
+            sector_rows.append(
+                {
+                    "sector": sector,
+                    "count": len(rows),
+                    "avg_score": avg_score,
+                    "avg_day_move": avg_day_move,
+                    "leader": leader,
+                }
             )
 
-        return "\n".join(section) + "\n"
+        return sorted(sector_rows, key=lambda row: row["avg_score"], reverse=True)
 
     def _generate_priority_ranking(self):
         """Generate an actionable review-first watchlist ranking"""
@@ -709,13 +765,8 @@ class ReportGenerator:
         section.append("| Rank | Ticker | Priority | Atlas Score | Day Move | Sector | Signals |")
         section.append("|------|--------|----------|-------------|----------|--------|---------|")
 
-        rows = []
-        for ticker, data, total_score in scored:
-            priority_score, signals = self._priority_score(ticker, data, total_score)
-            rows.append((ticker, data, total_score, priority_score, signals))
-
         for rank, (ticker, data, total_score, priority_score, signals) in enumerate(
-            sorted(rows, key=lambda row: row[3], reverse=True)[:12],
+            self._priority_rows(limit=12),
             start=1,
         ):
             section.append(
@@ -726,6 +777,15 @@ class ReportGenerator:
             )
 
         return "\n".join(section) + "\n"
+
+    def _priority_rows(self, limit=None):
+        rows = []
+        for ticker, data, total_score in self._scored_companies():
+            priority_score, signals = self._priority_score(ticker, data, total_score)
+            rows.append((ticker, data, total_score, priority_score, signals))
+
+        sorted_rows = sorted(rows, key=lambda row: row[3], reverse=True)
+        return sorted_rows[:limit] if limit else sorted_rows
 
     def _priority_score(self, ticker, data, total_score):
         signals = []

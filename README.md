@@ -15,7 +15,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Monitors a 56-security universe across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
-- Generates a rule-based executive summary of market tone, leaders, risks, and volatility
+- Generates a rule-based executive summary of market tone, sector strength, priority names, catalysts, risks, and volatility
 - Generates Morning Executive Brief reports in markdown and HTML formats
 - Supports Windows scheduled daily execution
 - Supports optional SMTP email delivery using environment variables
@@ -118,7 +118,7 @@ The archive is generated locally and ignored by Git. The Morning Executive Brief
 Each Morning Executive Brief includes:
 
 1. **Date** - Report generation date
-2. **Executive Summary** - Concise readout of market tone, leaders, risks, and volatility
+2. **Executive Summary** - Concise readout of market tone, sector strength, priority names, catalysts, risks, and volatility
 3. **Market Summary** - Overview of major indices
 4. **Upcoming Earnings** - Atlas universe earnings events expected in the next 7 days
 5. **Watchlist Summary** - Current prices and performance
