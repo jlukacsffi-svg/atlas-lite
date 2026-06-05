@@ -53,7 +53,7 @@ Stage 2: Research Memory And Scoring.
 Completed Stage 2 foundations:
 
 - Structured security-universe configuration.
-- Expanded Atlas Universe v1.3 with 56 securities across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs.
+- Expanded Atlas Universe v1.4 with 76 securities across AI infrastructure, AI power, cloud/software, defense, cybersecurity, robotics, and ETFs.
 - Sector, category, notes, and structured company-profile metadata.
 - Atlas Scoring Engine v1 weighted rankings.
 - Sector Scorecard and catalyst-aware Atlas Priority Ranking.

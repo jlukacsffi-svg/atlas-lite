@@ -1,5 +1,5 @@
 {
-  "version": "1.3",
+  "version": "1.4",
   "securities": [
     {
       "ticker": "NVDA",
@@ -80,6 +80,76 @@
       "profile": {"thesis": "Custom silicon, networking, and data-infrastructure chip supplier positioned for AI buildouts.", "key_driver": "AI networking and custom compute design wins.", "key_risk": "Execution risk and cyclical semiconductor demand."},
       "score_source": "manual_v1",
       "scores": {"growth": 82, "quality": 68, "moat": 72, "momentum": 72, "risk": 52}
+    },
+    {
+      "ticker": "ANET",
+      "company_name": "Arista Networks, Inc.",
+      "sector": "AI Networking & Infrastructure",
+      "category": "Watchlist",
+      "notes": "Cloud networking supplier with AI data-center exposure.",
+      "profile": {"thesis": "High-performance networking supplier positioned for hyperscale and AI-cluster demand.", "key_driver": "Ethernet AI networking adoption and cloud customer spending.", "key_risk": "Customer concentration and competitive pressure from larger networking vendors."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 80, "quality": 88, "moat": 82, "momentum": 76, "risk": 68}
+    },
+    {
+      "ticker": "DELL",
+      "company_name": "Dell Technologies Inc.",
+      "sector": "AI Networking & Infrastructure",
+      "category": "Watchlist",
+      "notes": "AI server, storage, and enterprise infrastructure provider.",
+      "profile": {"thesis": "Enterprise infrastructure company with AI-server demand as a major growth catalyst.", "key_driver": "AI server backlog, enterprise refresh cycles, and storage demand.", "key_risk": "Hardware margin pressure and cyclical enterprise infrastructure spending."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 72, "quality": 72, "moat": 66, "momentum": 74, "risk": 58}
+    },
+    {
+      "ticker": "VRT",
+      "company_name": "Vertiv Holdings Co",
+      "sector": "AI Networking & Infrastructure",
+      "category": "Watchlist",
+      "notes": "Data-center power and cooling infrastructure supplier.",
+      "profile": {"thesis": "Data-center power and thermal-management supplier benefiting from AI infrastructure buildouts.", "key_driver": "AI data-center capacity growth and liquid-cooling adoption.", "key_risk": "Valuation, execution, and data-center capex cyclicality."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 86, "quality": 76, "moat": 72, "momentum": 82, "risk": 54}
+    },
+    {
+      "ticker": "ETN",
+      "company_name": "Eaton Corporation plc",
+      "sector": "AI Power & Energy",
+      "category": "Watchlist",
+      "notes": "Electrical equipment supplier tied to data-center power demand.",
+      "profile": {"thesis": "Power-management company with exposure to electrification and data-center electrical infrastructure.", "key_driver": "Data-center power demand, grid upgrades, and industrial electrification.", "key_risk": "Industrial cycle sensitivity and premium valuation."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 70, "quality": 86, "moat": 80, "momentum": 72, "risk": 70}
+    },
+    {
+      "ticker": "CEG",
+      "company_name": "Constellation Energy Corporation",
+      "sector": "AI Power & Energy",
+      "category": "Watchlist",
+      "notes": "Nuclear and clean-energy supplier with data-center power relevance.",
+      "profile": {"thesis": "Large nuclear generation fleet positioned for rising reliable-power demand from data centers.", "key_driver": "Power purchase agreements and demand for carbon-free baseload electricity.", "key_risk": "Regulation, commodity power pricing, and political risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 66, "quality": 78, "moat": 76, "momentum": 70, "risk": 62}
+    },
+    {
+      "ticker": "VST",
+      "company_name": "Vistra Corp.",
+      "sector": "AI Power & Energy",
+      "category": "Watchlist",
+      "notes": "Power generation and retail electricity company.",
+      "profile": {"thesis": "Power producer with leverage to tighter electricity markets and data-center load growth.", "key_driver": "Power demand, capacity pricing, and free-cash-flow generation.", "key_risk": "Commodity exposure, regulation, and power-market volatility."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 68, "quality": 74, "moat": 62, "momentum": 76, "risk": 54}
+    },
+    {
+      "ticker": "GEV",
+      "company_name": "GE Vernova Inc.",
+      "sector": "AI Power & Energy",
+      "category": "Watchlist",
+      "notes": "Power equipment and grid technology supplier.",
+      "profile": {"thesis": "Power-generation and grid-equipment company exposed to electrification and grid modernization.", "key_driver": "Grid investment, gas turbine demand, and electrification projects.", "key_risk": "Execution risk, project cyclicality, and policy sensitivity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 72, "quality": 72, "moat": 74, "momentum": 78, "risk": 58}
     },
     {
       "ticker": "QCOM",
@@ -242,6 +312,46 @@
       "scores": {"growth": 82, "quality": 70, "moat": 72, "momentum": 62, "risk": 52}
     },
     {
+      "ticker": "MDB",
+      "company_name": "MongoDB, Inc.",
+      "sector": "Software",
+      "category": "Emerging",
+      "notes": "Developer data platform with AI application relevance.",
+      "profile": {"thesis": "Developer data platform that can benefit from modern application and AI workload growth.", "key_driver": "Atlas cloud adoption and enterprise application modernization.", "key_risk": "Consumption volatility, competition, and profitability expectations."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 76, "quality": 58, "moat": 70, "momentum": 58, "risk": 46}
+    },
+    {
+      "ticker": "TEAM",
+      "company_name": "Atlassian Corporation",
+      "sector": "Software",
+      "category": "Watchlist",
+      "notes": "Collaboration and developer workflow software.",
+      "profile": {"thesis": "Developer and collaboration platform with durable workflow relevance across software teams.", "key_driver": "Cloud migration, enterprise expansion, and AI-assisted productivity features.", "key_risk": "Seat-growth pressure and software spending sensitivity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 66, "quality": 68, "moat": 76, "momentum": 50, "risk": 58}
+    },
+    {
+      "ticker": "HUBS",
+      "company_name": "HubSpot, Inc.",
+      "sector": "Software",
+      "category": "Watchlist",
+      "notes": "Customer platform for marketing, sales, and service workflows.",
+      "profile": {"thesis": "Mid-market customer platform with AI-assisted sales and marketing workflow optionality.", "key_driver": "Customer expansion and adoption of AI-enabled CRM tools.", "key_risk": "SMB exposure, competition, and premium valuation."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 64, "quality": 70, "moat": 68, "momentum": 48, "risk": 56}
+    },
+    {
+      "ticker": "WDAY",
+      "company_name": "Workday, Inc.",
+      "sector": "Software",
+      "category": "Watchlist",
+      "notes": "Human capital and financial management software platform.",
+      "profile": {"thesis": "Enterprise HR and finance platform with sticky mission-critical workflows.", "key_driver": "Enterprise cloud migrations and AI-assisted back-office automation.", "key_risk": "Enterprise sales cycles and competition from large software suites."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 76, "moat": 76, "momentum": 52, "risk": 66}
+    },
+    {
       "ticker": "NET",
       "company_name": "Cloudflare, Inc.",
       "sector": "Software",
@@ -372,6 +482,66 @@
       "scores": {"growth": 72, "quality": 86, "moat": 78, "momentum": 66, "risk": 62}
     },
     {
+      "ticker": "LHX",
+      "company_name": "L3Harris Technologies, Inc.",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Defense electronics, communications, and space systems supplier.",
+      "profile": {"thesis": "Defense technology supplier with exposure to communications, sensors, and space systems.", "key_driver": "Defense modernization and demand for resilient communications.", "key_risk": "Program execution, budget timing, and integration risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 78, "moat": 80, "momentum": 58, "risk": 70}
+    },
+    {
+      "ticker": "LDOS",
+      "company_name": "Leidos Holdings, Inc.",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Government technology and defense services provider.",
+      "profile": {"thesis": "Government technology services company with defense, intelligence, and civil-agency exposure.", "key_driver": "Federal IT modernization and defense services demand.", "key_risk": "Contract recompetes and lower-margin services exposure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 54, "quality": 76, "moat": 72, "momentum": 54, "risk": 72}
+    },
+    {
+      "ticker": "BWXT",
+      "company_name": "BWX Technologies, Inc.",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Nuclear components and services for defense and energy markets.",
+      "profile": {"thesis": "Specialized nuclear supplier with naval reactor and advanced nuclear exposure.", "key_driver": "Naval nuclear demand and interest in advanced nuclear technology.", "key_risk": "Program timing, valuation, and specialized execution requirements."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 64, "quality": 78, "moat": 78, "momentum": 68, "risk": 62}
+    },
+    {
+      "ticker": "TDG",
+      "company_name": "TransDigm Group Incorporated",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Aerospace components supplier with aftermarket exposure.",
+      "profile": {"thesis": "Aerospace component supplier with strong aftermarket economics and pricing power.", "key_driver": "Commercial aerospace aftermarket demand and acquisition execution.", "key_risk": "High leverage, valuation, and aviation-cycle sensitivity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 68, "quality": 88, "moat": 84, "momentum": 66, "risk": 58}
+    },
+    {
+      "ticker": "CW",
+      "company_name": "Curtiss-Wright Corporation",
+      "sector": "Defense & Aerospace",
+      "category": "Watchlist",
+      "notes": "Defense, aerospace, and industrial motion-control supplier.",
+      "profile": {"thesis": "Specialized engineered-products company with defense, aerospace, and nuclear end-market exposure.", "key_driver": "Defense electronics, naval nuclear demand, and industrial automation.", "key_risk": "Niche-market cyclicality and valuation sensitivity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 82, "moat": 76, "momentum": 66, "risk": 64}
+    },
+    {
+      "ticker": "MRCY",
+      "company_name": "Mercury Systems, Inc.",
+      "sector": "Defense & Aerospace",
+      "category": "Emerging",
+      "notes": "Defense electronics and mission-computing supplier.",
+      "profile": {"thesis": "Defense electronics supplier with potential upside from modernization and operational improvement.", "key_driver": "Mission-computing demand and execution recovery.", "key_risk": "Profitability pressure, program timing, and turnaround execution."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 56, "quality": 42, "moat": 58, "momentum": 52, "risk": 34}
+    },
+    {
       "ticker": "CRWD",
       "company_name": "CrowdStrike Holdings, Inc.",
       "sector": "Cybersecurity",
@@ -430,6 +600,36 @@
       "profile": {"thesis": "Emerging endpoint and security-operations platform with AI-driven automation pitch.", "key_driver": "Enterprise expansion and path to profitability.", "key_risk": "Losses and competition from larger platforms."},
       "score_source": "manual_v1",
       "scores": {"growth": 72, "quality": 38, "moat": 52, "momentum": 50, "risk": 32}
+    },
+    {
+      "ticker": "QLYS",
+      "company_name": "Qualys, Inc.",
+      "sector": "Cybersecurity",
+      "category": "Watchlist",
+      "notes": "Vulnerability management and cloud security compliance platform.",
+      "profile": {"thesis": "Security and compliance platform with durable vulnerability-management relevance.", "key_driver": "Enterprise exposure management, cloud compliance, and platform expansion.", "key_risk": "Moderate growth, competition, and security budget prioritization."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 52, "quality": 84, "moat": 70, "momentum": 48, "risk": 72}
+    },
+    {
+      "ticker": "CHKP",
+      "company_name": "Check Point Software Technologies Ltd.",
+      "sector": "Cybersecurity",
+      "category": "Watchlist",
+      "notes": "Network security and firewall platform provider.",
+      "profile": {"thesis": "Mature cybersecurity vendor with durable margins and network-security relevance.", "key_driver": "Security refresh cycles and platform expansion.", "key_risk": "Slower growth and competitive pressure from faster-growing platforms."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 48, "quality": 88, "moat": 76, "momentum": 52, "risk": 78}
+    },
+    {
+      "ticker": "TENB",
+      "company_name": "Tenable Holdings, Inc.",
+      "sector": "Cybersecurity",
+      "category": "Emerging",
+      "notes": "Exposure management and vulnerability management platform.",
+      "profile": {"thesis": "Exposure-management company aligned with enterprise vulnerability and attack-surface visibility needs.", "key_driver": "Platform adoption and enterprise security budget prioritization.", "key_risk": "Profitability, competition, and smaller-company execution risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 50, "moat": 58, "momentum": 44, "risk": 42}
     },
     {
       "ticker": "ROK",
