@@ -15,6 +15,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Saves structured historical research snapshots for comparison over time
 - Maintains a local research archive index for recent snapshots and reports
 - Generates weekly research summaries from the local archive index
+- Supports optional email delivery for daily briefs and weekly summaries
 - Monitors a 56-security universe across AI infrastructure, cloud/software, defense, cybersecurity, robotics, and ETFs
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
@@ -185,6 +186,8 @@ Weekly summaries are saved to the `reports/` folder:
 - `weekly_summary_YYYYMMDD_HHMMSS.md`
 - `weekly_summary_YYYYMMDD_HHMMSS.html`
 
+If email delivery is enabled, the weekly summary command emails both weekly summary files.
+
 ## Scheduled Execution
 
 Atlas includes PowerShell scripts for Windows Task Scheduler.
@@ -207,10 +210,29 @@ To use a different time:
 .\scripts\setup_windows_scheduled_task.ps1 -RunTime "06:30"
 ```
 
+To test the weekly summary scheduled runner manually:
+
+```powershell
+.\scripts\run_atlas_weekly.ps1
+```
+
+To create or update a weekly summary scheduled task for Sunday at 8:00 AM:
+
+```powershell
+.\scripts\setup_windows_weekly_summary_task.ps1
+```
+
+To use a different weekly schedule:
+
+```powershell
+.\scripts\setup_windows_weekly_summary_task.ps1 -RunDay "Friday" -RunTime "16:30"
+```
+
 Scheduled run logs are written to:
 
 ```text
 logs/scheduled_run_YYYYMMDD_HHMMSS.log
+logs/weekly_summary_run_YYYYMMDD_HHMMSS.log
 ```
 
 ## Email Delivery

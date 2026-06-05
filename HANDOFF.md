@@ -17,6 +17,7 @@ Atlas Lite now:
 - Identifies opportunities and risks.
 - Supports Windows scheduled execution.
 - Sends reports by email through a dedicated Gmail sender account.
+- Sends weekly research summaries by email when email delivery is enabled.
 
 Dedicated sender account:
 
@@ -71,12 +72,13 @@ Completed Stage 2 foundations:
 - Structured historical research snapshots.
 - Local research archive index in `research_archive/archive_index.json` and `research_archive/archive_index.md`.
 - Weekly research summary generator powered by the local archive index.
+- Weekly summary email delivery and Windows weekly scheduled-task helpers.
 - Research Memory comparison in Markdown and HTML reports.
 - Validation and unit tests for universe and scores.
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then decide whether to automate weekly summary scheduling/email delivery.
+Continue expanding the universe toward the 100-150 security target, then add richer weekly summary interpretation such as biggest score changes, recurring risks, and sector trend shifts.
 
 ## Useful Files
 
@@ -101,4 +103,6 @@ Continue expanding the universe toward the 100-150 security target, then decide 
 - `main.py`: daily report execution flow.
 - `weekly_summary.py`: command-line entry point for weekly summaries.
 - `scripts/run_atlas_daily.ps1`: scheduled runner.
+- `scripts/run_atlas_weekly.ps1`: weekly summary scheduled runner.
 - `scripts/setup_windows_scheduled_task.ps1`: Windows Scheduled Task setup.
+- `scripts/setup_windows_weekly_summary_task.ps1`: Windows Weekly Summary Scheduled Task setup.

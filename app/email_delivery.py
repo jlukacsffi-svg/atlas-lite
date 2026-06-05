@@ -79,7 +79,7 @@ class EmailDelivery:
     def __init__(self, config=None):
         self.config = config or EmailConfig()
 
-    def send_report(self, markdown_path, html_path=None, subject=None):
+    def send_report(self, markdown_path, html_path=None, subject=None, body=None):
         if not self.config.enabled:
             return False
 
@@ -88,15 +88,16 @@ class EmailDelivery:
         markdown_path = Path(markdown_path)
         html_path = Path(html_path) if html_path else None
         subject = subject or f"Atlas Lite Morning Executive Brief - {markdown_path.stem}"
+        body = body or (
+            "Atlas Lite generated today's Morning Executive Brief.\n\n"
+            "The Markdown and HTML report files are attached.\n"
+        )
 
         message = EmailMessage()
         message["From"] = self.config.sender
         message["To"] = ", ".join(self.config.recipients)
         message["Subject"] = subject
-        message.set_content(
-            "Atlas Lite generated today's Morning Executive Brief.\n\n"
-            "The Markdown and HTML report files are attached.\n"
-        )
+        message.set_content(body)
 
         for attachment_path in [markdown_path, html_path]:
             if attachment_path:
