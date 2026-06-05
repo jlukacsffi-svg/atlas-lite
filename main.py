@@ -20,6 +20,7 @@ from app.email_delivery import EmailDelivery
 from app.analyst_actions import AnalystActionTracker
 from app.earnings_calendar import EarningsCalendar
 from app.insider_transactions import InsiderTransactionTracker
+from app.portfolio import Portfolio
 from app.research_memory import ResearchMemory
 from app.security_universe import SecurityUniverse
 
@@ -105,6 +106,18 @@ def main():
             print(f"[warning] Insider-transaction tracking unavailable: {insider_error}")
 
         print()
+        print("[portfolio] Checking local portfolio configuration...")
+        try:
+            portfolio_summary = Portfolio().analyze(market_data)
+            if portfolio_summary.get("configured"):
+                print(f"[ok] Portfolio loaded with {len(portfolio_summary.get('positions', []))} positions.")
+            else:
+                print("[portfolio] No local portfolio file configured.")
+        except Exception as portfolio_error:
+            portfolio_summary = {"configured": False, "error": str(portfolio_error)}
+            print(f"[warning] Portfolio analysis unavailable: {portfolio_error}")
+
+        print()
         print("[memory] Updating research archive...")
         memory = ResearchMemory()
         previous_snapshot = memory.load_latest_snapshot()
@@ -121,6 +134,7 @@ def main():
             earnings_events=earnings_events,
             analyst_actions=analyst_actions,
             insider_transactions=insider_transactions,
+            portfolio_summary=portfolio_summary,
         )
         report_path = generator.save_report()
 

@@ -16,6 +16,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Maintains a local research archive index for recent snapshots and reports
 - Generates weekly research summaries from the local archive index
 - Supports optional email delivery for daily briefs and weekly summaries
+- Supports optional local portfolio exposure monitoring without trading
 - Monitors a 100-security universe across AI infrastructure, AI power, cloud/software, defense, cybersecurity, robotics, healthcare, financials, consumer platforms, and ETFs
 - Fetches real-time market data using yfinance
 - Adds recent news headlines for major watchlist movers
@@ -279,6 +280,31 @@ $env:ATLAS_SMTP_USE_SSL = "false"
 ```
 
 When enabled, Atlas attaches both the Markdown and HTML reports to the email.
+
+## Portfolio Intelligence
+
+Portfolio intelligence is optional and local-only. Atlas does not trade and does not connect to brokerage accounts.
+
+To enable portfolio exposure monitoring, copy:
+
+```text
+data/portfolio.example.json
+```
+
+to:
+
+```text
+data/portfolio.json
+```
+
+Then edit `data/portfolio.json` with local holdings. The real portfolio file is ignored by Git and should not be committed.
+
+When configured, the daily brief includes:
+
+- Estimated portfolio market value
+- Top tracked positions
+- Sector exposure
+- Concentration risks to watch
 
 ## SEC Growth And Quality Data
 

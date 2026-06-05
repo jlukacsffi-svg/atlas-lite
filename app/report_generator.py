@@ -19,6 +19,7 @@ class ReportGenerator:
         earnings_events=None,
         analyst_actions=None,
         insider_transactions=None,
+        portfolio_summary=None,
     ):
         """
         Initialize the report generator
@@ -30,6 +31,7 @@ class ReportGenerator:
             earnings_events (list): Optional upcoming earnings events
             analyst_actions (list): Optional analyst-action headlines
             insider_transactions (list): Optional SEC Form 4 transactions
+            portfolio_summary (dict): Optional local portfolio analysis
         """
         self.market_data = market_data or {}
         self.market_summary = market_summary or {}
@@ -37,6 +39,7 @@ class ReportGenerator:
         self.earnings_events = earnings_events or []
         self.analyst_actions = analyst_actions or []
         self.insider_transactions = insider_transactions or []
+        self.portfolio_summary = portfolio_summary or {"configured": False}
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
         self.scoring_engine = ScoringEngine()
@@ -75,6 +78,9 @@ class ReportGenerator:
         
         # Watchlist Summary
         report.append(self._generate_watchlist_summary())
+
+        # Portfolio Intelligence
+        report.append(self._generate_portfolio_intelligence())
 
         # Scoring Summary
         report.append(self._generate_scoring_summary())
@@ -618,6 +624,82 @@ class ReportGenerator:
         else:
             section.append("Unable to fetch watchlist data at this time.\n")
         
+        return "\n".join(section) + "\n"
+
+    def _generate_portfolio_intelligence(self):
+        """Generate optional portfolio exposure summary."""
+        section = ["## Portfolio Intelligence\n"]
+
+        if self.portfolio_summary.get("error"):
+            section.append(
+                f"Portfolio analysis is unavailable: {self.portfolio_summary['error']}\n"
+            )
+            return "\n".join(section) + "\n"
+
+        if not self.portfolio_summary.get("configured"):
+            section.append(
+                "No local portfolio is configured. To enable this section, create "
+                "`data/portfolio.json` from `data/portfolio.example.json`. "
+                "The local portfolio file is ignored by Git.\n"
+            )
+            return "\n".join(section) + "\n"
+
+        total_value = self.portfolio_summary.get("total_value", 0)
+        positions = self.portfolio_summary.get("positions", [])
+        section.append(
+            f"Local portfolio: **{self.portfolio_summary.get('name', 'Local Portfolio')}**. "
+            "This is exposure monitoring only; Atlas does not trade.\n"
+        )
+        section.append(f"- **Estimated Market Value**: {self._format_currency(total_value)}")
+        section.append(f"- **Positions Tracked**: {len(positions)}")
+
+        unavailable = self.portfolio_summary.get("unavailable_tickers", [])
+        if unavailable:
+            section.append(f"- **Unavailable Holdings Data**: {', '.join(unavailable)}")
+        section.append("")
+
+        section.append("### Top Positions\n")
+        section.append("| Ticker | Shares | Market Value | Allocation | Day Move | Gain/Loss |")
+        section.append("|--------|--------|--------------|------------|----------|-----------|")
+        for position in sorted(
+            positions,
+            key=lambda item: item.get("market_value") or 0,
+            reverse=True,
+        )[:10]:
+            gain_loss = self._format_currency(position.get("gain_loss"), decimals=0)
+            gain_loss_pct = self._format_optional_percent(position.get("gain_loss_pct"))
+            section.append(
+                f"| {position['ticker']} | {position['shares']:,.4g} | "
+                f"{self._format_currency(position.get('market_value'), decimals=0)} | "
+                f"{self._format_optional_percent(position.get('allocation_pct'))} | "
+                f"{self._format_optional_percent(position.get('day_change_pct'))} | "
+                f"{gain_loss} ({gain_loss_pct}) |"
+            )
+
+        sector_allocations = self.portfolio_summary.get("sector_allocations", [])
+        if sector_allocations:
+            section.append("\n### Sector Exposure\n")
+            section.append("| Sector | Market Value | Allocation |")
+            section.append("|--------|--------------|------------|")
+            for allocation in sector_allocations[:10]:
+                section.append(
+                    f"| {self._format_table_text(allocation['sector'])} | "
+                    f"{self._format_currency(allocation.get('market_value'), decimals=0)} | "
+                    f"{self._format_optional_percent(allocation.get('allocation_pct'))} |"
+                )
+
+        concentration = [
+            position for position in positions
+            if position.get("allocation_pct") is not None and position["allocation_pct"] >= 25
+        ]
+        if concentration:
+            section.append("\n### Portfolio Risks To Watch\n")
+            for position in concentration:
+                section.append(
+                    f"- **Concentration**: {position['ticker']} is "
+                    f"{position['allocation_pct']:.1f}% of tracked portfolio value."
+                )
+
         return "\n".join(section) + "\n"
     
     def _generate_top_movers(self):

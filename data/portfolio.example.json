@@ -1,0 +1,15 @@
+{
+  "name": "Example Portfolio",
+  "positions": [
+    {
+      "ticker": "NVDA",
+      "shares": 1,
+      "cost_basis": 100.00
+    },
+    {
+      "ticker": "MSFT",
+      "shares": 1,
+      "cost_basis": 250.00
+    }
+  ]
+}

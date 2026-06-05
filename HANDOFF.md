@@ -79,9 +79,16 @@ Completed Stage 2 foundations:
 - Research Memory comparison in Markdown and HTML reports.
 - Validation and unit tests for universe and scores.
 
+Stage 3 portfolio-intelligence foundations started:
+
+- Optional local `data/portfolio.json` support.
+- Safe committed template at `data/portfolio.example.json`.
+- Portfolio market value, position exposure, sector exposure, and concentration-risk reporting.
+- Real portfolio file is ignored by Git.
+
 Recommended next Stage 2 task:
 
-Atlas has reached the lower end of the 100-150 security target. Next, consider Stage 3 portfolio-intelligence foundations or continue expanding selectively toward 125-150 securities.
+Atlas has reached the lower end of the 100-150 security target. Next, continue Stage 3 portfolio-intelligence foundations or expand selectively toward 125-150 securities.
 
 ## Useful Files
 
@@ -99,6 +106,7 @@ Atlas has reached the lower end of the 100-150 security target. Next, consider S
 - `data_cache/insider_transactions/`: ignored local cache for SEC submissions and Form 4 XML.
 - `app/market_data.py`: market data retrieval and fallback behavior.
 - `app/momentum.py`: automated return measurement and Momentum scoring.
+- `app/portfolio.py`: optional local portfolio loading and exposure analysis.
 - `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.
 - `app/report_generator.py`: Markdown and HTML report generation.
 - `app/weekly_summary.py`: weekly summary generation from the local research archive index.
