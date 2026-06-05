@@ -85,6 +85,9 @@ class ReportGenerator:
         # Priority Ranking
         report.append(self._generate_priority_ranking())
 
+        # Watchlist Change Recommendations
+        report.append(self._generate_watchlist_recommendations())
+
         # Company Profiles
         report.append(self._generate_company_profile_highlights())
 
@@ -814,6 +817,89 @@ class ReportGenerator:
             signals.append("Core")
 
         return min(priority_score, 100), signals
+
+    def _generate_watchlist_recommendations(self):
+        """Generate conservative watchlist category review recommendations"""
+        section = ["## Watchlist Change Recommendations\n"]
+        recommendations = self._watchlist_recommendations()
+
+        if not recommendations:
+            section.append("No watchlist category changes require review today.\n")
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "These are review prompts only. Atlas does not change categories automatically.\n"
+        )
+        section.append("| Ticker | Current | Recommendation | Evidence |")
+        section.append("|--------|---------|----------------|----------|")
+
+        for item in recommendations:
+            section.append(
+                f"| {item['ticker']} | {self._format_table_text(item['current_category'])} | "
+                f"{self._format_table_text(item['recommendation'])} | "
+                f"{self._format_table_text(item['evidence'])} |"
+            )
+
+        return "\n".join(section) + "\n"
+
+    def _watchlist_recommendations(self, limit=10):
+        recommendations = []
+        event_tickers = (
+            self._event_tickers(self.earnings_events)
+            | self._event_tickers(self.analyst_actions)
+            | self._event_tickers(self.insider_transactions)
+        )
+
+        for ticker, data, total_score, priority_score, signals in self._priority_rows():
+            category = data.get('category', 'Watchlist')
+            percent_change = data.get('percent_change') or 0
+            recommendation = None
+            evidence = []
+
+            if category != 'Core' and total_score >= 88 and priority_score >= 90:
+                recommendation = "Review for Core"
+                evidence.append(f"Atlas Score {total_score:.1f}")
+                evidence.append(f"Priority {priority_score:.1f}")
+            elif category == 'Emerging' and total_score >= 78:
+                recommendation = "Review for Watchlist"
+                evidence.append(f"Emerging name with Atlas Score {total_score:.1f}")
+            elif category == 'Watchlist' and total_score >= 84 and ticker in event_tickers:
+                recommendation = "Review for higher conviction"
+                evidence.append(f"Atlas Score {total_score:.1f}")
+                evidence.append("new catalyst")
+            elif total_score < 60:
+                recommendation = "Review for Avoid"
+                evidence.append(f"Atlas Score {total_score:.1f}")
+            elif percent_change <= -6 and ticker in event_tickers:
+                recommendation = "Review risk status"
+                evidence.append(f"{percent_change:+.1f}% move")
+                evidence.append("new catalyst")
+            elif abs(percent_change) >= 6:
+                recommendation = "Monitor volatility"
+                evidence.append(f"{percent_change:+.1f}% move")
+
+            if not recommendation:
+                continue
+
+            for signal in signals[:3]:
+                if signal not in evidence:
+                    evidence.append(signal)
+
+            recommendations.append(
+                {
+                    "ticker": ticker,
+                    "current_category": category,
+                    "recommendation": recommendation,
+                    "priority_score": priority_score,
+                    "evidence": "; ".join(evidence),
+                }
+            )
+
+        return sorted(
+            recommendations,
+            key=lambda item: item["priority_score"],
+            reverse=True,
+        )[:limit]
 
     def _event_tickers(self, events):
         return {

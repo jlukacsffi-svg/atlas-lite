@@ -56,6 +56,7 @@ Completed Stage 2 foundations:
 - Sector, category, notes, and structured company-profile metadata.
 - Atlas Scoring Engine v1 weighted rankings.
 - Sector Scorecard and catalyst-aware Atlas Priority Ranking.
+- Conservative Watchlist Change Recommendations for category review.
 - Executive Summary integrates sector scores, priority rankings, earnings, analyst actions, insider activity, and major price moves.
 - Hybrid v3 scoring with automatically calculated Growth, Quality, and Momentum.
 - Local SEC Company Facts caching in `data_cache/sec/` for faster and more resilient runs.
@@ -65,7 +66,7 @@ Completed Stage 2 foundations:
 - Auditable annual revenue and net-income Growth measurements from SEC filings.
 - Auditable net-margin, operating cash-flow margin, and free-cash-flow margin Quality measurements.
 - Auditable 1-month, 3-month, and 6-month Momentum measurements.
-- Sector Scorecard, Atlas Priority Ranking, Company Profile Highlights, Upcoming Earnings, Analyst Actions, Insider Transactions, Automated Growth, Automated Quality, and Automated Momentum report sections.
+- Sector Scorecard, Atlas Priority Ranking, Watchlist Change Recommendations, Company Profile Highlights, Upcoming Earnings, Analyst Actions, Insider Transactions, Automated Growth, Automated Quality, and Automated Momentum report sections.
 - Scoring Summary in Markdown and HTML reports.
 - Structured historical research snapshots.
 - Research Memory comparison in Markdown and HTML reports.
@@ -73,7 +74,7 @@ Completed Stage 2 foundations:
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then begin a simple Watchlist Change Recommendation section.
+Continue expanding the universe toward the 100-150 security target, then add a simple research archive index for easier historical review.
 
 ## Useful Files
 

@@ -7,6 +7,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Loads a structured security universe with sector, category, notes, and company-profile metadata
 - Calculates transparent Atlas Scoring Engine v1 rankings with automated Growth, Quality, and Momentum
 - Produces sector scorecards and a catalyst-aware Atlas Priority Ranking
+- Produces conservative watchlist category review recommendations
 - Caches SEC Company Facts locally to make repeated daily runs faster and more resilient
 - Tracks upcoming earnings events for Atlas universe securities
 - Tracks recent analyst-action headlines for upgrades, downgrades, initiations, and price-target changes
@@ -125,17 +126,18 @@ Each Morning Executive Brief includes:
 6. **Atlas Scoring Summary** - Weighted company rankings
 7. **Sector Scorecard** - Sector-level average scores, day moves, and leaders
 8. **Atlas Priority Ranking** - Research triage ranking using scores and near-term signals
-9. **Company Profile Highlights** - Thesis, key driver, and key risk for top-ranked companies
-10. **Automated Growth** - SEC filing growth scores and underlying annual comparisons
-11. **Automated Quality** - SEC filing profitability and cash-generation measurements
-12. **Automated Momentum** - Momentum scores and recent return measurements
-13. **Research Memory** - Changes since the most recent structured snapshot
-14. **Top Movers** - Best and worst performing stocks
-15. **News Highlights** - Recent headlines for stocks moving more than 2%
-16. **Analyst Actions** - Recent analyst-action headlines for Atlas universe companies
-17. **Insider Transactions** - Recent SEC Form 4 non-derivative transactions
-18. **Potential Opportunities** - Notable price changes
-19. **Risks To Watch** - Key considerations
+9. **Watchlist Change Recommendations** - Conservative category review prompts
+10. **Company Profile Highlights** - Thesis, key driver, and key risk for top-ranked companies
+11. **Automated Growth** - SEC filing growth scores and underlying annual comparisons
+12. **Automated Quality** - SEC filing profitability and cash-generation measurements
+13. **Automated Momentum** - Momentum scores and recent return measurements
+14. **Research Memory** - Changes since the most recent structured snapshot
+15. **Top Movers** - Best and worst performing stocks
+16. **News Highlights** - Recent headlines for stocks moving more than 2%
+17. **Analyst Actions** - Recent analyst-action headlines for Atlas universe companies
+18. **Insider Transactions** - Recent SEC Form 4 non-derivative transactions
+19. **Potential Opportunities** - Notable price changes
+20. **Risks To Watch** - Key considerations
 
 ## Installation
 
