@@ -192,6 +192,7 @@ Weekly summaries are saved to the `reports/` folder:
 Each weekly summary includes:
 
 - Weekly overview
+- What Changed This Week narrative
 - Key score changes across available snapshots
 - Sector trend shifts
 - Recurring top movers

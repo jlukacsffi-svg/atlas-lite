@@ -54,6 +54,7 @@ class WeeklySummaryGenerator:
             return "\n".join(report)
 
         report.append(self._generate_weekly_overview(entries))
+        report.append(self._generate_weekly_narrative(entries))
         report.append(self._generate_key_changes(entries))
         report.append(self._generate_sector_trends(entries))
         report.append(self._generate_recurring_movers(entries))
@@ -142,6 +143,38 @@ class WeeklySummaryGenerator:
         lines.append("")
         return "\n".join(lines) + "\n"
 
+    def _generate_weekly_narrative(self, entries):
+        snapshots = self._load_entry_snapshots(entries)
+        latest_entry = entries[-1]
+        lines = ["## What Changed This Week\n"]
+
+        coverage = self._coverage_sentence(entries)
+        if coverage:
+            lines.append(f"- {coverage}")
+
+        sector_extremes = self._sector_extreme_sentences(snapshots)
+        lines.extend(f"- {sentence}" for sentence in sector_extremes)
+
+        score_sentences = self._score_change_sentences(snapshots)
+        lines.extend(f"- {sentence}" for sentence in score_sentences)
+
+        recurring_mover = self._top_recurring_mover_sentence(entries)
+        if recurring_mover:
+            lines.append(f"- {recurring_mover}")
+
+        score_leader = self._score_leader_sentence(entries)
+        if score_leader:
+            lines.append(f"- {score_leader}")
+
+        if len(lines) == 1:
+            lines.append("- Not enough archive data is available yet to generate a meaningful weekly narrative.")
+
+        latest_run = latest_entry.get("generated_at")
+        if latest_run:
+            lines.append(f"- Latest indexed run: {latest_run}.")
+
+        return "\n".join(lines) + "\n"
+
     def _generate_key_changes(self, entries):
         snapshots = self._load_entry_snapshots(entries)
         if len(snapshots) < 2:
@@ -208,6 +241,144 @@ class WeeklySummaryGenerator:
         for sector, avg_move, count in sorted(rows, key=lambda item: item[1], reverse=True):
             lines.append(f"| {sector} | {avg_move:+.2f}% | {count} |")
         return "\n".join(lines) + "\n"
+
+    def _coverage_sentence(self, entries):
+        latest = entries[-1]
+        available = latest.get("available_securities", 0)
+        total = latest.get("securities", 0)
+        if not total:
+            return None
+
+        missing = total - available
+        if missing == 0:
+            return f"Atlas ended the week with full data coverage: {available}/{total} securities available."
+        return f"Atlas ended the week with {available}/{total} securities available; {missing} lacked usable market data."
+
+    def _sector_extreme_sentences(self, snapshots):
+        rows = self._sector_average_moves(snapshots)
+        if not rows:
+            return []
+
+        strongest = max(rows, key=lambda item: item[1])
+        weakest = min(rows, key=lambda item: item[1])
+        sentences = [
+            (
+                f"Strongest sector trend: {strongest[0]} averaged "
+                f"{strongest[1]:+.2f}% across {strongest[2]} observations."
+            )
+        ]
+        if weakest[0] != strongest[0]:
+            sentences.append(
+                f"Weakest sector trend: {weakest[0]} averaged {weakest[1]:+.2f}%."
+            )
+        return sentences
+
+    def _score_change_sentences(self, snapshots):
+        changes = self._score_changes(snapshots)
+        if not changes:
+            return ["No meaningful score changes were detected across available snapshots."]
+
+        strongest = max(changes, key=lambda item: item[3])
+        weakest = min(changes, key=lambda item: item[3])
+        sentences = []
+
+        if strongest[3] > 0:
+            sentences.append(
+                f"Largest score improvement: {strongest[0]} rose from "
+                f"{strongest[1]:.1f} to {strongest[2]:.1f} ({strongest[3]:+.1f})."
+            )
+        if weakest[3] < 0:
+            sentences.append(
+                f"Largest score decline: {weakest[0]} fell from "
+                f"{weakest[1]:.1f} to {weakest[2]:.1f} ({weakest[3]:+.1f})."
+            )
+        return sentences or ["Score changes were positive but modest across available snapshots."]
+
+    def _top_recurring_mover_sentence(self, entries):
+        mover_counts = Counter()
+        largest_moves = {}
+
+        for entry in entries:
+            for mover in entry.get("top_movers", []):
+                ticker = mover.get("ticker")
+                pct = mover.get("percent_change")
+                if not ticker or pct is None:
+                    continue
+                mover_counts[ticker] += 1
+                current = largest_moves.get(ticker)
+                if current is None or abs(pct) > abs(current):
+                    largest_moves[ticker] = pct
+
+        if not mover_counts:
+            return None
+
+        ticker, appearances = mover_counts.most_common(1)[0]
+        return (
+            f"Most persistent top mover: {ticker} appeared {appearances} times, "
+            f"with a largest move of {largest_moves[ticker]:+.2f}%."
+        )
+
+    def _score_leader_sentence(self, entries):
+        scores_by_ticker = defaultdict(list)
+
+        for entry in entries:
+            for leader in entry.get("score_leaders", []):
+                ticker = leader.get("ticker")
+                score = leader.get("total_score")
+                if ticker and score is not None:
+                    scores_by_ticker[ticker].append(score)
+
+        if not scores_by_ticker:
+            return None
+
+        ticker, scores = max(
+            scores_by_ticker.items(),
+            key=lambda item: (len(item[1]), sum(item[1]) / len(item[1])),
+        )
+        avg_score = sum(scores) / len(scores)
+        return (
+            f"Most consistent score leader: {ticker} appeared {len(scores)} times "
+            f"with an average score of {avg_score:.1f}."
+        )
+
+    def _score_changes(self, snapshots):
+        if len(snapshots) < 2:
+            return []
+
+        first = snapshots[0]
+        latest = snapshots[-1]
+        first_securities = first.get("securities", {})
+        latest_securities = latest.get("securities", {})
+        changes = []
+
+        for ticker, latest_data in latest_securities.items():
+            first_data = first_securities.get(ticker)
+            if not first_data:
+                continue
+            first_score = first_data.get("total_score")
+            latest_score = latest_data.get("total_score")
+            if first_score is None or latest_score is None:
+                continue
+            delta = latest_score - first_score
+            if abs(delta) >= 0.1:
+                changes.append((ticker, first_score, latest_score, delta))
+
+        return changes
+
+    def _sector_average_moves(self, snapshots):
+        sector_moves = defaultdict(list)
+        for snapshot in snapshots:
+            for data in snapshot.get("securities", {}).values():
+                sector = data.get("sector")
+                pct = data.get("percent_change")
+                status = data.get("status")
+                if sector and pct is not None and status == "available":
+                    sector_moves[sector].append(pct)
+
+        return [
+            (sector, sum(moves) / len(moves), len(moves))
+            for sector, moves in sector_moves.items()
+        ]
 
     def _generate_recurring_movers(self, entries):
         mover_counts = Counter()
