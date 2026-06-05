@@ -9,6 +9,54 @@ from app.weekly_summary import WeeklySummaryGenerator
 
 class WeeklySummaryGeneratorTests(unittest.TestCase):
     def write_index(self, archive_dir):
+        self.write_snapshot(
+            archive_dir,
+            "snapshot_1.json",
+            {
+                "NVDA": {
+                    "sector": "AI & Semiconductors",
+                    "status": "available",
+                    "percent_change": 5.5,
+                    "total_score": 90.0,
+                },
+                "AVGO": {
+                    "sector": "AI & Semiconductors",
+                    "status": "available",
+                    "percent_change": -4.2,
+                    "total_score": 88.0,
+                },
+                "MSFT": {
+                    "sector": "Cloud Platforms",
+                    "status": "available",
+                    "percent_change": 1.0,
+                    "total_score": 86.0,
+                },
+            },
+        )
+        self.write_snapshot(
+            archive_dir,
+            "snapshot_2.json",
+            {
+                "NVDA": {
+                    "sector": "AI & Semiconductors",
+                    "status": "available",
+                    "percent_change": -6.5,
+                    "total_score": 93.0,
+                },
+                "AVGO": {
+                    "sector": "AI & Semiconductors",
+                    "status": "available",
+                    "percent_change": 2.0,
+                    "total_score": 87.0,
+                },
+                "MSFT": {
+                    "sector": "Cloud Platforms",
+                    "status": "available",
+                    "percent_change": 3.1,
+                    "total_score": 88.0,
+                },
+            },
+        )
         payload = {
             "entries": [
                 {
@@ -16,6 +64,7 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
                     "universe_version": "1.3",
                     "securities": 56,
                     "available_securities": 56,
+                    "snapshot_path": "snapshot_1.json",
                     "report_path": "../reports/morning_1.md",
                     "html_report_path": "../reports/morning_1.html",
                     "top_movers": [
@@ -32,6 +81,7 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
                     "universe_version": "1.3",
                     "securities": 56,
                     "available_securities": 55,
+                    "snapshot_path": "snapshot_2.json",
                     "report_path": "../reports/morning_2.md",
                     "html_report_path": "../reports/morning_2.html",
                     "top_movers": [
@@ -58,6 +108,16 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def write_snapshot(self, archive_dir, filename, securities):
+        payload = {
+            "generated_at": "2026-06-01T08:00:00",
+            "securities": securities,
+        }
+        (Path(archive_dir) / filename).write_text(
+            json.dumps(payload),
+            encoding="utf-8",
+        )
+
     def test_generate_summary_uses_recent_archive_entries(self):
         with tempfile.TemporaryDirectory() as archive_dir:
             self.write_index(archive_dir)
@@ -69,6 +129,8 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
         self.assertIn("Runs indexed**: 2", summary)
         self.assertIn("| NVDA | 2 | -6.50% |", summary)
         self.assertIn("| NVDA | 2 | 93.0 |", summary)
+        self.assertIn("| NVDA | 90.0 | 93.0 | +3.0 |", summary)
+        self.assertIn("| AI & Semiconductors |", summary)
         self.assertIn("[markdown](morning_2.md)", summary)
         self.assertNotIn("OLD", summary)
 

@@ -186,6 +186,15 @@ Weekly summaries are saved to the `reports/` folder:
 - `weekly_summary_YYYYMMDD_HHMMSS.md`
 - `weekly_summary_YYYYMMDD_HHMMSS.html`
 
+Each weekly summary includes:
+
+- Weekly overview
+- Key score changes across available snapshots
+- Sector trend shifts
+- Recurring top movers
+- Recurring score leaders
+- Run log with links to daily reports
+
 If email delivery is enabled, the weekly summary command emails both weekly summary files.
 
 ## Scheduled Execution

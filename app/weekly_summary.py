@@ -54,6 +54,8 @@ class WeeklySummaryGenerator:
             return "\n".join(report)
 
         report.append(self._generate_weekly_overview(entries))
+        report.append(self._generate_key_changes(entries))
+        report.append(self._generate_sector_trends(entries))
         report.append(self._generate_recurring_movers(entries))
         report.append(self._generate_score_leaders(entries))
         report.append(self._generate_run_log(entries))
@@ -140,6 +142,73 @@ class WeeklySummaryGenerator:
         lines.append("")
         return "\n".join(lines) + "\n"
 
+    def _generate_key_changes(self, entries):
+        snapshots = self._load_entry_snapshots(entries)
+        if len(snapshots) < 2:
+            return "## Key Changes\n\nAt least two snapshots are needed to compare score changes.\n\n"
+
+        first = snapshots[0]
+        latest = snapshots[-1]
+        first_securities = first.get("securities", {})
+        latest_securities = latest.get("securities", {})
+        score_changes = []
+
+        for ticker, latest_data in latest_securities.items():
+            first_data = first_securities.get(ticker)
+            if not first_data:
+                continue
+            first_score = first_data.get("total_score")
+            latest_score = latest_data.get("total_score")
+            if first_score is None or latest_score is None:
+                continue
+            delta = latest_score - first_score
+            if abs(delta) >= 0.1:
+                score_changes.append((ticker, first_score, latest_score, delta))
+
+        lines = ["## Key Changes\n"]
+        if not score_changes:
+            lines.append("No meaningful score changes were detected across the available snapshots.\n")
+            return "\n".join(lines) + "\n"
+
+        lines.append("| Ticker | First Score | Latest Score | Change |")
+        lines.append("|--------|-------------|--------------|--------|")
+        for ticker, first_score, latest_score, delta in sorted(
+            score_changes,
+            key=lambda item: abs(item[3]),
+            reverse=True,
+        )[:10]:
+            lines.append(f"| {ticker} | {first_score:.1f} | {latest_score:.1f} | {delta:+.1f} |")
+        return "\n".join(lines) + "\n"
+
+    def _generate_sector_trends(self, entries):
+        snapshots = self._load_entry_snapshots(entries)
+        if not snapshots:
+            return "## Sector Trend Shifts\n\nNo snapshot data is available for sector trend analysis.\n\n"
+
+        sector_moves = defaultdict(list)
+        for snapshot in snapshots:
+            for data in snapshot.get("securities", {}).values():
+                sector = data.get("sector")
+                pct = data.get("percent_change")
+                status = data.get("status")
+                if sector and pct is not None and status == "available":
+                    sector_moves[sector].append(pct)
+
+        lines = ["## Sector Trend Shifts\n"]
+        if not sector_moves:
+            lines.append("No sector-level movement data is available for this period.\n")
+            return "\n".join(lines) + "\n"
+
+        rows = [
+            (sector, sum(moves) / len(moves), len(moves))
+            for sector, moves in sector_moves.items()
+        ]
+        lines.append("| Sector | Average Daily Move | Observations |")
+        lines.append("|--------|--------------------|--------------|")
+        for sector, avg_move, count in sorted(rows, key=lambda item: item[1], reverse=True):
+            lines.append(f"| {sector} | {avg_move:+.2f}% | {count} |")
+        return "\n".join(lines) + "\n"
+
     def _generate_recurring_movers(self, entries):
         mover_counts = Counter()
         largest_moves = {}
@@ -223,6 +292,29 @@ class WeeklySummaryGenerator:
         if str(archive_relative_path).startswith("../reports/"):
             return path.name
         return archive_relative_path
+
+    def _load_entry_snapshots(self, entries):
+        snapshots = []
+        for entry in entries:
+            snapshot_path = self._resolve_archive_path(entry.get("snapshot_path"))
+            if not snapshot_path:
+                continue
+            try:
+                import json
+
+                with open(snapshot_path, "r", encoding="utf-8") as f:
+                    snapshots.append(json.load(f))
+            except Exception:
+                continue
+        return snapshots
+
+    def _resolve_archive_path(self, archive_relative_path):
+        if not archive_relative_path:
+            return None
+        path = Path(archive_relative_path)
+        if path.is_absolute():
+            return path
+        return (self.archive_dir / path).resolve()
 
     def _markdown_to_html(self, markdown_content):
         lines = markdown_content.splitlines()

@@ -73,12 +73,13 @@ Completed Stage 2 foundations:
 - Local research archive index in `research_archive/archive_index.json` and `research_archive/archive_index.md`.
 - Weekly research summary generator powered by the local archive index.
 - Weekly summary email delivery and Windows weekly scheduled-task helpers.
+- Weekly summary Key Changes and Sector Trend Shifts sections.
 - Research Memory comparison in Markdown and HTML reports.
 - Validation and unit tests for universe and scores.
 
 Recommended next Stage 2 task:
 
-Continue expanding the universe toward the 100-150 security target, then add richer weekly summary interpretation such as biggest score changes, recurring risks, and sector trend shifts.
+Continue expanding the universe toward the 100-150 security target, then add richer weekly summary interpretation such as recurring risks and narrative "what changed this week" commentary.
 
 ## Useful Files
 
