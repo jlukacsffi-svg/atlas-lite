@@ -5,6 +5,7 @@ import html
 import re
 
 from app.news_data import NewsFetcher
+from app.research_tasks import ResearchTaskQueue
 from app.scoring import ScoringEngine
 
 
@@ -43,6 +44,7 @@ class ReportGenerator:
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
         self.scoring_engine = ScoringEngine()
+        self.research_task_queue = ResearchTaskQueue()
         self.last_html_path = None
     
     def generate_report(self):
@@ -69,6 +71,9 @@ class ReportGenerator:
         
         # Executive Summary
         report.append(self._generate_executive_summary())
+
+        # Research Agenda
+        report.append(self._generate_research_agenda())
 
         # Market Summary
         report.append(self._generate_market_summary())
@@ -526,6 +531,46 @@ class ReportGenerator:
             )
         else:
             section.append("- **Action focus**: no urgent watchlist dislocation detected.")
+
+        return "\n".join(section) + "\n"
+
+    def _generate_research_agenda(self):
+        """Generate current open research task agenda."""
+        section = ["## Research Agenda\n"]
+
+        try:
+            open_tasks = self.research_task_queue.list_tasks(status="open")
+        except Exception as exc:
+            section.append(f"Research task queue is unavailable: {exc}\n")
+            return "\n".join(section) + "\n"
+
+        if not open_tasks:
+            section.append(
+                "No open research tasks. Generate suggestions with `py -3.12 research_tasks.py generate`.\n"
+            )
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Open research tasks from the local Stage 4 task queue. "
+            "These are review prompts only, not trade instructions.\n"
+        )
+        section.append("| Priority | Role | Subject | Prompt |")
+        section.append("|----------|------|---------|--------|")
+
+        priority_order = {"high": 0, "medium": 1, "low": 2}
+        for task in sorted(
+            open_tasks,
+            key=lambda item: (
+                priority_order.get(item.get("priority", "medium"), 1),
+                item.get("created_at", ""),
+            ),
+        )[:8]:
+            section.append(
+                f"| {self._format_table_text(task.get('priority', 'medium')).title()} | "
+                f"{self._format_table_text(task.get('role', 'N/A'))} | "
+                f"{self._format_table_text(task.get('subject', 'General'))} | "
+                f"{self._format_table_text(task.get('prompt', 'N/A'))} |"
+            )
 
         return "\n".join(section) + "\n"
 

@@ -99,6 +99,7 @@ Stage 4 planning artifact:
 - `STAGE4_PLAN.md` defines the first lightweight multi-agent research organization path.
 - Local ignored `research_tasks/` queue started before autonomous agents.
 - `research_tasks.py generate` creates reviewable task suggestions from latest archive signals.
+- Morning Executive Brief includes a Research Agenda section with open local tasks.
 
 ## Useful Files
 

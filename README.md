@@ -140,24 +140,26 @@ Each Morning Executive Brief includes:
 
 1. **Date** - Report generation date
 2. **Executive Summary** - Concise readout of market tone, sector strength, priority names, catalysts, risks, and volatility
-3. **Market Summary** - Overview of major indices
-4. **Upcoming Earnings** - Atlas universe earnings events expected in the next 7 days
-5. **Watchlist Summary** - Current prices and performance
-6. **Atlas Scoring Summary** - Weighted company rankings
-7. **Sector Scorecard** - Sector-level average scores, day moves, and leaders
-8. **Atlas Priority Ranking** - Research triage ranking using scores and near-term signals
-9. **Watchlist Change Recommendations** - Conservative category review prompts
-10. **Company Profile Highlights** - Thesis, key driver, and key risk for top-ranked companies
-11. **Automated Growth** - SEC filing growth scores and underlying annual comparisons
-12. **Automated Quality** - SEC filing profitability and cash-generation measurements
-13. **Automated Momentum** - Momentum scores and recent return measurements
-14. **Research Memory** - Changes since the most recent structured snapshot
-15. **Top Movers** - Best and worst performing stocks
-16. **News Highlights** - Recent headlines for stocks moving more than 2%
-17. **Analyst Actions** - Recent analyst-action headlines for Atlas universe companies
-18. **Insider Transactions** - Recent SEC Form 4 non-derivative transactions
-19. **Potential Opportunities** - Notable price changes
-20. **Risks To Watch** - Key considerations
+3. **Research Agenda** - Open Stage 4 research tasks from the local queue
+4. **Market Summary** - Overview of major indices
+5. **Upcoming Earnings** - Atlas universe earnings events expected in the next 7 days
+6. **Watchlist Summary** - Current prices and performance
+7. **Portfolio Intelligence** - Optional local portfolio exposure monitoring
+8. **Atlas Scoring Summary** - Weighted company rankings
+9. **Sector Scorecard** - Sector-level average scores, day moves, and leaders
+10. **Atlas Priority Ranking** - Research triage ranking using scores and near-term signals
+11. **Watchlist Change Recommendations** - Conservative category review prompts
+12. **Company Profile Highlights** - Thesis, key driver, and key risk for top-ranked companies
+13. **Automated Growth** - SEC filing growth scores and underlying annual comparisons
+14. **Automated Quality** - SEC filing profitability and cash-generation measurements
+15. **Automated Momentum** - Momentum scores and recent return measurements
+16. **Research Memory** - Changes since the most recent structured snapshot
+17. **Top Movers** - Best and worst performing stocks
+18. **News Highlights** - Recent headlines for stocks moving more than 2%
+19. **Analyst Actions** - Recent analyst-action headlines for Atlas universe companies
+20. **Insider Transactions** - Recent SEC Form 4 non-derivative transactions
+21. **Potential Opportunities** - Notable price changes
+22. **Risks To Watch** - Key considerations
 
 ## Installation
 
