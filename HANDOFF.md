@@ -46,9 +46,11 @@ The local `.env` file is ignored by Git and should stay local only.
 
 Never commit `.env`.
 
-## Next Development Phase
+## Current Development Phase
 
-Stage 2: Research Memory And Scoring.
+Stage 3: Portfolio Intelligence.
+
+Stage 2: Research Memory And Scoring is complete at the foundation level.
 
 Completed Stage 2 foundations:
 
@@ -79,7 +81,7 @@ Completed Stage 2 foundations:
 - Research Memory comparison in Markdown and HTML reports.
 - Validation and unit tests for universe and scores.
 
-Stage 3 portfolio-intelligence foundations started:
+Stage 3 portfolio-intelligence foundations completed:
 
 - Optional local `data/portfolio.json` support.
 - Safe committed template at `data/portfolio.example.json`.
@@ -88,9 +90,9 @@ Stage 3 portfolio-intelligence foundations started:
 - Local portfolio history snapshots in ignored `portfolio_history/`.
 - Real portfolio file is ignored by Git.
 
-Recommended next Stage 2 task:
+Recommended next Stage 3 task:
 
-Atlas has reached the lower end of the 100-150 security target. Next, continue Stage 3 portfolio-intelligence foundations or expand selectively toward 125-150 securities.
+Create the local `data/portfolio.json` file when Joe is ready to add real holdings. After that, run `py -3.12 portfolio_check.py`, then run `py -3.12 main.py` to generate the first portfolio-aware brief. If Joe wants to wait on real holdings, the next software step is Stage 4 planning for a lightweight research task queue and agent-role boundaries.
 
 ## Useful Files
 

@@ -34,7 +34,7 @@ Atlas produces a useful daily brief without babysitting.
 
 ## Stage 2: Research Memory And Scoring
 
-Current phase.
+Complete at the foundation level.
 
 Goal: Atlas starts remembering and ranking securities.
 
@@ -55,6 +55,8 @@ Atlas can say not just what moved, but what matters and how new information chan
 
 ## Stage 3: Portfolio Intelligence
 
+Current phase.
+
 Goal: Atlas understands Joe's actual holdings, but still does not trade.
 
 Build:
@@ -66,6 +68,7 @@ Build:
 - Concentration risk.
 - Benchmark comparison.
 - Portfolio-specific risk alerts.
+- Local portfolio history.
 
 Success test:
 
