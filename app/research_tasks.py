@@ -6,6 +6,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from app.scoring import ScoringEngine
+
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TASK_DIR = PROJECT_ROOT / "research_tasks"
@@ -20,6 +22,7 @@ class ResearchTaskQueue:
 
     def __init__(self, task_file=DEFAULT_TASK_FILE):
         self.task_file = Path(task_file)
+        self.scoring_engine = ScoringEngine()
 
     def load(self):
         if not self.task_file.exists():
@@ -191,6 +194,59 @@ class ResearchTaskQueue:
 
         return created
 
+    def generate_from_market_data(self, market_data, source="daily_run", limit=8):
+        """Create research tasks directly from the current market-data run."""
+        available = [
+            (ticker, data)
+            for ticker, data in market_data.items()
+            if data.get("status") == "available"
+        ]
+        top_movers = [
+            {
+                "ticker": ticker,
+                "percent_change": float(data["percent_change"]),
+            }
+            for ticker, data in sorted(
+                available,
+                key=lambda item: abs(float(item[1].get("percent_change") or 0)),
+                reverse=True,
+            )[:5]
+            if data.get("percent_change") is not None
+        ]
+
+        score_leaders = []
+        for ticker, data in available:
+            scores = data.get("scores")
+            if not scores or data.get("sector") == "Benchmark ETF":
+                continue
+            try:
+                total_score = self.scoring_engine.score(scores)
+            except (TypeError, ValueError):
+                continue
+            score_leaders.append(
+                {
+                    "ticker": ticker,
+                    "total_score": total_score,
+                }
+            )
+        score_leaders.sort(key=lambda item: item["total_score"], reverse=True)
+
+        entry = {
+            "source": source,
+            "top_movers": top_movers,
+            "score_leaders": score_leaders[:3],
+        }
+        snapshot = {"securities": market_data}
+        suggestions = self._task_suggestions_from_entry(entry, snapshot=snapshot)
+        created = []
+
+        for suggestion in suggestions[:limit]:
+            task, was_created = self.add_task(**suggestion)
+            if was_created:
+                created.append(task)
+
+        return created
+
     def _normalize_role(self, role):
         role = str(role).strip()
         if role not in VALID_ROLES:
@@ -235,7 +291,12 @@ class ResearchTaskQueue:
         return str(value).replace("|", "/").replace("\n", " ").strip()
 
     def _task_suggestions_from_entry(self, entry, snapshot=None):
-        source = entry.get("report_path") or entry.get("snapshot_path") or "archive_index"
+        source = (
+            entry.get("source")
+            or entry.get("report_path")
+            or entry.get("snapshot_path")
+            or "archive_index"
+        )
         suggestions = []
 
         for mover in entry.get("top_movers", [])[:5]:

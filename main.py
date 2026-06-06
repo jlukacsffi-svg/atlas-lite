@@ -22,6 +22,7 @@ from app.earnings_calendar import EarningsCalendar
 from app.insider_transactions import InsiderTransactionTracker
 from app.portfolio import Portfolio
 from app.research_memory import ResearchMemory
+from app.research_tasks import ResearchTaskQueue
 from app.security_universe import SecurityUniverse
 
 LOG_DIR = Path(__file__).resolve().parent / "logs"
@@ -121,6 +122,15 @@ def main():
         except Exception as portfolio_error:
             portfolio_summary = {"configured": False, "error": str(portfolio_error)}
             print(f"[warning] Portfolio analysis unavailable: {portfolio_error}")
+
+        print()
+        print("[tasks] Updating research task queue...")
+        try:
+            task_queue = ResearchTaskQueue()
+            created_tasks = task_queue.generate_from_market_data(market_data)
+            print(f"[ok] Generated {len(created_tasks)} new research tasks from current market data.")
+        except Exception as task_error:
+            print(f"[warning] Research task generation unavailable: {task_error}")
 
         print()
         print("[memory] Updating research archive...")

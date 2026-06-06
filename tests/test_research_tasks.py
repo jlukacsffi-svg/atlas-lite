@@ -144,6 +144,80 @@ class ResearchTaskQueueTests(unittest.TestCase):
         self.assertIn("CIO", roles)
         self.assertIn("Reporting", roles)
 
+    def test_generate_from_market_data_creates_current_run_tasks(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            market_data = {
+                "LOSS": {
+                    "status": "available",
+                    "percent_change": -6.0,
+                    "sector": "Software",
+                    "scores": {
+                        "growth": 70,
+                        "quality": 70,
+                        "moat": 70,
+                        "momentum": 60,
+                        "risk": 50,
+                    },
+                },
+                "GAIN": {
+                    "status": "available",
+                    "percent_change": 5.0,
+                    "sector": "Semiconductors",
+                    "scores": {
+                        "growth": 95,
+                        "quality": 90,
+                        "moat": 90,
+                        "momentum": 95,
+                        "risk": 80,
+                    },
+                },
+                "BAD": {
+                    "status": "unavailable",
+                    "percent_change": None,
+                    "sector": "Software",
+                    "scores": {},
+                },
+            }
+
+            created = queue.generate_from_market_data(
+                market_data,
+                source="test_daily_run",
+            )
+
+        roles = {task["role"] for task in created}
+        subjects = {task["subject"] for task in created}
+        self.assertIn("CRO", roles)
+        self.assertIn("CIO", roles)
+        self.assertIn("Reporting", roles)
+        self.assertIn("LOSS", subjects)
+        self.assertIn("GAIN", subjects)
+        self.assertTrue(all(task["source"] == "test_daily_run" for task in created))
+
+    def test_generate_from_market_data_deduplicates_repeated_runs(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            market_data = {
+                "NVDA": {
+                    "status": "available",
+                    "percent_change": 5.0,
+                    "sector": "Semiconductors",
+                    "scores": {
+                        "growth": 95,
+                        "quality": 90,
+                        "moat": 95,
+                        "momentum": 90,
+                        "risk": 80,
+                    },
+                }
+            }
+
+            first = queue.generate_from_market_data(market_data)
+            second = queue.generate_from_market_data(market_data)
+
+        self.assertGreaterEqual(len(first), 1)
+        self.assertEqual(second, [])
+
 
 if __name__ == "__main__":
     unittest.main()
