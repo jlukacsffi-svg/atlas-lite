@@ -52,6 +52,32 @@ class ResearchTaskQueueTests(unittest.TestCase):
         self.assertEqual(summary["by_role"]["CRO"], 1)
         self.assertEqual(len(summary["open_high_priority"]), 1)
 
+    def test_render_agenda_groups_tasks_for_review(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.add_task(role="CRO", priority="high", subject="ENPH", prompt="Review downside risk.")
+            queue.add_task(role="CIO", priority="medium", subject="NVDA", prompt="Review thesis.")
+
+            agenda = queue.render_agenda()
+
+        self.assertIn("# Atlas Research Task Agenda", agenda)
+        self.assertIn("## High Priority", agenda)
+        self.assertIn("### CRO", agenda)
+        self.assertIn("### CIO", agenda)
+        self.assertIn("Review downside risk.", agenda)
+
+    def test_save_agenda_writes_markdown_file(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            output_path = Path(temp_dir) / "agenda.md"
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.add_task(role="CIO", subject="NVDA", prompt="Review thesis.")
+
+            saved_path = queue.save_agenda(output_path=output_path)
+            saved_text = output_path.read_text(encoding="utf-8")
+
+        self.assertEqual(saved_path, output_path)
+        self.assertIn("Review thesis.", saved_text)
+
     def test_invalid_role_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")

@@ -19,6 +19,10 @@ def build_parser():
 
     subparsers.add_parser("summary", help="Summarize research task queue status.")
 
+    agenda_parser = subparsers.add_parser("agenda", help="Write a Markdown research agenda.")
+    agenda_parser.add_argument("--status", choices=["open", "in_progress", "closed"], default="open")
+    agenda_parser.add_argument("--output", default=None)
+
     add_parser = subparsers.add_parser("add", help="Add a research task.")
     add_parser.add_argument("--role", required=True, choices=["CEO", "CIO", "CRO", "Reporting"])
     add_parser.add_argument("--subject", default="General")
@@ -76,6 +80,11 @@ def main(argv=None):
             print("Open high-priority tasks:")
             for task in summary["open_high_priority"]:
                 print(f"  {task['id']} | {task['role']} | {task['subject']} | {task['prompt']}")
+        return 0
+
+    if args.command == "agenda":
+        output_path = queue.save_agenda(output_path=args.output, status=args.status)
+        print(f"[ok] Research agenda saved to: {output_path}")
         return 0
 
     if args.command == "generate":

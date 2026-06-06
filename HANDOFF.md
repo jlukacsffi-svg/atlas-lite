@@ -101,6 +101,7 @@ Stage 4 planning artifact:
 - `research_tasks.py generate` creates reviewable task suggestions from latest archive signals.
 - Morning Executive Brief includes a Research Agenda section with open local tasks.
 - `research_tasks.py summary` summarizes local tasks by status, role, and priority.
+- `research_tasks.py agenda` writes a local Markdown research agenda.
 
 ## Useful Files
 

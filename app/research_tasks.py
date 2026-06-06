@@ -96,6 +96,59 @@ class ResearchTaskQueue:
             ],
         }
 
+    def render_agenda(self, status="open"):
+        """Render a Markdown agenda for the selected task status."""
+        tasks = self.list_tasks(status=status)
+        summary = self.summary()
+        generated_at = datetime.now().isoformat(timespec="seconds")
+        lines = [
+            "# Atlas Research Task Agenda",
+            "",
+            f"Generated: {generated_at}",
+            f"Status filter: {status or 'all'}",
+            "",
+            "## Queue Summary",
+            "",
+            f"- **Total Tasks**: {summary['total']}",
+            f"- **Open Tasks**: {summary['by_status'].get('open', 0)}",
+            f"- **High Priority Open Tasks**: {len(summary['open_high_priority'])}",
+            "",
+        ]
+
+        if not tasks:
+            lines.append("No matching research tasks.")
+            lines.append("")
+            return "\n".join(lines)
+
+        high_priority = [
+            task for task in tasks
+            if task.get("priority") == "high"
+        ]
+        if high_priority:
+            lines.extend(["## High Priority", ""])
+            lines.extend(self._task_table(high_priority))
+            lines.append("")
+
+        lines.extend(["## By Role", ""])
+        for role in sorted(VALID_ROLES):
+            role_tasks = [
+                task for task in tasks
+                if task.get("role") == role
+            ]
+            if not role_tasks:
+                continue
+            lines.extend([f"### {role}", ""])
+            lines.extend(self._task_table(role_tasks))
+            lines.append("")
+
+        return "\n".join(lines)
+
+    def save_agenda(self, output_path=None, status="open"):
+        output_path = Path(output_path) if output_path else self.task_file.parent / "agenda.md"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(self.render_agenda(status=status), encoding="utf-8")
+        return output_path
+
     def update_status(self, task_id, status):
         if status not in VALID_STATUSES:
             raise ValueError(f"invalid task status: {status}")
@@ -145,6 +198,30 @@ class ResearchTaskQueue:
         raw = f"{role}|{subject or 'General'}|{prompt}".lower()
         digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
         return f"task_{digest}"
+
+    def _task_table(self, tasks):
+        lines = [
+            "| Priority | Role | Subject | Prompt | Source |",
+            "|----------|------|---------|--------|--------|",
+        ]
+        for task in sorted(
+            tasks,
+            key=lambda item: (
+                {"high": 0, "medium": 1, "low": 2}.get(item.get("priority", "medium"), 1),
+                item.get("created_at", ""),
+            ),
+        ):
+            lines.append(
+                f"| {self._table_text(task.get('priority', 'medium')).title()} | "
+                f"{self._table_text(task.get('role', 'N/A'))} | "
+                f"{self._table_text(task.get('subject', 'General'))} | "
+                f"{self._table_text(task.get('prompt', 'N/A'))} | "
+                f"{self._table_text(task.get('source', 'manual'))} |"
+            )
+        return lines
+
+    def _table_text(self, value):
+        return str(value).replace("|", "/").replace("\n", " ").strip()
 
     def _task_suggestions_from_entry(self, entry, snapshot=None):
         source = entry.get("report_path") or entry.get("snapshot_path") or "archive_index"

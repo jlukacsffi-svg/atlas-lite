@@ -243,6 +243,12 @@ To summarize the task queue by status, role, and priority:
 py -3.12 research_tasks.py summary
 ```
 
+To write a Markdown research agenda:
+
+```bash
+py -3.12 research_tasks.py agenda
+```
+
 Local task data is saved in `research_tasks/`, which is ignored by Git.
 
 ## Scheduled Execution
