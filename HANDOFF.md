@@ -94,9 +94,15 @@ Recommended next Stage 3 task:
 
 Create the local `data/portfolio.json` file when Joe is ready to add real holdings. After that, run `py -3.12 portfolio_check.py`, then run `py -3.12 main.py` to generate the first portfolio-aware brief. If Joe wants to wait on real holdings, the next software step is Stage 4 planning for a lightweight research task queue and agent-role boundaries.
 
+Stage 4 planning artifact:
+
+- `STAGE4_PLAN.md` defines the first lightweight multi-agent research organization path.
+- Recommended first Stage 4 build: local ignored `research_tasks/` queue before autonomous agents.
+
 ## Useful Files
 
 - `ROADMAP.md`: long-term Atlas development roadmap.
+- `STAGE4_PLAN.md`: first Stage 4 multi-agent research organization plan.
 - `PROJECT_BRIEF.md`: project vision and constraints.
 - `AGENTS.md`: Codex working instructions.
 - `app/analyst_actions.py`: analyst-action headline retrieval and local caching.

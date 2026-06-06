@@ -207,6 +207,16 @@ Each weekly summary includes:
 
 If email delivery is enabled, the weekly summary command emails both weekly summary files.
 
+## Stage 4 Planning
+
+The Stage 4 multi-agent research organization should begin with a local research task queue, not a large autonomous agent framework.
+
+The planning document is:
+
+```text
+STAGE4_PLAN.md
+```
+
 ## Scheduled Execution
 
 Atlas includes PowerShell scripts for Windows Task Scheduler.
