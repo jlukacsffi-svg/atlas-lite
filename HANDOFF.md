@@ -84,6 +84,7 @@ Stage 3 portfolio-intelligence foundations started:
 - Optional local `data/portfolio.json` support.
 - Safe committed template at `data/portfolio.example.json`.
 - Portfolio market value, estimated daily change, benchmark context, position exposure, sector exposure, and risk-alert reporting.
+- `portfolio_check.py` validates local portfolio structure before daily use.
 - Real portfolio file is ignored by Git.
 
 Recommended next Stage 2 task:
@@ -107,6 +108,7 @@ Atlas has reached the lower end of the 100-150 security target. Next, continue S
 - `app/market_data.py`: market data retrieval and fallback behavior.
 - `app/momentum.py`: automated return measurement and Momentum scoring.
 - `app/portfolio.py`: optional local portfolio loading and exposure analysis.
+- `portfolio_check.py`: local portfolio validation command.
 - `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.
 - `app/report_generator.py`: Markdown and HTML report generation.
 - `app/weekly_summary.py`: weekly summary generation from the local research archive index.

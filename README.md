@@ -299,6 +299,12 @@ data/portfolio.json
 
 Then edit `data/portfolio.json` with local holdings. The real portfolio file is ignored by Git and should not be committed.
 
+To validate the local portfolio file before running the daily brief:
+
+```bash
+py -3.12 portfolio_check.py
+```
+
 When configured, the daily brief includes:
 
 - Estimated portfolio market value

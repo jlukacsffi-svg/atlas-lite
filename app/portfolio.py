@@ -31,6 +31,49 @@ class Portfolio:
             "positions": [self._normalize_position(position) for position in positions],
         }
 
+    def validate(self, allowed_tickers=None):
+        """Validate local portfolio structure without requiring market data."""
+        portfolio = self.load()
+        if not portfolio.get("configured"):
+            return {
+                "configured": False,
+                "errors": [],
+                "warnings": ["No local portfolio file found."],
+                "positions": [],
+            }
+
+        allowed = {ticker.upper() for ticker in allowed_tickers} if allowed_tickers else None
+        seen = set()
+        duplicates = []
+        unknown = []
+
+        for position in portfolio["positions"]:
+            ticker = position["ticker"]
+            if ticker in seen:
+                duplicates.append(ticker)
+            seen.add(ticker)
+
+            if allowed is not None and ticker not in allowed:
+                unknown.append(ticker)
+
+        errors = []
+        warnings = []
+        if duplicates:
+            errors.append(f"Duplicate portfolio tickers: {', '.join(sorted(set(duplicates)))}")
+        if unknown:
+            warnings.append(
+                "Portfolio tickers outside the Atlas universe: "
+                f"{', '.join(sorted(set(unknown)))}"
+            )
+
+        return {
+            "configured": True,
+            "name": portfolio.get("name", "Local Portfolio"),
+            "errors": errors,
+            "warnings": warnings,
+            "positions": portfolio["positions"],
+        }
+
     def analyze(self, market_data):
         portfolio = self.load()
         if not portfolio.get("configured"):

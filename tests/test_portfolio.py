@@ -58,6 +58,28 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(summary["sector_allocations"][0]["sector"], "AI & Semiconductors")
         self.assertTrue(summary["risk_alerts"])
 
+    def test_validate_flags_duplicate_tickers_and_unknown_universe_names(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "portfolio.json"
+            path.write_text(
+                json.dumps(
+                    {
+                        "positions": [
+                            {"ticker": "NVDA", "shares": 1},
+                            {"ticker": "NVDA", "shares": 2},
+                            {"ticker": "UNKNOWN", "shares": 1},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            result = Portfolio(path).validate(allowed_tickers=["NVDA"])
+
+        self.assertTrue(result["configured"])
+        self.assertIn("Duplicate portfolio tickers: NVDA", result["errors"])
+        self.assertIn("UNKNOWN", result["warnings"][0])
+
 
 if __name__ == "__main__":
     unittest.main()
