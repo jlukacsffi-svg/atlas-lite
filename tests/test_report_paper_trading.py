@@ -45,6 +45,10 @@ class ReportPaperTradingTests(unittest.TestCase):
                         "price": 150,
                         "source": "paper_strategy_v1",
                         "thesis": "High Atlas score.",
+                        "risk_review": {
+                            "verdict": "caution",
+                            "flags": ["Elevated daily volatility."],
+                        },
                     }
                 ],
             },
@@ -57,7 +61,8 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("| SPY | +0.50% | +0.50% |", section)
         self.assertIn("Recommendations / Simulated Trades", section)
         self.assertIn("Pending Paper Proposals", section)
-        self.assertIn("| proposal_test | Buy | NVDA | 10 | $150.00 |", section)
+        self.assertIn("| proposal_test | Buy | NVDA | 10 | $150.00 | Caution |", section)
+        self.assertIn("Elevated daily volatility.", section)
         self.assertIn("cannot execute without a separate simulation approval", section)
         self.assertIn("Simulated performance only", section)
 

@@ -33,6 +33,12 @@ class PaperTradingAccountTests(unittest.TestCase):
             thesis,
             recommendation_id=recommendation_id,
         )
+        account.record_proposal_risk_review(
+            proposal["proposal_id"],
+            verdict="clear",
+            flags=[],
+            source="test",
+        )
         account.decide_proposal(proposal["proposal_id"], "approve")
         return account.execute_order(
             side,
@@ -201,6 +207,7 @@ class PaperTradingAccountTests(unittest.TestCase):
                     datetime(2026, 6, 1, 9, 31, 0),
                     datetime(2026, 6, 1, 9, 32, 0),
                     datetime(2026, 6, 1, 9, 33, 0),
+                    datetime(2026, 6, 1, 9, 34, 0),
                     datetime(2026, 6, 1, 16, 0, 0),
                     datetime(2026, 6, 2, 16, 0, 0),
                 ]
@@ -312,6 +319,9 @@ class PaperTradingAccountTests(unittest.TestCase):
             account = self.make_account(temp_dir)
             account.initialize(100000)
             proposal = account.create_proposal("buy", "NVDA", 10, 100, "Approved.")
+            account.record_proposal_risk_review(
+                proposal["proposal_id"], "clear", [], source="test"
+            )
             account.decide_proposal(proposal["proposal_id"], "approve")
 
             with self.assertRaisesRegex(ValueError, "does not match"):
@@ -329,6 +339,9 @@ class PaperTradingAccountTests(unittest.TestCase):
             account = self.make_account(temp_dir)
             account.initialize(100000)
             proposal = account.create_proposal("buy", "NVDA", 10, 100, "Approved.")
+            account.record_proposal_risk_review(
+                proposal["proposal_id"], "clear", [], source="test"
+            )
             account.decide_proposal(proposal["proposal_id"], "approve")
 
             trade = account.execute_order(
@@ -351,6 +364,9 @@ class PaperTradingAccountTests(unittest.TestCase):
             account = self.make_account(temp_dir)
             account.initialize(100000)
             proposal = account.create_proposal("buy", "NVDA", 10, 100, "Approved.")
+            account.record_proposal_risk_review(
+                proposal["proposal_id"], "clear", [], source="test"
+            )
             account.decide_proposal(proposal["proposal_id"], "approve")
             account.execute_order(
                 "buy",
@@ -374,6 +390,23 @@ class PaperTradingAccountTests(unittest.TestCase):
             status = account.proposal_status(proposal["proposal_id"])
 
         self.assertEqual(status, "executed")
+
+    def test_approval_requires_non_hold_risk_review(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+            proposal = account.create_proposal("buy", "NVDA", 10, 100, "Review.")
+
+            with self.assertRaisesRegex(ValueError, "requires a risk review"):
+                account.decide_proposal(proposal["proposal_id"], "approve")
+
+            account.record_proposal_risk_review(
+                proposal["proposal_id"],
+                verdict="hold",
+                flags=["Sharp downside."],
+            )
+            with self.assertRaisesRegex(ValueError, "hold risk verdict"):
+                account.decide_proposal(proposal["proposal_id"], "approve")
 
 
 if __name__ == "__main__":

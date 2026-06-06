@@ -366,6 +366,8 @@ Daily Atlas runs automatically add a mark-to-market snapshot and Morning Brief s
 
 The daily run also uses `paper_strategy_v1` to create at most three deduplicated pending proposals from eligible high-scoring securities. The strategy targets roughly 5% of starting simulated cash per entry, excludes benchmarks and Avoid names, and never approves or executes its own proposals.
 
+`paper_strategy_v1` skips new entries already down 8% or more in the current session. `paper_risk_v1` independently reviews every pending proposal. Sharp downside, missing data, or weak scores produce a hard hold and automatic paper-policy rejection. Elevated volatility or proposal concentration produces caution and leaves the proposal pending. At most three active buy proposals may remain in the queue.
+
 The initial policy prohibits margin, short selling, options, and leverage; preserves a 10% cash reserve; limits positions to 20% of simulated equity; and permits at most five simulated trades per day.
 
 Paper account data is saved locally in ignored `paper_trading/`. No paper-trading command can transmit a real order.

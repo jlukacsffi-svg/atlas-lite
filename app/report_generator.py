@@ -897,18 +897,21 @@ class ReportGenerator:
         else:
             section.extend(
                 [
-                    "| ID | Side | Ticker | Shares | Reference Price | Source | Thesis |",
-                    "|----|------|--------|--------|-----------------|--------|--------|",
+                    "| ID | Side | Ticker | Shares | Reference Price | Risk | Flags | Thesis |",
+                    "|----|------|--------|--------|-----------------|------|-------|--------|",
                 ]
             )
             for proposal in pending:
+                review = proposal.get("risk_review") or {}
+                flags = "; ".join(review.get("flags", [])) or "None"
                 section.append(
                     f"| {proposal.get('proposal_id', 'N/A')} | "
                     f"{proposal.get('side', 'N/A').title()} | "
                     f"{proposal.get('ticker', 'N/A')} | "
                     f"{proposal.get('shares', 0):g} | "
                     f"${proposal.get('price', 0):,.2f} | "
-                    f"{proposal.get('source', 'manual')} | "
+                    f"{review.get('verdict', 'unreviewed').title()} | "
+                    f"{flags.replace('|', '/')} | "
                     f"{proposal.get('thesis', 'N/A').replace('|', '/')} |"
                 )
         section.append(

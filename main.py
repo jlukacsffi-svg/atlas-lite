@@ -22,6 +22,7 @@ from app.earnings_calendar import EarningsCalendar
 from app.insider_transactions import InsiderTransactionTracker
 from app.paper_trading import PaperTradingAccount
 from app.paper_strategy import PaperStrategy
+from app.paper_risk import PaperRiskReviewer
 from app.portfolio import Portfolio
 from app.research_memory import ResearchMemory
 from app.research_tasks import ResearchTaskQueue
@@ -158,6 +159,10 @@ def main():
                     },
                 )
                 paper_proposals = PaperStrategy().generate(paper_account, market_data)
+                paper_reviews = PaperRiskReviewer().review_pending(
+                    paper_account,
+                    market_data,
+                )
                 paper_summary = paper_account.performance_summary()
                 paper_summary["configured"] = True
                 paper_summary["pending_proposals"] = paper_account.proposals(
@@ -170,6 +175,7 @@ def main():
                 print(
                     f"[ok] Generated {len(paper_proposals)} new pending paper proposals."
                 )
+                print(f"[ok] Recorded {len(paper_reviews)} paper proposal risk reviews.")
             else:
                 paper_summary = {"configured": False, "available": False}
                 print("[paper] No simulated paper account initialized.")

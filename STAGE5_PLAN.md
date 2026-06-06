@@ -72,6 +72,10 @@ Implemented:
 - Transparent `paper_strategy_v1` candidate generation.
 - Maximum three new daily proposals with approximately 5% target sizing.
 - Pending proposal rationale in the Morning Brief.
+- CRO-style risk reviews before proposal approval.
+- Automatic policy rejection for hard-hold paper proposals.
+- Maximum three active pending or approved buy proposals.
+- Strategy-level rejection of new entries already down 8% or more.
 
 ## Safety Boundary
 

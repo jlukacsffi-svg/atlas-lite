@@ -14,11 +14,13 @@ class PaperStrategy:
         maximum_exit_score=60.0,
         target_position_pct=5.0,
         maximum_new_proposals=3,
+        minimum_daily_move_pct=-8.0,
     ):
         self.minimum_buy_score = float(minimum_buy_score)
         self.maximum_exit_score = float(maximum_exit_score)
         self.target_position_pct = float(target_position_pct)
         self.maximum_new_proposals = int(maximum_new_proposals)
+        self.minimum_daily_move_pct = float(minimum_daily_move_pct)
         self.scoring_engine = ScoringEngine()
 
     def generate(self, account, market_data):
@@ -30,8 +32,14 @@ class PaperStrategy:
             for proposal in account.proposals()
             if proposal["status"] in {"pending", "approved"}
         }
+        active_buy_count = sum(1 for side, _ticker in existing if side == "buy")
+        available_buy_slots = max(
+            0,
+            self.maximum_new_proposals - active_buy_count,
+        )
         candidates = self._candidate_rows(market_data)
         created = []
+        created_buys = 0
 
         for row in candidates:
             ticker = row["ticker"]
@@ -55,9 +63,11 @@ class PaperStrategy:
                     )
                 continue
 
-            if len(created) >= self.maximum_new_proposals:
+            if created_buys >= available_buy_slots:
                 break
             if row["category"] == "Avoid" or row["score"] < self.minimum_buy_score:
+                continue
+            if row["percent_change"] <= self.minimum_daily_move_pct:
                 continue
             if ("buy", ticker) in existing:
                 continue
@@ -85,6 +95,7 @@ class PaperStrategy:
                     source="paper_strategy_v1",
                 )
             )
+            created_buys += 1
 
         return created
 

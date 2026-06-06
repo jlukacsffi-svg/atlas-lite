@@ -69,10 +69,33 @@ class PaperStrategyTests(unittest.TestCase):
         self.assertEqual(len(first), 1)
         self.assertEqual(second, [])
 
+    def test_existing_pending_proposals_count_against_daily_cap(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            strategy = PaperStrategy(maximum_new_proposals=3)
+            account.create_proposal("buy", "AAA", 10, 100, "Existing.")
+            account.create_proposal("buy", "BBB", 10, 100, "Existing.")
+
+            created = strategy.generate(
+                account,
+                {
+                    "AAA": market_security(99),
+                    "BBB": market_security(98),
+                    "CCC": market_security(97),
+                    "DDD": market_security(96),
+                },
+            )
+
+        self.assertEqual(len(created), 1)
+        self.assertEqual(created[0]["ticker"], "CCC")
+
     def test_generates_exit_for_held_name_below_threshold(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)
             proposal = account.create_proposal("buy", "AAA", 10, 100, "Entry.")
+            account.record_proposal_risk_review(
+                proposal["proposal_id"], "clear", [], source="test"
+            )
             account.decide_proposal(proposal["proposal_id"], "approve")
             account.execute_order(
                 "buy",
@@ -101,6 +124,18 @@ class PaperStrategyTests(unittest.TestCase):
             created = strategy.generate(
                 account,
                 {"AAA": market_security(99, category="Avoid")},
+            )
+
+        self.assertEqual(created, [])
+
+    def test_sharp_downside_never_creates_buy(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            strategy = PaperStrategy()
+
+            created = strategy.generate(
+                account,
+                {"AAA": market_security(99, change=-9.0)},
             )
 
         self.assertEqual(created, [])

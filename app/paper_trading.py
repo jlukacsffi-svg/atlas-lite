@@ -15,6 +15,7 @@ DEFAULT_POLICY = {
     "minimum_cash_reserve_pct": 10.0,
     "maximum_position_pct": 20.0,
     "maximum_daily_trades": 5,
+    "require_risk_review": True,
 }
 
 
@@ -147,6 +148,14 @@ class PaperTradingAccount:
             raise ValueError(f"paper proposal not found: {proposal_id}")
         if self.proposal_status(proposal_id) != "pending":
             raise ValueError("paper proposal already has a decision")
+        if decision == "approve":
+            policy = self.load().get("policy", self.policy)
+            if policy.get("require_risk_review", True):
+                review = self.latest_proposal_risk_review(proposal_id)
+                if not review:
+                    raise ValueError("paper proposal requires a risk review before approval")
+                if review.get("verdict") == "hold":
+                    raise ValueError("paper proposal has a hold risk verdict")
 
         event = {
             "event": "paper_proposal_decision",
@@ -158,9 +167,42 @@ class PaperTradingAccount:
         self._append_event(event)
         return event
 
+    def record_proposal_risk_review(self, proposal_id, verdict, flags, source="paper_risk_v1"):
+        """Append a CRO-style risk review for a pending paper proposal."""
+        if not self._find_proposal(proposal_id):
+            raise ValueError(f"paper proposal not found: {proposal_id}")
+        if self.proposal_status(proposal_id) != "pending":
+            raise ValueError("risk review requires a pending paper proposal")
+        verdict = str(verdict).strip().lower()
+        if verdict not in {"clear", "caution", "hold"}:
+            raise ValueError("risk verdict must be clear, caution, or hold")
+        event = {
+            "event": "paper_proposal_risk_review",
+            "proposal_id": proposal_id,
+            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "verdict": verdict,
+            "flags": [str(flag).strip() for flag in flags if str(flag).strip()],
+            "source": source,
+        }
+        self._append_event(event)
+        return event
+
+    def latest_proposal_risk_review(self, proposal_id):
+        reviews = [
+            event
+            for event in self.ledger()
+            if event.get("event") == "paper_proposal_risk_review"
+            and event.get("proposal_id") == proposal_id
+        ]
+        return reviews[-1] if reviews else None
+
     def proposals(self, status=None):
         proposals = [
-            dict(event, status=self.proposal_status(event["proposal_id"]))
+            dict(
+                event,
+                status=self.proposal_status(event["proposal_id"]),
+                risk_review=self.latest_proposal_risk_review(event["proposal_id"]),
+            )
             for event in self.ledger()
             if event.get("event") == "paper_proposal"
         ]

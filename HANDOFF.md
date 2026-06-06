@@ -130,6 +130,9 @@ Stage 5 paper-trading foundation:
 - The local paper account was initialized with $100,000 simulated cash.
 - Every simulated fill now requires a separately approved, single-use paper proposal.
 - Owner-approved research can create a pending paper proposal, but never an automatic fill.
+- `paper_risk_v1` records CRO-style reviews for every pending proposal.
+- Hard-hold proposals are automatically rejected by paper policy; caution proposals remain pending.
+- The strategy enforces a maximum of three active buy proposals.
 
 ## Useful Files
 
