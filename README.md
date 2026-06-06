@@ -237,6 +237,12 @@ To generate task suggestions from the latest Atlas research archive:
 py -3.12 research_tasks.py generate
 ```
 
+To summarize the task queue by status, role, and priority:
+
+```bash
+py -3.12 research_tasks.py summary
+```
+
 Local task data is saved in `research_tasks/`, which is ignored by Git.
 
 ## Scheduled Execution

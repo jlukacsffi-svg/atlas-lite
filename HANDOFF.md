@@ -100,6 +100,7 @@ Stage 4 planning artifact:
 - Local ignored `research_tasks/` queue started before autonomous agents.
 - `research_tasks.py generate` creates reviewable task suggestions from latest archive signals.
 - Morning Executive Brief includes a Research Agenda section with open local tasks.
+- `research_tasks.py summary` summarizes local tasks by status, role, and priority.
 
 ## Useful Files
 

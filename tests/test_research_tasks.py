@@ -37,6 +37,21 @@ class ResearchTaskQueueTests(unittest.TestCase):
 
         self.assertEqual(updated["status"], "closed")
 
+    def test_summary_counts_tasks_by_status_role_and_priority(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.add_task(role="CRO", priority="high", subject="ENPH", prompt="Review downside risk.")
+            task, _ = queue.add_task(role="CIO", priority="medium", subject="NVDA", prompt="Review thesis.")
+            queue.update_status(task["id"], "closed")
+
+            summary = queue.summary()
+
+        self.assertEqual(summary["total"], 2)
+        self.assertEqual(summary["by_status"]["open"], 1)
+        self.assertEqual(summary["by_status"]["closed"], 1)
+        self.assertEqual(summary["by_role"]["CRO"], 1)
+        self.assertEqual(len(summary["open_high_priority"]), 1)
+
     def test_invalid_role_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")

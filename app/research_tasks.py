@@ -1,6 +1,7 @@
 """Local research task queue for Atlas Stage 4."""
 
 from datetime import datetime
+from collections import Counter
 import hashlib
 import json
 from pathlib import Path
@@ -81,6 +82,19 @@ class ResearchTaskQueue:
         if status:
             return [task for task in tasks if task.get("status") == status]
         return tasks
+
+    def summary(self):
+        tasks = self.load()["tasks"]
+        return {
+            "total": len(tasks),
+            "by_status": dict(Counter(task.get("status", "open") for task in tasks)),
+            "by_role": dict(Counter(task.get("role", "Unknown") for task in tasks)),
+            "by_priority": dict(Counter(task.get("priority", "medium") for task in tasks)),
+            "open_high_priority": [
+                task for task in tasks
+                if task.get("status") == "open" and task.get("priority") == "high"
+            ],
+        }
 
     def update_status(self, task_id, status):
         if status not in VALID_STATUSES:

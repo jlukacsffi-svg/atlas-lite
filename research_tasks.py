@@ -17,6 +17,8 @@ def build_parser():
     list_parser = subparsers.add_parser("list", help="List research tasks.")
     list_parser.add_argument("--status", choices=["open", "in_progress", "closed"])
 
+    subparsers.add_parser("summary", help="Summarize research task queue status.")
+
     add_parser = subparsers.add_parser("add", help="Add a research task.")
     add_parser.add_argument("--role", required=True, choices=["CEO", "CIO", "CRO", "Reporting"])
     add_parser.add_argument("--subject", default="General")
@@ -56,6 +58,24 @@ def main(argv=None):
     if args.command == "status":
         task = queue.update_status(args.task_id, args.status)
         print(f"[ok] Task {task['id']} updated to {task['status']}.")
+        return 0
+
+    if args.command == "summary":
+        summary = queue.summary()
+        print(f"Total tasks: {summary['total']}")
+        print("By status:")
+        for status, count in sorted(summary["by_status"].items()):
+            print(f"  {status}: {count}")
+        print("By role:")
+        for role, count in sorted(summary["by_role"].items()):
+            print(f"  {role}: {count}")
+        print("By priority:")
+        for priority, count in sorted(summary["by_priority"].items()):
+            print(f"  {priority}: {count}")
+        if summary["open_high_priority"]:
+            print("Open high-priority tasks:")
+            for task in summary["open_high_priority"]:
+                print(f"  {task['id']} | {task['role']} | {task['subject']} | {task['prompt']}")
         return 0
 
     if args.command == "generate":
