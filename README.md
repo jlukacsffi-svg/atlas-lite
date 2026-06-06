@@ -217,6 +217,20 @@ The planning document is:
 STAGE4_PLAN.md
 ```
 
+To list open local research tasks:
+
+```bash
+py -3.12 research_tasks.py list
+```
+
+To add a research-only task:
+
+```bash
+py -3.12 research_tasks.py add --role CIO --subject NVDA "Review thesis quality."
+```
+
+Local task data is saved in `research_tasks/`, which is ignored by Git.
+
 ## Scheduled Execution
 
 Atlas includes PowerShell scripts for Windows Task Scheduler.

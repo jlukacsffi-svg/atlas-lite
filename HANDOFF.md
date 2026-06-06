@@ -97,7 +97,7 @@ Create the local `data/portfolio.json` file when Joe is ready to add real holdin
 Stage 4 planning artifact:
 
 - `STAGE4_PLAN.md` defines the first lightweight multi-agent research organization path.
-- Recommended first Stage 4 build: local ignored `research_tasks/` queue before autonomous agents.
+- Local ignored `research_tasks/` queue started before autonomous agents.
 
 ## Useful Files
 
@@ -118,6 +118,8 @@ Stage 4 planning artifact:
 - `app/momentum.py`: automated return measurement and Momentum scoring.
 - `app/portfolio.py`: optional local portfolio loading and exposure analysis.
 - `portfolio_check.py`: local portfolio validation command.
+- `app/research_tasks.py`: local Stage 4 research task queue.
+- `research_tasks.py`: command-line entry point for listing and adding research tasks.
 - `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.
 - `app/report_generator.py`: Markdown and HTML report generation.
 - `app/weekly_summary.py`: weekly summary generation from the local research archive index.
