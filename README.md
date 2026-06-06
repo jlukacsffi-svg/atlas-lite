@@ -243,6 +243,12 @@ To summarize the task queue by status, role, and priority:
 py -3.12 research_tasks.py summary
 ```
 
+To update task status with an optional note:
+
+```bash
+py -3.12 research_tasks.py status task_id closed --notes "Reviewed and closed."
+```
+
 To write a Markdown research agenda:
 
 ```bash

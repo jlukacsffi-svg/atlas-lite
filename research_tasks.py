@@ -34,6 +34,7 @@ def build_parser():
     status_parser = subparsers.add_parser("status", help="Update a research task status.")
     status_parser.add_argument("task_id")
     status_parser.add_argument("status", choices=["open", "in_progress", "closed"])
+    status_parser.add_argument("--notes", default=None)
 
     generate_parser = subparsers.add_parser("generate", help="Generate tasks from latest Atlas archive signals.")
     generate_parser.add_argument("--limit", type=int, default=8)
@@ -60,7 +61,7 @@ def main(argv=None):
         return 0
 
     if args.command == "status":
-        task = queue.update_status(args.task_id, args.status)
+        task = queue.update_status(args.task_id, args.status, notes=args.notes)
         print(f"[ok] Task {task['id']} updated to {task['status']}.")
         return 0
 

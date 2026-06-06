@@ -33,9 +33,20 @@ class ResearchTaskQueueTests(unittest.TestCase):
             queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
             task, _ = queue.add_task(role="CRO", prompt="Review concentration risk.")
 
-            updated = queue.update_status(task["id"], "closed")
+            updated = queue.update_status(task["id"], "closed", notes="Risk reviewed.")
 
         self.assertEqual(updated["status"], "closed")
+        self.assertEqual(updated["notes"], "Risk reviewed.")
+
+    def test_update_status_appends_notes(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            task, _ = queue.add_task(role="CIO", prompt="Review thesis.", notes="Initial note.")
+
+            updated = queue.update_status(task["id"], "in_progress", notes="Started review.")
+
+        self.assertIn("Initial note.", updated["notes"])
+        self.assertIn("Started review.", updated["notes"])
 
     def test_summary_counts_tasks_by_status_role_and_priority(self):
         with tempfile.TemporaryDirectory() as temp_dir:

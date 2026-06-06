@@ -102,6 +102,7 @@ Stage 4 planning artifact:
 - Morning Executive Brief includes a Research Agenda section with open local tasks.
 - `research_tasks.py summary` summarizes local tasks by status, role, and priority.
 - `research_tasks.py agenda` writes a local Markdown research agenda.
+- Task status updates can append review notes.
 
 ## Useful Files
 

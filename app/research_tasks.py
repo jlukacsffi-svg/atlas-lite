@@ -149,7 +149,7 @@ class ResearchTaskQueue:
         output_path.write_text(self.render_agenda(status=status), encoding="utf-8")
         return output_path
 
-    def update_status(self, task_id, status):
+    def update_status(self, task_id, status, notes=None):
         if status not in VALID_STATUSES:
             raise ValueError(f"invalid task status: {status}")
 
@@ -158,6 +158,9 @@ class ResearchTaskQueue:
             if task.get("id") == task_id:
                 task["status"] = status
                 task["updated_at"] = datetime.now().isoformat(timespec="seconds")
+                if notes is not None:
+                    existing_notes = task.get("notes", "")
+                    task["notes"] = self._append_note(existing_notes, notes)
                 self.save(payload)
                 return task
 
@@ -198,6 +201,14 @@ class ResearchTaskQueue:
         raw = f"{role}|{subject or 'General'}|{prompt}".lower()
         digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
         return f"task_{digest}"
+
+    def _append_note(self, existing_notes, new_note):
+        new_note = str(new_note).strip()
+        if not new_note:
+            return existing_notes or ""
+        if not existing_notes:
+            return new_note
+        return f"{existing_notes}\n{new_note}"
 
     def _task_table(self, tasks):
         lines = [
