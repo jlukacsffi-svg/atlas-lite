@@ -20,6 +20,7 @@ from app.email_delivery import EmailDelivery
 from app.analyst_actions import AnalystActionTracker
 from app.earnings_calendar import EarningsCalendar
 from app.insider_transactions import InsiderTransactionTracker
+from app.paper_trading import PaperTradingAccount
 from app.portfolio import Portfolio
 from app.research_memory import ResearchMemory
 from app.research_tasks import ResearchTaskQueue
@@ -139,6 +140,40 @@ def main():
             print(f"[warning] Research task generation unavailable: {task_error}")
 
         print()
+        print("[paper] Checking simulated paper account...")
+        try:
+            paper_account = PaperTradingAccount()
+            if paper_account.account_file.exists():
+                prices = {
+                    ticker: data.get("price")
+                    for ticker, data in market_data.items()
+                    if data.get("status") == "available"
+                }
+                paper_account.record_performance_snapshot(
+                    prices=prices,
+                    benchmark_prices={
+                        "SPY": prices.get("SPY"),
+                        "QQQ": prices.get("QQQ"),
+                    },
+                )
+                paper_summary = paper_account.performance_summary()
+                paper_summary["configured"] = True
+                print(
+                    f"[ok] Paper account marked at "
+                    f"${paper_summary['latest']['equity']:,.2f} simulated equity."
+                )
+            else:
+                paper_summary = {"configured": False, "available": False}
+                print("[paper] No simulated paper account initialized.")
+        except Exception as paper_error:
+            paper_summary = {
+                "configured": True,
+                "available": False,
+                "error": str(paper_error),
+            }
+            print(f"[warning] Paper account snapshot unavailable: {paper_error}")
+
+        print()
         print("[memory] Updating research archive...")
         memory = ResearchMemory()
         previous_snapshot = memory.load_latest_snapshot()
@@ -156,6 +191,7 @@ def main():
             analyst_actions=analyst_actions,
             insider_transactions=insider_transactions,
             portfolio_summary=portfolio_summary,
+            paper_summary=paper_summary,
         )
         report_path = generator.save_report()
 

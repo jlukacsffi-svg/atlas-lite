@@ -43,6 +43,8 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 - No brokerage APIs.
 - No financial commitments.
 - No customer outreach.
+- Stage 5 paper trading must remain strictly simulated and local.
+- Paper-trading approval or execution must never transmit a real order.
 
 ## Repository notes
 
@@ -50,11 +52,11 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 
 ## Development priorities
 
-1. Add news headlines explaining major price moves.
-2. Add AI-generated executive summary.
-3. Add HTML report output.
-4. Add scheduled daily execution.
-5. Add email delivery.
+1. Preserve reliable daily and weekly reporting.
+2. Preserve research-task and owner-review workflows.
+3. Evaluate paper recommendations against SPY and QQQ.
+4. Expand paper-trading attribution and risk-rule testing.
+5. Do not add brokerage integration without explicit owner approval.
 
 ## Development guidance
 

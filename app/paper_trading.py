@@ -74,17 +74,62 @@ class PaperTradingAccount:
     def preview_order(self, side, ticker, shares, price, thesis):
         account = self.load()
         order = self._normalize_order(side, ticker, shares, price, thesis)
-        return self._validate_order(account, order)
+        return self._validate_order(account, order, now=self.clock())
 
-    def execute_order(self, side, ticker, shares, price, thesis, source="manual"):
+    def record_recommendation(
+        self,
+        side,
+        ticker,
+        shares,
+        reference_price,
+        thesis,
+        confidence="medium",
+        source="manual",
+    ):
+        """Append a paper recommendation without changing account holdings."""
+        self.load()
+        order = self._normalize_order(side, ticker, shares, reference_price, thesis)
+        confidence = str(confidence).strip().lower()
+        if confidence not in {"low", "medium", "high"}:
+            raise ValueError("confidence must be low, medium, or high")
+
+        event = {
+            "event": "paper_recommendation",
+            "recommendation_id": f"recommendation_{uuid.uuid4().hex[:12]}",
+            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "source": source,
+            "confidence": confidence,
+            **order,
+        }
+        self._append_event(event)
+        return event
+
+    def execute_order(
+        self,
+        side,
+        ticker,
+        shares,
+        price,
+        thesis,
+        source="manual",
+        recommendation_id=None,
+    ):
         """Apply a simulated fill and append it to the local audit ledger."""
         account = self.load()
         order = self._normalize_order(side, ticker, shares, price, thesis)
-        validation = self._validate_order(account, order)
+        recommendation = None
+        if recommendation_id:
+            recommendation = self._find_recommendation(recommendation_id)
+            if not recommendation:
+                raise ValueError(f"paper recommendation not found: {recommendation_id}")
+            if recommendation["side"] != order["side"] or recommendation["ticker"] != order["ticker"]:
+                raise ValueError("paper order does not match linked recommendation")
+        now_value = self.clock()
+        validation = self._validate_order(account, order, now=now_value)
         if validation["errors"]:
             raise ValueError("; ".join(validation["errors"]))
 
-        now = self.clock().isoformat(timespec="seconds")
+        now = now_value.isoformat(timespec="seconds")
         ticker = order["ticker"]
         notional = order["notional"]
         position = account["positions"].get(
@@ -120,6 +165,7 @@ class PaperTradingAccount:
             "trade_id": f"paper_{uuid.uuid4().hex[:12]}",
             "timestamp": now,
             "source": source,
+            "recommendation_id": recommendation_id,
             **order,
             "realized_gain_loss": round(realized, 2),
             "cash_after": round(account["cash"], 2),
@@ -127,6 +173,244 @@ class PaperTradingAccount:
         }
         self._append_event(event)
         return event
+
+    def recommendations(self):
+        return [
+            event
+            for event in self.ledger()
+            if event.get("event") == "paper_recommendation"
+        ]
+
+    def record_performance_snapshot(self, prices, benchmark_prices):
+        """Append a mark-to-market snapshot with SPY and QQQ comparisons."""
+        account = self.load()
+        missing = [
+            ticker
+            for ticker in account.get("positions", {})
+            if prices.get(ticker) is None
+        ]
+        if missing:
+            raise ValueError(
+                "missing paper position prices: " + ", ".join(sorted(missing))
+            )
+
+        required_benchmarks = {"SPY", "QQQ"}
+        missing_benchmarks = [
+            ticker
+            for ticker in required_benchmarks
+            if benchmark_prices.get(ticker) is None
+        ]
+        if missing_benchmarks:
+            raise ValueError(
+                "missing benchmark prices: " + ", ".join(sorted(missing_benchmarks))
+            )
+
+        status = self.status(prices=prices)
+        prior_snapshots = self.performance_history()
+        first = prior_snapshots[0] if prior_snapshots else None
+        benchmark_returns = {}
+        for ticker in sorted(required_benchmarks):
+            current_price = float(benchmark_prices[ticker])
+            initial_price = (
+                first.get("benchmark_prices", {}).get(ticker)
+                if first
+                else current_price
+            )
+            benchmark_returns[ticker] = (
+                (current_price / initial_price - 1) * 100
+                if initial_price
+                else 0.0
+            )
+
+        event = {
+            "event": "performance_snapshot",
+            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "cash": round(status["cash"], 2),
+            "market_value": round(status["market_value"], 2),
+            "equity": round(status["equity"], 2),
+            "total_return_pct": round(
+                (status["equity"] / status["starting_cash"] - 1) * 100,
+                4,
+            ),
+            "realized_gain_loss": round(status["realized_gain_loss"], 2),
+            "unrealized_gain_loss": round(status["unrealized_gain_loss"], 2),
+            "benchmark_prices": {
+                ticker: float(benchmark_prices[ticker])
+                for ticker in sorted(required_benchmarks)
+            },
+            "benchmark_returns_pct": {
+                ticker: round(value, 4)
+                for ticker, value in benchmark_returns.items()
+            },
+            "positions": [
+                {
+                    "ticker": item["ticker"],
+                    "shares": item["shares"],
+                    "price": item["price"],
+                    "market_value": round(item["market_value"], 2),
+                    "unrealized_gain_loss": round(item["unrealized_gain_loss"], 2),
+                }
+                for item in status["positions"]
+            ],
+        }
+        self._append_event(event)
+        return event
+
+    def performance_history(self):
+        return [
+            event
+            for event in self.ledger()
+            if event.get("event") == "performance_snapshot"
+        ]
+
+    def performance_summary(self):
+        snapshots = self.performance_history()
+        if not snapshots:
+            return {"available": False}
+        latest = snapshots[-1]
+        return {
+            "available": True,
+            "snapshots": len(snapshots),
+            "latest": latest,
+            "trade_statistics": self.trade_statistics(),
+            "excess_return_pct": {
+                ticker: round(
+                    latest["total_return_pct"] - benchmark_return,
+                    4,
+                )
+                for ticker, benchmark_return in latest["benchmark_returns_pct"].items()
+            },
+        }
+
+    def trade_statistics(self):
+        events = self.ledger()
+        trades = [event for event in events if event.get("event") == "paper_trade"]
+        recommendations = [
+            event for event in events if event.get("event") == "paper_recommendation"
+        ]
+        exits = [
+            event
+            for event in trades
+            if event.get("side") == "sell"
+        ]
+        wins = [event for event in exits if event.get("realized_gain_loss", 0) > 0]
+        losses = [event for event in exits if event.get("realized_gain_loss", 0) < 0]
+        linked = [event for event in trades if event.get("recommendation_id")]
+        return {
+            "recommendations": len(recommendations),
+            "trades": len(trades),
+            "linked_trades": len(linked),
+            "realized_exits": len(exits),
+            "wins": len(wins),
+            "losses": len(losses),
+            "win_rate_pct": len(wins) / len(exits) * 100 if exits else None,
+        }
+
+    def render_performance_report(self):
+        summary = self.performance_summary()
+        lines = [
+            "# Atlas Paper Trading Performance",
+            "",
+            "Simulation only. No real capital or brokerage account is involved.",
+            "",
+        ]
+        if not summary["available"]:
+            lines.extend(
+                [
+                    "No performance snapshots are available.",
+                    "",
+                    "Run `py -3.12 paper_trading.py snapshot` after the account is initialized.",
+                    "",
+                ]
+            )
+            return "\n".join(lines)
+
+        latest = summary["latest"]
+        stats = summary["trade_statistics"]
+        lines.extend(
+            [
+                "## Account Performance",
+                "",
+                f"- **Equity**: ${latest['equity']:,.2f}",
+                f"- **Total Return**: {latest['total_return_pct']:+.2f}%",
+                f"- **Realized Gain/Loss**: ${latest['realized_gain_loss']:,.2f}",
+                f"- **Unrealized Gain/Loss**: ${latest['unrealized_gain_loss']:,.2f}",
+                f"- **Snapshots**: {summary['snapshots']}",
+                "",
+                "## Benchmark Comparison",
+                "",
+                "| Benchmark | Return | Atlas Excess |",
+                "|-----------|--------|--------------|",
+            ]
+        )
+        for ticker, value in latest["benchmark_returns_pct"].items():
+            lines.append(
+                f"| {ticker} | {value:+.2f}% | "
+                f"{summary['excess_return_pct'][ticker]:+.2f}% |"
+            )
+
+        win_rate = (
+            f"{stats['win_rate_pct']:.1f}%"
+            if stats["win_rate_pct"] is not None
+            else "N/A"
+        )
+        lines.extend(
+            [
+                "",
+                "## Decision Audit",
+                "",
+                f"- **Recommendations Logged**: {stats['recommendations']}",
+                f"- **Simulated Trades**: {stats['trades']}",
+                f"- **Trades Linked To Recommendations**: {stats['linked_trades']}",
+                f"- **Realized Exits**: {stats['realized_exits']}",
+                f"- **Wins / Losses**: {stats['wins']} / {stats['losses']}",
+                f"- **Win Rate**: {win_rate}",
+                "",
+                "## Position Attribution",
+                "",
+            ]
+        )
+        positions = latest.get("positions", [])
+        if not positions:
+            lines.extend(["No open simulated positions.", ""])
+        else:
+            lines.extend(
+                [
+                    "| Ticker | Shares | Price | Market Value | Unrealized Gain/Loss |",
+                    "|--------|--------|-------|--------------|----------------------|",
+                ]
+            )
+            for position in sorted(
+                positions,
+                key=lambda item: item["market_value"],
+                reverse=True,
+            ):
+                lines.append(
+                    f"| {position['ticker']} | {position['shares']:g} | "
+                    f"${position['price']:,.2f} | ${position['market_value']:,.2f} | "
+                    f"${position['unrealized_gain_loss']:,.2f} |"
+                )
+            lines.append("")
+
+        lines.extend(
+            [
+                "## Safety Boundary",
+                "",
+                "This report evaluates a simulation. It does not authorize or execute real trades.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+    def save_performance_report(self, output_path=None):
+        output_path = (
+            Path(output_path)
+            if output_path
+            else self.account_file.parent / "performance.md"
+        )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(self.render_performance_report(), encoding="utf-8")
+        return output_path
 
     def status(self, prices=None):
         account = self.load()
@@ -205,11 +489,12 @@ class PaperTradingAccount:
             "thesis": thesis,
         }
 
-    def _validate_order(self, account, order):
+    def _validate_order(self, account, order, now=None):
         errors = []
         warnings = []
         policy = account.get("policy", self.policy)
-        trades_today = self._trades_on_date(self.clock().date().isoformat())
+        now = now or self.clock()
+        trades_today = self._trades_on_date(now.date().isoformat())
         if trades_today >= int(policy["maximum_daily_trades"]):
             errors.append("maximum daily paper-trade count reached")
 
@@ -256,6 +541,12 @@ class PaperTradingAccount:
             if event.get("event") == "paper_trade"
             and str(event.get("timestamp", "")).startswith(date_text)
         )
+
+    def _find_recommendation(self, recommendation_id):
+        for event in self.recommendations():
+            if event.get("recommendation_id") == recommendation_id:
+                return event
+        return None
 
     def _save_account(self, account):
         self.account_file.parent.mkdir(parents=True, exist_ok=True)

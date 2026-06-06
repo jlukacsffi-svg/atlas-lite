@@ -21,6 +21,7 @@ class ReportGenerator:
         analyst_actions=None,
         insider_transactions=None,
         portfolio_summary=None,
+        paper_summary=None,
     ):
         """
         Initialize the report generator
@@ -33,6 +34,7 @@ class ReportGenerator:
             analyst_actions (list): Optional analyst-action headlines
             insider_transactions (list): Optional SEC Form 4 transactions
             portfolio_summary (dict): Optional local portfolio analysis
+            paper_summary (dict): Optional simulated paper-account performance
         """
         self.market_data = market_data or {}
         self.market_summary = market_summary or {}
@@ -41,6 +43,7 @@ class ReportGenerator:
         self.analyst_actions = analyst_actions or []
         self.insider_transactions = insider_transactions or []
         self.portfolio_summary = portfolio_summary or {"configured": False}
+        self.paper_summary = paper_summary or {"configured": False}
         self.timestamp = datetime.now()
         self.news_fetcher = NewsFetcher()
         self.scoring_engine = ScoringEngine()
@@ -89,6 +92,9 @@ class ReportGenerator:
 
         # Portfolio Intelligence
         report.append(self._generate_portfolio_intelligence())
+
+        # Paper Trading Performance
+        report.append(self._generate_paper_performance())
 
         # Scoring Summary
         report.append(self._generate_scoring_summary())
@@ -835,6 +841,54 @@ class ReportGenerator:
                 continue
             companies.append((ticker, data, self.scoring_engine.score(scores)))
         return companies
+
+    def _generate_paper_performance(self):
+        """Generate simulated performance and benchmark comparison."""
+        section = ["## Paper Trading Performance\n"]
+        if self.paper_summary.get("error"):
+            section.append(
+                f"Paper performance is unavailable: {self.paper_summary['error']}\n"
+            )
+            return "\n".join(section) + "\n"
+
+        if not self.paper_summary.get("configured"):
+            section.append(
+                "No simulated paper account is initialized. Stage 5 remains dormant "
+                "until an account is intentionally created with `paper_trading.py init`. "
+                "No brokerage connection exists.\n"
+            )
+            return "\n".join(section) + "\n"
+
+        if not self.paper_summary.get("available"):
+            section.append("The simulated account has no performance snapshot yet.\n")
+            return "\n".join(section) + "\n"
+
+        latest = self.paper_summary["latest"]
+        excess = self.paper_summary.get("excess_return_pct", {})
+        stats = self.paper_summary.get("trade_statistics", {})
+        section.extend(
+            [
+                "Simulated performance only. No real capital or brokerage account is involved.\n",
+                f"- **Simulated Equity**: {self._format_currency(latest.get('equity'))}",
+                f"- **Total Return**: {self._format_optional_percent(latest.get('total_return_pct'))}",
+                f"- **Realized Gain/Loss**: {self._format_currency(latest.get('realized_gain_loss'))}",
+                f"- **Unrealized Gain/Loss**: {self._format_currency(latest.get('unrealized_gain_loss'))}",
+                f"- **Performance Snapshots**: {self.paper_summary.get('snapshots', 0)}",
+                f"- **Recommendations / Simulated Trades**: "
+                f"{stats.get('recommendations', 0)} / {stats.get('trades', 0)}",
+                f"- **Realized Wins / Losses**: "
+                f"{stats.get('wins', 0)} / {stats.get('losses', 0)}",
+                "",
+                "| Benchmark | Benchmark Return | Atlas Excess Return |",
+                "|-----------|------------------|---------------------|",
+            ]
+        )
+        for ticker, benchmark_return in latest.get("benchmark_returns_pct", {}).items():
+            section.append(
+                f"| {ticker} | {benchmark_return:+.2f}% | "
+                f"{excess.get(ticker, 0):+.2f}% |"
+            )
+        return "\n".join(section) + "\n"
 
     def _generate_scoring_summary(self):
         """Generate transparent weighted score rankings"""

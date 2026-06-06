@@ -54,6 +54,19 @@ Implement:
 - Append-only order ledger.
 - Account status command.
 
+## Evaluation Milestone
+
+Implemented:
+
+- Immutable recommendation IDs.
+- Recommendation-to-fill linkage.
+- Mark-to-market performance snapshots.
+- SPY and QQQ comparison.
+- Position-level unrealized attribution.
+- Realized win/loss and win-rate tracking.
+- Standalone Markdown performance report.
+- Morning Brief paper-performance section.
+
 ## Safety Boundary
 
 No Stage 5 code may:

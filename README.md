@@ -317,12 +317,30 @@ Execute a simulated order:
 py -3.12 paper_trading.py order buy NVDA 10 --price 150 --thesis "Example paper thesis."
 ```
 
+Log a recommendation before a simulated fill:
+
+```bash
+py -3.12 paper_trading.py recommend buy NVDA 10 --price 150 --thesis "Example paper thesis." --confidence medium
+```
+
+The returned recommendation ID can be linked to a later simulated order with `--recommendation-id`.
+
 Review account state or the append-only ledger:
 
 ```bash
 py -3.12 paper_trading.py status
 py -3.12 paper_trading.py ledger
 ```
+
+Record performance from the latest Atlas research snapshot and generate the evaluation report:
+
+```bash
+py -3.12 paper_trading.py snapshot
+py -3.12 paper_trading.py performance
+py -3.12 paper_trading.py report
+```
+
+Daily Atlas runs automatically add a mark-to-market snapshot and Morning Brief section after a paper account has been intentionally initialized.
 
 The initial policy prohibits margin, short selling, options, and leverage; preserves a 10% cash reserve; limits positions to 20% of simulated equity; and permits at most five simulated trades per day.
 

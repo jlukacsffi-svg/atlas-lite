@@ -102,6 +102,8 @@ Atlas routes daily, weekly, sector, and portfolio signals into persistent role-b
 
 ## Stage 5: Paper Trading
 
+Current phase. Software foundation complete; evaluation period has not started.
+
 Goal: prove decision quality without risking money.
 
 Build:
@@ -117,6 +119,15 @@ Build:
 Success test:
 
 Atlas beats or meaningfully informs benchmarks over time, with a clear audit trail.
+
+Current result:
+
+Atlas can maintain a strictly simulated account, enforce conservative risk
+rules, log recommendations and linked fills, calculate realized and unrealized
+performance, compare results with SPY and QQQ, and generate an audit report.
+The account remains intentionally uninitialized until Joe selects the simulated
+starting capital. Stage 5 cannot be considered complete until it has accumulated
+a meaningful performance history.
 
 ## Stage 6: Human-Approved Trading
 

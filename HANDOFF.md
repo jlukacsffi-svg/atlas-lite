@@ -122,6 +122,11 @@ Stage 5 paper-trading foundation:
 - The append-only JSONL ledger records account initialization and every simulated fill.
 - Initial rules prohibit margin, short selling, options, and leverage; enforce cash reserve, position size, and daily trade limits; and require a thesis.
 - No brokerage integration or real-order transmission exists.
+- Paper recommendations have immutable IDs and can be linked to simulated fills.
+- Performance snapshots compare simulated equity with SPY and QQQ.
+- Decision audit tracks recommendations, linked fills, realized wins/losses, and win rate.
+- `paper_trading.py report` writes a local Markdown evaluation report.
+- Daily reports include paper performance after a simulated account is intentionally initialized.
 
 ## Useful Files
 
