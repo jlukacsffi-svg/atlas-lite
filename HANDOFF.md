@@ -85,6 +85,7 @@ Stage 3 portfolio-intelligence foundations started:
 - Safe committed template at `data/portfolio.example.json`.
 - Portfolio market value, estimated daily change, benchmark context, position exposure, sector exposure, and risk-alert reporting.
 - `portfolio_check.py` validates local portfolio structure before daily use.
+- Local portfolio history snapshots in ignored `portfolio_history/`.
 - Real portfolio file is ignored by Git.
 
 Recommended next Stage 2 task:

@@ -660,6 +660,13 @@ class ReportGenerator:
             f"- **Benchmark Context**: SPY {self._format_optional_percent(self.market_summary.get('SPY', {}).get('percent_change'))}; "
             f"QQQ {self._format_optional_percent(self.market_summary.get('QQQ', {}).get('percent_change'))}"
         )
+        previous = self.portfolio_summary.get("previous_snapshot")
+        if previous:
+            section.append(
+                f"- **Change Since Previous Portfolio Snapshot**: "
+                f"{self._format_currency(previous.get('change_value'))} "
+                f"({self._format_optional_percent(previous.get('change_pct'))})"
+            )
         section.append(f"- **Positions Tracked**: {len(positions)}")
 
         unavailable = self.portfolio_summary.get("unavailable_tickers", [])

@@ -1,6 +1,7 @@
 import json
 import tempfile
 import unittest
+from datetime import datetime
 from pathlib import Path
 
 from app.portfolio import Portfolio
@@ -79,6 +80,29 @@ class PortfolioTests(unittest.TestCase):
         self.assertTrue(result["configured"])
         self.assertIn("Duplicate portfolio tickers: NVDA", result["errors"])
         self.assertIn("UNKNOWN", result["warnings"][0])
+
+    def test_history_snapshot_and_comparison_are_local(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            history_dir = Path(temp_dir) / "history"
+            portfolio = Portfolio(Path(temp_dir) / "missing.json", history_dir=history_dir)
+            prior = {
+                "configured": True,
+                "name": "Test Portfolio",
+                "total_value": 500,
+                "day_change_value": 0,
+                "day_change_pct": 0,
+                "positions": [],
+                "sector_allocations": [],
+                "risk_alerts": [],
+            }
+            portfolio.save_history(prior, timestamp=datetime(2026, 6, 1, 8, 0, 0))
+            current = {"configured": True, "name": "Test Portfolio", "total_value": 550}
+
+            portfolio.add_history_comparison(current)
+
+        self.assertEqual(current["previous_snapshot"]["total_value"], 500)
+        self.assertEqual(current["previous_snapshot"]["change_value"], 50)
+        self.assertEqual(current["previous_snapshot"]["change_pct"], 10)
 
 
 if __name__ == "__main__":

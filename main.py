@@ -108,9 +108,14 @@ def main():
         print()
         print("[portfolio] Checking local portfolio configuration...")
         try:
-            portfolio_summary = Portfolio().analyze(market_data)
+            portfolio = Portfolio()
+            portfolio_summary = portfolio.analyze(market_data)
             if portfolio_summary.get("configured"):
+                portfolio.add_history_comparison(portfolio_summary)
+                portfolio_history_path = portfolio.save_history(portfolio_summary)
                 print(f"[ok] Portfolio loaded with {len(portfolio_summary.get('positions', []))} positions.")
+                if portfolio_history_path:
+                    print(f"[ok] Portfolio snapshot saved to: {portfolio_history_path}")
             else:
                 print("[portfolio] No local portfolio file configured.")
         except Exception as portfolio_error:

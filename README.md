@@ -310,9 +310,18 @@ When configured, the daily brief includes:
 - Estimated portfolio market value
 - Estimated daily portfolio change
 - SPY and QQQ benchmark context
+- Change since previous local portfolio snapshot
 - Top tracked positions
 - Sector exposure
 - Portfolio risk alerts such as position concentration, sector concentration, holding drawdowns, and missing market data
+
+When a portfolio is configured, Atlas saves local portfolio snapshots in:
+
+```text
+portfolio_history/
+```
+
+This folder is ignored by Git.
 
 ## SEC Growth And Quality Data
 

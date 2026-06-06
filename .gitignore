@@ -4,6 +4,7 @@
 logs/
 reports/
 research_archive/
+portfolio_history/
 data_cache/
 
 .vscode/

@@ -1,18 +1,21 @@
 """Local portfolio intelligence for Atlas Lite."""
 
+from datetime import datetime
 import json
 from pathlib import Path
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_PORTFOLIO_PATH = PROJECT_ROOT / "data" / "portfolio.json"
+DEFAULT_PORTFOLIO_HISTORY_DIR = PROJECT_ROOT / "portfolio_history"
 
 
 class Portfolio:
     """Load optional local portfolio holdings and calculate exposure."""
 
-    def __init__(self, portfolio_path=DEFAULT_PORTFOLIO_PATH):
+    def __init__(self, portfolio_path=DEFAULT_PORTFOLIO_PATH, history_dir=DEFAULT_PORTFOLIO_HISTORY_DIR):
         self.portfolio_path = Path(portfolio_path)
+        self.history_dir = Path(history_dir)
 
     def load(self):
         if not self.portfolio_path.exists():
@@ -151,6 +154,65 @@ class Portfolio:
             "unavailable_tickers": unavailable,
             "risk_alerts": self._risk_alerts(positions, total_value, unavailable),
         }
+
+    def add_history_comparison(self, summary):
+        """Attach comparison to the latest saved portfolio snapshot."""
+        if not summary.get("configured"):
+            return summary
+
+        previous = self.load_latest_history()
+        if not previous:
+            summary["previous_snapshot"] = None
+            return summary
+
+        previous_value = previous.get("total_value")
+        current_value = summary.get("total_value")
+        if previous_value is None or current_value is None:
+            summary["previous_snapshot"] = previous
+            return summary
+
+        delta = current_value - previous_value
+        delta_pct = delta / previous_value * 100 if previous_value else None
+        summary["previous_snapshot"] = {
+            "generated_at": previous.get("generated_at"),
+            "total_value": previous_value,
+            "change_value": delta,
+            "change_pct": delta_pct,
+        }
+        return summary
+
+    def save_history(self, summary, timestamp=None):
+        """Save a local portfolio snapshot. The history folder is ignored by Git."""
+        if not summary.get("configured"):
+            return None
+
+        timestamp = timestamp or datetime.now()
+        self.history_dir.mkdir(parents=True, exist_ok=True)
+        payload = {
+            "generated_at": timestamp.isoformat(timespec="seconds"),
+            "name": summary.get("name"),
+            "total_value": summary.get("total_value"),
+            "day_change_value": summary.get("day_change_value"),
+            "day_change_pct": summary.get("day_change_pct"),
+            "positions": summary.get("positions", []),
+            "sector_allocations": summary.get("sector_allocations", []),
+            "risk_alerts": summary.get("risk_alerts", []),
+        }
+        path = self.history_dir / timestamp.strftime("portfolio_snapshot_%Y%m%d_%H%M%S.json")
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, sort_keys=True)
+        return path
+
+    def load_latest_history(self):
+        if not self.history_dir.exists():
+            return None
+
+        history_files = sorted(self.history_dir.glob("portfolio_snapshot_*.json"), reverse=True)
+        if not history_files:
+            return None
+
+        with open(history_files[0], "r", encoding="utf-8") as f:
+            return json.load(f)
 
     def _normalize_position(self, position):
         ticker = str(position.get("ticker", "")).upper().strip()

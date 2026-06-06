@@ -23,6 +23,12 @@ class ReportPortfolioTests(unittest.TestCase):
                 "total_value": 550,
                 "day_change_value": 5,
                 "day_change_pct": 0.92,
+                "previous_snapshot": {
+                    "generated_at": "2026-06-01T08:00:00",
+                    "total_value": 500,
+                    "change_value": 50,
+                    "change_pct": 10,
+                },
                 "positions": [
                     {
                         "ticker": "NVDA",
@@ -57,6 +63,7 @@ class ReportPortfolioTests(unittest.TestCase):
         self.assertIn("$550.00", section)
         self.assertIn("Estimated Daily Change", section)
         self.assertIn("Benchmark Context", section)
+        self.assertIn("Change Since Previous Portfolio Snapshot", section)
         self.assertIn("| NVDA |", section)
         self.assertIn("AI & Semiconductors", section)
         self.assertIn("NVDA is 54.5% of tracked portfolio value", section)
