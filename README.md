@@ -289,6 +289,45 @@ Daily and weekly runs refresh the agenda and all role briefs automatically. When
 
 Local task data and generated role briefs are saved in `research_tasks/`, which is ignored by Git.
 
+## Stage 5 Paper Trading
+
+Paper trading is strictly simulated and cannot connect to a brokerage.
+
+The design and risk policy are documented in:
+
+```text
+STAGE5_PLAN.md
+```
+
+Initialize a local simulated account:
+
+```bash
+py -3.12 paper_trading.py init --cash 100000
+```
+
+Preview a paper order without changing the account:
+
+```bash
+py -3.12 paper_trading.py preview buy NVDA 10 --price 150 --thesis "Example paper thesis."
+```
+
+Execute a simulated order:
+
+```bash
+py -3.12 paper_trading.py order buy NVDA 10 --price 150 --thesis "Example paper thesis."
+```
+
+Review account state or the append-only ledger:
+
+```bash
+py -3.12 paper_trading.py status
+py -3.12 paper_trading.py ledger
+```
+
+The initial policy prohibits margin, short selling, options, and leverage; preserves a 10% cash reserve; limits positions to 20% of simulated equity; and permits at most five simulated trades per day.
+
+Paper account data is saved locally in ignored `paper_trading/`. No paper-trading command can transmit a real order.
+
 ## Scheduled Execution
 
 Atlas includes PowerShell scripts for Windows Task Scheduler.

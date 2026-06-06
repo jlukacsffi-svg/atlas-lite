@@ -113,10 +113,21 @@ Stage 4 planning artifact:
 - Owner decisions are recorded without authorizing or executing trades.
 - Sector-trend assignments route to a dedicated Sector Analyst role.
 
+Stage 5 paper-trading foundation:
+
+- `STAGE5_PLAN.md` defines the simulated-account safety policy.
+- `app/paper_trading.py` manages local simulated cash, positions, and accounting.
+- `paper_trading.py` provides initialization, preview, simulated order, status, and ledger commands.
+- `paper_trading/` is ignored by Git.
+- The append-only JSONL ledger records account initialization and every simulated fill.
+- Initial rules prohibit margin, short selling, options, and leverage; enforce cash reserve, position size, and daily trade limits; and require a thesis.
+- No brokerage integration or real-order transmission exists.
+
 ## Useful Files
 
 - `ROADMAP.md`: long-term Atlas development roadmap.
 - `STAGE4_PLAN.md`: first Stage 4 multi-agent research organization plan.
+- `STAGE5_PLAN.md`: Stage 5 paper-trading policy and milestones.
 - `PROJECT_BRIEF.md`: project vision and constraints.
 - `AGENTS.md`: Codex working instructions.
 - `app/analyst_actions.py`: analyst-action headline retrieval and local caching.
@@ -132,6 +143,8 @@ Stage 4 planning artifact:
 - `app/momentum.py`: automated return measurement and Momentum scoring.
 - `app/portfolio.py`: optional local portfolio loading and exposure analysis.
 - `portfolio_check.py`: local portfolio validation command.
+- `app/paper_trading.py`: strictly simulated account and risk-rule engine.
+- `paper_trading.py`: Stage 5 paper-account command-line entry point.
 - `app/research_tasks.py`: local Stage 4 research task queue.
 - `research_tasks.py`: command-line entry point for listing and adding research tasks.
 - `app/quality.py`: SEC filing profitability and cash-generation Quality scoring.
