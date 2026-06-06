@@ -302,9 +302,11 @@ Then edit `data/portfolio.json` with local holdings. The real portfolio file is 
 When configured, the daily brief includes:
 
 - Estimated portfolio market value
+- Estimated daily portfolio change
+- SPY and QQQ benchmark context
 - Top tracked positions
 - Sector exposure
-- Concentration risks to watch
+- Portfolio risk alerts such as position concentration, sector concentration, holding drawdowns, and missing market data
 
 ## SEC Growth And Quality Data
 

@@ -651,6 +651,15 @@ class ReportGenerator:
             "This is exposure monitoring only; Atlas does not trade.\n"
         )
         section.append(f"- **Estimated Market Value**: {self._format_currency(total_value)}")
+        section.append(
+            f"- **Estimated Daily Change**: "
+            f"{self._format_currency(self.portfolio_summary.get('day_change_value'))} "
+            f"({self._format_optional_percent(self.portfolio_summary.get('day_change_pct'))})"
+        )
+        section.append(
+            f"- **Benchmark Context**: SPY {self._format_optional_percent(self.market_summary.get('SPY', {}).get('percent_change'))}; "
+            f"QQQ {self._format_optional_percent(self.market_summary.get('QQQ', {}).get('percent_change'))}"
+        )
         section.append(f"- **Positions Tracked**: {len(positions)}")
 
         unavailable = self.portfolio_summary.get("unavailable_tickers", [])
@@ -688,16 +697,13 @@ class ReportGenerator:
                     f"{self._format_optional_percent(allocation.get('allocation_pct'))} |"
                 )
 
-        concentration = [
-            position for position in positions
-            if position.get("allocation_pct") is not None and position["allocation_pct"] >= 25
-        ]
-        if concentration:
+        risk_alerts = self.portfolio_summary.get("risk_alerts", [])
+        if risk_alerts:
             section.append("\n### Portfolio Risks To Watch\n")
-            for position in concentration:
+            for alert in risk_alerts:
                 section.append(
-                    f"- **Concentration**: {position['ticker']} is "
-                    f"{position['allocation_pct']:.1f}% of tracked portfolio value."
+                    f"- **{self._format_table_text(alert.get('severity', 'risk')).title()}**: "
+                    f"{alert.get('message', 'Portfolio risk requires review.')}"
                 )
 
         return "\n".join(section) + "\n"

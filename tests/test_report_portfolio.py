@@ -21,6 +21,8 @@ class ReportPortfolioTests(unittest.TestCase):
                 "configured": True,
                 "name": "Test Portfolio",
                 "total_value": 550,
+                "day_change_value": 5,
+                "day_change_pct": 0.92,
                 "positions": [
                     {
                         "ticker": "NVDA",
@@ -40,6 +42,12 @@ class ReportPortfolioTests(unittest.TestCase):
                     }
                 ],
                 "unavailable_tickers": [],
+                "risk_alerts": [
+                    {
+                        "severity": "medium",
+                        "message": "NVDA is 54.5% of tracked portfolio value.",
+                    }
+                ],
             },
         )
 
@@ -47,9 +55,11 @@ class ReportPortfolioTests(unittest.TestCase):
 
         self.assertIn("Test Portfolio", section)
         self.assertIn("$550.00", section)
+        self.assertIn("Estimated Daily Change", section)
+        self.assertIn("Benchmark Context", section)
         self.assertIn("| NVDA |", section)
         self.assertIn("AI & Semiconductors", section)
-        self.assertIn("Concentration", section)
+        self.assertIn("NVDA is 54.5% of tracked portfolio value", section)
 
 
 if __name__ == "__main__":

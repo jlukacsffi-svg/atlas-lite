@@ -86,13 +86,27 @@ class Portfolio:
                 else None
             )
 
+        day_change_value = sum(
+            self._position_day_change_value(position)
+            for position in positions
+        )
+        previous_value = total_value - day_change_value
+        day_change_pct = (
+            day_change_value / previous_value * 100
+            if previous_value
+            else None
+        )
+
         return {
             "configured": True,
             "name": portfolio.get("name", "Local Portfolio"),
             "total_value": total_value,
+            "day_change_value": day_change_value,
+            "day_change_pct": day_change_pct,
             "positions": positions,
             "sector_allocations": self._sector_allocations(positions, total_value),
             "unavailable_tickers": unavailable,
+            "risk_alerts": self._risk_alerts(positions, total_value, unavailable),
         }
 
     def _normalize_position(self, position):
@@ -132,3 +146,59 @@ class Portfolio:
                 reverse=True,
             )
         ]
+
+    def _position_day_change_value(self, position):
+        market_value = position.get("market_value")
+        day_change_pct = position.get("day_change_pct")
+        if market_value is None or day_change_pct is None or day_change_pct <= -100:
+            return 0
+
+        previous_value = market_value / (1 + day_change_pct / 100)
+        return market_value - previous_value
+
+    def _risk_alerts(self, positions, total_value, unavailable):
+        alerts = []
+
+        for position in positions:
+            allocation = position.get("allocation_pct")
+            if allocation is not None and allocation >= 25:
+                alerts.append(
+                    {
+                        "type": "position_concentration",
+                        "severity": "high" if allocation >= 35 else "medium",
+                        "message": f"{position['ticker']} is {allocation:.1f}% of tracked portfolio value.",
+                    }
+                )
+
+            day_change_pct = position.get("day_change_pct")
+            if day_change_pct is not None and day_change_pct <= -5:
+                alerts.append(
+                    {
+                        "type": "holding_drawdown",
+                        "severity": "medium",
+                        "message": f"{position['ticker']} is down {day_change_pct:.2f}% today.",
+                    }
+                )
+
+        sector_allocations = self._sector_allocations(positions, total_value)
+        for sector in sector_allocations:
+            allocation = sector.get("allocation_pct")
+            if allocation is not None and allocation >= 40:
+                alerts.append(
+                    {
+                        "type": "sector_concentration",
+                        "severity": "high" if allocation >= 55 else "medium",
+                        "message": f"{sector['sector']} is {allocation:.1f}% of tracked portfolio value.",
+                    }
+                )
+
+        if unavailable:
+            alerts.append(
+                {
+                    "type": "missing_data",
+                    "severity": "medium",
+                    "message": f"Missing market data for holdings: {', '.join(unavailable)}.",
+                }
+            )
+
+        return alerts

@@ -53,7 +53,10 @@ class PortfolioTests(unittest.TestCase):
         self.assertEqual(summary["positions"][0]["market_value"], 300)
         self.assertEqual(summary["positions"][0]["gain_loss"], 100)
         self.assertAlmostEqual(summary["positions"][0]["allocation_pct"], 54.5454, places=3)
+        self.assertGreater(summary["day_change_value"], 0)
+        self.assertGreater(summary["day_change_pct"], 0)
         self.assertEqual(summary["sector_allocations"][0]["sector"], "AI & Semiconductors")
+        self.assertTrue(summary["risk_alerts"])
 
 
 if __name__ == "__main__":

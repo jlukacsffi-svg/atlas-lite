@@ -83,7 +83,7 @@ Stage 3 portfolio-intelligence foundations started:
 
 - Optional local `data/portfolio.json` support.
 - Safe committed template at `data/portfolio.example.json`.
-- Portfolio market value, position exposure, sector exposure, and concentration-risk reporting.
+- Portfolio market value, estimated daily change, benchmark context, position exposure, sector exposure, and risk-alert reporting.
 - Real portfolio file is ignored by Git.
 
 Recommended next Stage 2 task:
