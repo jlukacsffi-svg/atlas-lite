@@ -104,6 +104,9 @@ Stage 4 planning artifact:
 - `research_tasks.py agenda` writes a local Markdown research agenda.
 - `research_tasks.py brief --role ROLE` writes a focused CEO, CIO, CRO, or Reporting brief.
 - The daily run now creates deduplicated research tasks directly from current market signals.
+- The weekly summary creates deduplicated CIO and CRO tasks from multi-run trends.
+- Configured portfolio risk alerts create CRO or Reporting tasks.
+- Daily and weekly runs refresh the shared agenda and all role briefs.
 - Task status updates can append review notes.
 
 ## Useful Files

@@ -124,6 +124,19 @@ class ResearchTaskQueueTests(unittest.TestCase):
         self.assertEqual(saved_path.name, "cio_brief.md")
         self.assertIn("Review thesis.", saved_text)
 
+    def test_save_review_outputs_writes_agenda_and_all_role_briefs(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.add_task(role="CIO", subject="NVDA", prompt="Review thesis.")
+
+            paths = queue.save_review_outputs()
+
+            self.assertEqual(
+                set(paths),
+                {"agenda", "CEO", "CIO", "CRO", "Reporting"},
+            )
+            self.assertTrue(all(path.exists() for path in paths.values()))
+
     def test_invalid_role_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
@@ -252,6 +265,39 @@ class ResearchTaskQueueTests(unittest.TestCase):
 
         self.assertGreaterEqual(len(first), 1)
         self.assertEqual(second, [])
+
+    def test_generate_from_portfolio_summary_assigns_risk_and_data_tasks(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            summary = {
+                "configured": True,
+                "risk_alerts": [
+                    {
+                        "type": "position_concentration",
+                        "severity": "high",
+                        "message": "NVDA is 40.0% of tracked portfolio value.",
+                    },
+                    {
+                        "type": "missing_data",
+                        "severity": "medium",
+                        "message": "Missing market data for holdings: TEST.",
+                    },
+                ],
+            }
+
+            created = queue.generate_from_portfolio_summary(summary, source="test_portfolio")
+
+        self.assertEqual(len(created), 2)
+        self.assertEqual({task["role"] for task in created}, {"CRO", "Reporting"})
+        self.assertTrue(all(task["source"] == "test_portfolio" for task in created))
+
+    def test_generate_from_portfolio_summary_skips_unconfigured_portfolio(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+
+            created = queue.generate_from_portfolio_summary({"configured": False})
+
+        self.assertEqual(created, [])
 
 
 if __name__ == "__main__":

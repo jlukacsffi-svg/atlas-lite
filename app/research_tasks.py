@@ -228,6 +228,13 @@ class ResearchTaskQueue:
         )
         return output_path
 
+    def save_review_outputs(self, status="open"):
+        """Refresh the shared agenda and every role-specific brief."""
+        paths = {"agenda": self.save_agenda(status=status)}
+        for role in sorted(VALID_ROLES):
+            paths[role] = self.save_role_brief(role=role, status=status)
+        return paths
+
     def update_status(self, task_id, status, notes=None):
         if status not in VALID_STATUSES:
             raise ValueError(f"invalid task status: {status}")
@@ -321,6 +328,35 @@ class ResearchTaskQueue:
             if was_created:
                 created.append(task)
 
+        return created
+
+    def generate_from_portfolio_summary(self, portfolio_summary, source="daily_portfolio", limit=8):
+        """Create research tasks from configured portfolio risk alerts."""
+        if not portfolio_summary.get("configured"):
+            return []
+
+        suggestions = []
+        for alert in portfolio_summary.get("risk_alerts", []):
+            alert_type = alert.get("type", "portfolio_risk")
+            message = alert.get("message")
+            if not message:
+                continue
+            role = "Reporting" if alert_type == "missing_data" else "CRO"
+            suggestions.append(
+                {
+                    "role": role,
+                    "subject": alert_type.replace("_", " ").title(),
+                    "priority": alert.get("severity", "medium"),
+                    "source": source,
+                    "prompt": f"Review portfolio alert: {message}",
+                }
+            )
+
+        created = []
+        for suggestion in suggestions[:limit]:
+            task, was_created = self.add_task(**suggestion)
+            if was_created:
+                created.append(task)
         return created
 
     def _normalize_role(self, role):

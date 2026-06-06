@@ -191,6 +191,8 @@ To generate a weekly research summary from the local archive index:
 py -3.12 weekly_summary.py
 ```
 
+The weekly run also adds deduplicated CIO and CRO assignments to the local research queue from score changes, recurring movers, sector weakness, and recurring score leaders.
+
 Weekly summaries are saved to the `reports/` folder:
 
 - `weekly_summary_YYYYMMDD_HHMMSS.md`
@@ -263,7 +265,9 @@ py -3.12 research_tasks.py brief --role CRO
 
 Use `CEO`, `CIO`, `CRO`, or `Reporting`. The CEO brief includes the full queue for prioritization; other briefs include only tasks assigned to that role.
 
-Local task data is saved in `research_tasks/`, which is ignored by Git.
+Daily and weekly runs refresh the agenda and all role briefs automatically. When a local portfolio is configured, portfolio concentration, drawdown, and missing-data alerts also create reviewable CRO or Reporting tasks.
+
+Local task data and generated role briefs are saved in `research_tasks/`, which is ignored by Git.
 
 ## Scheduled Execution
 

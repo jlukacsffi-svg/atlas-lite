@@ -161,6 +161,22 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
             self.assertIn("Atlas Weekly Research Summary", markdown_path.read_text(encoding="utf-8"))
             self.assertIn("<html", generator.last_html_path.read_text(encoding="utf-8"))
 
+    def test_research_task_suggestions_assign_weekly_signals_to_roles(self):
+        with tempfile.TemporaryDirectory() as archive_dir:
+            self.write_index(archive_dir)
+            generator = WeeklySummaryGenerator(archive_dir=archive_dir)
+            generator.timestamp = datetime(2026, 6, 4, 8, 0, 0)
+
+            suggestions = generator.research_task_suggestions(days=7)
+
+        roles = {item["role"] for item in suggestions}
+        subjects = {item["subject"] for item in suggestions}
+        self.assertIn("CIO", roles)
+        self.assertIn("CRO", roles)
+        self.assertIn("NVDA", subjects)
+        self.assertIn("AVGO", subjects)
+        self.assertTrue(all(item.get("priority") for item in suggestions))
+
     def test_generate_summary_handles_empty_archive(self):
         with tempfile.TemporaryDirectory() as archive_dir:
             generator = WeeklySummaryGenerator(archive_dir=archive_dir)

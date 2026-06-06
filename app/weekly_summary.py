@@ -80,6 +80,10 @@ class WeeklySummaryGenerator:
         self.last_html_path = html_path
         return markdown_path
 
+    def research_task_suggestions(self, days=7):
+        """Return structured role assignments from recent weekly signals."""
+        return self._research_action_items(self.recent_entries(days=days))
+
     def generate_html_summary(self, markdown_content=None):
         markdown_content = markdown_content or self.generate_summary()
         body = self._markdown_to_html(markdown_content)
@@ -244,45 +248,8 @@ class WeeklySummaryGenerator:
         return "\n".join(lines) + "\n"
 
     def _generate_research_action_prompts(self, entries):
-        snapshots = self._load_entry_snapshots(entries)
-        prompts = []
-
-        strongest_score = self._largest_positive_score_change(snapshots)
-        if strongest_score:
-            ticker, first_score, latest_score, delta = strongest_score
-            prompts.append(
-                f"Review {ticker}: score improved {delta:+.1f} points "
-                f"from {first_score:.1f} to {latest_score:.1f}; confirm whether the change reflects durable fundamentals."
-            )
-
-        weakest_score = self._largest_negative_score_change(snapshots)
-        if weakest_score:
-            ticker, first_score, latest_score, delta = weakest_score
-            prompts.append(
-                f"Challenge {ticker}: score declined {delta:+.1f} points "
-                f"from {first_score:.1f} to {latest_score:.1f}; identify whether this is temporary volatility or thesis damage."
-            )
-
-        recurring_mover = self._top_recurring_mover(entries)
-        if recurring_mover:
-            ticker, appearances, largest_move = recurring_mover
-            prompts.append(
-                f"Investigate {ticker}: appeared as a top mover {appearances} times; review catalysts behind the {largest_move:+.2f}% largest move."
-            )
-
-        sector_rows = self._sector_average_moves(snapshots)
-        if sector_rows:
-            weakest_sector = min(sector_rows, key=lambda item: item[1])
-            prompts.append(
-                f"Monitor {weakest_sector[0]}: weakest sector trend at {weakest_sector[1]:+.2f}% average movement; check for broad pressure or isolated names."
-            )
-
-        leader = self._top_score_leader(entries)
-        if leader:
-            ticker, appearances, avg_score = leader
-            prompts.append(
-                f"Maintain thesis file for {ticker}: appeared as a recurring score leader {appearances} times with an average score of {avg_score:.1f}."
-            )
+        items = self._research_action_items(entries)
+        prompts = [item["prompt"] for item in items]
 
         lines = ["## Research Action Prompts\n"]
         if not prompts:
@@ -292,6 +259,87 @@ class WeeklySummaryGenerator:
         for prompt in prompts[:6]:
             lines.append(f"- {prompt}")
         return "\n".join(lines) + "\n"
+
+    def _research_action_items(self, entries):
+        snapshots = self._load_entry_snapshots(entries)
+        items = []
+
+        strongest_score = self._largest_positive_score_change(snapshots)
+        if strongest_score:
+            ticker, first_score, latest_score, delta = strongest_score
+            items.append(
+                {
+                    "role": "CIO",
+                    "subject": ticker,
+                    "priority": "medium",
+                    "prompt": (
+                        f"Review {ticker}: score improved {delta:+.1f} points "
+                        f"from {first_score:.1f} to {latest_score:.1f}; confirm whether the change reflects durable fundamentals."
+                    ),
+                }
+            )
+
+        weakest_score = self._largest_negative_score_change(snapshots)
+        if weakest_score:
+            ticker, first_score, latest_score, delta = weakest_score
+            items.append(
+                {
+                    "role": "CRO",
+                    "subject": ticker,
+                    "priority": "high",
+                    "prompt": (
+                        f"Challenge {ticker}: score declined {delta:+.1f} points "
+                        f"from {first_score:.1f} to {latest_score:.1f}; identify whether this is temporary volatility or thesis damage."
+                    ),
+                }
+            )
+
+        recurring_mover = self._top_recurring_mover(entries)
+        if recurring_mover:
+            ticker, appearances, largest_move = recurring_mover
+            items.append(
+                {
+                    "role": "CRO" if largest_move < 0 else "CIO",
+                    "subject": ticker,
+                    "priority": "high" if largest_move <= -4 else "medium",
+                    "prompt": (
+                        f"Investigate {ticker}: appeared as a top mover {appearances} times; "
+                        f"review catalysts behind the {largest_move:+.2f}% largest move."
+                    ),
+                }
+            )
+
+        sector_rows = self._sector_average_moves(snapshots)
+        if sector_rows:
+            weakest_sector = min(sector_rows, key=lambda item: item[1])
+            items.append(
+                {
+                    "role": "CRO",
+                    "subject": weakest_sector[0],
+                    "priority": "medium",
+                    "prompt": (
+                        f"Monitor {weakest_sector[0]}: weakest sector trend at "
+                        f"{weakest_sector[1]:+.2f}% average movement; check for broad pressure or isolated names."
+                    ),
+                }
+            )
+
+        leader = self._top_score_leader(entries)
+        if leader:
+            ticker, appearances, avg_score = leader
+            items.append(
+                {
+                    "role": "CIO",
+                    "subject": ticker,
+                    "priority": "medium",
+                    "prompt": (
+                        f"Maintain thesis file for {ticker}: appeared as a recurring score leader "
+                        f"{appearances} times with an average score of {avg_score:.1f}."
+                    ),
+                }
+            )
+
+        return items
 
     def _coverage_sentence(self, entries):
         latest = entries[-1]

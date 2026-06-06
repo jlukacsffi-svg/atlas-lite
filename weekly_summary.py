@@ -11,6 +11,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from app.email_delivery import EmailDelivery
+from app.research_tasks import ResearchTaskQueue
 from app.weekly_summary import WeeklySummaryGenerator
 
 
@@ -26,6 +27,24 @@ def main():
     print(f"[ok] Weekly summary saved to: {report_path}")
     if generator.last_html_path:
         print(f"[ok] HTML weekly summary saved to: {generator.last_html_path}")
+
+    print()
+    print("[tasks] Updating research task queue from weekly signals...")
+    try:
+        queue = ResearchTaskQueue()
+        created_tasks = []
+        for suggestion in generator.research_task_suggestions(days=7):
+            task, created = queue.add_task(
+                **suggestion,
+                source=str(report_path),
+            )
+            if created:
+                created_tasks.append(task)
+        print(f"[ok] Generated {len(created_tasks)} new research tasks from weekly signals.")
+        review_paths = queue.save_review_outputs()
+        print(f"[ok] Research agenda refreshed: {review_paths['agenda']}")
+    except Exception as task_error:
+        print(f"[warning] Weekly research task generation unavailable: {task_error}")
 
     print()
     print("[email] Checking email delivery settings...")
