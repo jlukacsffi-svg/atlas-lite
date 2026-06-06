@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).parent))
 
 from app.paper_trading import PaperTradingAccount
 from app.research_memory import ResearchMemory
+from app.research_tasks import ResearchTaskQueue
 
 
 def build_parser():
@@ -29,6 +30,7 @@ def build_parser():
     order_parser.add_argument("--thesis", required=True)
     order_parser.add_argument("--source", default="manual")
     order_parser.add_argument("--recommendation-id", default=None)
+    order_parser.add_argument("--proposal-id", required=True)
 
     recommend_parser = subparsers.add_parser(
         "recommend",
@@ -41,6 +43,37 @@ def build_parser():
     recommend_parser.add_argument("--thesis", required=True)
     recommend_parser.add_argument("--confidence", choices=["low", "medium", "high"], default="medium")
     recommend_parser.add_argument("--source", default="manual")
+
+    propose_parser = subparsers.add_parser(
+        "propose",
+        help="Create a reviewable paper-trade proposal without executing it.",
+    )
+    propose_parser.add_argument("side", choices=["buy", "sell"])
+    propose_parser.add_argument("ticker")
+    propose_parser.add_argument("shares", type=float)
+    propose_parser.add_argument("--price", type=float, required=True)
+    propose_parser.add_argument("--thesis", required=True)
+    propose_parser.add_argument("--recommendation-id", default=None)
+    propose_parser.add_argument("--research-task-id", default=None)
+    propose_parser.add_argument("--source", default="manual")
+
+    decide_parser = subparsers.add_parser(
+        "decide-proposal",
+        help="Approve or reject a paper proposal.",
+    )
+    decide_parser.add_argument("proposal_id")
+    decide_parser.add_argument("decision", choices=["approve", "reject"])
+    decide_parser.add_argument("--notes", default=None)
+
+    research_parser = subparsers.add_parser(
+        "propose-research",
+        help="Create a paper proposal from an owner-approved research finding.",
+    )
+    research_parser.add_argument("task_id")
+    research_parser.add_argument("side", choices=["buy", "sell"])
+    research_parser.add_argument("shares", type=float)
+    research_parser.add_argument("--price", type=float, required=True)
+    research_parser.add_argument("--thesis", default=None)
 
     preview_parser = subparsers.add_parser("preview", help="Validate without executing.")
     preview_parser.add_argument("side", choices=["buy", "sell"])
@@ -61,6 +94,11 @@ def build_parser():
     )
     report_parser.add_argument("--output", default=None)
     subparsers.add_parser("recommendations", help="Show paper recommendations.")
+    proposals_parser = subparsers.add_parser("proposals", help="Show paper proposals.")
+    proposals_parser.add_argument(
+        "--status",
+        choices=["pending", "approved", "rejected", "executed"],
+    )
     subparsers.add_parser("ledger", help="Show the append-only paper ledger.")
     return parser
 
@@ -94,6 +132,7 @@ def main(argv=None):
             **values,
             source=args.source,
             recommendation_id=args.recommendation_id,
+            proposal_id=args.proposal_id,
         )
         print(
             f"[ok] Simulated {event['side']} {event['shares']:g} {event['ticker']} "
@@ -101,6 +140,68 @@ def main(argv=None):
         )
         print(f"[paper] Trade ID: {event['trade_id']}")
         print("[safety] No real order was transmitted.")
+        return 0
+
+    if args.command == "propose":
+        event = account.create_proposal(
+            side=args.side,
+            ticker=args.ticker,
+            shares=args.shares,
+            reference_price=args.price,
+            thesis=args.thesis,
+            recommendation_id=args.recommendation_id,
+            research_task_id=args.research_task_id,
+            source=args.source,
+        )
+        print(
+            f"[ok] Created paper proposal {event['proposal_id']}: "
+            f"{event['side']} {event['shares']:g} {event['ticker']}."
+        )
+        print("[safety] The proposal is pending and no simulated order was executed.")
+        return 0
+
+    if args.command == "decide-proposal":
+        event = account.decide_proposal(
+            args.proposal_id,
+            args.decision,
+            notes=args.notes,
+        )
+        print(
+            f"[ok] Paper proposal {event['proposal_id']} "
+            f"{event['decision']}d."
+        )
+        print("[safety] Approval permits simulation only; no real order is possible.")
+        return 0
+
+    if args.command == "propose-research":
+        tasks = ResearchTaskQueue().list_tasks()
+        task = next((item for item in tasks if item.get("id") == args.task_id), None)
+        if not task:
+            raise ValueError(f"research task not found: {args.task_id}")
+        owner_decision = task.get("owner_decision", {}).get("decision")
+        if owner_decision != "approve" or task.get("status") != "closed":
+            raise ValueError("research task must be closed with owner approval")
+        ticker = str(task.get("subject", "")).strip().upper()
+        if not ticker or " " in ticker:
+            raise ValueError("research task subject must be a ticker")
+        thesis = args.thesis or task.get("result", {}).get("conclusion")
+        if not thesis:
+            raise ValueError("approved research task has no conclusion")
+
+        event = account.create_proposal(
+            side=args.side,
+            ticker=ticker,
+            shares=args.shares,
+            reference_price=args.price,
+            thesis=thesis,
+            research_task_id=args.task_id,
+            source="owner_approved_research",
+        )
+        print(
+            f"[ok] Created paper proposal {event['proposal_id']} "
+            f"from approved research task {args.task_id}."
+        )
+        print("[safety] The proposal remains pending; no simulated order was executed.")
         return 0
 
     if args.command == "recommend":
@@ -175,7 +276,12 @@ def main(argv=None):
         print(f"[ok] Paper performance report saved to: {output_path}")
         return 0
 
-    events = account.recommendations() if args.command == "recommendations" else account.ledger()
+    if args.command == "recommendations":
+        events = account.recommendations()
+    elif args.command == "proposals":
+        events = account.proposals(status=args.status)
+    else:
+        events = account.ledger()
     for event in events:
         print(event)
     return 0

@@ -66,6 +66,12 @@ Implemented:
 - Realized win/loss and win-rate tracking.
 - Standalone Markdown performance report.
 - Morning Brief paper-performance section.
+- Separate recommendation, proposal, approval, and fill records.
+- Single-use approved proposal requirement for every simulated fill.
+- Explicit conversion from owner-approved research to a pending paper proposal.
+- Transparent `paper_strategy_v1` candidate generation.
+- Maximum three new daily proposals with approximately 5% target sizing.
+- Pending proposal rationale in the Morning Brief.
 
 ## Safety Boundary
 

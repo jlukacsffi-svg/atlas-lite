@@ -15,6 +15,35 @@ class PaperTradingAccountTests(unittest.TestCase):
             clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
         )
 
+    def execute_approved(
+        self,
+        account,
+        side,
+        ticker,
+        shares,
+        price,
+        thesis,
+        recommendation_id=None,
+    ):
+        proposal = account.create_proposal(
+            side,
+            ticker,
+            shares,
+            price,
+            thesis,
+            recommendation_id=recommendation_id,
+        )
+        account.decide_proposal(proposal["proposal_id"], "approve")
+        return account.execute_order(
+            side,
+            ticker,
+            shares,
+            price,
+            thesis,
+            recommendation_id=recommendation_id,
+            proposal_id=proposal["proposal_id"],
+        )
+
     def test_initialize_creates_account_and_ledger_event(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)
@@ -33,9 +62,9 @@ class PaperTradingAccountTests(unittest.TestCase):
             )
             account.initialize(100000)
 
-            account.execute_order("buy", "NVDA", 100, 100, "Initial thesis.")
-            account.execute_order("buy", "NVDA", 50, 120, "Add after confirmation.")
-            sell = account.execute_order("sell", "NVDA", 50, 130, "Trim after target.")
+            self.execute_approved(account, "buy", "NVDA", 100, 100, "Initial thesis.")
+            self.execute_approved(account, "buy", "NVDA", 50, 120, "Add after confirmation.")
+            sell = self.execute_approved(account, "sell", "NVDA", 50, 130, "Trim after target.")
             state = account.load()
 
         self.assertAlmostEqual(state["positions"]["NVDA"]["average_cost"], 106.666666, places=5)
@@ -77,8 +106,8 @@ class PaperTradingAccountTests(unittest.TestCase):
                 policy={"maximum_position_pct": 100.0, "maximum_daily_trades": 2},
             )
             account.initialize(100000)
-            account.execute_order("buy", "AAA", 1, 100, "One.")
-            account.execute_order("buy", "BBB", 1, 100, "Two.")
+            self.execute_approved(account, "buy", "AAA", 1, 100, "One.")
+            self.execute_approved(account, "buy", "BBB", 1, 100, "Two.")
 
             result = account.preview_order("buy", "CCC", 1, 100, "Three.")
 
@@ -89,7 +118,7 @@ class PaperTradingAccountTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir, policy={"maximum_position_pct": 50.0})
             account.initialize(100000)
-            account.execute_order("buy", "NVDA", 10, 100, "Test.")
+            self.execute_approved(account, "buy", "NVDA", 10, 100, "Test.")
 
             status = account.status()
 
@@ -127,7 +156,8 @@ class PaperTradingAccountTests(unittest.TestCase):
                 "Paper thesis.",
             )
 
-            trade = account.execute_order(
+            trade = self.execute_approved(
+                account,
                 "buy",
                 "NVDA",
                 10,
@@ -154,7 +184,7 @@ class PaperTradingAccountTests(unittest.TestCase):
             )
 
             with self.assertRaisesRegex(ValueError, "does not match"):
-                account.execute_order(
+                proposal = account.create_proposal(
                     "sell",
                     "NVDA",
                     1,
@@ -169,6 +199,8 @@ class PaperTradingAccountTests(unittest.TestCase):
                 [
                     datetime(2026, 6, 1, 9, 30, 0),
                     datetime(2026, 6, 1, 9, 31, 0),
+                    datetime(2026, 6, 1, 9, 32, 0),
+                    datetime(2026, 6, 1, 9, 33, 0),
                     datetime(2026, 6, 1, 16, 0, 0),
                     datetime(2026, 6, 2, 16, 0, 0),
                 ]
@@ -180,7 +212,7 @@ class PaperTradingAccountTests(unittest.TestCase):
                 clock=lambda: next(times),
             )
             account.initialize(100000)
-            account.execute_order("buy", "NVDA", 100, 100, "Paper thesis.")
+            self.execute_approved(account, "buy", "NVDA", 100, 100, "Paper thesis.")
             first = account.record_performance_snapshot(
                 prices={"NVDA": 100},
                 benchmark_prices={"SPY": 500, "QQQ": 400},
@@ -202,7 +234,7 @@ class PaperTradingAccountTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)
             account.initialize(100000)
-            account.execute_order("buy", "NVDA", 10, 100, "Paper thesis.")
+            self.execute_approved(account, "buy", "NVDA", 10, 100, "Paper thesis.")
 
             with self.assertRaisesRegex(ValueError, "missing paper position prices"):
                 account.record_performance_snapshot(
@@ -221,7 +253,8 @@ class PaperTradingAccountTests(unittest.TestCase):
                 100,
                 "Paper thesis.",
             )
-            account.execute_order(
+            self.execute_approved(
+                account,
                 "buy",
                 "NVDA",
                 10,
@@ -229,7 +262,7 @@ class PaperTradingAccountTests(unittest.TestCase):
                 "Paper thesis.",
                 recommendation_id=recommendation["recommendation_id"],
             )
-            account.execute_order("sell", "NVDA", 10, 110, "Exit thesis.")
+            self.execute_approved(account, "sell", "NVDA", 10, 110, "Exit thesis.")
             account.record_performance_snapshot(
                 prices={},
                 benchmark_prices={"SPY": 500, "QQQ": 400},
@@ -246,6 +279,101 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(stats["win_rate_pct"], 100)
         self.assertIn("## Decision Audit", report)
         self.assertIn("This report evaluates a simulation", report)
+
+    def test_pending_or_rejected_proposal_cannot_execute(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+            pending = account.create_proposal("buy", "NVDA", 10, 100, "Pending.")
+
+            with self.assertRaisesRegex(ValueError, "not approved"):
+                account.execute_order(
+                    "buy",
+                    "NVDA",
+                    10,
+                    100,
+                    "Pending.",
+                    proposal_id=pending["proposal_id"],
+                )
+
+            account.decide_proposal(pending["proposal_id"], "reject")
+            with self.assertRaisesRegex(ValueError, "not approved"):
+                account.execute_order(
+                    "buy",
+                    "NVDA",
+                    10,
+                    100,
+                    "Pending.",
+                    proposal_id=pending["proposal_id"],
+                )
+
+    def test_approved_proposal_must_match_order_size_and_security(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+            proposal = account.create_proposal("buy", "NVDA", 10, 100, "Approved.")
+            account.decide_proposal(proposal["proposal_id"], "approve")
+
+            with self.assertRaisesRegex(ValueError, "does not match"):
+                account.execute_order(
+                    "buy",
+                    "NVDA",
+                    11,
+                    100,
+                    "Approved.",
+                    proposal_id=proposal["proposal_id"],
+                )
+
+    def test_approved_proposal_executes_and_is_audited(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+            proposal = account.create_proposal("buy", "NVDA", 10, 100, "Approved.")
+            account.decide_proposal(proposal["proposal_id"], "approve")
+
+            trade = account.execute_order(
+                "buy",
+                "NVDA",
+                10,
+                101,
+                "Approved.",
+                proposal_id=proposal["proposal_id"],
+            )
+            stats = account.trade_statistics()
+
+        self.assertEqual(trade["proposal_id"], proposal["proposal_id"])
+        self.assertEqual(stats["proposals"], 1)
+        self.assertEqual(stats["proposal_linked_trades"], 1)
+        self.assertEqual(stats["proposal_statuses"]["executed"], 1)
+
+    def test_executed_proposal_cannot_be_reused(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+            proposal = account.create_proposal("buy", "NVDA", 10, 100, "Approved.")
+            account.decide_proposal(proposal["proposal_id"], "approve")
+            account.execute_order(
+                "buy",
+                "NVDA",
+                10,
+                100,
+                "Approved.",
+                proposal_id=proposal["proposal_id"],
+            )
+
+            with self.assertRaisesRegex(ValueError, "not approved"):
+                account.execute_order(
+                    "buy",
+                    "NVDA",
+                    10,
+                    100,
+                    "Approved.",
+                    proposal_id=proposal["proposal_id"],
+                )
+
+            status = account.proposal_status(proposal["proposal_id"])
+
+        self.assertEqual(status, "executed")
 
 
 if __name__ == "__main__":

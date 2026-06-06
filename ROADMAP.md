@@ -125,9 +125,10 @@ Current result:
 Atlas can maintain a strictly simulated account, enforce conservative risk
 rules, log recommendations and linked fills, calculate realized and unrealized
 performance, compare results with SPY and QQQ, and generate an audit report.
-The account remains intentionally uninitialized until Joe selects the simulated
-starting capital. Stage 5 cannot be considered complete until it has accumulated
-a meaningful performance history.
+The account is initialized with $100,000 simulated cash. Atlas can generate
+transparent, reviewable paper proposals, but separate simulation approval is
+required before a fill. Stage 5 cannot be considered complete until it has
+accumulated a meaningful performance history.
 
 ## Stage 6: Human-Approved Trading
 

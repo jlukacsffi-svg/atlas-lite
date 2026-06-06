@@ -325,11 +325,33 @@ py -3.12 paper_trading.py recommend buy NVDA 10 --price 150 --thesis "Example pa
 
 The returned recommendation ID can be linked to a later simulated order with `--recommendation-id`.
 
+Create and review a paper proposal:
+
+```bash
+py -3.12 paper_trading.py propose buy NVDA 10 --price 150 --thesis "Example paper thesis." --recommendation-id recommendation_id
+py -3.12 paper_trading.py decide-proposal proposal_id approve --notes "Approved for simulation."
+```
+
+An approved proposal is required for every simulated fill and can be used only once:
+
+```bash
+py -3.12 paper_trading.py order buy NVDA 10 --price 150 --thesis "Example paper thesis." --proposal-id proposal_id
+```
+
+An owner-approved research finding can be converted into a pending paper proposal:
+
+```bash
+py -3.12 paper_trading.py propose-research task_id buy 10 --price 150
+```
+
+This conversion still does not execute a simulated order. The paper proposal requires a separate approval.
+
 Review account state or the append-only ledger:
 
 ```bash
 py -3.12 paper_trading.py status
 py -3.12 paper_trading.py ledger
+py -3.12 paper_trading.py proposals --status pending
 ```
 
 Record performance from the latest Atlas research snapshot and generate the evaluation report:
@@ -341,6 +363,8 @@ py -3.12 paper_trading.py report
 ```
 
 Daily Atlas runs automatically add a mark-to-market snapshot and Morning Brief section after a paper account has been intentionally initialized.
+
+The daily run also uses `paper_strategy_v1` to create at most three deduplicated pending proposals from eligible high-scoring securities. The strategy targets roughly 5% of starting simulated cash per entry, excludes benchmarks and Avoid names, and never approves or executes its own proposals.
 
 The initial policy prohibits margin, short selling, options, and leverage; preserves a 10% cash reserve; limits positions to 20% of simulated equity; and permits at most five simulated trades per day.
 

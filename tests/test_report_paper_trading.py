@@ -34,7 +34,19 @@ class ReportPaperTradingTests(unittest.TestCase):
                     "trades": 2,
                     "wins": 1,
                     "losses": 0,
+                    "proposal_statuses": {"pending": 1},
                 },
+                "pending_proposals": [
+                    {
+                        "proposal_id": "proposal_test",
+                        "side": "buy",
+                        "ticker": "NVDA",
+                        "shares": 10,
+                        "price": 150,
+                        "source": "paper_strategy_v1",
+                        "thesis": "High Atlas score.",
+                    }
+                ],
             },
         )
 
@@ -44,6 +56,9 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("| QQQ | +2.00% | -1.00% |", section)
         self.assertIn("| SPY | +0.50% | +0.50% |", section)
         self.assertIn("Recommendations / Simulated Trades", section)
+        self.assertIn("Pending Paper Proposals", section)
+        self.assertIn("| proposal_test | Buy | NVDA | 10 | $150.00 |", section)
+        self.assertIn("cannot execute without a separate simulation approval", section)
         self.assertIn("Simulated performance only", section)
 
 

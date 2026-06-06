@@ -127,6 +127,9 @@ Stage 5 paper-trading foundation:
 - Decision audit tracks recommendations, linked fills, realized wins/losses, and win rate.
 - `paper_trading.py report` writes a local Markdown evaluation report.
 - Daily reports include paper performance after a simulated account is intentionally initialized.
+- The local paper account was initialized with $100,000 simulated cash.
+- Every simulated fill now requires a separately approved, single-use paper proposal.
+- Owner-approved research can create a pending paper proposal, but never an automatic fill.
 
 ## Useful Files
 

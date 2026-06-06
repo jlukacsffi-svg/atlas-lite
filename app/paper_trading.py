@@ -104,6 +104,88 @@ class PaperTradingAccount:
         self._append_event(event)
         return event
 
+    def create_proposal(
+        self,
+        side,
+        ticker,
+        shares,
+        reference_price,
+        thesis,
+        recommendation_id=None,
+        research_task_id=None,
+        source="manual",
+    ):
+        """Append a reviewable paper-trade proposal without executing it."""
+        self.load()
+        order = self._normalize_order(side, ticker, shares, reference_price, thesis)
+        if recommendation_id:
+            recommendation = self._find_recommendation(recommendation_id)
+            if not recommendation:
+                raise ValueError(f"paper recommendation not found: {recommendation_id}")
+            if recommendation["side"] != order["side"] or recommendation["ticker"] != order["ticker"]:
+                raise ValueError("paper proposal does not match linked recommendation")
+
+        event = {
+            "event": "paper_proposal",
+            "proposal_id": f"proposal_{uuid.uuid4().hex[:12]}",
+            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "source": source,
+            "recommendation_id": recommendation_id,
+            "research_task_id": research_task_id,
+            **order,
+        }
+        self._append_event(event)
+        return event
+
+    def decide_proposal(self, proposal_id, decision, notes=None):
+        """Append an approval or rejection decision for a paper proposal."""
+        decision = str(decision).strip().lower()
+        if decision not in {"approve", "reject"}:
+            raise ValueError("paper proposal decision must be approve or reject")
+        proposal = self._find_proposal(proposal_id)
+        if not proposal:
+            raise ValueError(f"paper proposal not found: {proposal_id}")
+        if self.proposal_status(proposal_id) != "pending":
+            raise ValueError("paper proposal already has a decision")
+
+        event = {
+            "event": "paper_proposal_decision",
+            "proposal_id": proposal_id,
+            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "decision": decision,
+            "notes": str(notes or "").strip(),
+        }
+        self._append_event(event)
+        return event
+
+    def proposals(self, status=None):
+        proposals = [
+            dict(event, status=self.proposal_status(event["proposal_id"]))
+            for event in self.ledger()
+            if event.get("event") == "paper_proposal"
+        ]
+        if status:
+            return [proposal for proposal in proposals if proposal["status"] == status]
+        return proposals
+
+    def proposal_status(self, proposal_id):
+        executed = any(
+            event.get("event") == "paper_trade"
+            and event.get("proposal_id") == proposal_id
+            for event in self.ledger()
+        )
+        if executed:
+            return "executed"
+        decisions = [
+            event
+            for event in self.ledger()
+            if event.get("event") == "paper_proposal_decision"
+            and event.get("proposal_id") == proposal_id
+        ]
+        if not decisions:
+            return "pending"
+        return "approved" if decisions[-1]["decision"] == "approve" else "rejected"
+
     def execute_order(
         self,
         side,
@@ -113,11 +195,27 @@ class PaperTradingAccount:
         thesis,
         source="manual",
         recommendation_id=None,
+        proposal_id=None,
     ):
         """Apply a simulated fill and append it to the local audit ledger."""
         account = self.load()
         order = self._normalize_order(side, ticker, shares, price, thesis)
+        if not proposal_id:
+            raise ValueError("an approved paper proposal is required")
+        proposal = self._find_proposal(proposal_id)
+        if not proposal:
+            raise ValueError(f"paper proposal not found: {proposal_id}")
+        if self.proposal_status(proposal_id) != "approved":
+            raise ValueError("paper proposal is not approved")
+        if (
+            proposal["side"] != order["side"]
+            or proposal["ticker"] != order["ticker"]
+            or abs(float(proposal["shares"]) - order["shares"]) > 0.0000001
+        ):
+            raise ValueError("paper order does not match approved proposal")
+
         recommendation = None
+        recommendation_id = recommendation_id or proposal.get("recommendation_id")
         if recommendation_id:
             recommendation = self._find_recommendation(recommendation_id)
             if not recommendation:
@@ -166,6 +264,7 @@ class PaperTradingAccount:
             "timestamp": now,
             "source": source,
             "recommendation_id": recommendation_id,
+            "proposal_id": proposal_id,
             **order,
             "realized_gain_loss": round(realized, 2),
             "cash_after": round(account["cash"], 2),
@@ -296,10 +395,25 @@ class PaperTradingAccount:
         wins = [event for event in exits if event.get("realized_gain_loss", 0) > 0]
         losses = [event for event in exits if event.get("realized_gain_loss", 0) < 0]
         linked = [event for event in trades if event.get("recommendation_id")]
+        proposal_linked = [event for event in trades if event.get("proposal_id")]
+        proposals = [
+            event for event in events if event.get("event") == "paper_proposal"
+        ]
+        proposal_statuses = {
+            "pending": 0,
+            "approved": 0,
+            "rejected": 0,
+            "executed": 0,
+        }
+        for proposal in proposals:
+            proposal_statuses[self.proposal_status(proposal["proposal_id"])] += 1
         return {
             "recommendations": len(recommendations),
             "trades": len(trades),
             "linked_trades": len(linked),
+            "proposal_linked_trades": len(proposal_linked),
+            "proposals": len(proposals),
+            "proposal_statuses": proposal_statuses,
             "realized_exits": len(exits),
             "wins": len(wins),
             "losses": len(losses),
@@ -362,6 +476,13 @@ class PaperTradingAccount:
                 f"- **Recommendations Logged**: {stats['recommendations']}",
                 f"- **Simulated Trades**: {stats['trades']}",
                 f"- **Trades Linked To Recommendations**: {stats['linked_trades']}",
+                f"- **Paper Proposals**: {stats['proposals']}",
+                f"- **Pending / Approved / Rejected / Executed Proposals**: "
+                f"{stats['proposal_statuses']['pending']} / "
+                f"{stats['proposal_statuses']['approved']} / "
+                f"{stats['proposal_statuses']['rejected']} / "
+                f"{stats['proposal_statuses']['executed']}",
+                f"- **Trades Linked To Approved Proposals**: {stats['proposal_linked_trades']}",
                 f"- **Realized Exits**: {stats['realized_exits']}",
                 f"- **Wins / Losses**: {stats['wins']} / {stats['losses']}",
                 f"- **Win Rate**: {win_rate}",
@@ -545,6 +666,15 @@ class PaperTradingAccount:
     def _find_recommendation(self, recommendation_id):
         for event in self.recommendations():
             if event.get("recommendation_id") == recommendation_id:
+                return event
+        return None
+
+    def _find_proposal(self, proposal_id):
+        for event in self.ledger():
+            if (
+                event.get("event") == "paper_proposal"
+                and event.get("proposal_id") == proposal_id
+            ):
                 return event
         return None
 

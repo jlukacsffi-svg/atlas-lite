@@ -876,6 +876,8 @@ class ReportGenerator:
                 f"- **Performance Snapshots**: {self.paper_summary.get('snapshots', 0)}",
                 f"- **Recommendations / Simulated Trades**: "
                 f"{stats.get('recommendations', 0)} / {stats.get('trades', 0)}",
+                f"- **Pending Paper Proposals**: "
+                f"{stats.get('proposal_statuses', {}).get('pending', 0)}",
                 f"- **Realized Wins / Losses**: "
                 f"{stats.get('wins', 0)} / {stats.get('losses', 0)}",
                 "",
@@ -888,6 +890,30 @@ class ReportGenerator:
                 f"| {ticker} | {benchmark_return:+.2f}% | "
                 f"{excess.get(ticker, 0):+.2f}% |"
             )
+        pending = self.paper_summary.get("pending_proposals", [])
+        section.extend(["", "### Pending Paper Proposals\n"])
+        if not pending:
+            section.append("No paper proposals are awaiting simulation approval.")
+        else:
+            section.extend(
+                [
+                    "| ID | Side | Ticker | Shares | Reference Price | Source | Thesis |",
+                    "|----|------|--------|--------|-----------------|--------|--------|",
+                ]
+            )
+            for proposal in pending:
+                section.append(
+                    f"| {proposal.get('proposal_id', 'N/A')} | "
+                    f"{proposal.get('side', 'N/A').title()} | "
+                    f"{proposal.get('ticker', 'N/A')} | "
+                    f"{proposal.get('shares', 0):g} | "
+                    f"${proposal.get('price', 0):,.2f} | "
+                    f"{proposal.get('source', 'manual')} | "
+                    f"{proposal.get('thesis', 'N/A').replace('|', '/')} |"
+                )
+        section.append(
+            "\nPending proposals are review records only. They cannot execute without a separate simulation approval."
+        )
         return "\n".join(section) + "\n"
 
     def _generate_scoring_summary(self):
