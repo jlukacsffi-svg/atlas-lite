@@ -133,9 +133,65 @@ class ResearchTaskQueueTests(unittest.TestCase):
 
             self.assertEqual(
                 set(paths),
-                {"agenda", "CEO", "CIO", "CRO", "Reporting"},
+                {
+                    "agenda",
+                    "owner_review",
+                    "CEO",
+                    "CIO",
+                    "CRO",
+                    "Reporting",
+                    "Sector Analyst",
+                },
             )
             self.assertTrue(all(path.exists() for path in paths.values()))
+
+    def test_sector_analyst_role_uses_safe_brief_filename(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.add_task(
+                role="Sector Analyst",
+                subject="Cybersecurity",
+                prompt="Review sector weakness.",
+            )
+
+            saved_path = queue.save_role_brief("Sector Analyst")
+
+        self.assertEqual(saved_path.name, "sector_analyst_brief.md")
+
+    def test_complete_research_routes_task_to_owner_review(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            task, _ = queue.add_task(role="CRO", subject="NVDA", prompt="Review risk.")
+
+            completed = queue.complete_research(
+                task["id"],
+                conclusion="The move appears event-driven.",
+                recommendation="monitor",
+                confidence="high",
+                evidence=["Earnings release"],
+            )
+            review = queue.render_owner_review()
+
+        self.assertEqual(completed["status"], "awaiting_owner")
+        self.assertEqual(completed["result"]["recommendation"], "monitor")
+        self.assertIn("The move appears event-driven.", review)
+        self.assertIn("does not authorize or execute", review)
+
+    def test_owner_decision_closes_or_defers_recommendation(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            task, _ = queue.add_task(role="CIO", subject="NVDA", prompt="Review thesis.")
+            queue.complete_research(
+                task["id"],
+                conclusion="Thesis remains intact.",
+                recommendation="watchlist_review",
+            )
+
+            decided = queue.record_owner_decision(task["id"], "approve", notes="Reviewed.")
+
+        self.assertEqual(decided["status"], "closed")
+        self.assertEqual(decided["owner_decision"]["decision"], "approve")
+        self.assertEqual(decided["owner_decision"]["notes"], "Reviewed.")
 
     def test_invalid_role_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp_dir:

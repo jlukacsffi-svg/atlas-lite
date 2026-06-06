@@ -263,7 +263,27 @@ To write a focused role brief:
 py -3.12 research_tasks.py brief --role CRO
 ```
 
-Use `CEO`, `CIO`, `CRO`, or `Reporting`. The CEO brief includes the full queue for prioritization; other briefs include only tasks assigned to that role.
+Use `CEO`, `CIO`, `CRO`, `Reporting`, or `"Sector Analyst"`. The CEO brief includes the full queue for prioritization; other briefs include only tasks assigned to that role.
+
+To record a completed research finding and route it to owner review:
+
+```bash
+py -3.12 research_tasks.py complete task_id --conclusion "Thesis remains intact." --recommendation monitor --confidence medium --evidence "Earnings release"
+```
+
+To write the owner-review queue:
+
+```bash
+py -3.12 research_tasks.py review
+```
+
+To record Joe's disposition:
+
+```bash
+py -3.12 research_tasks.py decide task_id approve --notes "Reviewed."
+```
+
+Approval here records acceptance of a research recommendation only. It never authorizes or executes a trade.
 
 Daily and weekly runs refresh the agenda and all role briefs automatically. When a local portfolio is configured, portfolio concentration, drawdown, and missing-data alerts also create reviewable CRO or Reporting tasks.
 

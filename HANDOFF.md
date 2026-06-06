@@ -108,6 +108,10 @@ Stage 4 planning artifact:
 - Configured portfolio risk alerts create CRO or Reporting tasks.
 - Daily and weekly runs refresh the shared agenda and all role briefs.
 - Task status updates can append review notes.
+- Completed research records a conclusion, recommendation, confidence, and evidence.
+- Completed findings enter a separate owner-review queue.
+- Owner decisions are recorded without authorizing or executing trades.
+- Sector-trend assignments route to a dedicated Sector Analyst role.
 
 ## Useful Files
 

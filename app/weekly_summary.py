@@ -314,7 +314,7 @@ class WeeklySummaryGenerator:
             weakest_sector = min(sector_rows, key=lambda item: item[1])
             items.append(
                 {
-                    "role": "CRO",
+                    "role": "Sector Analyst",
                     "subject": weakest_sector[0],
                     "priority": "medium",
                     "prompt": (

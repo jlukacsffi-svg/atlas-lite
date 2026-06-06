@@ -75,6 +75,9 @@ class ReportGenerator:
         # Research Agenda
         report.append(self._generate_research_agenda())
 
+        # Research Recommendations Awaiting Owner Review
+        report.append(self._generate_owner_review())
+
         # Market Summary
         report.append(self._generate_market_summary())
 
@@ -572,6 +575,34 @@ class ReportGenerator:
                 f"{self._format_table_text(task.get('prompt', 'N/A'))} |"
             )
 
+        return "\n".join(section) + "\n"
+
+    def _generate_owner_review(self):
+        section = ["## Research Recommendations Awaiting Owner Review\n"]
+        tasks = self.research_task_queue.list_tasks(status="awaiting_owner")
+        if not tasks:
+            section.append("No completed research recommendations are awaiting owner review.\n")
+            return "\n".join(section) + "\n"
+
+        section.extend(
+            [
+                "| Priority | Role | Subject | Recommendation | Confidence | Conclusion |",
+                "|----------|------|---------|----------------|------------|------------|",
+            ]
+        )
+        for task in self.research_task_queue._sorted_tasks(tasks):
+            result = task.get("result", {})
+            section.append(
+                f"| {task.get('priority', 'medium').title()} | "
+                f"{task.get('role', 'N/A')} | "
+                f"{task.get('subject', 'General')} | "
+                f"{result.get('recommendation', 'N/A').replace('_', ' ').title()} | "
+                f"{result.get('confidence', 'N/A').title()} | "
+                f"{result.get('conclusion', 'N/A')} |"
+            )
+        section.append(
+            "\nOwner review records research disposition only and does not authorize a trade.\n"
+        )
         return "\n".join(section) + "\n"
 
     def _generate_data_quality(self):

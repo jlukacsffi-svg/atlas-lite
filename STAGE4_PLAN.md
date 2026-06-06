@@ -113,6 +113,20 @@ Initial task sources:
 
 Atlas should not execute tasks automatically in the first version. It should create a reviewable task list.
 
+## Operational Foundation Status
+
+Complete.
+
+Atlas now:
+
+- Creates deduplicated tasks from daily market signals.
+- Creates CIO, CRO, and Sector Analyst tasks from weekly trends.
+- Creates CRO and Reporting tasks from configured portfolio alerts.
+- Produces CEO, CIO, CRO, Sector Analyst, and Reporting briefs.
+- Records research conclusions, recommendations, confidence, and evidence.
+- Routes completed findings to a separate owner-review queue.
+- Records owner dispositions without authorizing trades.
+
 ## Success Test
 
 Stage 4 foundation is successful when Atlas can answer:
@@ -127,7 +141,7 @@ Atlas now also produces role-specific Markdown briefs. The CEO brief sees the fu
 queue for prioritization, while CIO, CRO, and Reporting briefs contain only their
 assigned work.
 
-## Recommended Next Build Step
+## Original Recommended Build Step
 
 Create a local `research_tasks/` system with:
 

@@ -55,7 +55,7 @@ Atlas can say not just what moved, but what matters and how new information chan
 
 ## Stage 3: Portfolio Intelligence
 
-Current phase.
+Complete at the software-foundation level. Joe can add the private local portfolio file when ready.
 
 Goal: Atlas understands Joe's actual holdings, but still does not trade.
 
@@ -76,6 +76,8 @@ Atlas can brief Joe on both the market and his portfolio exposure.
 
 ## Stage 4: Multi-Agent Research Organization
 
+Complete at the first operational level.
+
 Goal: Atlas becomes company-like.
 
 Build:
@@ -87,10 +89,16 @@ Build:
 - Reporting Agent.
 - Research archive and task queue.
 - Agent memory.
+- Role-specific research briefs.
+- Structured findings and owner-review workflow.
 
 Success test:
 
 Atlas can assign research, challenge assumptions, and produce organized recommendations.
+
+Current result:
+
+Atlas routes daily, weekly, sector, and portfolio signals into persistent role-based tasks; tracks their status; records findings; and presents recommendations for owner review.
 
 ## Stage 5: Paper Trading
 
@@ -165,9 +173,7 @@ Capabilities:
 
 ## Current Recommended Sequence
 
-1. Finish Atlas Lite reporting.
-2. Add scoring.
-3. Add memory.
-4. Add portfolio awareness.
-5. Add paper trading.
-6. Discuss real trading only after Atlas has proven reliability and discipline.
+1. Preserve and monitor the completed daily reporting, scoring, memory, portfolio, and research-organization foundations.
+2. Begin Stage 5 with a strictly simulated portfolio and immutable recommendation log.
+3. Establish paper-trading risk rules and benchmark evaluation.
+4. Discuss real trading only after Atlas has proven reliability and discipline over a meaningful test period.

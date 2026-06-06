@@ -173,6 +173,7 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
         subjects = {item["subject"] for item in suggestions}
         self.assertIn("CIO", roles)
         self.assertIn("CRO", roles)
+        self.assertIn("Sector Analyst", roles)
         self.assertIn("NVDA", subjects)
         self.assertIn("AVGO", subjects)
         self.assertTrue(all(item.get("priority") for item in suggestions))

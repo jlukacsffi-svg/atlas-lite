@@ -13,13 +13,23 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_TASK_DIR = PROJECT_ROOT / "research_tasks"
 DEFAULT_TASK_FILE = DEFAULT_TASK_DIR / "tasks.json"
 DEFAULT_ARCHIVE_INDEX = PROJECT_ROOT / "research_archive" / "archive_index.json"
-VALID_STATUSES = {"open", "in_progress", "closed"}
-VALID_ROLES = {"CEO", "CIO", "CRO", "Reporting"}
+VALID_STATUSES = {"open", "in_progress", "awaiting_owner", "closed"}
+VALID_ROLES = {"CEO", "CIO", "CRO", "Reporting", "Sector Analyst"}
+VALID_CONFIDENCE = {"low", "medium", "high"}
+VALID_RECOMMENDATIONS = {
+    "no_action",
+    "monitor",
+    "research_further",
+    "watchlist_review",
+    "risk_review",
+}
+VALID_OWNER_DECISIONS = {"approve", "reject", "defer"}
 ROLE_PURPOSES = {
     "CEO": "Prioritize the research agenda, escalate urgent risks, and summarize owner decisions needed.",
     "CIO": "Review investment opportunities, catalyst quality, and thesis conviction.",
     "CRO": "Challenge assumptions and investigate downside, concentration, and data-quality risks.",
     "Reporting": "Maintain concise, accurate, owner-focused research outputs.",
+    "Sector Analyst": "Investigate sector trends, catalysts, and whether broad moves are durable or isolated.",
 }
 
 
@@ -219,7 +229,7 @@ class ResearchTaskQueue:
 
     def save_role_brief(self, role, output_path=None, status="open"):
         role = self._normalize_role(role)
-        default_name = f"{role.lower()}_brief.md"
+        default_name = f"{role.lower().replace(' ', '_')}_brief.md"
         output_path = Path(output_path) if output_path else self.task_file.parent / default_name
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(
@@ -230,10 +240,133 @@ class ResearchTaskQueue:
 
     def save_review_outputs(self, status="open"):
         """Refresh the shared agenda and every role-specific brief."""
-        paths = {"agenda": self.save_agenda(status=status)}
+        paths = {
+            "agenda": self.save_agenda(status=status),
+            "owner_review": self.save_owner_review(),
+        }
         for role in sorted(VALID_ROLES):
             paths[role] = self.save_role_brief(role=role, status=status)
         return paths
+
+    def complete_research(
+        self,
+        task_id,
+        conclusion,
+        recommendation,
+        confidence="medium",
+        evidence=None,
+    ):
+        """Record a research finding and route it to owner review."""
+        recommendation = str(recommendation).strip().lower()
+        confidence = str(confidence).strip().lower()
+        conclusion = str(conclusion).strip()
+        if not conclusion:
+            raise ValueError("research conclusion is required")
+        if recommendation not in VALID_RECOMMENDATIONS:
+            raise ValueError(f"invalid recommendation: {recommendation}")
+        if confidence not in VALID_CONFIDENCE:
+            raise ValueError(f"invalid confidence: {confidence}")
+
+        if evidence is None:
+            evidence = []
+        elif isinstance(evidence, str):
+            evidence = [evidence]
+        evidence = [str(item).strip() for item in evidence if str(item).strip()]
+
+        payload = self.load()
+        for task in payload["tasks"]:
+            if task.get("id") != task_id:
+                continue
+            task["status"] = "awaiting_owner"
+            task["updated_at"] = datetime.now().isoformat(timespec="seconds")
+            task["result"] = {
+                "conclusion": conclusion,
+                "recommendation": recommendation,
+                "confidence": confidence,
+                "evidence": evidence,
+            }
+            self.save(payload)
+            return task
+
+        raise ValueError(f"task not found: {task_id}")
+
+    def record_owner_decision(self, task_id, decision, notes=None):
+        """Record Joe's disposition of a research recommendation."""
+        decision = str(decision).strip().lower()
+        if decision not in VALID_OWNER_DECISIONS:
+            raise ValueError(f"invalid owner decision: {decision}")
+
+        payload = self.load()
+        for task in payload["tasks"]:
+            if task.get("id") != task_id:
+                continue
+            if task.get("status") != "awaiting_owner":
+                raise ValueError("task is not awaiting owner review")
+
+            task["owner_decision"] = {
+                "decision": decision,
+                "decided_at": datetime.now().isoformat(timespec="seconds"),
+                "notes": str(notes or "").strip(),
+            }
+            task["status"] = "in_progress" if decision == "defer" else "closed"
+            task["updated_at"] = task["owner_decision"]["decided_at"]
+            self.save(payload)
+            return task
+
+        raise ValueError(f"task not found: {task_id}")
+
+    def render_owner_review(self):
+        """Render completed research recommendations awaiting Joe's review."""
+        tasks = self.list_tasks(status="awaiting_owner")
+        lines = [
+            "# Atlas Owner Review Queue",
+            "",
+            f"Generated: {datetime.now().isoformat(timespec='seconds')}",
+            "",
+            "## Pending Recommendations",
+            "",
+        ]
+        if not tasks:
+            lines.extend(["No research recommendations are awaiting owner review.", ""])
+        else:
+            lines.extend(
+                [
+                    "| Priority | Role | Subject | Recommendation | Confidence | Conclusion |",
+                    "|----------|------|---------|----------------|------------|------------|",
+                ]
+            )
+            for task in self._sorted_tasks(tasks):
+                result = task.get("result", {})
+                lines.append(
+                    f"| {self._table_text(task.get('priority', 'medium')).title()} | "
+                    f"{self._table_text(task.get('role', 'N/A'))} | "
+                    f"{self._table_text(task.get('subject', 'General'))} | "
+                    f"{self._table_text(result.get('recommendation', 'N/A')).replace('_', ' ').title()} | "
+                    f"{self._table_text(result.get('confidence', 'N/A')).title()} | "
+                    f"{self._table_text(result.get('conclusion', 'N/A'))} |"
+                )
+            lines.append("")
+
+        lines.extend(
+            [
+                "## Authority Boundary",
+                "",
+                "Owner review accepts or rejects a research recommendation only. "
+                "It does not authorize or execute a financial transaction.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+    def save_owner_review(self, output_path=None):
+        output_path = (
+            Path(output_path)
+            if output_path
+            else self.task_file.parent / "owner_review.md"
+        )
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(self.render_owner_review(), encoding="utf-8")
+        return output_path
 
     def update_status(self, task_id, status, notes=None):
         if status not in VALID_STATUSES:
@@ -383,13 +516,7 @@ class ResearchTaskQueue:
             "| Priority | Role | Subject | Prompt | Source |",
             "|----------|------|---------|--------|--------|",
         ]
-        for task in sorted(
-            tasks,
-            key=lambda item: (
-                {"high": 0, "medium": 1, "low": 2}.get(item.get("priority", "medium"), 1),
-                item.get("created_at", ""),
-            ),
-        ):
+        for task in self._sorted_tasks(tasks):
             lines.append(
                 f"| {self._table_text(task.get('priority', 'medium')).title()} | "
                 f"{self._table_text(task.get('role', 'N/A'))} | "
@@ -398,6 +525,15 @@ class ResearchTaskQueue:
                 f"{self._table_text(task.get('source', 'manual'))} |"
             )
         return lines
+
+    def _sorted_tasks(self, tasks):
+        return sorted(
+            tasks,
+            key=lambda item: (
+                {"high": 0, "medium": 1, "low": 2}.get(item.get("priority", "medium"), 1),
+                item.get("created_at", ""),
+            ),
+        )
 
     def _table_text(self, value):
         return str(value).replace("|", "/").replace("\n", " ").strip()
