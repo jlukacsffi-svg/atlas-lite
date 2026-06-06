@@ -123,6 +123,10 @@ Stage 4 foundation is successful when Atlas can answer:
 - What report or signal created the task?
 - Is the task still open?
 
+Atlas now also produces role-specific Markdown briefs. The CEO brief sees the full
+queue for prioritization, while CIO, CRO, and Reporting briefs contain only their
+assigned work.
+
 ## Recommended Next Build Step
 
 Create a local `research_tasks/` system with:

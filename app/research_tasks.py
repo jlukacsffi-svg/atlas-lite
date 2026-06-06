@@ -15,6 +15,12 @@ DEFAULT_TASK_FILE = DEFAULT_TASK_DIR / "tasks.json"
 DEFAULT_ARCHIVE_INDEX = PROJECT_ROOT / "research_archive" / "archive_index.json"
 VALID_STATUSES = {"open", "in_progress", "closed"}
 VALID_ROLES = {"CEO", "CIO", "CRO", "Reporting"}
+ROLE_PURPOSES = {
+    "CEO": "Prioritize the research agenda, escalate urgent risks, and summarize owner decisions needed.",
+    "CIO": "Review investment opportunities, catalyst quality, and thesis conviction.",
+    "CRO": "Challenge assumptions and investigate downside, concentration, and data-quality risks.",
+    "Reporting": "Maintain concise, accurate, owner-focused research outputs.",
+}
 
 
 class ResearchTaskQueue:
@@ -150,6 +156,76 @@ class ResearchTaskQueue:
         output_path = Path(output_path) if output_path else self.task_file.parent / "agenda.md"
         output_path.parent.mkdir(parents=True, exist_ok=True)
         output_path.write_text(self.render_agenda(status=status), encoding="utf-8")
+        return output_path
+
+    def render_role_brief(self, role, status="open"):
+        """Render a focused Markdown work brief for one Atlas role."""
+        role = self._normalize_role(role)
+        tasks = self.list_tasks(status=status)
+        if role != "CEO":
+            tasks = [task for task in tasks if task.get("role") == role]
+
+        generated_at = datetime.now().isoformat(timespec="seconds")
+        high_priority = [task for task in tasks if task.get("priority") == "high"]
+        lines = [
+            f"# Atlas {role} Research Brief",
+            "",
+            f"Generated: {generated_at}",
+            f"Status filter: {status or 'all'}",
+            "",
+            "## Role Mandate",
+            "",
+            ROLE_PURPOSES[role],
+            "",
+            "## Workload",
+            "",
+            f"- **Matching Tasks**: {len(tasks)}",
+            f"- **High Priority**: {len(high_priority)}",
+            "",
+        ]
+
+        if not tasks:
+            lines.extend(
+                [
+                    "## Assigned Work",
+                    "",
+                    "No matching research tasks.",
+                    "",
+                ]
+            )
+            return "\n".join(lines)
+
+        if high_priority:
+            lines.extend(["## Immediate Attention", ""])
+            lines.extend(self._task_table(high_priority))
+            lines.append("")
+
+        remaining = [task for task in tasks if task.get("priority") != "high"]
+        if remaining:
+            lines.extend(["## Research Queue", ""])
+            lines.extend(self._task_table(remaining))
+            lines.append("")
+
+        lines.extend(
+            [
+                "## Owner Boundary",
+                "",
+                "This brief organizes research only. It does not authorize trades, "
+                "capital commitments, or external actions.",
+                "",
+            ]
+        )
+        return "\n".join(lines)
+
+    def save_role_brief(self, role, output_path=None, status="open"):
+        role = self._normalize_role(role)
+        default_name = f"{role.lower()}_brief.md"
+        output_path = Path(output_path) if output_path else self.task_file.parent / default_name
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            self.render_role_brief(role=role, status=status),
+            encoding="utf-8",
+        )
         return output_path
 
     def update_status(self, task_id, status, notes=None):

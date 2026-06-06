@@ -89,6 +89,41 @@ class ResearchTaskQueueTests(unittest.TestCase):
         self.assertEqual(saved_path, output_path)
         self.assertIn("Review thesis.", saved_text)
 
+    def test_render_role_brief_filters_non_ceo_assignments(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.add_task(role="CRO", priority="high", subject="ENPH", prompt="Review downside risk.")
+            queue.add_task(role="CIO", priority="medium", subject="NVDA", prompt="Review thesis.")
+
+            brief = queue.render_role_brief("CRO")
+
+        self.assertIn("# Atlas CRO Research Brief", brief)
+        self.assertIn("Review downside risk.", brief)
+        self.assertNotIn("Review thesis.", brief)
+        self.assertIn("does not authorize trades", brief)
+
+    def test_render_ceo_brief_includes_all_roles(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.add_task(role="CRO", subject="Risk", prompt="Review downside risk.")
+            queue.add_task(role="CIO", subject="Thesis", prompt="Review thesis.")
+
+            brief = queue.render_role_brief("CEO")
+
+        self.assertIn("Review downside risk.", brief)
+        self.assertIn("Review thesis.", brief)
+
+    def test_save_role_brief_uses_role_specific_default_name(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.add_task(role="CIO", subject="NVDA", prompt="Review thesis.")
+
+            saved_path = queue.save_role_brief("CIO")
+            saved_text = saved_path.read_text(encoding="utf-8")
+
+        self.assertEqual(saved_path.name, "cio_brief.md")
+        self.assertIn("Review thesis.", saved_text)
+
     def test_invalid_role_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")

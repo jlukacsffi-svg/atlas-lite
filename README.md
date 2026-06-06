@@ -255,6 +255,14 @@ To write a Markdown research agenda:
 py -3.12 research_tasks.py agenda
 ```
 
+To write a focused role brief:
+
+```bash
+py -3.12 research_tasks.py brief --role CRO
+```
+
+Use `CEO`, `CIO`, `CRO`, or `Reporting`. The CEO brief includes the full queue for prioritization; other briefs include only tasks assigned to that role.
+
 Local task data is saved in `research_tasks/`, which is ignored by Git.
 
 ## Scheduled Execution

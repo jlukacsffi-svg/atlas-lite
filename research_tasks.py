@@ -23,6 +23,11 @@ def build_parser():
     agenda_parser.add_argument("--status", choices=["open", "in_progress", "closed"], default="open")
     agenda_parser.add_argument("--output", default=None)
 
+    brief_parser = subparsers.add_parser("brief", help="Write a role-specific Markdown research brief.")
+    brief_parser.add_argument("--role", required=True, choices=["CEO", "CIO", "CRO", "Reporting"])
+    brief_parser.add_argument("--status", choices=["open", "in_progress", "closed"], default="open")
+    brief_parser.add_argument("--output", default=None)
+
     add_parser = subparsers.add_parser("add", help="Add a research task.")
     add_parser.add_argument("--role", required=True, choices=["CEO", "CIO", "CRO", "Reporting"])
     add_parser.add_argument("--subject", default="General")
@@ -86,6 +91,15 @@ def main(argv=None):
     if args.command == "agenda":
         output_path = queue.save_agenda(output_path=args.output, status=args.status)
         print(f"[ok] Research agenda saved to: {output_path}")
+        return 0
+
+    if args.command == "brief":
+        output_path = queue.save_role_brief(
+            role=args.role,
+            output_path=args.output,
+            status=args.status,
+        )
+        print(f"[ok] {args.role} research brief saved to: {output_path}")
         return 0
 
     if args.command == "generate":
