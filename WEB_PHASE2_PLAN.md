@@ -8,7 +8,7 @@ authority.
 
 Authentication and durable-storage foundations are implemented. Cloud
 deployment is intentionally not yet enabled.
-Estimated Web Phase 2 completion: 55%.
+Estimated Web Phase 2 completion: 65%.
 
 Completed foundation:
 
@@ -34,10 +34,15 @@ Completed foundation:
   after a successful run.
 - Automated authentication, authorization, readiness, and read-only tests.
 - Full live daily-run validation against a disposable cloud-style data root.
+- Google Cloud CLI and Application Default Credentials configured locally.
+- Dedicated `atlas-capital-research-stg` project created with billing disabled.
+- Guarded, plan-first bootstrap and deployment scripts for budgets, storage,
+  identities, Artifact Registry, Cloud Run, IAP, jobs, and schedules.
 
 Remaining before the first cloud deployment:
 
-- Create a dedicated Google Cloud project with billing and budget alerts.
+- Create or select a billing account, link only the dedicated staging project,
+  and apply the prepared budget alerts.
 - Choose a U.S. region and create separate staging and production services.
 - Create and bootstrap the private Cloud Storage bucket.
 - Configure Secret Manager and a least-privilege service account.
@@ -47,6 +52,12 @@ Remaining before the first cloud deployment:
 - Configure scheduled Cloud Run jobs for daily and weekly Atlas execution.
 - Add centralized logs, uptime checks, alerts, and backup restoration tests.
 - Complete staging deployment and security review before production.
+
+Current external gate:
+
+- The Google account has no open Cloud Billing account.
+- No paid services have been enabled.
+- Follow `GCP_STAGING_SETUP.md` to cross the billing gate deliberately.
 
 ## Chosen Initial Architecture
 

@@ -204,6 +204,8 @@ py -3.12 cloud_dashboard.py
 Cloud mode is deliberately fail-closed. It requires Google Identity-Aware Proxy,
 the configured owner identity, an exact IAP audience, and persistent Atlas data.
 See `WEB_PHASE2_PLAN.md` before attempting deployment.
+The guarded Google Cloud staging procedure is documented in
+`GCP_STAGING_SETUP.md`.
 
 The single-owner cloud foundation synchronizes private runtime artifacts through
 an allowlisted, checksum-verified Cloud Storage bundle:

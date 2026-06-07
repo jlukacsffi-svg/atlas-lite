@@ -1,0 +1,79 @@
+param(
+    [string]$ProjectId = 'atlas-capital-research-stg',
+    [ValidateSet('us-west1', 'us-central1', 'us-east1')]
+    [string]$Region = 'us-west1'
+)
+
+$ErrorActionPreference = 'Stop'
+$Gcloud = Join-Path $env:LOCALAPPDATA 'Google\Cloud SDK\google-cloud-sdk\bin\gcloud.cmd'
+$Bucket = "$ProjectId-atlas-private"
+
+if (-not (Test-Path $Gcloud)) {
+    throw 'Google Cloud CLI is not installed.'
+}
+
+function Get-GcloudValue {
+    param([string[]]$Arguments)
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    $value = & $Gcloud @Arguments 2>$null
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $previousPreference
+    if ($exitCode -ne 0) {
+        return 'missing'
+    }
+    $text = ($value | Out-String).Trim()
+    return $(if ($text) { $text } else { 'not configured' })
+}
+
+$account = Get-GcloudValue @(
+    'auth', 'list',
+    '--filter=status:ACTIVE',
+    '--format=value(account)'
+)
+$project = Get-GcloudValue @(
+    'projects', 'describe', $ProjectId,
+    '--format=value(lifecycleState)'
+)
+$billing = Get-GcloudValue @(
+    'billing', 'projects', 'describe', $ProjectId,
+    '--format=value(billingEnabled)'
+)
+$bucket = Get-GcloudValue @(
+    'storage', 'buckets', 'describe', "gs://$Bucket",
+    '--format=value(name)'
+)
+$repository = Get-GcloudValue @(
+    'artifacts', 'repositories', 'describe', 'atlas-containers',
+    "--project=$ProjectId",
+    "--location=$Region",
+    '--format=value(name)'
+)
+$service = Get-GcloudValue @(
+    'run', 'services', 'describe', 'atlas-dashboard-stg',
+    "--project=$ProjectId",
+    "--region=$Region",
+    '--format=value(status.url)'
+)
+$dailyJob = Get-GcloudValue @(
+    'run', 'jobs', 'describe', 'atlas-daily-stg',
+    "--project=$ProjectId",
+    "--region=$Region",
+    '--format=value(metadata.name)'
+)
+$weeklyJob = Get-GcloudValue @(
+    'run', 'jobs', 'describe', 'atlas-weekly-stg',
+    "--project=$ProjectId",
+    "--region=$Region",
+    '--format=value(metadata.name)'
+)
+
+Write-Host 'Atlas Google Cloud staging status'
+Write-Host "  Account: $account"
+Write-Host "  Project: $project"
+Write-Host "  Billing enabled: $billing"
+Write-Host "  Private bucket: $bucket"
+Write-Host "  Artifact repository: $repository"
+Write-Host "  Dashboard service: $service"
+Write-Host "  Daily job: $dailyJob"
+Write-Host "  Weekly job: $weeklyJob"

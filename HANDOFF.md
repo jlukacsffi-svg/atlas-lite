@@ -159,9 +159,14 @@ Secure web-platform direction:
   disposable-root daily run completed successfully.
 - `cloud_daily.py` and `cloud_weekly.py` pull durable state before running and
   push it only after success.
-- The service is not deployed yet. Google Cloud tooling is not installed on
-  this laptop. Cloud project setup, bucket creation, scheduling, monitoring,
-  backups, and staging validation remain.
+- Google Cloud CLI 571.0.0, user login, and Application Default Credentials
+  are configured locally.
+- The dedicated `atlas-capital-research-stg` project exists with billing
+  disabled, so no Atlas cloud services or charges are active.
+- Guarded plan-first scripts cover staging bootstrap, dashboard deployment,
+  Cloud Run jobs, schedules, and read-only status.
+- The service is not deployed yet. Billing-account creation, bucket creation,
+  deployment, monitoring, backups, and staging validation remain.
 
 ## Useful Files
 
@@ -170,6 +175,7 @@ Secure web-platform direction:
 - `STAGE5_PLAN.md`: Stage 5 paper-trading policy and milestones.
 - `WEB_PLATFORM_PLAN.md`: secure modern dashboard and multi-user platform plan.
 - `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
+- `GCP_STAGING_SETUP.md`: guarded Google Cloud staging setup and billing gate.
 - `app/cloud_storage.py`: private durable artifact synchronization.
 - `cloud_sync.py`: manual private artifact pull/push command.
 - `cloud_daily.py`: cloud daily job wrapper.
