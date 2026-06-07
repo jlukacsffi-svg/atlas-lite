@@ -150,6 +150,9 @@ Secure web-platform direction:
 - Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
 - Web development must not weaken the research engine or grant additional trading authority.
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
+- Web Phase 2 foundation is in progress in `app/web_cloud.py`, `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
+- Cloud mode is fail-closed and requires verified Google IAP identity, the configured owner email, an exact audience, and explicit persistent data storage.
+- The service is not deployed yet. Managed storage, cloud project setup, scheduling, monitoring, backups, and staging validation remain.
 
 ## Useful Files
 
@@ -157,6 +160,7 @@ Secure web-platform direction:
 - `STAGE4_PLAN.md`: first Stage 4 multi-agent research organization plan.
 - `STAGE5_PLAN.md`: Stage 5 paper-trading policy and milestones.
 - `WEB_PLATFORM_PLAN.md`: secure modern dashboard and multi-user platform plan.
+- `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
 - `PROJECT_BRIEF.md`: project vision and constraints.
 - `AGENTS.md`: Codex working instructions.
 - `app/analyst_actions.py`: analyst-action headline retrieval and local caching.

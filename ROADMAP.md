@@ -208,7 +208,7 @@ paper-trading information.
 Phases:
 
 1. Read-only local owner dashboard with modern charts and responsive design. Complete.
-2. Secure single-user cloud hosting independent of Joe's laptop.
+2. Secure single-user cloud hosting independent of Joe's laptop. Foundation in progress.
 3. Invite-only multi-user accounts with strict tenant isolation.
 4. Controlled customer beta with privacy, support, and subscription foundations.
 5. Public self-service product only after security and operational readiness.

@@ -1,0 +1,15 @@
+.git
+.github
+.env
+.vscode
+__pycache__
+*.pyc
+data_cache
+logs
+paper_trading
+portfolio_history
+reports
+research_archive
+research_tasks
+data/portfolio.json
+tests

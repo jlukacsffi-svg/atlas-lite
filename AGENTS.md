@@ -63,12 +63,15 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 ## Web platform direction
 
 - Read `WEB_PLATFORM_PLAN.md` before web-platform work.
+- Read `WEB_PHASE2_PLAN.md` before cloud deployment work.
 - Build the website incrementally without disrupting the research and paper-evaluation engine.
 - Start with a read-only local owner dashboard.
 - Use modern, responsive, accessible financial-workspace design with meaningful charts.
 - Reuse stable Python research modules behind service boundaries rather than rewriting them for presentation.
 - Keep web-platform maturity separate from trading authority.
 - Use managed authentication and secret storage for hosted environments.
+- Cloud mode must fail closed when managed authentication or persistent data is not configured.
+- Do not trust unsigned proxy identity headers; verify the provider's signed identity token.
 - Treat every user-owned record as tenant-scoped and test that users cannot access one another's data.
 
 ## Development guidance

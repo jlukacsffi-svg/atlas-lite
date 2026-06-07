@@ -160,6 +160,8 @@ No public accounts and no cloud deployment.
 
 Move the owner dashboard to secure hosted infrastructure.
 
+Status: Foundation in progress.
+
 Includes:
 
 - Owner authentication.
@@ -169,6 +171,9 @@ Includes:
 - Monitoring, backups, and secure deployment.
 
 This phase removes the requirement that Joe's laptop remain on.
+
+The detailed architecture, configuration contract, and deployment checklist
+are in `WEB_PHASE2_PLAN.md`.
 
 ### Web Phase 3: Multi-User Foundation
 

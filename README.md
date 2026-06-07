@@ -194,6 +194,17 @@ The dashboard is a read-only presentation of local Atlas research, paper-account
 performance, market, and research-queue data. It binds only to this computer and
 does not create public accounts or expose Atlas to the internet.
 
+To exercise the cloud-ready WSGI boundary locally:
+
+```bash
+py -3.12 -m pip install -r requirements-web.txt
+py -3.12 cloud_dashboard.py
+```
+
+Cloud mode is deliberately fail-closed. It requires Google Identity-Aware Proxy,
+the configured owner identity, an exact IAP audience, and persistent Atlas data.
+See `WEB_PHASE2_PLAN.md` before attempting deployment.
+
 Reports are saved to the `reports/` folder with a timestamp in the filename.
 
 Each run writes both:
