@@ -53,6 +53,16 @@ Before any first paid staging deployment, record:
 
 ## Emergency Stop
 
+Verify that the project remains behind the zero-cost gate:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_zero_cost_audit.ps1
+```
+
+The audit fails if billing is linked, Atlas storage exists, BigQuery datasets
+exist, or deployment APIs have been enabled.
+
 Preview the billing-disable command:
 
 ```powershell

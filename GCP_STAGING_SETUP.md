@@ -81,6 +81,16 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 
 This command changes nothing.
 
+To enforce the current zero-cost gate, run:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_zero_cost_audit.ps1
+```
+
+This audit is read-only and exits with an error if billing or Atlas cloud
+resources are detected.
+
 ## Deployment Order
 
 After bootstrap:
@@ -95,7 +105,8 @@ After bootstrap:
    `gcp_deploy_jobs_staging.ps1`.
 6. Execute each job manually once.
 7. Obtain separate owner approval before resuming the paused schedules.
-8. Configure monitoring and test backup restoration.
+8. Create a private backup and run the local restoration drill.
+9. Configure monitoring and repeat restoration against the cloud bundle.
 
 Public registration and customer accounts remain prohibited in Web Phase 2.
 
@@ -107,3 +118,16 @@ Every mutating deployment command requires:
 
 Do not add these flags until the cost review and owner approval required by
 `CLOUD_COST_POLICY.md` are complete.
+
+## Zero-Cost Restoration Drill
+
+The local drill does not use Google Cloud or create charges:
+
+```powershell
+py -3.12 backup_restore.py create
+py -3.12 backup_restore.py drill backups\atlas_backup_TIMESTAMP.zip
+```
+
+The backup contains private Atlas data. Keep it only in approved private
+encrypted storage. The local ZIP is integrity-protected but is not encrypted by
+Atlas. The `backups/` folder is ignored by Git.

@@ -77,3 +77,6 @@ Write-Host "  Artifact repository: $repository"
 Write-Host "  Dashboard service: $service"
 Write-Host "  Daily job: $dailyJob"
 Write-Host "  Weekly job: $weeklyJob"
+if ($billing -eq 'True') {
+    Write-Warning 'Billing is enabled. Review CLOUD_COST_POLICY.md before continuing.'
+}

@@ -8,7 +8,7 @@ authority.
 
 Authentication and durable-storage foundations are implemented. Cloud
 deployment is intentionally not yet enabled.
-Estimated Web Phase 2 completion: 65%.
+Estimated Web Phase 2 completion: 70%.
 
 Completed foundation:
 
@@ -40,6 +40,13 @@ Completed foundation:
   identities, Artifact Registry, Cloud Run, IAP, jobs, and schedules.
 - Zero-cost cloud policy, explicit paid-deployment confirmations, paused
   schedules, and a plan-first emergency billing stop.
+- Checksum-verified local private backup archives.
+- Clear handling rule that local ZIP backups require private encrypted storage;
+  application-level archive encryption is not claimed.
+- Guarded restores that validate the complete archive before writing.
+- Automated tamper, path-traversal, unexpected-entry, and overwrite tests.
+- Successful isolated restoration drill against the current Atlas private
+  state.
 
 Remaining before the first cloud deployment:
 
@@ -52,7 +59,8 @@ Remaining before the first cloud deployment:
 - Enable Identity-Aware Proxy and grant access only to Joe's Google account.
 - Configure and verify the exact IAP audience.
 - Configure scheduled Cloud Run jobs for daily and weekly Atlas execution.
-- Add centralized logs, uptime checks, alerts, and backup restoration tests.
+- Add centralized logs, uptime checks, and alerts.
+- Repeat the restoration drill against the first real Cloud Storage bundle.
 - Complete staging deployment and security review before production.
 
 Current external gate:
@@ -180,6 +188,8 @@ Before any staging URL is shared:
 - Health endpoints reveal no portfolio, research, account, or identity data.
 - Logs do not include tokens, credentials, report bodies, or portfolio details.
 - Backups are encrypted and a restoration has been tested.
+- Private local backup archives remain ignored by Git and outside public
+  storage.
 - Staging and production use separate services and data.
 - No brokerage credentials or real-order capability exist.
 
@@ -193,4 +203,6 @@ Web Phase 2 is complete when:
 - Dashboard and report history survive service restarts and redeployments.
 - Monitoring reports failures.
 - Backup restoration has been demonstrated.
+- The local restoration drill passes before cloud deployment, and the cloud
+  restoration drill passes before production.
 - The full security checklist has passed in staging and production.

@@ -12,6 +12,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             root / "scripts" / "gcp_deploy_jobs_staging.ps1",
             root / "scripts" / "gcp_staging_status.ps1",
             root / "scripts" / "gcp_disable_billing.ps1",
+            root / "scripts" / "gcp_zero_cost_audit.ps1",
         ]
         for script in scripts:
             command = (
@@ -67,6 +68,17 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("Billing must remain disabled", content)
         self.assertIn("budgets are alerts, not hard spending caps", content)
         self.assertIn("explicit approval", content)
+
+    def test_zero_cost_audit_checks_billing_resources_and_deployment_apis(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_zero_cost_audit.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("billing projects describe", content)
+        self.assertIn("storage buckets list", content)
+        self.assertIn("BigQuery datasets", content)
+        self.assertIn("run.googleapis.com", content)
+        self.assertIn("zero-cost audit failed", content)
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
 
 ## Current Roadmap Position
 
@@ -167,6 +167,19 @@ Secure web-platform direction:
   Cloud Run jobs, schedules, and read-only status.
 - The service is not deployed yet. Billing-account creation, bucket creation,
   deployment, monitoring, backups, and staging validation remain.
+- Google Cloud billing remains disabled under `CLOUD_COST_POLICY.md`.
+- On 2026-06-07, the final readiness check detected that a billing account had
+  been linked in the console. The emergency stop immediately unlinked it.
+  Cloud Run, Artifact Registry, Cloud Scheduler, buckets, and BigQuery datasets
+  were not created.
+- `scripts/gcp_zero_cost_audit.ps1` now enforces the zero-cost gate and fails if
+  billing, deployment APIs, buckets, or BigQuery datasets are detected.
+- Local disaster-recovery tooling now creates private ZIP backups containing
+  only the cloud allowlist, verifies all paths, sizes, and SHA-256 checksums,
+  and refuses unapproved overwrites.
+- A restoration drill against the current private Atlas state passed with 194
+  files and 10,183,920 bytes.
+- Cloud deployment, monitoring, and a cloud-backed restoration drill remain.
 
 ## Useful Files
 
@@ -177,6 +190,9 @@ Secure web-platform direction:
 - `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
 - `GCP_STAGING_SETUP.md`: guarded Google Cloud staging setup and billing gate.
 - `app/cloud_storage.py`: private durable artifact synchronization.
+- `app/backup_restore.py`: private backup creation, inspection, validation, and
+  guarded restoration.
+- `backup_restore.py`: backup and restoration-drill command-line entry point.
 - `cloud_sync.py`: manual private artifact pull/push command.
 - `cloud_daily.py`: cloud daily job wrapper.
 - `cloud_weekly.py`: cloud weekly job wrapper.

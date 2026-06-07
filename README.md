@@ -24,6 +24,7 @@ A lightweight market monitoring tool that generates daily executive briefs for a
 - Generates Morning Executive Brief reports in markdown and HTML formats
 - Supports Windows scheduled daily execution
 - Supports optional SMTP email delivery using environment variables
+- Creates checksum-verified private backup archives and runs isolated restore drills
 - Saves reports to the `reports/` folder with timestamps
 
 ## Security Universe
@@ -224,6 +225,45 @@ py -3.12 cloud_weekly.py
 
 These commands require `ATLAS_GCS_BUCKET`, `ATLAS_DATA_ROOT`, and Google
 Application Default Credentials. They must not be run against a public bucket.
+
+## Private Backup And Restore
+
+Create a local private backup of the same allowlisted runtime artifacts used by
+cloud synchronization:
+
+```bash
+py -3.12 backup_restore.py create
+```
+
+Backups are written to the ignored `backups/` folder. They can contain private
+portfolio, research, paper-account, and report data and must not be committed,
+emailed, or placed in public storage. The ZIP format is checksum-protected but
+is not encrypted by Atlas; keep it only on private encrypted storage.
+
+Inspect and verify a backup without restoring it:
+
+```bash
+py -3.12 backup_restore.py inspect backups/atlas_backup_TIMESTAMP.zip
+```
+
+Run an isolated restoration drill:
+
+```bash
+py -3.12 backup_restore.py drill backups/atlas_backup_TIMESTAMP.zip
+```
+
+The drill validates the manifest, file inventory, paths, sizes, and SHA-256
+checksums, then restores into a disposable directory and verifies the result.
+
+An actual restore is plan-only unless `--apply` is supplied:
+
+```bash
+py -3.12 backup_restore.py restore backups/atlas_backup_TIMESTAMP.zip `
+  --target C:\path\to\restore
+```
+
+Existing files are never replaced unless both `--apply` and
+`--replace-existing` are supplied.
 
 Reports are saved to the `reports/` folder with a timestamp in the filename.
 

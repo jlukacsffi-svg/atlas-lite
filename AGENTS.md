@@ -82,6 +82,10 @@ For broader project context, long-term vision, future autonomy levels, scoring p
   bundle; never upload `.env`, credentials, caches, or arbitrary repository files.
 - Keep dashboard storage access read-only and scheduled-job storage access
   separate and least-privileged.
+- Keep private backups in the ignored `backups/` folder; never commit or expose
+  backup archives.
+- Run a local `backup_restore.py drill` before the first cloud deployment and a
+  cloud-backed restoration drill before production.
 - Treat every user-owned record as tenant-scoped and test that users cannot access one another's data.
 
 ## Development guidance
