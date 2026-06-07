@@ -14,8 +14,8 @@ param(
     [ValidateSet('us-west1', 'us-central1', 'us-east1')]
     [string]$Region = 'us-west1',
 
-    [ValidateRange(5, 500)]
-    [int]$MonthlyBudgetUsd = 25,
+    [ValidateRange(5, 100)]
+    [int]$MonthlyBudgetUsd = 10,
 
     [switch]$Apply,
     [switch]$ConfirmCosts
@@ -89,20 +89,11 @@ Invoke-Gcloud @(
 )
 Invoke-Gcloud @('config', 'set', 'project', $ProjectId)
 
-$services = @(
-    'artifactregistry.googleapis.com',
+Invoke-Gcloud @(
+    'services', 'enable',
     'billingbudgets.googleapis.com',
-    'cloudbuild.googleapis.com',
-    'cloudscheduler.googleapis.com',
-    'iap.googleapis.com',
-    'iam.googleapis.com',
-    'logging.googleapis.com',
-    'monitoring.googleapis.com',
-    'run.googleapis.com',
-    'secretmanager.googleapis.com',
-    'storage.googleapis.com'
+    "--project=$ProjectId"
 )
-Invoke-Gcloud (@('services', 'enable') + $services + @("--project=$ProjectId"))
 
 $budgetExists = $false
 if ($Apply) {
@@ -120,12 +111,28 @@ if (-not $budgetExists) {
         "--budget-amount=${MonthlyBudgetUsd}USD",
         '--calendar-period=month',
         "--filter-projects=projects/$ProjectId",
+        '--credit-types-treatment=exclude-all-credits',
+        '--threshold-rule=percent=0.25',
         '--threshold-rule=percent=0.50',
         '--threshold-rule=percent=0.80',
         '--threshold-rule=percent=1.00',
         '--threshold-rule=percent=1.00,basis=forecasted-spend'
     )
 }
+
+$services = @(
+    'artifactregistry.googleapis.com',
+    'cloudbuild.googleapis.com',
+    'cloudscheduler.googleapis.com',
+    'iap.googleapis.com',
+    'iam.googleapis.com',
+    'logging.googleapis.com',
+    'monitoring.googleapis.com',
+    'run.googleapis.com',
+    'secretmanager.googleapis.com',
+    'storage.googleapis.com'
+)
+Invoke-Gcloud (@('services', 'enable') + $services + @("--project=$ProjectId"))
 
 if (-not (Test-GcloudResource @('storage', 'buckets', 'describe', "gs://$Bucket"))) {
     Invoke-Gcloud @(
@@ -191,7 +198,6 @@ if (-not (Test-GcloudResource @(
         '--repository-format=docker',
         "--location=$Region",
         '--description=Private Atlas staging container images',
-        '--allow-vulnerability-scanning',
         "--project=$ProjectId"
     )
 }

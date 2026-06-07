@@ -1,48 +1,58 @@
 # Atlas Cloud Cost Policy
 
-Atlas cloud infrastructure must remain at zero authorized spend until Joe
-explicitly approves a reviewed staging budget and billing activation.
+Atlas may use a small amount of Google Cloud credit for controlled staging.
+The goal is minimum practical cost, not an absolute zero-cost requirement.
 
-## Current Gate
+## Current Cost Envelope
 
 - Google Cloud project: `atlas-capital-research-stg`
-- Billing must remain disabled.
-- No billable Atlas resources may be created.
-- Plan-only commands and read-only status checks are allowed.
-- Installing local tools and keeping an empty Google Cloud project are allowed.
+- Available promotional credit reported by Joe: approximately `$300`.
+- Initial target usage: `$0-$5` per month.
+- Initial recurring alert budget: `$10` per month.
+- Billing remains disabled until Joe approves the written deployment estimate.
+- Staging is the only environment authorized for initial cloud spending.
 
-Enabling an API does not by itself authorize Atlas to consume paid resources.
-No deployment may rely on a free tier as its only cost control.
+Promotional credit is a cushion, not a spending control. Its remaining balance,
+expiration date, and eligible services must be checked in Google Cloud Billing
+before activation. A payment method can be charged after credits expire, are
+exhausted, or do not apply to a service.
 
 ## Required Owner Approval
 
-Before linking billing or creating any cloud resource, Codex must:
+Before linking billing or creating a cloud resource, Codex must:
 
-1. Give Joe a plain-language estimate of expected monthly costs.
-2. Identify each service that can create charges.
-3. Explain the free allowance, if any, and what can exceed it.
+1. Give Joe a plain-language low, expected, and high monthly estimate.
+2. Identify every planned service that can create charges.
+3. Explain relevant free allowances and what can exceed them.
 4. Explain that Google Cloud budgets are alerts, not hard spending caps.
-5. State the proposed monthly alert budget and shutdown procedure.
-6. Receive Joe's explicit approval to enable billing and accept that budget.
+5. Confirm the credit balance and expiration shown in the Billing console.
+6. State the monthly alert budget and shutdown procedure.
+7. Receive Joe's explicit approval for that deployment and budget.
 
-Approval for planning, local development, or creating this policy is not
-approval to enable billing.
+Approval to incur some future staging cost is not approval for unlimited
+spending, production deployment, or a changed architecture.
 
 ## Deployment Controls
 
 - All cloud scripts default to plan-only mode.
 - Mutating commands require both `-Apply` and `-ConfirmCosts`.
-- Bootstrap requires a monthly budget of at least `$5`.
+- The initial bootstrap defaults to a `$10` monthly alert budget.
+- Budget alerts track gross usage before promotional credits are applied.
+- The budget is created before application deployment services are enabled.
 - Dashboard instances remain at minimum `0` and maximum `1`.
 - Scheduled jobs use one task and conservative resource limits.
 - Scheduler triggers are created or updated, then left paused.
-- Schedules may be resumed only after manual tests and separate owner approval.
+- Container vulnerability scanning is disabled for the initial staging launch.
+- Schedules and optional paid features require separate approval.
 - Staging and production must use separate projects and budgets.
 
-## Before Go-Live
+## Cost Review
 
-Before any first paid staging deployment, record:
+The current estimate is maintained in `CLOUD_COST_ESTIMATE.md`.
 
+Before the first deployment, record:
+
+- Credit balance and expiration date observed in Google Cloud.
 - Approved monthly alert budget.
 - Estimated low, expected, and high monthly cost.
 - Billing account selected.
@@ -51,9 +61,9 @@ Before any first paid staging deployment, record:
 - Manual disable-billing procedure.
 - Resource cleanup procedure.
 
-## Emergency Stop
+## Pre-Activation Audit
 
-Verify that the project remains behind the zero-cost gate:
+Verify that the project has not crossed the billing gate:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass `
@@ -61,7 +71,10 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 ```
 
 The audit fails if billing is linked, Atlas storage exists, BigQuery datasets
-exist, or deployment APIs have been enabled.
+exist, or deployment APIs have been enabled. After approved deployment, use the
+normal staging status and billing reports instead.
+
+## Emergency Stop
 
 Preview the billing-disable command:
 
@@ -71,7 +84,6 @@ powershell -NoProfile -ExecutionPolicy Bypass `
   -ProjectId atlas-capital-research-stg
 ```
 
-Only add `-Apply` when Joe explicitly requests billing to be disabled. Disabling
-billing stops billable services and can make cloud resources unavailable or
-cause data loss, so it is an emergency control rather than a routine cleanup
-command.
+Only add `-Apply` when Joe explicitly requests billing to be disabled or an
+unapproved billing link is detected. Disabling billing stops billable services
+and can make cloud resources unavailable or cause data loss.

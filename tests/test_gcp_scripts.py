@@ -62,10 +62,11 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("'scheduler', 'jobs', 'pause'", content)
         self.assertIn("separate owner approval", content)
 
-    def test_cloud_cost_policy_preserves_zero_cost_gate(self):
+    def test_cloud_cost_policy_preserves_controlled_cost_gate(self):
         root = Path(__file__).resolve().parent.parent
         content = (root / "CLOUD_COST_POLICY.md").read_text(encoding="utf-8")
-        self.assertIn("Billing must remain disabled", content)
+        self.assertIn("Billing remains disabled", content)
+        self.assertIn("`$10` monthly alert budget", content)
         self.assertIn("budgets are alerts, not hard spending caps", content)
         self.assertIn("explicit approval", content)
 
@@ -79,6 +80,23 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("BigQuery datasets", content)
         self.assertIn("run.googleapis.com", content)
         self.assertIn("zero-cost audit failed", content)
+
+    def test_bootstrap_defaults_to_small_budget_and_no_paid_scanning(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_bootstrap_staging.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("[int]$MonthlyBudgetUsd = 10", content)
+        self.assertIn(
+            "'--credit-types-treatment=exclude-all-credits'",
+            content,
+        )
+        self.assertIn("'--threshold-rule=percent=0.25'", content)
+        self.assertNotIn("--allow-vulnerability-scanning", content)
+        self.assertLess(
+            content.index("'billing', 'budgets', 'create'"),
+            content.index("'artifactregistry.googleapis.com'"),
+        )
 
 
 if __name__ == "__main__":

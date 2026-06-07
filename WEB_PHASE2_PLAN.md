@@ -38,8 +38,8 @@ Completed foundation:
 - Dedicated `atlas-capital-research-stg` project created with billing disabled.
 - Guarded, plan-first bootstrap and deployment scripts for budgets, storage,
   identities, Artifact Registry, Cloud Run, IAP, jobs, and schedules.
-- Zero-cost cloud policy, explicit paid-deployment confirmations, paused
-  schedules, and a plan-first emergency billing stop.
+- Controlled-cost cloud policy, explicit paid-deployment confirmations, paused
+  schedules, a `$10` alert budget, and a plan-first emergency billing stop.
 - Checksum-verified local private backup archives.
 - Clear handling rule that local ZIP backups require private encrypted storage;
   application-level archive encryption is not claimed.
@@ -50,8 +50,8 @@ Completed foundation:
 
 Remaining before the first cloud deployment:
 
-- Create or select a billing account, link only the dedicated staging project,
-  and apply the prepared budget alerts.
+- Verify promotional-credit balance and expiration, obtain final owner approval,
+  link only the dedicated staging project, and apply the prepared budget alerts.
 - Choose a U.S. region and create separate staging and production services.
 - Create and bootstrap the private Cloud Storage bucket.
 - Configure Secret Manager and a least-privilege service account.
@@ -65,10 +65,11 @@ Remaining before the first cloud deployment:
 
 Current external gate:
 
-- The Google account has no open Cloud Billing account.
+- An open billing account exists, but the Atlas project is currently unlinked.
 - No paid services have been enabled.
-- Billing must remain disabled until Joe reviews a written cost estimate and
-  explicitly approves the monthly staging budget.
+- Billing remains disabled until Joe verifies the credit details, reviews
+  `CLOUD_COST_ESTIMATE.md`, and explicitly approves the `$10` monthly alert
+  budget.
 - Follow `GCP_STAGING_SETUP.md` to cross the billing gate deliberately.
 
 ## Chosen Initial Architecture

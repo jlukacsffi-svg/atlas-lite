@@ -232,13 +232,14 @@ incrementally.
 
 Current Web Phase 2 result:
 
-- Cloud billing remains disabled and no paid resources are active.
+- Cloud billing remains disabled and no paid resources are active; a
+  minimal-cost staging direction is approved in principle.
 - Authentication, private artifact storage, guarded deployment, and
   zero-cost controls are implemented.
 - A checksum-verified private backup and isolated restoration drill are
   implemented and passing.
-- The next no-cost work is local observability and deployment-readiness
-  validation; actual hosting remains behind the owner-approved billing gate.
+- The next gate is credit-expiration verification and explicit approval of the
+  `$10` monthly staging alert budget before actual hosting begins.
 
 ## Current Recommended Sequence
 

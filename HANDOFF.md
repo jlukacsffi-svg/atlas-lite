@@ -165,15 +165,21 @@ Secure web-platform direction:
   disabled, so no Atlas cloud services or charges are active.
 - Guarded plan-first scripts cover staging bootstrap, dashboard deployment,
   Cloud Run jobs, schedules, and read-only status.
-- The service is not deployed yet. Billing-account creation, bucket creation,
-  deployment, monitoring, backups, and staging validation remain.
+- The service is not deployed yet. Credit verification, final budget approval,
+  billing linkage, bucket creation, deployment, monitoring, and staging
+  validation remain.
 - Google Cloud billing remains disabled under `CLOUD_COST_POLICY.md`.
 - On 2026-06-07, the final readiness check detected that a billing account had
   been linked in the console. The emergency stop immediately unlinked it.
   Cloud Run, Artifact Registry, Cloud Scheduler, buckets, and BigQuery datasets
   were not created.
-- `scripts/gcp_zero_cost_audit.ps1` now enforces the zero-cost gate and fails if
-  billing, deployment APIs, buckets, or BigQuery datasets are detected.
+- `scripts/gcp_zero_cost_audit.ps1` enforces the pre-activation gate and fails
+  if billing, deployment APIs, buckets, or BigQuery datasets are detected.
+- Joe reported approximately `$300` of Google Cloud promotional credit and
+  approved a minimal-cost direction. The proposed operating target is `$0-$5`
+  per month with a `$10` monthly alert budget; final billing activation still
+  requires verification of credit expiration and explicit approval.
+- `CLOUD_COST_ESTIMATE.md` records the expected service costs and review steps.
 - Local disaster-recovery tooling now creates private ZIP backups containing
   only the cloud allowlist, verifies all paths, sizes, and SHA-256 checksums,
   and refuses unapproved overwrites.

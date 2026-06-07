@@ -18,22 +18,24 @@ Current cloud status:
 - Billing is disabled.
 - No bucket, image repository, Cloud Run service, scheduled job, or public URL
   exists yet.
-- No Atlas cloud charges have been authorized.
+- Joe has authorized a future minimal-cost staging deployment after reviewing
+  its estimate and explicitly approving the `$10` monthly alert budget.
 
 The controlling policy is `CLOUD_COST_POLICY.md`. Billing must remain disabled
-until Joe reviews the cost estimate and explicitly approves activation.
+until Joe verifies the promotional-credit balance and expiration, reviews
+`CLOUD_COST_ESTIMATE.md`, and explicitly approves activation.
 
 ## Billing Gate
 
-The next owner action is to create or select a Google Cloud billing account.
+The open billing account is named `My Billing Account`.
 
 Before linking it to Atlas:
 
-1. Verify the payment method directly in Google Cloud Console.
-2. Record the billing account ID, which looks like
-   `000000-000000-000000`.
-3. Keep the initial Atlas monthly budget at `$25`.
-4. Do not reuse the unrelated `MusterApp` project.
+1. Verify the remaining promotional credit and expiration directly in Google
+   Cloud Console.
+2. Review `CLOUD_COST_ESTIMATE.md`.
+3. Keep the initial Atlas monthly alert budget at `$10`.
+4. Confirm the project is `atlas-capital-research-stg`.
 
 Budgets send alerts but do not automatically cap spending. Atlas therefore also
 uses zero minimum dashboard instances, one maximum dashboard instance, one task
@@ -61,14 +63,17 @@ It creates nothing unless both flags are added:
 The guarded bootstrap will:
 
 - Link only the dedicated staging project to billing.
-- Create a `$25` monthly budget with 50%, 80%, 100%, and forecast alerts.
+- Create a `$10` monthly budget with 25%, 50%, 80%, 100%, and forecast alerts
+  before enabling application deployment services. The alert tracks gross usage
+  before promotional credits are applied.
 - Enable only required APIs.
 - Create a private bucket in `us-west1`.
 - Enforce uniform bucket-level access and public access prevention.
 - Create separate dashboard, job, and scheduler service accounts.
 - Give the dashboard read-only object access.
 - Give scheduled jobs object update access.
-- Create a private vulnerability-scanned Artifact Registry repository.
+- Create a private Artifact Registry repository without optional paid
+  vulnerability scanning.
 
 ## Read-Only Status
 
@@ -81,7 +86,7 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 
 This command changes nothing.
 
-To enforce the current zero-cost gate, run:
+To verify the pre-activation gate, run:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass `
@@ -89,7 +94,7 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 ```
 
 This audit is read-only and exits with an error if billing or Atlas cloud
-resources are detected.
+resources are detected. It is intended for use before the approved deployment.
 
 ## Deployment Order
 
