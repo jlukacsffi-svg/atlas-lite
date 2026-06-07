@@ -28,8 +28,9 @@ from app.portfolio import Portfolio
 from app.research_memory import ResearchMemory
 from app.research_tasks import ResearchTaskQueue
 from app.security_universe import SecurityUniverse
+from app.paths import data_path
 
-LOG_DIR = Path(__file__).resolve().parent / "logs"
+LOG_DIR = data_path("logs")
 
 
 def verify_internet_connectivity(timeout=5):
@@ -218,7 +219,7 @@ def main():
             portfolio_summary=portfolio_summary,
             paper_summary=paper_summary,
         )
-        report_path = generator.save_report()
+        report_path = generator.save_report(reports_dir=data_path("reports"))
 
         print(f"[ok] Report saved to: {report_path}")
         if generator.last_html_path:

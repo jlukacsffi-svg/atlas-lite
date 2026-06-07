@@ -9,9 +9,9 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from app.paths import data_path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_ANALYST_CACHE_DIR = PROJECT_ROOT / "data_cache" / "analyst_actions"
+DEFAULT_ANALYST_CACHE_DIR = data_path("data_cache", "analyst_actions")
 YAHOO_SEARCH_URL = "https://query1.finance.yahoo.com/v1/finance/search"
 ANALYST_ACTION_CACHE_HOURS = 12
 ANALYST_ACTION_TIMEOUT_SECONDS = 5

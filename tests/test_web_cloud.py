@@ -55,6 +55,13 @@ class CloudWebSettingsTests(unittest.TestCase):
                 auth_mode="iap",
                 owner_email="owner@example.com",
             ).validate()
+        with self.assertRaisesRegex(ValueError, "ATLAS_GCS_BUCKET"):
+            CloudWebSettings(
+                mode="cloud",
+                auth_mode="iap",
+                owner_email="owner@example.com",
+                iap_audience="/projects/123/locations/us/services/atlas",
+            ).validate()
 
     def test_local_mode_cannot_accept_cloud_identity_headers(self):
         with self.assertRaisesRegex(ValueError, "must use ATLAS_AUTH_MODE=local"):
@@ -87,6 +94,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 auth_mode="iap",
                 owner_email="owner@example.com",
                 iap_audience="/projects/123/locations/us/services/atlas",
+                storage_bucket="atlas-private",
             ),
             data_service=StubDataService(),
             token_verifier=verifier,

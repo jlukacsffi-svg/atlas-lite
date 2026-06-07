@@ -160,7 +160,7 @@ No public accounts and no cloud deployment.
 
 Move the owner dashboard to secure hosted infrastructure.
 
-Status: Foundation in progress.
+Status: Authentication and durable-storage foundation in progress.
 
 Includes:
 

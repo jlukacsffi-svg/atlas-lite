@@ -6,8 +6,9 @@ authority.
 
 ## Current Status
 
-Foundation implemented. Cloud deployment is intentionally not yet enabled.
-Estimated Web Phase 2 completion: 35%.
+Authentication and durable-storage foundations are implemented. Cloud
+deployment is intentionally not yet enabled.
+Estimated Web Phase 2 completion: 55%.
 
 Completed foundation:
 
@@ -22,14 +23,23 @@ Completed foundation:
 - Read-only HTTP surface with mutating methods rejected.
 - Security headers for private dashboard responses.
 - Explicit `ATLAS_DATA_ROOT` boundary for private artifacts.
+- Centralized writable paths for reports, archives, research tasks, paper
+  state, portfolio history, logs, and caches.
+- Private Cloud Storage artifact bundle with a versioned manifest.
+- SHA-256 verification and atomic local replacement on downloads.
+- Generation-match preconditions on uploads to prevent silent concurrent
+  overwrites.
+- Strict file allowlist that excludes `.env`, source files, and credentials.
+- Daily and weekly cloud-job wrappers that pull before execution and push only
+  after a successful run.
 - Automated authentication, authorization, readiness, and read-only tests.
+- Full live daily-run validation against a disposable cloud-style data root.
 
 Remaining before the first cloud deployment:
 
 - Create a dedicated Google Cloud project with billing and budget alerts.
 - Choose a U.S. region and create separate staging and production services.
-- Replace local JSON files with durable managed storage or a tested persistent
-  synchronization process.
+- Create and bootstrap the private Cloud Storage bucket.
 - Configure Secret Manager and a least-privilege service account.
 - Configure Cloud Run with no unauthenticated invoker access.
 - Enable Identity-Aware Proxy and grant access only to Joe's Google account.
@@ -88,6 +98,8 @@ ATLAS_AUTH_MODE=iap
 ATLAS_OWNER_EMAIL=<owner Google account>
 ATLAS_IAP_AUDIENCE=<exact Cloud Run IAP audience>
 ATLAS_DATA_ROOT=<persistent artifact mount or synchronized directory>
+ATLAS_GCS_BUCKET=<private bucket name>
+ATLAS_GCS_PREFIX=owner-v1
 PORT=<provided by Cloud Run>
 ```
 
@@ -100,18 +112,41 @@ configuration and Secret Manager.
 
 ## Persistent Data Migration
 
-Cloud Run's container filesystem is temporary. The existing local files cannot
-be treated as the hosted system of record.
+Cloud Run's container filesystem is temporary. Atlas now uses a private Cloud
+Storage bundle as the first single-user hosted system of record.
 
-The migration should proceed in two steps:
+The bundle includes only allowlisted private runtime artifacts:
 
-1. Define repository interfaces for research snapshots, research tasks, paper
-   account state, recommendations, reviews, and audit events.
-2. Implement managed adapters, likely using a relational database for
-   structured account and workflow data plus object storage for generated
-   reports and immutable exports.
+- Research snapshots and archive indexes.
+- Research tasks and role briefs.
+- Paper account, append-only ledger, and performance report.
+- Morning and weekly reports.
+- Portfolio history and optional private portfolio configuration.
 
-The local file adapters remain available for development and recovery testing.
+Every bundle has a versioned manifest containing object paths, sizes, and
+SHA-256 checksums. Downloads verify the manifest and write files atomically.
+Uploads use object-generation preconditions and publish the manifest last.
+
+This object-storage design is intentionally a Phase 2 single-owner bridge. Web
+Phase 3 still requires a tenant-aware relational database for multi-user data.
+
+Least-privilege service roles:
+
+- Dashboard service: bucket-level `roles/storage.objectViewer`.
+- Scheduled daily/weekly job: bucket-level `roles/storage.objectUser`.
+- Neither service receives Storage Admin, Editor, or Owner.
+
+Cloud commands:
+
+```text
+python cloud_sync.py pull
+python cloud_sync.py push
+python cloud_daily.py
+python cloud_weekly.py
+```
+
+The Python client uses Application Default Credentials. Do not create or place
+service-account key files in the repository or container image.
 
 ## Deployment Safety Checklist
 
@@ -123,6 +158,9 @@ Before any staging URL is shared:
   non-owner IAP tokens.
 - The service account has no broad project-owner or editor role.
 - Secrets are stored outside the image.
+- Bucket uses uniform bucket-level access and public access prevention.
+- Dashboard and scheduled-job service accounts have separate least-privilege
+  bucket roles.
 - Private data is not included in the image or build context.
 - Health endpoints reveal no portfolio, research, account, or identity data.
 - Logs do not include tokens, credentials, report bodies, or portfolio details.

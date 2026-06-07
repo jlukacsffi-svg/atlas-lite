@@ -152,7 +152,16 @@ Secure web-platform direction:
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
 - Web Phase 2 foundation is in progress in `app/web_cloud.py`, `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
 - Cloud mode is fail-closed and requires verified Google IAP identity, the configured owner email, an exact audience, and explicit persistent data storage.
-- The service is not deployed yet. Managed storage, cloud project setup, scheduling, monitoring, backups, and staging validation remain.
+- Durable single-owner storage is implemented in `app/cloud_storage.py` using
+  an allowlisted Cloud Storage bundle, versioned manifest, SHA-256 checks, atomic
+  downloads, and generation-match upload preconditions.
+- `ATLAS_DATA_ROOT` now controls all writable runtime state, and a seeded
+  disposable-root daily run completed successfully.
+- `cloud_daily.py` and `cloud_weekly.py` pull durable state before running and
+  push it only after success.
+- The service is not deployed yet. Google Cloud tooling is not installed on
+  this laptop. Cloud project setup, bucket creation, scheduling, monitoring,
+  backups, and staging validation remain.
 
 ## Useful Files
 
@@ -161,6 +170,10 @@ Secure web-platform direction:
 - `STAGE5_PLAN.md`: Stage 5 paper-trading policy and milestones.
 - `WEB_PLATFORM_PLAN.md`: secure modern dashboard and multi-user platform plan.
 - `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
+- `app/cloud_storage.py`: private durable artifact synchronization.
+- `cloud_sync.py`: manual private artifact pull/push command.
+- `cloud_daily.py`: cloud daily job wrapper.
+- `cloud_weekly.py`: cloud weekly job wrapper.
 - `PROJECT_BRIEF.md`: project vision and constraints.
 - `AGENTS.md`: Codex working instructions.
 - `app/analyst_actions.py`: analyst-action headline retrieval and local caching.

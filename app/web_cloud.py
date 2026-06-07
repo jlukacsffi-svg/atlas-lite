@@ -23,6 +23,7 @@ class CloudWebSettings:
     auth_mode: str = "local"
     owner_email: str = ""
     iap_audience: str = ""
+    storage_bucket: str = ""
     web_dir: Path = WEB_DIR
 
     @classmethod
@@ -32,6 +33,7 @@ class CloudWebSettings:
             auth_mode=os.getenv("ATLAS_AUTH_MODE", "local").strip().lower(),
             owner_email=os.getenv("ATLAS_OWNER_EMAIL", "").strip().lower(),
             iap_audience=os.getenv("ATLAS_IAP_AUDIENCE", "").strip(),
+            storage_bucket=os.getenv("ATLAS_GCS_BUCKET", "").strip(),
             web_dir=Path(os.getenv("ATLAS_WEB_DIR", str(WEB_DIR))),
         )
 
@@ -47,6 +49,8 @@ class CloudWebSettings:
                 raise ValueError("Cloud mode requires ATLAS_OWNER_EMAIL")
             if not self.iap_audience:
                 raise ValueError("Cloud mode requires ATLAS_IAP_AUDIENCE")
+            if not self.storage_bucket:
+                raise ValueError("Cloud mode requires ATLAS_GCS_BUCKET")
         elif self.auth_mode != "local":
             raise ValueError("Local mode must use ATLAS_AUTH_MODE=local")
 

@@ -7,12 +7,12 @@ import json
 from pathlib import Path
 
 from app.scoring import ScoringEngine
+from app.paths import data_path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_TASK_DIR = PROJECT_ROOT / "research_tasks"
+DEFAULT_TASK_DIR = data_path("research_tasks")
 DEFAULT_TASK_FILE = DEFAULT_TASK_DIR / "tasks.json"
-DEFAULT_ARCHIVE_INDEX = PROJECT_ROOT / "research_archive" / "archive_index.json"
+DEFAULT_ARCHIVE_INDEX = data_path("research_archive", "archive_index.json")
 VALID_STATUSES = {"open", "in_progress", "awaiting_owner", "closed"}
 VALID_ROLES = {"CEO", "CIO", "CRO", "Reporting", "Sector Analyst"}
 VALID_CONFIDENCE = {"low", "medium", "high"}

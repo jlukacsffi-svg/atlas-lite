@@ -15,7 +15,10 @@ from app.growth import GrowthEngine
 from app.momentum import MomentumEngine
 from app.quality import QualityEngine
 
-LOG_DIR = Path(__file__).resolve().parent.parent / "logs"
+from app.paths import data_path
+
+
+LOG_DIR = data_path("logs")
 LOG_FILE = LOG_DIR / "atlas_diagnostics.log"
 YAHOO_CHART_URL = (
     "https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"

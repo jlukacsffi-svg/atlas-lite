@@ -4,6 +4,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     ATLAS_WEB_MODE=cloud \
     ATLAS_AUTH_MODE=iap \
+    ATLAS_DATA_ROOT=/tmp/atlas-data \
     PORT=8080
 
 WORKDIR /app
@@ -13,7 +14,9 @@ RUN pip install --no-cache-dir -r requirements-web.txt
 
 COPY app ./app
 COPY web ./web
-COPY cloud_dashboard.py ./
+COPY data/security_universe.json ./data/security_universe.json
+COPY cloud_dashboard.py cloud_daily.py cloud_sync.py cloud_weekly.py ./
+COPY main.py weekly_summary.py ./
 
 RUN useradd --create-home --uid 10001 atlas
 USER atlas

@@ -6,10 +6,10 @@ import os
 from pathlib import Path
 
 from app.scoring import ScoringEngine
+from app.paths import data_path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_ARCHIVE_DIR = PROJECT_ROOT / "research_archive"
+DEFAULT_ARCHIVE_DIR = data_path("research_archive")
 SNAPSHOT_FIELDS = [
     "company_name",
     "sector",

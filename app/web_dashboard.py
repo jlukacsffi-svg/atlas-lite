@@ -7,12 +7,12 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from app.paper_trading import PaperTradingAccount
+from app.paths import data_path, project_path
 from app.research_tasks import ResearchTaskQueue
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-WEB_DIR = PROJECT_ROOT / "web"
-DEFAULT_ARCHIVE_DIR = PROJECT_ROOT / "research_archive"
+WEB_DIR = project_path("web")
+DEFAULT_ARCHIVE_DIR = data_path("research_archive")
 
 STATIC_FILES = {
     "/": ("index.html", "text/html; charset=utf-8"),

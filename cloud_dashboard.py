@@ -4,6 +4,7 @@
 import os
 import sys
 
+from app.cloud_storage import sync_from_environment
 from app.web_cloud import CloudWebSettings, create_application
 
 
@@ -22,6 +23,9 @@ def main():
     settings.validate()
     host = "127.0.0.1" if settings.mode == "local" else "0.0.0.0"
     port = int(os.getenv("PORT", "8765"))
+    if settings.mode == "cloud":
+        downloaded = sync_from_environment("pull")
+        print(f"[cloud-storage] Loaded {len(downloaded)} private artifacts")
     print(f"[web] Atlas {settings.mode} dashboard listening on {host}:{port}")
     serve(
         create_application(settings=settings),

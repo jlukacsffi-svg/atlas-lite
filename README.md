@@ -205,6 +205,24 @@ Cloud mode is deliberately fail-closed. It requires Google Identity-Aware Proxy,
 the configured owner identity, an exact IAP audience, and persistent Atlas data.
 See `WEB_PHASE2_PLAN.md` before attempting deployment.
 
+The single-owner cloud foundation synchronizes private runtime artifacts through
+an allowlisted, checksum-verified Cloud Storage bundle:
+
+```bash
+py -3.12 cloud_sync.py pull
+py -3.12 cloud_sync.py push
+```
+
+Cloud scheduled jobs use:
+
+```bash
+py -3.12 cloud_daily.py
+py -3.12 cloud_weekly.py
+```
+
+These commands require `ATLAS_GCS_BUCKET`, `ATLAS_DATA_ROOT`, and Google
+Application Default Credentials. They must not be run against a public bucket.
+
 Reports are saved to the `reports/` folder with a timestamp in the filename.
 
 Each run writes both:

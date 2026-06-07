@@ -72,6 +72,10 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 - Use managed authentication and secret storage for hosted environments.
 - Cloud mode must fail closed when managed authentication or persistent data is not configured.
 - Do not trust unsigned proxy identity headers; verify the provider's signed identity token.
+- Cloud private artifacts must use the allowlisted, checksum-verified storage
+  bundle; never upload `.env`, credentials, caches, or arbitrary repository files.
+- Keep dashboard storage access read-only and scheduled-job storage access
+  separate and least-privileged.
 - Treat every user-owned record as tenant-scoped and test that users cannot access one another's data.
 
 ## Development guidance

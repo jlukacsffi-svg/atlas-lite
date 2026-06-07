@@ -4,10 +4,10 @@ from datetime import datetime
 import json
 from pathlib import Path
 
+from app.paths import data_path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PORTFOLIO_PATH = PROJECT_ROOT / "data" / "portfolio.json"
-DEFAULT_PORTFOLIO_HISTORY_DIR = PROJECT_ROOT / "portfolio_history"
+DEFAULT_PORTFOLIO_PATH = data_path("data", "portfolio.json")
+DEFAULT_PORTFOLIO_HISTORY_DIR = data_path("portfolio_history")
 
 
 class Portfolio:

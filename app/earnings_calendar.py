@@ -8,9 +8,9 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from app.paths import data_path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_EARNINGS_CACHE_DIR = PROJECT_ROOT / "data_cache" / "earnings"
+DEFAULT_EARNINGS_CACHE_DIR = data_path("data_cache", "earnings")
 NASDAQ_EARNINGS_URL = "https://api.nasdaq.com/api/calendar/earnings?date={date}"
 EARNINGS_LOOKAHEAD_DAYS = 7
 EARNINGS_TIMEOUT_SECONDS = 10

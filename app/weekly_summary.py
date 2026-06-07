@@ -7,10 +7,10 @@ import re
 from pathlib import Path
 
 from app.research_memory import DEFAULT_ARCHIVE_DIR
+from app.paths import data_path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_REPORTS_DIR = PROJECT_ROOT / "reports"
+DEFAULT_REPORTS_DIR = data_path("reports")
 
 
 class WeeklySummaryGenerator:

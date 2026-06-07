@@ -5,9 +5,9 @@ import json
 from pathlib import Path
 import uuid
 
+from app.paths import data_path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_PAPER_DIR = PROJECT_ROOT / "paper_trading"
+DEFAULT_PAPER_DIR = data_path("paper_trading")
 DEFAULT_ACCOUNT_FILE = DEFAULT_PAPER_DIR / "account.json"
 DEFAULT_LEDGER_FILE = DEFAULT_PAPER_DIR / "ledger.jsonl"
 

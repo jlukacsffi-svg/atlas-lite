@@ -10,10 +10,10 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from app.growth import GrowthEngine
+from app.paths import data_path
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_INSIDER_CACHE_DIR = PROJECT_ROOT / "data_cache" / "insider_transactions"
+DEFAULT_INSIDER_CACHE_DIR = data_path("data_cache", "insider_transactions")
 SEC_SUBMISSIONS_URL = "https://data.sec.gov/submissions/CIK{cik}.json"
 SEC_ARCHIVE_INDEX_URL = "https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession}/index.json"
 SEC_ARCHIVE_DOCUMENT_URL = "https://www.sec.gov/Archives/edgar/data/{cik_int}/{accession}/{document}"

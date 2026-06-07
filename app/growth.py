@@ -8,9 +8,9 @@ import urllib.request
 from datetime import date
 from pathlib import Path
 
+from app.paths import data_path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_SEC_CACHE_DIR = PROJECT_ROOT / "data_cache" / "sec"
+DEFAULT_SEC_CACHE_DIR = data_path("data_cache", "sec")
 SEC_TICKERS_URL = "https://www.sec.gov/files/company_tickers.json"
 SEC_COMPANY_FACTS_URL = "https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json"
 SEC_TIMEOUT_SECONDS = 10
