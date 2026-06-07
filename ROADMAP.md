@@ -130,6 +130,13 @@ transparent, reviewable paper proposals, but separate simulation approval is
 required before a fill. Stage 5 cannot be considered complete until it has
 accumulated a meaningful performance history.
 
+Software status:
+
+The Stage 5 software scope is complete. The live paper evaluation period is now
+running with a $100,000 simulated account and its first owner-approved position.
+Stage 5 remains in validation until enough daily history exists to evaluate
+returns, exits, win rate, and benchmark-relative behavior.
+
 ## Stage 6: Human-Approved Trading
 
 Goal: Atlas recommends trades and prepares orders, but Joe approves execution.

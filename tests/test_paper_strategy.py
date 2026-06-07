@@ -52,10 +52,13 @@ class PaperStrategyTests(unittest.TestCase):
 
             created = strategy.generate(account, market_data)
             proposals = account.proposals()
+            recommendations = account.recommendations()
 
         self.assertEqual([item["ticker"] for item in created], ["AAA", "BBB", "CCC"])
         self.assertTrue(all(item["status"] == "pending" for item in proposals))
         self.assertEqual(created[0]["shares"], 50)
+        self.assertEqual(len(recommendations), 3)
+        self.assertTrue(all(item.get("recommendation_id") for item in created))
 
     def test_deduplicates_pending_proposals(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -76,6 +76,11 @@ Implemented:
 - Automatic policy rejection for hard-hold paper proposals.
 - Maximum three active pending or approved buy proposals.
 - Strategy-level rejection of new entries already down 8% or more.
+- Daily open-position thesis reviews.
+- Maintain, review, and exit verdicts with append-only history.
+- Exit proposals that remain subject to risk review and simulation approval.
+- Immutable recommendation linkage for every strategy-generated proposal.
+- Automatic daily refresh of the standalone performance report.
 
 ## Safety Boundary
 

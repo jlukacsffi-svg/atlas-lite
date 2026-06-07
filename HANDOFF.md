@@ -133,6 +133,11 @@ Stage 5 paper-trading foundation:
 - `paper_risk_v1` records CRO-style reviews for every pending proposal.
 - Hard-hold proposals are automatically rejected by paper policy; caution proposals remain pending.
 - The strategy enforces a maximum of three active buy proposals.
+- `paper_monitor_v1` records one thesis review per open position per day.
+- Weak-score or Avoid holdings create pending exit proposals, never automatic sells.
+- Strategy proposals now create and link immutable recommendation records first.
+- The daily run refreshes `paper_trading/performance.md`.
+- Stage 5 software is complete; the live paper evaluation period is in progress.
 
 ## Useful Files
 

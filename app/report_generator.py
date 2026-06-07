@@ -917,6 +917,27 @@ class ReportGenerator:
         section.append(
             "\nPending proposals are review records only. They cannot execute without a separate simulation approval."
         )
+        position_reviews = self.paper_summary.get("position_reviews", {})
+        section.extend(["", "### Open Position Thesis Reviews\n"])
+        if not position_reviews:
+            section.append("No open-position thesis reviews are available.")
+        else:
+            section.extend(
+                [
+                    "| Ticker | Verdict | Return | Atlas Score | Flags | Thesis |",
+                    "|--------|---------|--------|-------------|-------|--------|",
+                ]
+            )
+            for ticker, review in sorted(position_reviews.items()):
+                flags = "; ".join(review.get("flags", [])) or "None"
+                score = review.get("atlas_score")
+                score_text = f"{score:.1f}" if score is not None else "N/A"
+                section.append(
+                    f"| {ticker} | {review.get('verdict', 'review').title()} | "
+                    f"{review.get('return_pct', 0):+.2f}% | {score_text} | "
+                    f"{flags.replace('|', '/')} | "
+                    f"{review.get('thesis', 'N/A').replace('|', '/')} |"
+                )
         return "\n".join(section) + "\n"
 
     def _generate_scoring_summary(self):

@@ -48,16 +48,27 @@ class PaperStrategy:
                     if ("sell", ticker) in existing:
                         continue
                     position = positions[ticker]
+                    thesis = (
+                        f"Atlas paper exit rule: {ticker} has score "
+                        f"{row['score']:.1f} and category {row['category']}."
+                    )
+                    recommendation = account.record_recommendation(
+                        side="sell",
+                        ticker=ticker,
+                        shares=position["shares"],
+                        reference_price=row["price"],
+                        thesis=thesis,
+                        confidence="high",
+                        source="paper_strategy_v1",
+                    )
                     created.append(
                         account.create_proposal(
                             side="sell",
                             ticker=ticker,
                             shares=position["shares"],
                             reference_price=row["price"],
-                            thesis=(
-                                f"Atlas paper exit rule: {ticker} has score "
-                                f"{row['score']:.1f} and category {row['category']}."
-                            ),
+                            thesis=thesis,
+                            recommendation_id=recommendation["recommendation_id"],
                             source="paper_strategy_v1",
                         )
                     )
@@ -85,13 +96,24 @@ class PaperStrategy:
             if not preview["valid"]:
                 continue
 
+            thesis = self._buy_thesis(row)
+            recommendation = account.record_recommendation(
+                side="buy",
+                ticker=ticker,
+                shares=shares,
+                reference_price=row["price"],
+                thesis=thesis,
+                confidence="high" if row["score"] >= 92 else "medium",
+                source="paper_strategy_v1",
+            )
             created.append(
                 account.create_proposal(
                     side="buy",
                     ticker=ticker,
                     shares=shares,
                     reference_price=row["price"],
-                    thesis=self._buy_thesis(row),
+                    thesis=thesis,
+                    recommendation_id=recommendation["recommendation_id"],
                     source="paper_strategy_v1",
                 )
             )

@@ -23,6 +23,7 @@ from app.insider_transactions import InsiderTransactionTracker
 from app.paper_trading import PaperTradingAccount
 from app.paper_strategy import PaperStrategy
 from app.paper_risk import PaperRiskReviewer
+from app.paper_monitor import PaperPositionMonitor
 from app.portfolio import Portfolio
 from app.research_memory import ResearchMemory
 from app.research_tasks import ResearchTaskQueue
@@ -159,6 +160,10 @@ def main():
                     },
                 )
                 paper_proposals = PaperStrategy().generate(paper_account, market_data)
+                position_monitor = PaperPositionMonitor().review(
+                    paper_account,
+                    market_data,
+                )
                 paper_reviews = PaperRiskReviewer().review_pending(
                     paper_account,
                     market_data,
@@ -168,6 +173,7 @@ def main():
                 paper_summary["pending_proposals"] = paper_account.proposals(
                     status="pending"
                 )
+                performance_report_path = paper_account.save_performance_report()
                 print(
                     f"[ok] Paper account marked at "
                     f"${paper_summary['latest']['equity']:,.2f} simulated equity."
@@ -175,7 +181,12 @@ def main():
                 print(
                     f"[ok] Generated {len(paper_proposals)} new pending paper proposals."
                 )
+                print(
+                    f"[ok] Recorded {len(position_monitor['reviews'])} position "
+                    f"reviews and {len(position_monitor['exit_proposals'])} exit proposals."
+                )
                 print(f"[ok] Recorded {len(paper_reviews)} paper proposal risk reviews.")
+                print(f"[ok] Paper performance report refreshed: {performance_report_path}")
             else:
                 paper_summary = {"configured": False, "available": False}
                 print("[paper] No simulated paper account initialized.")

@@ -51,6 +51,15 @@ class ReportPaperTradingTests(unittest.TestCase):
                         },
                     }
                 ],
+                "position_reviews": {
+                    "NVDA": {
+                        "verdict": "maintain",
+                        "return_pct": 2.5,
+                        "atlas_score": 89.7,
+                        "flags": [],
+                        "thesis": "NVDA thesis remains intact.",
+                    }
+                },
             },
         )
 
@@ -64,6 +73,8 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("| proposal_test | Buy | NVDA | 10 | $150.00 | Caution |", section)
         self.assertIn("Elevated daily volatility.", section)
         self.assertIn("cannot execute without a separate simulation approval", section)
+        self.assertIn("Open Position Thesis Reviews", section)
+        self.assertIn("| NVDA | Maintain | +2.50% | 89.7 |", section)
         self.assertIn("Simulated performance only", section)
 
 

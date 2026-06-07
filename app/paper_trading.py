@@ -196,6 +196,58 @@ class PaperTradingAccount:
         ]
         return reviews[-1] if reviews else None
 
+    def record_position_review(
+        self,
+        ticker,
+        verdict,
+        current_price,
+        return_pct,
+        atlas_score,
+        flags,
+        thesis,
+        source="paper_monitor_v1",
+    ):
+        """Append a daily thesis review for an open simulated position."""
+        ticker = str(ticker).strip().upper()
+        verdict = str(verdict).strip().lower()
+        if verdict not in {"maintain", "review", "exit"}:
+            raise ValueError("position verdict must be maintain, review, or exit")
+        account = self.load()
+        if ticker not in account.get("positions", {}):
+            raise ValueError(f"paper position not found: {ticker}")
+        event = {
+            "event": "paper_position_review",
+            "review_id": f"position_review_{uuid.uuid4().hex[:12]}",
+            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "ticker": ticker,
+            "verdict": verdict,
+            "current_price": float(current_price),
+            "return_pct": round(float(return_pct), 4),
+            "atlas_score": round(float(atlas_score), 1) if atlas_score is not None else None,
+            "flags": [str(flag).strip() for flag in flags if str(flag).strip()],
+            "thesis": str(thesis).strip(),
+            "source": source,
+        }
+        self._append_event(event)
+        return event
+
+    def position_reviews(self, ticker=None):
+        reviews = [
+            event
+            for event in self.ledger()
+            if event.get("event") == "paper_position_review"
+        ]
+        if ticker:
+            ticker = str(ticker).strip().upper()
+            reviews = [review for review in reviews if review.get("ticker") == ticker]
+        return reviews
+
+    def latest_position_reviews(self):
+        latest = {}
+        for review in self.position_reviews():
+            latest[review["ticker"]] = review
+        return latest
+
     def proposals(self, status=None):
         proposals = [
             dict(
@@ -414,6 +466,7 @@ class PaperTradingAccount:
             "snapshots": len(snapshots),
             "latest": latest,
             "trade_statistics": self.trade_statistics(),
+            "position_reviews": self.latest_position_reviews(),
             "excess_return_pct": {
                 ticker: round(
                     latest["total_return_pct"] - benchmark_return,
@@ -552,6 +605,29 @@ class PaperTradingAccount:
                     f"| {position['ticker']} | {position['shares']:g} | "
                     f"${position['price']:,.2f} | ${position['market_value']:,.2f} | "
                     f"${position['unrealized_gain_loss']:,.2f} |"
+                )
+            lines.append("")
+
+        reviews = summary.get("position_reviews", {})
+        lines.extend(["## Thesis Reviews", ""])
+        if not reviews:
+            lines.extend(["No daily position thesis reviews are available.", ""])
+        else:
+            lines.extend(
+                [
+                    "| Ticker | Verdict | Return | Atlas Score | Flags | Thesis |",
+                    "|--------|---------|--------|-------------|-------|--------|",
+                ]
+            )
+            for ticker, review in sorted(reviews.items()):
+                flags = "; ".join(review.get("flags", [])) or "None"
+                score = review.get("atlas_score")
+                score_text = f"{score:.1f}" if score is not None else "N/A"
+                lines.append(
+                    f"| {ticker} | {review['verdict'].title()} | "
+                    f"{review['return_pct']:+.2f}% | {score_text} | "
+                    f"{flags.replace('|', '/')} | "
+                    f"{review.get('thesis', 'N/A').replace('|', '/')} |"
                 )
             lines.append("")
 

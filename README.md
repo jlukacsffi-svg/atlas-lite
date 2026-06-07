@@ -368,6 +368,10 @@ The daily run also uses `paper_strategy_v1` to create at most three deduplicated
 
 `paper_strategy_v1` skips new entries already down 8% or more in the current session. `paper_risk_v1` independently reviews every pending proposal. Sharp downside, missing data, or weak scores produce a hard hold and automatic paper-policy rejection. Elevated volatility or proposal concentration produces caution and leaves the proposal pending. At most three active buy proposals may remain in the queue.
 
+`paper_monitor_v1` reviews each open simulated position once per day. It records the current return, Atlas score, thesis status, and a `maintain`, `review`, or `exit` verdict. Exit verdicts create pending sell proposals only; they still require risk review and separate simulation approval.
+
+Every strategy-generated proposal first records an immutable recommendation and links the proposal to it. The daily run also refreshes `paper_trading/performance.md` after snapshots, proposal reviews, and position thesis reviews.
+
 The initial policy prohibits margin, short selling, options, and leverage; preserves a 10% cash reserve; limits positions to 20% of simulated equity; and permits at most five simulated trades per day.
 
 Paper account data is saved locally in ignored `paper_trading/`. No paper-trading command can transmit a real order.
