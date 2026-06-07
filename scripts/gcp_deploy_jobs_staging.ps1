@@ -12,7 +12,8 @@ param(
     [string]$DailySchedule = '0 7 * * *',
     [string]$WeeklySchedule = '0 8 * * 0',
     [string]$TimeZone = 'America/Los_Angeles',
-    [switch]$Apply
+    [switch]$Apply,
+    [switch]$ConfirmCosts
 )
 
 $ErrorActionPreference = 'Stop'
@@ -27,6 +28,9 @@ $Image = "$Region-docker.pkg.dev/$ProjectId/$Repository/atlas:$ImageTag"
 
 if (-not (Test-Path $Gcloud)) {
     throw 'Google Cloud CLI is not installed.'
+}
+if ($Apply -and -not $ConfirmCosts) {
+    throw 'Deployment can create charges. Re-run with -Apply -ConfirmCosts only after owner approval.'
 }
 
 function Invoke-Gcloud {
@@ -150,9 +154,19 @@ Invoke-Gcloud @(
     '--attempt-deadline=180s'
 )
 
+foreach ($schedule in @('atlas-daily-stg', 'atlas-weekly-stg')) {
+    Invoke-Gcloud @(
+        'scheduler', 'jobs', 'pause', $schedule,
+        "--project=$ProjectId",
+        "--location=$Region"
+    )
+}
+
 Write-Host ''
 if ($Apply) {
-    Write-Host '[ok] Staging jobs and schedules deployed.'
+    Write-Host '[ok] Staging jobs deployed. Scheduler triggers are paused.'
+    Write-Host 'Resume schedules only after manual tests and separate owner approval.'
 } else {
     Write-Host '[plan] No jobs or schedules were changed.'
+    Write-Host 'Re-run with -Apply -ConfirmCosts only after owner cost approval.'
 }

@@ -47,6 +47,12 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 - Paper-trading approval or execution must never transmit a real order.
 - Future web accounts must enforce server-side authorization and strict tenant isolation.
 - Do not enable public registration until authentication, privacy, backup, monitoring, and security controls are validated.
+- Read `CLOUD_COST_POLICY.md` before any cloud work.
+- Keep Google Cloud billing disabled until Joe receives a written cost estimate
+  and explicitly approves billing activation and a monthly budget.
+- Never treat a cloud budget or free tier as a hard spending cap.
+- Do not run cloud scripts with `-Apply` or `-ConfirmCosts` without explicit
+  owner approval for that paid deployment stage.
 
 ## Repository notes
 

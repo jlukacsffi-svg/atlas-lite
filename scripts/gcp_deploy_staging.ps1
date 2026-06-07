@@ -11,7 +11,8 @@ param(
     [string]$Region = 'us-west1',
 
     [string]$ImageTag = '',
-    [switch]$Apply
+    [switch]$Apply,
+    [switch]$ConfirmCosts
 )
 
 $ErrorActionPreference = 'Stop'
@@ -23,6 +24,9 @@ $DashboardServiceAccount = "atlas-dashboard-stg@$ProjectId.iam.gserviceaccount.c
 
 if (-not (Test-Path $Gcloud)) {
     throw 'Google Cloud CLI is not installed.'
+}
+if ($Apply -and -not $ConfirmCosts) {
+    throw 'Deployment can create charges. Re-run with -Apply -ConfirmCosts only after owner approval.'
 }
 if (-not $ImageTag) {
     $ImageTag = (Get-Date).ToUniversalTime().ToString('yyyyMMdd-HHmmss')
@@ -110,4 +114,5 @@ if ($Apply) {
     Write-Host 'Verify IAP in the Cloud Run console before sharing the URL.'
 } else {
     Write-Host '[plan] No image was built and no service was deployed.'
+    Write-Host 'Re-run with -Apply -ConfirmCosts only after owner cost approval.'
 }

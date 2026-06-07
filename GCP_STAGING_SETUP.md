@@ -20,6 +20,9 @@ Current cloud status:
   exists yet.
 - No Atlas cloud charges have been authorized.
 
+The controlling policy is `CLOUD_COST_POLICY.md`. Billing must remain disabled
+until Joe reviews the cost estimate and explicitly approves activation.
+
 ## Billing Gate
 
 The next owner action is to create or select a Google Cloud billing account.
@@ -34,7 +37,8 @@ Before linking it to Atlas:
 
 Budgets send alerts but do not automatically cap spending. Atlas therefore also
 uses zero minimum dashboard instances, one maximum dashboard instance, one task
-per scheduled job, conservative memory limits, and staging-only resources.
+per scheduled job, conservative memory limits, paused schedules, and
+staging-only resources.
 
 ## Preview The Staging Plan
 
@@ -90,7 +94,16 @@ After bootstrap:
 5. Deploy daily and weekly Cloud Run jobs with
    `gcp_deploy_jobs_staging.ps1`.
 6. Execute each job manually once.
-7. Enable schedules only after successful manual executions.
+7. Obtain separate owner approval before resuming the paused schedules.
 8. Configure monitoring and test backup restoration.
 
 Public registration and customer accounts remain prohibited in Web Phase 2.
+
+Every mutating deployment command requires:
+
+```text
+-Apply -ConfirmCosts
+```
+
+Do not add these flags until the cost review and owner approval required by
+`CLOUD_COST_POLICY.md` are complete.

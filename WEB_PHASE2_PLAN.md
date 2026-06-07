@@ -38,6 +38,8 @@ Completed foundation:
 - Dedicated `atlas-capital-research-stg` project created with billing disabled.
 - Guarded, plan-first bootstrap and deployment scripts for budgets, storage,
   identities, Artifact Registry, Cloud Run, IAP, jobs, and schedules.
+- Zero-cost cloud policy, explicit paid-deployment confirmations, paused
+  schedules, and a plan-first emergency billing stop.
 
 Remaining before the first cloud deployment:
 
@@ -57,6 +59,8 @@ Current external gate:
 
 - The Google account has no open Cloud Billing account.
 - No paid services have been enabled.
+- Billing must remain disabled until Joe reviews a written cost estimate and
+  explicitly approves the monthly staging budget.
 - Follow `GCP_STAGING_SETUP.md` to cross the billing gate deliberately.
 
 ## Chosen Initial Architecture
