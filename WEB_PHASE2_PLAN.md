@@ -6,9 +6,10 @@ authority.
 
 ## Current Status
 
-Authentication and durable-storage foundations are implemented. Cloud
-deployment is intentionally not yet enabled.
-Estimated Web Phase 2 completion: 70%.
+Authentication, durable storage, backup restoration, and controlled-cost cloud
+foundations are implemented. The dashboard service exists but remains
+intentionally dark pending one-time Google OAuth client setup.
+Estimated Web Phase 2 completion: 82%.
 
 Completed foundation:
 
@@ -20,12 +21,24 @@ Completed foundation:
 - Fail-closed cloud startup configuration.
 - Google Identity-Aware Proxy signed-token verification.
 - Owner-email allowlist after signed-token verification.
+- Google OpenID Connect authorization-code flow for personal-project hosting.
+- CSRF state, nonce, verified ID-token, issuer, audience, and owner checks.
+- HMAC-signed one-hour owner sessions with Secure, HttpOnly, SameSite cookies.
+- Five-minute signed OAuth state cookies and fail-closed callback handling.
+- Secret Manager deployment references for client and session credentials.
 - Read-only HTTP surface with mutating methods rejected.
 - Security headers for private dashboard responses.
 - Explicit `ATLAS_DATA_ROOT` boundary for private artifacts.
 - Centralized writable paths for reports, archives, research tasks, paper
   state, portfolio history, logs, and caches.
 - Private Cloud Storage artifact bundle with a versioned manifest.
+- Bucket policy removes default legacy project-wide storage bindings and grants
+  Joe explicit bucket administration while granting only the dedicated
+  dashboard and job identities direct object access.
+- The unused default Compute Engine service account does not retain the broad
+  project `Editor` role.
+- The build identity has the purpose-built Cloud Build Builder role while the
+  broad project `Editor` role remains removed.
 - SHA-256 verification and atomic local replacement on downloads.
 - Generation-match preconditions on uploads to prevent silent concurrent
   overwrites.
@@ -35,9 +48,10 @@ Completed foundation:
 - Automated authentication, authorization, readiness, and read-only tests.
 - Full live daily-run validation against a disposable cloud-style data root.
 - Google Cloud CLI and Application Default Credentials configured locally.
-- Dedicated `atlas-capital-research-stg` project created with billing disabled.
+- Dedicated `atlas-capital-research-stg` project with controlled billing and a
+  `$10` gross-usage monthly budget.
 - Guarded, plan-first bootstrap and deployment scripts for budgets, storage,
-  identities, Artifact Registry, Cloud Run, IAP, jobs, and schedules.
+  identities, Artifact Registry, Cloud Run, Google OAuth, jobs, and schedules.
 - Controlled-cost cloud policy, explicit paid-deployment confirmations, paused
   schedules, a `$10` alert budget, and a plan-first emergency billing stop.
 - Checksum-verified local private backup archives.
@@ -48,16 +62,14 @@ Completed foundation:
 - Successful isolated restoration drill against the current Atlas private
   state.
 
-Remaining before the first cloud deployment:
+Remaining before the first authenticated cloud use:
 
-- Verify promotional-credit balance and expiration, obtain final owner approval,
-  link only the dedicated staging project, and apply the prepared budget alerts.
-- Choose a U.S. region and create separate staging and production services.
-- Create and bootstrap the private Cloud Storage bucket.
-- Configure Secret Manager and a least-privilege service account.
-- Configure Cloud Run with no unauthenticated invoker access.
-- Enable Identity-Aware Proxy and grant access only to Joe's Google account.
-- Configure and verify the exact IAP audience.
+- Create a Google OAuth Web application client in the Google Console.
+- Add Joe as the only OAuth test user and register the exact callback URI.
+- Transfer the downloaded client credentials into Secret Manager with the
+  guarded redacted provisioning script.
+- Deploy the tested OAuth-enabled image and application configuration.
+- Verify owner login, non-owner denial, logout, expiry, and redeployment.
 - Configure scheduled Cloud Run jobs for daily and weekly Atlas execution.
 - Add centralized logs, uptime checks, and alerts.
 - Repeat the restoration drill against the first real Cloud Storage bundle.
@@ -65,12 +77,12 @@ Remaining before the first cloud deployment:
 
 Current external gate:
 
-- An open billing account exists, but the Atlas project is currently unlinked.
-- No paid services have been enabled.
-- Billing remains disabled until Joe verifies the credit details, reviews
-  `CLOUD_COST_ESTIMATE.md`, and explicitly approves the `$10` monthly alert
-  budget.
-- Follow `GCP_STAGING_SETUP.md` to cross the billing gate deliberately.
+- The Atlas project is linked to `My Billing Account`.
+- The `$10` budget tracks gross usage before promotional credits.
+- Private storage, Artifact Registry, a container image, and a scale-to-zero
+  Cloud Run service exist.
+- No scheduled jobs are active and the current service returns `403`.
+- Follow `GCP_STAGING_SETUP.md` to complete owner sign-in deliberately.
 
 ## Chosen Initial Architecture
 
@@ -81,11 +93,11 @@ Joe's browser
     |
     | HTTPS + Google sign-in
     v
-Google Identity-Aware Proxy
+Cloud Run public login/callback boundary
     |
-    | Signed IAP identity JWT
+    | Google OpenID Connect + signed owner session
     v
-Private Cloud Run dashboard service
+Owner-only Atlas dashboard application
     |
     +-- Atlas read-only application API
     +-- Managed persistent research storage
@@ -101,8 +113,10 @@ Private Cloud Run jobs
     +-- Persistent archive updates
 ```
 
-The dashboard service must verify IAP's signed JWT in addition to relying on
-the cloud access policy. Unsigned identity headers are not trusted.
+Cloud Run permits unauthenticated network invocation only because `/login` and
+`/oauth/callback` must be reachable. The application allows public access only
+to those routes and data-free health checks. Dashboard pages and APIs require a
+valid signed owner session. Unsigned identity headers are never trusted.
 
 ## Runtime Configuration
 
@@ -118,17 +132,20 @@ Cloud mode requires all of:
 
 ```text
 ATLAS_WEB_MODE=cloud
-ATLAS_AUTH_MODE=iap
+ATLAS_AUTH_MODE=google_oauth
 ATLAS_OWNER_EMAIL=<owner Google account>
-ATLAS_IAP_AUDIENCE=<exact Cloud Run IAP audience>
+ATLAS_GOOGLE_CLIENT_ID=<Secret Manager reference>
+ATLAS_GOOGLE_CLIENT_SECRET=<Secret Manager reference>
+ATLAS_OAUTH_REDIRECT_URI=<exact HTTPS callback>
+ATLAS_SESSION_SECRET=<Secret Manager reference, at least 32 characters>
 ATLAS_DATA_ROOT=<persistent artifact mount or synchronized directory>
 ATLAS_GCS_BUCKET=<private bucket name>
 ATLAS_GCS_PREFIX=owner-v1
 PORT=<provided by Cloud Run>
 ```
 
-The service refuses cloud startup when authentication, owner identity, or IAP
-audience configuration is absent.
+The service refuses cloud startup when authentication, owner identity, callback
+URI, credentials, session key, or persistent storage configuration is absent.
 
 Do not put production values in source files, `.env` examples, container
 images, prompts, or GitHub. Production configuration belongs in managed cloud
@@ -176,10 +193,12 @@ service-account key files in the repository or container image.
 
 Before any staging URL is shared:
 
-- Cloud Run rejects unauthenticated invocation.
-- IAP is enabled and only Joe has the access role.
-- The application rejects missing, invalid, wrong-audience, expired, and
-  non-owner IAP tokens.
+- Unauthenticated dashboard/API access is rejected or redirected to login.
+- Google OAuth is in testing mode with Joe as the only test user.
+- The application rejects missing, invalid, wrong-audience, expired,
+  wrong-nonce, unverified-email, and non-owner identities.
+- Session and OAuth state cookies are signed, short-lived, Secure, HttpOnly,
+  and SameSite.
 - The service account has no broad project-owner or editor role.
 - Secrets are stored outside the image.
 - Bucket uses uniform bucket-level access and public access prevention.

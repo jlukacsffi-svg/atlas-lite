@@ -2,8 +2,9 @@
 
 Estimate date: June 7, 2026
 
-This estimate covers the first private, owner-only Atlas staging deployment in
-`us-west1`. It does not authorize deployment.
+This estimate covers the private, owner-only Atlas staging deployment in
+`us-west1`. The initial foundation has been explicitly authorized and created;
+new services or higher recurring usage still require review.
 
 ## Proposed Limit
 
@@ -16,8 +17,8 @@ This estimate covers the first private, owner-only Atlas staging deployment in
 - Daily and weekly schedules: paused during initial validation
 
 Google Cloud budgets notify; they do not stop usage automatically. Promotional
-credits can expire or exclude some products. Joe must verify the displayed
-credit balance and expiration date before billing is linked.
+credits can expire or exclude some products. Joe should verify the displayed
+credit balance and expiration date during each cost review.
 
 ## Expected Services
 
@@ -30,8 +31,8 @@ credit balance and expiration date before billing is linked.
 | Cloud Build | Occasional small staging builds | Expected within the billing-account monthly free build-minute allowance |
 | Cloud Scheduler | Two jobs, initially paused | Currently within the first three jobs free per billing account; paused jobs still count |
 | Logging and Monitoring | Basic staging logs and health signals | Expected to be small; verbose logging and long retention can create charges |
-| Identity-Aware Proxy and IAM | Owner-only authentication and authorization | No meaningful usage charge expected for this design |
-| Secret Manager | Small number of secrets, only if required | Small metered storage/access cost may apply |
+| Google OAuth and IAM | Owner-only authentication and authorization | No meaningful usage charge expected for this design |
+| Secret Manager | Three small OAuth/session secrets | Small metered storage/access cost may apply; expected within the free allowance at this scale |
 
 Automatic Artifact Registry vulnerability scanning is excluded from the first
 deployment because it can add a separate charge.
@@ -49,16 +50,14 @@ If forecast or actual spend approaches `$5`, pause jobs and investigate. If it
 approaches `$10`, disable Atlas billing unless Joe explicitly approves a new
 budget.
 
-## Before Activation
+## Before The Next Activation
 
-1. Confirm the remaining promotional credit and expiration in Billing.
-2. Confirm the billing account is `My Billing Account`.
-3. Approve the `$10` monthly alert budget.
-4. Run the pre-activation audit.
-5. Apply only the foundation and budget.
-6. Review Billing reports before deploying the dashboard.
-7. Deploy the dashboard with schedules paused.
-8. Review costs again after 24 hours and after 7 days.
+1. Confirm the remaining promotional credit and exact expiration in Billing.
+2. Review current gross cost against the `$10` alert budget.
+3. Create the owner-only OAuth client and three Secret Manager values.
+4. Deploy the authenticated dashboard at zero minimum and one maximum instance.
+5. Keep daily and weekly schedules paused.
+6. Review costs after 24 hours and after 7 days.
 
 ## Official Pricing References
 

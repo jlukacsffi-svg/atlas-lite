@@ -3,7 +3,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     ATLAS_WEB_MODE=cloud \
-    ATLAS_AUTH_MODE=iap \
+    ATLAS_AUTH_MODE=google_oauth \
     ATLAS_DATA_ROOT=/tmp/atlas-data \
     PORT=8080
 

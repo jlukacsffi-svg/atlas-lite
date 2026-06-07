@@ -15,15 +15,20 @@ Current cloud status:
 - User login complete.
 - Application Default Credentials complete.
 - Dedicated staging project created.
-- Billing is disabled.
-- No bucket, image repository, Cloud Run service, scheduled job, or public URL
-  exists yet.
-- Joe has authorized a future minimal-cost staging deployment after reviewing
-  its estimate and explicitly approving the `$10` monthly alert budget.
+- Billing is linked to `My Billing Account`.
+- A `$10` monthly gross-usage budget is active with 25%, 50%, 80%, 100%, and
+  100% forecast alerts.
+- Private Cloud Storage and Artifact Registry resources are active.
+- A checksum-verified private artifact bundle is stored in Cloud Storage.
+- The first dashboard container image was built successfully.
+- Cloud Run service `atlas-dashboard-stg` exists with zero minimum instances
+  and one maximum instance.
+- The service currently returns `403` to unauthenticated requests and remains
+  intentionally dark until application-level Google OAuth is configured.
+- No Cloud Run jobs or schedules are active.
 
-The controlling policy is `CLOUD_COST_POLICY.md`. Billing must remain disabled
-until Joe verifies the promotional-credit balance and expiration, reviews
-`CLOUD_COST_ESTIMATE.md`, and explicitly approves activation.
+The controlling policy is `CLOUD_COST_POLICY.md`. Any additional deployment
+still requires plan review plus `-Apply -ConfirmCosts`.
 
 ## Billing Gate
 
@@ -59,6 +64,15 @@ It creates nothing unless both flags are added:
 ```text
 -Apply -ConfirmCosts
 ```
+
+The first activation should stop after billing and budget configuration:
+
+```text
+-Apply -ConfirmCosts -BillingAndBudgetOnly
+```
+
+That scope links the staging project and creates the budget, but does not create
+Atlas storage, compute, builds, schedules, or container images.
 
 The guarded bootstrap will:
 
@@ -96,21 +110,61 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 This audit is read-only and exits with an error if billing or Atlas cloud
 resources are detected. It is intended for use before the approved deployment.
 
+## Owner Sign-In Setup
+
+Direct Cloud Run IAP was tested and rejected for this personal staging project
+because Google requires the project and permitted identities to belong to a
+Google Cloud organization. Atlas instead verifies Google OpenID Connect inside
+the application and allows only `jlukacsffi@gmail.com`.
+
+One-time Google Console steps:
+
+1. Open Google Auth Platform for `atlas-capital-research-stg`.
+2. Configure the app as External and keep it in testing.
+3. Add `jlukacsffi@gmail.com` as the only test user.
+4. Create an OAuth client of type **Web application**.
+5. Add this exact authorized redirect URI:
+
+```text
+https://atlas-dashboard-stg-851252682251.us-west1.run.app/oauth/callback
+```
+
+6. Download the client JSON. Do not paste its secret into chat or commit it.
+7. Preview the secure Secret Manager transfer:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_configure_oauth_secrets.ps1 `
+  -ProjectId atlas-capital-research-stg `
+  -OAuthClientJson "C:\path\to\client_secret.json"
+```
+
+8. After reviewing the plan, add `-Apply -ConfirmCosts`. The script creates or
+   rotates three redacted secrets and generates a fresh 48-byte session key.
+9. Delete the downloaded JSON after deployment is verified.
+
+The client ID, client secret, and session key are injected from Secret Manager.
+They are never stored in the image, repository, deployment command, or chat.
+
 ## Deployment Order
 
-After bootstrap:
+Completed:
 
-1. Upload the initial private artifact bundle with `cloud_sync.py push`.
-2. Build and deploy the owner-only dashboard with
-   `gcp_deploy_staging.ps1`.
-3. Complete the first direct-IAP setup in Google Cloud Console if Google
-   requires OAuth consent configuration.
-4. Verify only Joe can access the dashboard.
-5. Deploy daily and weekly Cloud Run jobs with
+1. Bootstrap the controlled-cost project.
+2. Upload and restore-test the initial private artifact bundle.
+3. Build the first dashboard image and create the private Cloud Run service.
+
+Next:
+
+1. Complete the one-time owner sign-in setup above.
+2. Review `gcp_deploy_staging.ps1` in plan-only mode.
+3. Deploy application-level OAuth with `-Apply -ConfirmCosts`.
+4. Verify Joe can sign in and a different Google account cannot.
+5. Verify signed-session expiry, logout, health, readiness, and private data.
+6. Deploy daily and weekly Cloud Run jobs with
    `gcp_deploy_jobs_staging.ps1`.
-6. Execute each job manually once.
-7. Obtain separate owner approval before resuming the paused schedules.
-8. Create a private backup and run the local restoration drill.
+7. Execute each job manually once.
+8. Obtain separate owner approval before resuming the paused schedules.
 9. Configure monitoring and repeat restoration against the cloud bundle.
 
 Public registration and customer accounts remain prohibited in Web Phase 2.

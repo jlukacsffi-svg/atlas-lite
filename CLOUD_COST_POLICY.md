@@ -9,7 +9,8 @@ The goal is minimum practical cost, not an absolute zero-cost requirement.
 - Available promotional credit reported by Joe: approximately `$300`.
 - Initial target usage: `$0-$5` per month.
 - Initial recurring alert budget: `$10` per month.
-- Billing remains disabled until Joe approves the written deployment estimate.
+- Billing is linked only to the dedicated staging project.
+- A `$10` monthly gross-usage budget is active.
 - Staging is the only environment authorized for initial cloud spending.
 
 Promotional credit is a cushion, not a spending control. Its remaining balance,
@@ -19,7 +20,8 @@ exhausted, or do not apply to a service.
 
 ## Required Owner Approval
 
-Before linking billing or creating a cloud resource, Codex must:
+Before creating a new billable service or materially increasing usage, Codex
+must:
 
 1. Give Joe a plain-language low, expected, and high monthly estimate.
 2. Identify every planned service that can create charges.
@@ -39,6 +41,7 @@ spending, production deployment, or a changed architecture.
 - The initial bootstrap defaults to a `$10` monthly alert budget.
 - Budget alerts track gross usage before promotional credits are applied.
 - The budget is created before application deployment services are enabled.
+- Billing and the budget were activated before Atlas runtime resources.
 - Dashboard instances remain at minimum `0` and maximum `1`.
 - Scheduled jobs use one task and conservative resource limits.
 - Scheduler triggers are created or updated, then left paused.
@@ -50,7 +53,7 @@ spending, production deployment, or a changed architecture.
 
 The current estimate is maintained in `CLOUD_COST_ESTIMATE.md`.
 
-Before the first deployment, record:
+For each deployment stage, record:
 
 - Credit balance and expiration date observed in Google Cloud.
 - Approved monthly alert budget.
@@ -61,7 +64,7 @@ Before the first deployment, record:
 - Manual disable-billing procedure.
 - Resource cleanup procedure.
 
-## Pre-Activation Audit
+## Historical Pre-Activation Audit
 
 Verify that the project has not crossed the billing gate:
 
@@ -70,9 +73,9 @@ powershell -NoProfile -ExecutionPolicy Bypass `
   -File scripts\gcp_zero_cost_audit.ps1
 ```
 
-The audit fails if billing is linked, Atlas storage exists, BigQuery datasets
-exist, or deployment APIs have been enabled. After approved deployment, use the
-normal staging status and billing reports instead.
+The audit now fails by design because the approved staging foundation exists.
+Use `scripts/gcp_staging_status.ps1` and Google Cloud Billing reports for the
+active staging environment.
 
 ## Emergency Stop
 

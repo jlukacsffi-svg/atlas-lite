@@ -11,6 +11,9 @@ param(
     [string]$Region = 'us-west1',
 
     [string]$ImageTag = '',
+    [string]$GoogleClientIdSecret = 'atlas-google-oauth-client-id',
+    [string]$GoogleClientSecretSecret = 'atlas-google-oauth-client-secret',
+    [string]$SessionSecret = 'atlas-session-secret',
     [switch]$Apply,
     [switch]$ConfirmCosts
 )
@@ -21,6 +24,11 @@ $Repository = 'atlas-containers'
 $Service = 'atlas-dashboard-stg'
 $Bucket = "$ProjectId-atlas-private"
 $DashboardServiceAccount = "atlas-dashboard-stg@$ProjectId.iam.gserviceaccount.com"
+$OAuthSecrets = @(
+    $GoogleClientIdSecret,
+    $GoogleClientSecretSecret,
+    $SessionSecret
+)
 
 if (-not (Test-Path $Gcloud)) {
     throw 'Google Cloud CLI is not installed.'
@@ -42,7 +50,8 @@ if ($Apply -and -not $projectNumber) {
 }
 
 $Image = "$Region-docker.pkg.dev/$ProjectId/$Repository/atlas:$ImageTag"
-$Audience = "/projects/$projectNumber/locations/$Region/services/$Service"
+$ServiceUrl = "https://$Service-$projectNumber.$Region.run.app"
+$RedirectUri = "$ServiceUrl/oauth/callback"
 
 function Invoke-Gcloud {
     param([Parameter(Mandatory = $true)][string[]]$Arguments)
@@ -64,7 +73,24 @@ Write-Host "  Region: $Region"
 Write-Host "  Image: $Image"
 Write-Host "  Service: $Service"
 Write-Host "  Owner: $OwnerEmail"
+Write-Host "  OAuth callback: $RedirectUri"
 Write-Host "  Mode: $(if ($Apply) { 'APPLY' } else { 'PLAN ONLY' })"
+
+foreach ($secretName in $OAuthSecrets) {
+    Invoke-Gcloud @(
+        'secrets', 'describe', $secretName,
+        "--project=$ProjectId"
+    )
+}
+
+foreach ($secretName in $OAuthSecrets) {
+    Invoke-Gcloud @(
+        'secrets', 'add-iam-policy-binding', $secretName,
+        "--project=$ProjectId",
+        "--member=serviceAccount:$DashboardServiceAccount",
+        '--role=roles/secretmanager.secretAccessor'
+    )
+}
 
 Invoke-Gcloud @(
     'builds', 'submit', '.',
@@ -79,39 +105,22 @@ Invoke-Gcloud @(
     "--region=$Region",
     "--image=$Image",
     "--service-account=$DashboardServiceAccount",
-    '--no-allow-unauthenticated',
-    '--iap',
+    '--allow-unauthenticated',
+    '--no-iap',
     '--min=0',
     '--max=1',
     '--cpu=1',
     '--memory=512Mi',
     '--concurrency=20',
     '--timeout=60',
-    "--set-env-vars=ATLAS_WEB_MODE=cloud,ATLAS_AUTH_MODE=iap,ATLAS_OWNER_EMAIL=$OwnerEmail,ATLAS_IAP_AUDIENCE=$Audience,ATLAS_GCS_BUCKET=$Bucket,ATLAS_GCS_PREFIX=owner-v1,ATLAS_DATA_ROOT=/tmp/atlas-data"
-)
-
-Invoke-Gcloud @(
-    'run', 'services', 'add-iam-policy-binding', $Service,
-    "--project=$ProjectId",
-    "--region=$Region",
-    "--member=serviceAccount:service-$projectNumber@gcp-sa-iap.iam.gserviceaccount.com",
-    '--role=roles/run.invoker'
-)
-
-Invoke-Gcloud @(
-    'iap', 'web', 'add-iam-policy-binding',
-    "--resource-type=cloud-run",
-    "--service=$Service",
-    "--region=$Region",
-    "--member=user:$OwnerEmail",
-    '--role=roles/iap.httpsResourceAccessor',
-    "--project=$ProjectId"
+    "--set-env-vars=ATLAS_WEB_MODE=cloud,ATLAS_AUTH_MODE=google_oauth,ATLAS_OWNER_EMAIL=$OwnerEmail,ATLAS_OAUTH_REDIRECT_URI=$RedirectUri,ATLAS_GCS_BUCKET=$Bucket,ATLAS_GCS_PREFIX=owner-v1,ATLAS_DATA_ROOT=/tmp/atlas-data",
+    "--set-secrets=ATLAS_GOOGLE_CLIENT_ID=$GoogleClientIdSecret`:latest,ATLAS_GOOGLE_CLIENT_SECRET=$GoogleClientSecretSecret`:latest,ATLAS_SESSION_SECRET=$SessionSecret`:latest"
 )
 
 Write-Host ''
 if ($Apply) {
     Write-Host '[ok] Staging dashboard deployment requested.'
-    Write-Host 'Verify IAP in the Cloud Run console before sharing the URL.'
+    Write-Host "Open $ServiceUrl and verify owner-only Google sign-in."
 } else {
     Write-Host '[plan] No image was built and no service was deployed.'
     Write-Host 'Re-run with -Apply -ConfirmCosts only after owner cost approval.'

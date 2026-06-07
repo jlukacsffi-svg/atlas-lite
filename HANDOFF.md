@@ -150,8 +150,12 @@ Secure web-platform direction:
 - Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
 - Web development must not weaken the research engine or grant additional trading authority.
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
-- Web Phase 2 foundation is in progress in `app/web_cloud.py`, `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
-- Cloud mode is fail-closed and requires verified Google IAP identity, the configured owner email, an exact audience, and explicit persistent data storage.
+- Web Phase 2 is approximately 82% complete in `app/web_cloud.py`,
+  `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
+- Cloud mode is fail-closed. The personal-project deployment uses Google OpenID
+  Connect, an owner-email allowlist, signed short-lived sessions, and explicit
+  persistent data storage. Legacy IAP verification remains available for a
+  future Google Cloud organization.
 - Durable single-owner storage is implemented in `app/cloud_storage.py` using
   an allowlisted Cloud Storage bundle, versioned manifest, SHA-256 checks, atomic
   downloads, and generation-match upload preconditions.
@@ -161,31 +165,44 @@ Secure web-platform direction:
   push it only after success.
 - Google Cloud CLI 571.0.0, user login, and Application Default Credentials
   are configured locally.
-- The dedicated `atlas-capital-research-stg` project exists with billing
-  disabled, so no Atlas cloud services or charges are active.
+- The dedicated `atlas-capital-research-stg` project is linked to
+  `My Billing Account` with a `$10` monthly gross-usage budget.
+- The private bucket, least-privilege service accounts, Artifact Registry,
+  first dashboard image, and scale-to-zero Cloud Run service exist.
+- The initial private bundle contains 197 files and passed a checksum-verified
+  isolated cloud pull restoration test.
+- The Cloud Run container loaded the private bundle and passed its startup
+  probe.
+- Direct Cloud Run IAP was disabled after official documentation and live
+  testing confirmed that personal projects outside a Google Cloud organization
+  cannot use it for this owner identity.
+- The current service is safely dark and returns `403`; no jobs or schedules
+  are active.
 - Guarded plan-first scripts cover staging bootstrap, dashboard deployment,
   Cloud Run jobs, schedules, and read-only status.
-- The service is not deployed yet. Credit verification, final budget approval,
-  billing linkage, bucket creation, deployment, monitoring, and staging
-  validation remain.
-- Google Cloud billing remains disabled under `CLOUD_COST_POLICY.md`.
-- On 2026-06-07, the final readiness check detected that a billing account had
-  been linked in the console. The emergency stop immediately unlinked it.
-  Cloud Run, Artifact Registry, Cloud Scheduler, buckets, and BigQuery datasets
-  were not created.
-- `scripts/gcp_zero_cost_audit.ps1` enforces the pre-activation gate and fails
-  if billing, deployment APIs, buckets, or BigQuery datasets are detected.
+- Application-level Google OAuth is implemented with signed state, nonce,
+  verified ID tokens, verified email, exact owner matching, one-hour signed
+  sessions, secure cookies, and logout.
+- `scripts/gcp_configure_oauth_secrets.ps1` securely transfers a downloaded
+  OAuth web-client JSON to Secret Manager without printing values.
+- `scripts/gcp_deploy_staging.ps1` now references Secret Manager and exposes
+  only the application-controlled login boundary.
+- The one-time Google Console OAuth client creation, live owner-login test,
+  monitoring, jobs, schedules, and final staging validation remain.
+- `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation
+  gate and now fails by design. Use `gcp_staging_status.ps1` for active staging.
 - Joe reported approximately `$300` of Google Cloud promotional credit and
-  approved a minimal-cost direction. The proposed operating target is `$0-$5`
-  per month with a `$10` monthly alert budget; final billing activation still
-  requires verification of credit expiration and explicit approval.
+  approved a minimal-cost direction. The operating target is `$0-$5` per month
+  with a `$10` monthly gross-usage alert budget. The credit is believed to
+  expire around September 3-4, 2026; the console date remains to be confirmed.
 - `CLOUD_COST_ESTIMATE.md` records the expected service costs and review steps.
 - Local disaster-recovery tooling now creates private ZIP backups containing
   only the cloud allowlist, verifies all paths, sizes, and SHA-256 checksums,
   and refuses unapproved overwrites.
-- A restoration drill against the current private Atlas state passed with 194
-  files and 10,183,920 bytes.
-- Cloud deployment, monitoring, and a cloud-backed restoration drill remain.
+- A local restoration drill passed, followed by a cloud pull restoration test
+  of 197 files and 10,532,703 local bytes.
+- Authenticated redeployment, monitoring, scheduled jobs, and final staging
+  validation remain.
 
 ## Useful Files
 

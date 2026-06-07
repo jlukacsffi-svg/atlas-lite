@@ -18,7 +18,8 @@ param(
     [int]$MonthlyBudgetUsd = 10,
 
     [switch]$Apply,
-    [switch]$ConfirmCosts
+    [switch]$ConfirmCosts,
+    [switch]$BillingAndBudgetOnly
 )
 
 $ErrorActionPreference = 'Stop'
@@ -61,8 +62,14 @@ function Test-GcloudResource {
     if (-not $Apply) {
         return $false
     }
-    & $Gcloud @Arguments *> $null
-    return $LASTEXITCODE -eq 0
+    $previousPreference = $ErrorActionPreference
+    $ErrorActionPreference = 'SilentlyContinue'
+    try {
+        & $Gcloud @Arguments *> $null
+        return $LASTEXITCODE -eq 0
+    } finally {
+        $ErrorActionPreference = $previousPreference
+    }
 }
 
 $activeAccount = & $Gcloud auth list --filter=status:ACTIVE --format='value(account)'
@@ -77,6 +84,7 @@ Write-Host "  Region: $Region"
 Write-Host "  Bucket: gs://$Bucket"
 Write-Host "  Budget: $MonthlyBudgetUsd USD/month"
 Write-Host "  Owner: $OwnerEmail"
+Write-Host "  Scope: $(if ($BillingAndBudgetOnly) { 'BILLING AND BUDGET ONLY' } else { 'FULL FOUNDATION' })"
 Write-Host "  Mode: $(if ($Apply) { 'APPLY' } else { 'PLAN ONLY' })"
 
 if (-not (Test-GcloudResource @('projects', 'describe', $ProjectId))) {
@@ -89,6 +97,26 @@ Invoke-Gcloud @(
 )
 Invoke-Gcloud @('config', 'set', 'project', $ProjectId)
 
+$ProjectNumber = if ($Apply) {
+    & $Gcloud projects describe $ProjectId '--format=value(projectNumber)'
+} else {
+    '<PROJECT_NUMBER>'
+}
+if ($Apply -and -not $ProjectNumber) {
+    throw "Unable to resolve project number for: $ProjectId"
+}
+
+Invoke-Gcloud -AllowFailure -Arguments @(
+    'projects', 'remove-iam-policy-binding', $ProjectId,
+    "--member=serviceAccount:$ProjectNumber-compute@developer.gserviceaccount.com",
+    '--role=roles/editor'
+)
+Invoke-Gcloud @(
+    'projects', 'add-iam-policy-binding', $ProjectId,
+    "--member=serviceAccount:$ProjectNumber-compute@developer.gserviceaccount.com",
+    '--role=roles/cloudbuild.builds.builder'
+)
+
 Invoke-Gcloud @(
     'services', 'enable',
     'billingbudgets.googleapis.com',
@@ -97,11 +125,18 @@ Invoke-Gcloud @(
 
 $budgetExists = $false
 if ($Apply) {
-    $existingBudget = & $Gcloud billing budgets list `
+    $budgetJson = & $Gcloud billing budgets list `
         "--billing-account=$BillingAccount" `
-        '--filter=displayName=atlas-staging-monthly' `
-        '--format=value(name)'
-    $budgetExists = [bool]$existingBudget
+        '--format=json'
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Unable to list existing billing budgets.'
+    }
+    $budgets = @($budgetJson | ConvertFrom-Json)
+    $budgetExists = [bool](
+        $budgets | Where-Object {
+            $_.displayName -eq 'atlas-staging-monthly'
+        }
+    )
 }
 if (-not $budgetExists) {
     Invoke-Gcloud @(
@@ -120,9 +155,21 @@ if (-not $budgetExists) {
     )
 }
 
+if ($BillingAndBudgetOnly) {
+    Write-Host ''
+    if ($Apply) {
+        Write-Host '[ok] Billing linked and staging budget configured.'
+        Write-Host 'No Atlas storage, compute, build, scheduler, or image resources were created.'
+    } else {
+        Write-Host '[plan] Billing and budget only. No cloud settings were changed.'
+    }
+    exit 0
+}
+
 $services = @(
     'artifactregistry.googleapis.com',
     'cloudbuild.googleapis.com',
+    'cloudresourcemanager.googleapis.com',
     'cloudscheduler.googleapis.com',
     'iap.googleapis.com',
     'iam.googleapis.com',
@@ -143,6 +190,45 @@ if (-not (Test-GcloudResource @('storage', 'buckets', 'describe', "gs://$Bucket"
         '--uniform-bucket-level-access',
         '--public-access-prevention',
         '--soft-delete-duration=7d'
+    )
+}
+
+Invoke-Gcloud @(
+    'storage', 'buckets', 'add-iam-policy-binding', "gs://$Bucket",
+    "--member=user:$OwnerEmail",
+    '--role=roles/storage.admin'
+)
+
+foreach ($legacyBinding in @(
+    @{
+        Member = "projectViewer:$ProjectId"
+        Role = 'roles/storage.legacyBucketReader'
+    },
+    @{
+        Member = "projectViewer:$ProjectId"
+        Role = 'roles/storage.legacyObjectReader'
+    },
+    @{
+        Member = "projectEditor:$ProjectId"
+        Role = 'roles/storage.legacyBucketOwner'
+    },
+    @{
+        Member = "projectEditor:$ProjectId"
+        Role = 'roles/storage.legacyObjectOwner'
+    },
+    @{
+        Member = "projectOwner:$ProjectId"
+        Role = 'roles/storage.legacyBucketOwner'
+    },
+    @{
+        Member = "projectOwner:$ProjectId"
+        Role = 'roles/storage.legacyObjectOwner'
+    }
+)) {
+    Invoke-Gcloud -AllowFailure -Arguments @(
+        'storage', 'buckets', 'remove-iam-policy-binding', "gs://$Bucket",
+        "--member=$($legacyBinding.Member)",
+        "--role=$($legacyBinding.Role)"
     )
 }
 
@@ -186,6 +272,12 @@ Invoke-Gcloud @(
     'storage', 'buckets', 'add-iam-policy-binding', "gs://$Bucket",
     "--member=serviceAccount:$JobServiceAccount",
     '--role=roles/storage.objectUser'
+)
+
+Invoke-Gcloud -AllowFailure -Arguments @(
+    'projects', 'remove-iam-policy-binding', $ProjectId,
+    "--member=user:$OwnerEmail",
+    '--role=roles/storage.admin'
 )
 
 if (-not (Test-GcloudResource @(

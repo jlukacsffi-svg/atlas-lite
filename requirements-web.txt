@@ -1,4 +1,5 @@
 -r requirements.txt
 google-auth==2.53.0
+google-auth-oauthlib==1.4.0
 google-cloud-storage==3.6.0
 waitress==3.0.2
