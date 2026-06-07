@@ -45,6 +45,8 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 - No customer outreach.
 - Stage 5 paper trading must remain strictly simulated and local.
 - Paper-trading approval or execution must never transmit a real order.
+- Future web accounts must enforce server-side authorization and strict tenant isolation.
+- Do not enable public registration until authentication, privacy, backup, monitoring, and security controls are validated.
 
 ## Repository notes
 
@@ -57,6 +59,17 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 3. Evaluate paper recommendations against SPY and QQQ.
 4. Expand paper-trading attribution and risk-rule testing.
 5. Do not add brokerage integration without explicit owner approval.
+
+## Web platform direction
+
+- Read `WEB_PLATFORM_PLAN.md` before web-platform work.
+- Build the website incrementally without disrupting the research and paper-evaluation engine.
+- Start with a read-only local owner dashboard.
+- Use modern, responsive, accessible financial-workspace design with meaningful charts.
+- Reuse stable Python research modules behind service boundaries rather than rewriting them for presentation.
+- Keep web-platform maturity separate from trading authority.
+- Use managed authentication and secret storage for hosted environments.
+- Treat every user-owned record as tenant-scoped and test that users cannot access one another's data.
 
 ## Development guidance
 

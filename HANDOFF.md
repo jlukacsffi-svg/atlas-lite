@@ -139,11 +139,21 @@ Stage 5 paper-trading foundation:
 - The daily run refreshes `paper_trading/performance.md`.
 - Stage 5 software is complete; the live paper evaluation period is in progress.
 
+Secure web-platform direction:
+
+- `WEB_PLATFORM_PLAN.md` defines the modern dashboard, secure cloud, and multi-user product track.
+- The website should become the primary Atlas experience; email remains a notification and report-delivery channel.
+- Web Phase 1 is a read-only local owner dashboard over stable Atlas outputs.
+- Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
+- Web development must not weaken the research engine or grant additional trading authority.
+- Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
+
 ## Useful Files
 
 - `ROADMAP.md`: long-term Atlas development roadmap.
 - `STAGE4_PLAN.md`: first Stage 4 multi-agent research organization plan.
 - `STAGE5_PLAN.md`: Stage 5 paper-trading policy and milestones.
+- `WEB_PLATFORM_PLAN.md`: secure modern dashboard and multi-user platform plan.
 - `PROJECT_BRIEF.md`: project vision and constraints.
 - `AGENTS.md`: Codex working instructions.
 - `app/analyst_actions.py`: analyst-action headline retrieval and local caching.

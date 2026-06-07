@@ -42,6 +42,19 @@ The long-term system should behave like a company that continuously gathers info
 
 The eventual vision may include autonomous trading, but the project should reach that only through staged, tested, owner-approved phases.
 
+Atlas should also become a modern web product. The long-term primary experience
+should be a secure, responsive website with dashboards and graphics for market
+research, scores, portfolios, risks, research workflows, and paper or approved
+trading activity.
+
+Users should eventually be able to create private Atlas accounts. Each account
+must be isolated so a user can access only that user's own watchlists, reports,
+portfolio information, alerts, research, and paper-trading records.
+
+The web-platform plan is documented in `WEB_PLATFORM_PLAN.md`. Account creation
+should progress from owner-only, to invite-only, to controlled beta, and only
+then to public registration after security and operational reviews.
+
 For the detailed staged development plan, read `ROADMAP.md`.
 
 Atlas should evolve in stages:
@@ -53,6 +66,14 @@ Atlas should evolve in stages:
 5. Paper trading.
 6. Limited autonomous trading under explicit owner-approved rules.
 7. Broader autonomous capital management only after major legal, compliance, risk, and owner-approval work.
+
+Web delivery evolves on a parallel track:
+
+1. Read-only local owner dashboard.
+2. Secure owner-only cloud deployment.
+3. Invite-only multi-user workspaces.
+4. Controlled customer beta.
+5. Public self-service product after security and compliance readiness.
 
 Do not add brokerage integrations, trading execution, or real capital movement unless Joe explicitly asks for that phase.
 
@@ -166,6 +187,12 @@ Near-term Atlas must not:
 - Contact external customers.
 - Represent itself as a licensed financial advisor.
 - Store passwords, tokens, or API keys in the repository.
+- Expose one user's private information to another user.
+- Enable public registration before tenant isolation and account security are tested.
+
+Future hosted Atlas must use managed authentication, server-side authorization,
+tenant-aware data storage, encryption, managed secrets, audit logging, backups,
+monitoring, and secure account recovery. Security is a release requirement.
 
 Secrets should not be placed in prompts, source code, README files, AGENTS.md, screenshots, commits, or issue comments.
 

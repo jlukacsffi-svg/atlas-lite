@@ -376,6 +376,22 @@ The initial policy prohibits margin, short selling, options, and leverage; prese
 
 Paper account data is saved locally in ignored `paper_trading/`. No paper-trading command can transmit a real order.
 
+## Future Web Platform
+
+Atlas is planned to evolve into a modern, secure web product with responsive
+dashboards, financial graphics, cloud operation, and private user accounts.
+
+The staged product, design, architecture, multi-user, and security plan is:
+
+```text
+WEB_PLATFORM_PLAN.md
+```
+
+The current research and paper-evaluation work remains the foundation. The
+first web phase will be a read-only local owner dashboard; public accounts will
+not be enabled until authentication, authorization, tenant isolation, privacy,
+backup, monitoring, and incident-response controls are validated.
+
 ## Scheduled Execution
 
 Atlas includes PowerShell scripts for Windows Task Scheduler.

@@ -4,6 +4,11 @@ Atlas Capital Research should develop in stages from a reliable research assista
 
 Trading autonomy should be earned gradually through reliability, auditability, risk discipline, paper trading performance, and explicit owner approval.
 
+Atlas will also develop a secure web platform so its intelligence can be
+presented through modern dashboards, graphics, and private user accounts.
+Web-platform maturity and trading autonomy are separate tracks: a richer
+interface never grants additional financial authority.
+
 ## Guiding Principle
 
 Atlas should earn autonomy one layer at a time.
@@ -190,9 +195,47 @@ Capabilities:
 - Produces executive intelligence.
 - Escalates decisions to Joe based on risk level.
 
+## Parallel Track: Secure Web Platform
+
+Detailed plan: `WEB_PLATFORM_PLAN.md`
+
+Goal:
+
+Turn Atlas into a modern, secure, cloud-hosted product where each user has a
+private account and sees only their own research, portfolio, alerts, and
+paper-trading information.
+
+Phases:
+
+1. Read-only local owner dashboard with modern charts and responsive design.
+2. Secure single-user cloud hosting independent of Joe's laptop.
+3. Invite-only multi-user accounts with strict tenant isolation.
+4. Controlled customer beta with privacy, support, and subscription foundations.
+5. Public self-service product only after security and operational readiness.
+
+Core requirements:
+
+- Modern financial dashboard design.
+- Interactive portfolio, market, scoring, sector, risk, and performance graphics.
+- Managed authentication, MFA/passkeys, secure recovery, and session controls.
+- Server-side authorization and tenant isolation for every private record.
+- Encryption, managed secrets, audit logs, backups, monitoring, and incident response.
+- Per-user watchlists, reports, portfolios, research tasks, alerts, and paper accounts.
+- Cloud scheduling so Atlas does not depend on Joe's laptop.
+- Privacy, data export/deletion, legal disclosures, and security review before public launch.
+
+Near-term rule:
+
+Do not disrupt the active Stage 5 evaluation. Web Phase 1 should begin as a
+read-only presentation layer over stable Atlas outputs, then advance
+incrementally.
+
 ## Current Recommended Sequence
 
 1. Preserve and monitor the completed daily reporting, scoring, memory, portfolio, and research-organization foundations.
 2. Begin Stage 5 with a strictly simulated portfolio and immutable recommendation log.
 3. Establish paper-trading risk rules and benchmark evaluation.
-4. Discuss real trading only after Atlas has proven reliability and discipline over a meaningful test period.
+4. Begin a read-only local owner dashboard while paper results accumulate.
+5. Move to secure cloud hosting after the dashboard and service boundaries are stable.
+6. Add multi-user accounts only after tenant isolation and security controls are tested.
+7. Discuss real trading only after Atlas has proven reliability and discipline over a meaningful test period.
