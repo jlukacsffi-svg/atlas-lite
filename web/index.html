@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atlas Capital Research</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <span class="brand-mark">A</span>
+        <span><strong>Atlas</strong><small>Capital Research</small></span>
+      </div>
+      <nav aria-label="Primary navigation">
+        <a class="nav-item active" href="#overview">Overview</a>
+        <a class="nav-item" href="#market">Market</a>
+        <a class="nav-item" href="#research">Research</a>
+        <a class="nav-item" href="#paper">Paper Portfolio</a>
+      </nav>
+      <div class="sidebar-status">
+        <span class="status-dot"></span>
+        <span>Local read-only workspace</span>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Owner workspace</p>
+          <h1>Executive dashboard</h1>
+        </div>
+        <div class="topbar-actions">
+          <span id="as-of" class="as-of">Loading latest run...</span>
+          <button id="refresh" type="button">Refresh</button>
+        </div>
+      </header>
+
+      <section id="overview" class="kpi-grid" aria-label="Market overview">
+        <article class="kpi">
+          <span>Simulated equity</span>
+          <strong id="equity">--</strong>
+          <small id="return">Paper account</small>
+        </article>
+        <article class="kpi">
+          <span>Cash reserve</span>
+          <strong id="cash">--</strong>
+          <small id="cash-share">Available capital</small>
+        </article>
+        <article class="kpi">
+          <span>Coverage</span>
+          <strong id="coverage">--</strong>
+          <small id="breadth">Market breadth</small>
+        </article>
+        <article class="kpi">
+          <span>Research queue</span>
+          <strong id="research-count">--</strong>
+          <small id="research-detail">Open assignments</small>
+        </article>
+      </section>
+
+      <section id="market" class="content-grid">
+        <article class="panel performance-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Paper portfolio</p>
+              <h2>Performance versus benchmarks</h2>
+            </div>
+            <div id="market-pills" class="market-pills"></div>
+          </div>
+          <div class="chart-wrap">
+            <svg id="performance-chart" viewBox="0 0 720 260" role="img" aria-label="Atlas, SPY, and QQQ return history"></svg>
+          </div>
+          <div class="legend">
+            <span><i class="legend-line atlas"></i>Atlas</span>
+            <span><i class="legend-line spy"></i>SPY</span>
+            <span><i class="legend-line qqq"></i>QQQ</span>
+          </div>
+        </article>
+
+        <article class="panel breadth-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Market breadth</p>
+              <h2>Advancing versus declining</h2>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <div id="breadth-donut" class="donut"><span id="breadth-center">--</span></div>
+            <div class="breadth-stats">
+              <div><span class="swatch positive"></span><strong id="advancing">--</strong><small>Advancing</small></div>
+              <div><span class="swatch negative"></span><strong id="declining">--</strong><small>Declining</small></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="content-grid lower-grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Research model</p>
+              <h2>Highest Atlas scores</h2>
+            </div>
+          </div>
+          <div id="score-leaders" class="rank-list"></div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Daily movement</p>
+              <h2>Largest watchlist moves</h2>
+            </div>
+          </div>
+          <div id="movers" class="mover-list"></div>
+        </article>
+
+        <article class="panel sector-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Sector tape</p>
+              <h2>Average daily movement</h2>
+            </div>
+          </div>
+          <div id="sectors" class="sector-bars"></div>
+        </article>
+      </section>
+
+      <section id="paper" class="content-grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Current simulation</p>
+              <h2>Open positions</h2>
+            </div>
+            <span class="tag">No real capital</span>
+          </div>
+          <div id="positions" class="positions"></div>
+        </article>
+
+        <article id="research" class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Organization</p>
+              <h2>Research agenda</h2>
+            </div>
+          </div>
+          <div id="tasks" class="task-list"></div>
+        </article>
+      </section>
+    </main>
+  </div>
+  <div id="error-banner" class="error-banner" role="alert" hidden></div>
+  <script src="/app.js"></script>
+</body>
+</html>

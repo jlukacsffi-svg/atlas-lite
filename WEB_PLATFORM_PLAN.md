@@ -141,6 +141,8 @@ boundaries rather than rewritten merely to create a website.
 
 Build a read-only local dashboard using existing Atlas outputs.
 
+Status: Complete.
+
 Includes:
 
 - Executive summary.
@@ -149,6 +151,8 @@ Includes:
 - Research agenda.
 - Paper-account performance.
 - Core charts and responsive navigation.
+- Localhost-only standard-library web server.
+- Explicit read-only routes and browser security headers.
 
 No public accounts and no cloud deployment.
 

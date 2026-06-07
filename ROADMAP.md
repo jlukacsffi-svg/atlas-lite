@@ -207,7 +207,7 @@ paper-trading information.
 
 Phases:
 
-1. Read-only local owner dashboard with modern charts and responsive design.
+1. Read-only local owner dashboard with modern charts and responsive design. Complete.
 2. Secure single-user cloud hosting independent of Joe's laptop.
 3. Invite-only multi-user accounts with strict tenant isolation.
 4. Controlled customer beta with privacy, support, and subscription foundations.
@@ -235,7 +235,7 @@ incrementally.
 1. Preserve and monitor the completed daily reporting, scoring, memory, portfolio, and research-organization foundations.
 2. Begin Stage 5 with a strictly simulated portfolio and immutable recommendation log.
 3. Establish paper-trading risk rules and benchmark evaluation.
-4. Begin a read-only local owner dashboard while paper results accumulate.
-5. Move to secure cloud hosting after the dashboard and service boundaries are stable.
+4. Operate and refine the completed read-only local owner dashboard while paper results accumulate.
+5. Plan secure single-user cloud hosting after the dashboard and service boundaries are stable.
 6. Add multi-user accounts only after tenant isolation and security controls are tested.
 7. Discuss real trading only after Atlas has proven reliability and discipline over a meaningful test period.

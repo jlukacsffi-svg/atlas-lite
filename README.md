@@ -178,6 +178,22 @@ Run the script to generate today's Morning Executive Brief:
 py -3.12 main.py
 ```
 
+Run the Web Phase 1 local owner dashboard:
+
+```bash
+py -3.12 dashboard.py
+```
+
+Then open:
+
+```text
+http://127.0.0.1:8765
+```
+
+The dashboard is a read-only presentation of local Atlas research, paper-account,
+performance, market, and research-queue data. It binds only to this computer and
+does not create public accounts or expose Atlas to the internet.
+
 Reports are saved to the `reports/` folder with a timestamp in the filename.
 
 Each run writes both:

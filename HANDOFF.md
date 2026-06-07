@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-06-02
+Last updated: 2026-06-06
 
 ## Current Roadmap Position
 
@@ -143,7 +143,10 @@ Secure web-platform direction:
 
 - `WEB_PLATFORM_PLAN.md` defines the modern dashboard, secure cloud, and multi-user product track.
 - The website should become the primary Atlas experience; email remains a notification and report-delivery channel.
-- Web Phase 1 is a read-only local owner dashboard over stable Atlas outputs.
+- Web Phase 1 is complete: `dashboard.py` serves a read-only local owner dashboard over stable Atlas outputs.
+- The dashboard displays market breadth, paper performance, benchmark context, score leaders, movers, sector movement, positions, and research tasks.
+- Run it with `py -3.12 dashboard.py`, then open `http://127.0.0.1:8765`.
+- The current dashboard is localhost-only and has no public authentication or cloud exposure.
 - Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
 - Web development must not weaken the research engine or grant additional trading authority.
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
