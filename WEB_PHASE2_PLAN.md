@@ -7,9 +7,10 @@ authority.
 ## Current Status
 
 Authentication, durable storage, backup restoration, and controlled-cost cloud
-foundations are implemented. The dashboard service exists but remains
-intentionally dark pending one-time Google OAuth client setup.
-Estimated Web Phase 2 completion: 82%.
+foundations are implemented. The dashboard service is deployed behind
+owner-only Google OAuth. The first interactive owner login and final staging
+validation are in progress.
+Estimated Web Phase 2 completion: 90%.
 
 Completed foundation:
 
@@ -62,14 +63,10 @@ Completed foundation:
 - Successful isolated restoration drill against the current Atlas private
   state.
 
-Remaining before the first authenticated cloud use:
+Remaining before completing authenticated cloud staging:
 
-- Create a Google OAuth Web application client in the Google Console.
-- Add Joe as the only OAuth test user and register the exact callback URI.
-- Transfer the downloaded client credentials into Secret Manager with the
-  guarded redacted provisioning script.
-- Deploy the tested OAuth-enabled image and application configuration.
-- Verify owner login, non-owner denial, logout, expiry, and redeployment.
+- Complete the first interactive owner login.
+- Verify non-owner denial, logout, expiry, and redeployment.
 - Configure scheduled Cloud Run jobs for daily and weekly Atlas execution.
 - Add centralized logs, uptime checks, and alerts.
 - Repeat the restoration drill against the first real Cloud Storage bundle.

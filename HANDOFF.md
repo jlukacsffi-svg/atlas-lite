@@ -150,7 +150,7 @@ Secure web-platform direction:
 - Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
 - Web development must not weaken the research engine or grant additional trading authority.
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
-- Web Phase 2 is approximately 82% complete in `app/web_cloud.py`,
+- Web Phase 2 is approximately 90% complete in `app/web_cloud.py`,
   `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
 - Cloud mode is fail-closed. The personal-project deployment uses Google OpenID
   Connect, an owner-email allowlist, signed short-lived sessions, and explicit
@@ -176,8 +176,8 @@ Secure web-platform direction:
 - Direct Cloud Run IAP was disabled after official documentation and live
   testing confirmed that personal projects outside a Google Cloud organization
   cannot use it for this owner identity.
-- The current service is safely dark and returns `403`; no jobs or schedules
-  are active.
+- Before the owner OAuth deployment, the service was safely dark and returned
+  `403`; no jobs or schedules were active.
 - Guarded plan-first scripts cover staging bootstrap, dashboard deployment,
   Cloud Run jobs, schedules, and read-only status.
 - Application-level Google OAuth is implemented with signed state, nonce,
@@ -187,8 +187,18 @@ Secure web-platform direction:
   OAuth web-client JSON to Secret Manager without printing values.
 - `scripts/gcp_deploy_staging.ps1` now references Secret Manager and exposes
   only the application-controlled login boundary.
-- The one-time Google Console OAuth client creation, live owner-login test,
-  monitoring, jobs, schedules, and final staging validation remain.
+- Google Auth Platform is configured in testing mode with
+  `jlukacsffi@gmail.com` as the only test user.
+- The `Atlas Owner Dashboard` OAuth web client uses the exact Cloud Run
+  callback URI.
+- OAuth client credentials and the generated session key are stored in Secret
+  Manager; temporary local credential material was deleted.
+- Cloud Run revision `atlas-dashboard-stg-00002-bwj` serves the OAuth-enabled
+  dashboard at zero minimum and one service-level maximum instance.
+- Unauthenticated dashboard access redirects to Google, and `/readyz` returns
+  ready without exposing private data.
+- The first interactive owner-login completion, monitoring, jobs, schedules,
+  and final staging validation remain.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation
   gate and now fails by design. Use `gcp_staging_status.ps1` for active staging.
 - Joe reported approximately `$300` of Google Cloud promotional credit and

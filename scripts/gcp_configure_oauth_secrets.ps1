@@ -50,7 +50,12 @@ if (-not $credentials.web.client_id -or -not $credentials.web.client_secret) {
 $clientId = [string]$credentials.web.client_id
 $clientSecret = [string]$credentials.web.client_secret
 $sessionBytes = New-Object byte[] 48
-[System.Security.Cryptography.RandomNumberGenerator]::Fill($sessionBytes)
+$randomGenerator = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+try {
+    $randomGenerator.GetBytes($sessionBytes)
+} finally {
+    $randomGenerator.Dispose()
+}
 $sessionValue = [Convert]::ToBase64String($sessionBytes)
 
 function Ensure-Secret {
