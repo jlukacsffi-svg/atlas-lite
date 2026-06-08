@@ -242,8 +242,11 @@ Current Web Phase 2 result:
   successfully.
 - Daily and weekly Cloud Run jobs have completed successful manual executions.
 - Dashboard readiness and failed-job alerting are active.
+- Recurring schedule activation now has a separate approval gate and validates
+  successful jobs plus monitoring before resume.
+- Artifact Registry retention is installed in non-destructive dry-run mode.
 - The next gate is separate approval to activate the paused schedules,
-  followed by cross-device and final staging validation.
+  followed by cross-device, retention-policy, and final staging validation.
 
 Estimated overall Atlas program completion: 61%.
 

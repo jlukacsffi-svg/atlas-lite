@@ -1,0 +1,21 @@
+[
+  {
+    "name": "delete-old-atlas-images",
+    "action": {
+      "type": "Delete"
+    },
+    "condition": {
+      "tagState": "any",
+      "olderThan": "14d"
+    }
+  },
+  {
+    "name": "keep-recent-atlas-images",
+    "action": {
+      "type": "Keep"
+    },
+    "mostRecentVersions": {
+      "keepCount": 3
+    }
+  }
+]

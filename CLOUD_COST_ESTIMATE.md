@@ -27,7 +27,7 @@ credit balance and expiration date during each cost review.
 | Cloud Run | One small private dashboard, scaling to zero | Usually within the monthly free allowance at owner-only traffic; usage above the allowance is metered |
 | Cloud Run Jobs | One manual daily job and one manual weekly job during validation | Usually negligible; jobs are not scheduled until separately approved |
 | Cloud Storage | Approximately 10-25 MB of private Atlas state initially | Less than one cent per month at current regional storage rates, excluding operations and transfer |
-| Artifact Registry | One small container image with old images cleaned up | First 0.5 GB is currently free; storage above that is metered |
+| Artifact Registry | Private dashboard images with conservative retention | Repository is 464.400 MB, just below the current 0.5 GB free allowance; a dry-run policy keeps three newest versions and considers only versions older than 14 days |
 | Cloud Build | Occasional small staging builds | Expected within the billing-account monthly free build-minute allowance |
 | Cloud Scheduler | Two jobs, initially paused | Currently within the first three jobs free per billing account; paused jobs still count |
 | Logging and Monitoring | Basic logs, one 10-minute uptime check from three regions, and two alert policies | Approximately 12,960 uptime executions per month, below the current one-million-execution project allowance; the Cloud Run job metric condition may add about `$0.10` per month |
@@ -36,6 +36,9 @@ credit balance and expiration date during each cost review.
 
 Automatic Artifact Registry vulnerability scanning is excluded from the first
 deployment because it can add a separate charge.
+
+The cleanup policy is observation-only. It cannot delete images unless its
+guarded script is rerun with explicit active-deletion approval.
 
 ## Monthly Scenarios
 

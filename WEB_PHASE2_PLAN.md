@@ -76,12 +76,17 @@ Completed foundation:
 - Paused daily and weekly Cloud Scheduler triggers.
 - A low-frequency public readiness check and owner email alerting for
   dashboard outages and Cloud Run job failures.
+- Guarded schedule controls require explicit recurring-execution approval and
+  verify job history plus monitoring before resume.
+- Artifact Registry retention is installed in dry-run mode, keeps the three
+  newest images, and does not currently delete anything.
 
 Remaining before completing authenticated cloud staging:
 
 - Complete a cross-device owner login test.
 - Perform a manual non-owner denial check; automated denial coverage passes.
 - Review one complete day of uptime and alert telemetry.
+- Review the Artifact Registry cleanup dry run before enabling deletion.
 - Activate schedules only after separate owner approval.
 - Complete staging deployment and security review before production.
 

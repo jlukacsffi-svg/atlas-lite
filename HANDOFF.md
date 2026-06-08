@@ -216,8 +216,13 @@ Secure web-platform direction:
   separate owner approval.
 - Cloud Monitoring now checks `/readyz` every ten minutes from three US
   regions and emails Joe for dashboard unavailability or a failed Atlas job.
+- Schedule control is now separately guarded: resume requires explicit cost
+  confirmation and recurring-execution approval, plus successful manual jobs
+  and configured monitoring.
+- Artifact Registry is 464.400 MB. Its retention policy is installed in
+  dry-run mode, keeps the three newest images, and currently deletes nothing.
 - Cross-device validation, manual non-owner validation, schedule activation,
-  and final staging review remain.
+  cleanup dry-run review, and final staging review remain.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation
   gate and now fails by design. Use `gcp_staging_status.ps1` for active staging.
 - Joe reported approximately `$300` of Google Cloud promotional credit and
@@ -244,6 +249,10 @@ Estimated overall Atlas program completion: 61%.
 - `WEB_PLATFORM_PLAN.md`: secure modern dashboard and multi-user platform plan.
 - `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
 - `GCP_STAGING_SETUP.md`: guarded Google Cloud staging setup and billing gate.
+- `scripts/gcp_set_schedules_staging.ps1`: guarded schedule status, pause, and
+  explicit resume workflow.
+- `scripts/gcp_configure_artifact_cleanup.ps1`: plan-first image-retention
+  setup that defaults to dry run.
 - `app/cloud_storage.py`: private durable artifact synchronization.
 - `app/backup_restore.py`: private backup creation, inspection, validation, and
   guarded restoration.

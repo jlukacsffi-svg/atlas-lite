@@ -45,6 +45,12 @@ spending, production deployment, or a changed architecture.
 - Dashboard instances remain at minimum `0` and maximum `1`.
 - Scheduled jobs use one task and conservative resource limits.
 - Scheduler triggers are created or updated, then left paused.
+- Schedule resume requires `-Apply -ConfirmCosts
+  -ApproveRecurringExecution` and verifies successful manual jobs plus active
+  monitoring before changing either trigger.
+- Artifact Registry cleanup defaults to dry-run mode, keeps the three newest
+  image versions, and only considers versions older than 14 days.
+- Active image deletion requires a separate `-ActivateDeletion` flag.
 - Container vulnerability scanning is disabled for the initial staging launch.
 - Schedules and optional paid features require separate approval.
 - Staging and production must use separate projects and budgets.
@@ -52,6 +58,12 @@ spending, production deployment, or a changed architecture.
 ## Cost Review
 
 The current estimate is maintained in `CLOUD_COST_ESTIMATE.md`.
+
+Current Artifact Registry status on June 8, 2026:
+
+- Repository size: `464.400 MB`.
+- Cleanup policy: installed in dry-run mode.
+- Deletion behavior: inactive; no images are deleted by the policy.
 
 For each deployment stage, record:
 

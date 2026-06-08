@@ -27,6 +27,11 @@ Current cloud status:
 - Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` exist and have each
   completed one successful manual execution.
 - Daily and weekly Cloud Scheduler triggers exist but remain paused.
+- Schedule changes use a dedicated guarded script; recurring execution cannot
+  be resumed without explicit cost and recurring-execution approval flags.
+- Artifact Registry is 464.400 MB and has a cleanup policy in dry-run mode.
+  The policy keeps the three newest images and observes images older than 14
+  days without deleting them.
 - Dashboard readiness and failed-job monitoring policies email
   `jlukacsffi@gmail.com`.
 
@@ -103,6 +108,29 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 
 This command changes nothing.
 
+To inspect, pause, or explicitly approve recurring schedules:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_set_schedules_staging.ps1 `
+  -ProjectId atlas-capital-research-stg `
+  -Action Status
+```
+
+`Resume` additionally requires `-Apply -ConfirmCosts
+-ApproveRecurringExecution`. Do not use it without Joe's separate approval.
+
+To preview the Artifact Registry retention policy:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_configure_artifact_cleanup.ps1 `
+  -ProjectId atlas-capital-research-stg
+```
+
+Adding `-Apply -ConfirmCosts` installs or refreshes the policy in dry-run mode.
+Deletion remains inactive unless `-ActivateDeletion` is also explicitly used.
+
 To verify the pre-activation gate, run:
 
 ```powershell
@@ -163,7 +191,8 @@ Next:
 2. Complete a cross-device owner login test.
 3. Perform a manual non-owner denial test.
 4. Obtain separate owner approval before resuming the paused schedules.
-5. Complete final staging security and cost review.
+5. Review Artifact Registry dry-run observations before considering cleanup.
+6. Complete final staging security and cost review.
 
 Public registration and customer accounts remain prohibited in Web Phase 2.
 

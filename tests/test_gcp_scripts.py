@@ -12,6 +12,8 @@ class GoogleCloudScriptTests(unittest.TestCase):
             root / "scripts" / "gcp_deploy_staging.ps1",
             root / "scripts" / "gcp_deploy_jobs_staging.ps1",
             root / "scripts" / "gcp_configure_monitoring_staging.ps1",
+            root / "scripts" / "gcp_configure_artifact_cleanup.ps1",
+            root / "scripts" / "gcp_set_schedules_staging.ps1",
             root / "scripts" / "gcp_staging_status.ps1",
             root / "scripts" / "gcp_disable_billing.ps1",
             root / "scripts" / "gcp_zero_cost_audit.ps1",
@@ -41,6 +43,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             "gcp_deploy_staging.ps1",
             "gcp_deploy_jobs_staging.ps1",
             "gcp_configure_monitoring_staging.ps1",
+            "gcp_configure_artifact_cleanup.ps1",
         ):
             content = (root / "scripts" / name).read_text(encoding="utf-8")
             self.assertIn("[switch]$Apply", content)
@@ -53,6 +56,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             "gcp_deploy_staging.ps1",
             "gcp_deploy_jobs_staging.ps1",
             "gcp_configure_monitoring_staging.ps1",
+            "gcp_configure_artifact_cleanup.ps1",
         ):
             content = (root / "scripts" / name).read_text(encoding="utf-8")
             self.assertIn("[switch]$ConfirmCosts", content)
@@ -122,6 +126,39 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("'run', 'jobs', 'executions', 'list'", content)
         self.assertIn("'monitoring', 'uptime', 'list-configs'", content)
         self.assertIn("'monitoring', 'policies', 'list'", content)
+        self.assertIn("'artifacts', 'docker', 'images', 'list'", content)
+        self.assertIn("Artifact image count:", content)
+        self.assertIn("'--format=value(cleanupPolicyDryRun)'", content)
+
+    def test_schedule_resume_requires_explicit_recurring_approval(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_set_schedules_staging.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("[switch]$ApproveRecurringExecution", content)
+        self.assertIn(
+            "-Apply -ConfirmCosts -ApproveRecurringExecution",
+            content,
+        )
+        self.assertIn("Latest execution for $job", content)
+        self.assertIn("Required staging monitoring", content)
+
+    def test_artifact_cleanup_defaults_to_dry_run_and_keeps_rollbacks(self):
+        root = Path(__file__).resolve().parent.parent
+        script = (
+            root / "scripts" / "gcp_configure_artifact_cleanup.ps1"
+        ).read_text(encoding="utf-8")
+        policy = (
+            root / "cloud" / "artifact_cleanup_policy.json"
+        ).read_text(encoding="utf-8")
+        self.assertIn("[switch]$ActivateDeletion", script)
+        self.assertIn("$arguments += '--dry-run'", script)
+        self.assertIn('"olderThan": "14d"', policy)
+        self.assertIn('"keepCount": 3', policy)
+        self.assertIn(
+            "Cleanup policy is configured in dry-run mode",
+            script,
+        )
 
     def test_oauth_secret_setup_never_prints_secret_values(self):
         root = Path(__file__).resolve().parent.parent

@@ -49,6 +49,25 @@ $repository = Get-GcloudValue @(
     "--location=$Region",
     '--format=value(name)'
 )
+$repositoryImageCount = Get-GcloudValue @(
+    'artifacts', 'docker', 'images', 'list',
+    "$Region-docker.pkg.dev/$ProjectId/atlas-containers",
+    "--project=$ProjectId",
+    "--format=value(version)"
+)
+$repositoryImageCount = if ($repositoryImageCount -in @(
+    'missing', 'not configured'
+)) {
+    $repositoryImageCount
+} else {
+    @($repositoryImageCount -split '\r?\n').Count
+}
+$cleanupDryRun = Get-GcloudValue @(
+    'artifacts', 'repositories', 'describe', 'atlas-containers',
+    "--project=$ProjectId",
+    "--location=$Region",
+    '--format=value(cleanupPolicyDryRun)'
+)
 $service = Get-GcloudValue @(
     'run', 'services', 'describe', 'atlas-dashboard-stg',
     "--project=$ProjectId",
@@ -112,6 +131,8 @@ Write-Host "  Project: $project"
 Write-Host "  Billing enabled: $billing"
 Write-Host "  Private bucket: $bucket"
 Write-Host "  Artifact repository: $repository"
+Write-Host "  Artifact image count: $repositoryImageCount"
+Write-Host "  Artifact cleanup dry run: $cleanupDryRun"
 Write-Host "  Dashboard service: $service"
 Write-Host "  Daily job: $dailyJob"
 Write-Host "  Daily schedule: $dailySchedule"
