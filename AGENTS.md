@@ -49,9 +49,9 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 - Do not enable public registration until authentication, privacy, backup, monitoring, and security controls are validated.
 - Read `CLOUD_COST_POLICY.md` before any cloud work.
 - Read `CLOUD_COST_ESTIMATE.md` before billing or deployment work.
-- Keep Google Cloud billing disabled until Joe verifies the credit balance and
-  expiration, reviews the estimate, and explicitly approves billing activation
-  and the `$10` monthly staging alert budget.
+- Google Cloud billing is linked only to the dedicated staging project, with a
+  `$10` monthly gross-usage alert budget. New billable services or materially
+  higher usage require a fresh estimate and explicit owner approval.
 - Never treat a cloud budget or free tier as a hard spending cap.
 - Do not run cloud scripts with `-Apply` or `-ConfirmCosts` without explicit
   owner approval for that paid deployment stage.
@@ -89,6 +89,9 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 - Run a local `backup_restore.py drill` before the first cloud deployment and a
   cloud-backed restoration drill before production.
 - Treat every user-owned record as tenant-scoped and test that users cannot access one another's data.
+- After every user-visible web change, reload Atlas in the in-app browser and
+  leave the updated page open for Joe to review. Show the working interface
+  instead of relying only on a written description.
 
 ## Development guidance
 
