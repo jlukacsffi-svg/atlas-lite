@@ -8,9 +8,10 @@ authority.
 
 Authentication, durable storage, backup restoration, and controlled-cost cloud
 foundations are implemented. The dashboard service is deployed behind
-owner-only Google OAuth. The first interactive owner login and final staging
-validation are in progress.
-Estimated Web Phase 2 completion: 90%.
+owner-only Google OAuth. Interactive owner login is working in the live
+staging service; cloud jobs, monitoring, cross-device testing, and final
+staging validation remain.
+Estimated Web Phase 2 completion: 94%.
 
 Completed foundation:
 
@@ -62,14 +63,21 @@ Completed foundation:
 - Automated tamper, path-traversal, unexpected-entry, and overwrite tests.
 - Successful isolated restoration drill against the current Atlas private
   state.
+- Successful live owner Google sign-in to the Cloud Run dashboard.
+- PKCE authorization-code protection with the verifier retained only in the
+  signed, five-minute OAuth state cookie.
+- Strict handling of Google's equivalent basic email-scope aliases without
+  globally relaxing OAuth scope validation.
+- Successful authenticated dashboard access after a fresh Cloud Run
+  redeployment.
 
 Remaining before completing authenticated cloud staging:
 
-- Complete the first interactive owner login.
-- Verify non-owner denial, logout, expiry, and redeployment.
+- Complete a cross-device owner login test.
+- Perform a manual non-owner denial check; automated denial coverage passes.
 - Configure scheduled Cloud Run jobs for daily and weekly Atlas execution.
 - Add centralized logs, uptime checks, and alerts.
-- Repeat the restoration drill against the first real Cloud Storage bundle.
+- Activate schedules only after reviewing expected monthly cost and alerting.
 - Complete staging deployment and security review before production.
 
 Current external gate:
@@ -78,8 +86,9 @@ Current external gate:
 - The `$10` budget tracks gross usage before promotional credits.
 - Private storage, Artifact Registry, a container image, and a scale-to-zero
   Cloud Run service exist.
-- No scheduled jobs are active and the current service returns `403`.
-- Follow `GCP_STAGING_SETUP.md` to complete owner sign-in deliberately.
+- No scheduled jobs are active.
+- The current service redirects unauthenticated users to Google and admits only
+  the configured owner after signed identity verification.
 
 ## Chosen Initial Architecture
 

@@ -232,14 +232,18 @@ incrementally.
 
 Current Web Phase 2 result:
 
-- Cloud billing remains disabled and no paid resources are active; a
-  minimal-cost staging direction is approved in principle.
+- Controlled billing is active with a `$10` gross-usage alert budget and a
+  target operating range of `$0-$5` per month.
 - Authentication, private artifact storage, guarded deployment, and
-  zero-cost controls are implemented.
+  controlled-cost safeguards are implemented.
 - A checksum-verified private backup and isolated restoration drill are
   implemented and passing.
-- The next gate is credit-expiration verification and explicit approval of the
-  `$10` monthly staging alert budget before actual hosting begins.
+- The owner-only Cloud Run dashboard is live and Google sign-in has completed
+  successfully.
+- The next gate is monitored daily and weekly cloud execution, followed by
+  cross-device and final staging validation.
+
+Estimated overall Atlas program completion: 60%.
 
 ## Current Recommended Sequence
 

@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-06-07
+Last updated: 2026-06-08
 
 ## Current Roadmap Position
 
@@ -150,7 +150,7 @@ Secure web-platform direction:
 - Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
 - Web development must not weaken the research engine or grant additional trading authority.
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
-- Web Phase 2 is approximately 90% complete in `app/web_cloud.py`,
+- Web Phase 2 is approximately 94% complete in `app/web_cloud.py`,
   `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
 - Cloud mode is fail-closed. The personal-project deployment uses Google OpenID
   Connect, an owner-email allowlist, signed short-lived sessions, and explicit
@@ -193,12 +193,20 @@ Secure web-platform direction:
   callback URI.
 - OAuth client credentials and the generated session key are stored in Secret
   Manager; temporary local credential material was deleted.
-- Cloud Run revision `atlas-dashboard-stg-00002-bwj` serves the OAuth-enabled
+- Cloud Run revision `atlas-dashboard-stg-00006-8d5` serves the OAuth-enabled
   dashboard at zero minimum and one service-level maximum instance.
 - Unauthenticated dashboard access redirects to Google, and `/readyz` returns
   ready without exposing private data.
-- The first interactive owner-login completion, monitoring, jobs, schedules,
-  and final staging validation remain.
+- The first interactive owner login completed successfully on June 8, 2026.
+  Google sign-in now establishes a signed owner session and opens the live
+  dashboard at
+  `https://atlas-dashboard-stg-851252682251.us-west1.run.app`.
+- OAuth uses PKCE, persists the verifier only in the signed short-lived state
+  cookie, and accepts only Google's equivalent basic email-scope aliases.
+- Automated tests cover non-owner denial, invalid state, nonce, issuer,
+  audience, unverified email, session tampering, expiry, and logout.
+- Monitoring, daily and weekly Cloud Run jobs, paused-to-active schedule
+  review, cross-device validation, and final staging review remain.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation
   gate and now fails by design. Use `gcp_staging_status.ps1` for active staging.
 - Joe reported approximately `$300` of Google Cloud promotional credit and
@@ -211,8 +219,10 @@ Secure web-platform direction:
   and refuses unapproved overwrites.
 - A local restoration drill passed, followed by a cloud pull restoration test
   of 197 files and 10,532,703 local bytes.
-- Authenticated redeployment, monitoring, scheduled jobs, and final staging
-  validation remain.
+- Authenticated redeployment is complete. Monitoring, scheduled jobs,
+  cross-device testing, and final staging validation remain.
+
+Estimated overall Atlas program completion: 60%.
 
 ## Useful Files
 

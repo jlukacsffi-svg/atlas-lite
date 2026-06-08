@@ -6,6 +6,7 @@ from http.cookies import SimpleCookie
 import hashlib
 import hmac
 import json
+import logging
 import os
 from pathlib import Path
 import secrets
@@ -24,6 +25,7 @@ OAUTH_STATE_COOKIE = "__Host-atlas_oauth_state"
 SESSION_COOKIE = "__Host-atlas_session"
 OAUTH_STATE_TTL_SECONDS = 300
 SESSION_TTL_SECONDS = 3600
+LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True)
@@ -142,12 +144,17 @@ class GoogleOIDCTokenVerifier:
 class GoogleOAuthClient:
     """Create Google authorization requests and exchange callback codes."""
 
-    scopes = ["openid", "email"]
+    email_scope = "https://www.googleapis.com/auth/userinfo.email"
+    scopes = [
+        "openid",
+        "email",
+        email_scope,
+    ]
 
     def __init__(self, settings):
         self.settings = settings
 
-    def _flow(self, state=None):
+    def _flow(self, state=None, code_verifier=None):
         try:
             from google_auth_oauthlib.flow import Flow
         except ImportError as exc:
@@ -166,24 +173,44 @@ class GoogleOAuthClient:
             client_config,
             scopes=self.scopes,
             state=state,
+            code_verifier=code_verifier,
+            autogenerate_code_verifier=code_verifier is None,
         )
         flow.redirect_uri = self.settings.oauth_redirect_uri
         return flow
 
     def authorization_url(self, state, nonce):
-        url, _ = self._flow(state=state).authorization_url(
+        flow = self._flow(state=state)
+        url, _ = flow.authorization_url(
             access_type="online",
             include_granted_scopes="true",
             login_hint=self.settings.owner_email,
             nonce=nonce,
             prompt="select_account",
         )
-        return url
+        return url, flow.code_verifier
 
-    def exchange_code(self, code, state):
-        flow = self._flow(state=state)
-        flow.fetch_token(code=code)
-        token = flow.credentials.id_token
+    def exchange_code(self, code, state, code_verifier):
+        flow = self._flow(state=state, code_verifier=code_verifier)
+        try:
+            flow.fetch_token(code=code)
+            token = flow.credentials.id_token
+        except Warning as exc:
+            granted_scopes = set(getattr(exc, "new_scope", ()))
+            permitted_scopes = set(self.scopes)
+            has_email = bool(
+                granted_scopes.intersection({"email", self.email_scope})
+            )
+            token_response = getattr(exc, "token", {})
+            if (
+                not granted_scopes
+                or not granted_scopes.issubset(permitted_scopes)
+                or "openid" not in granted_scopes
+                or not has_email
+                or not hasattr(token_response, "get")
+            ):
+                raise
+            token = token_response.get("id_token")
         if not token:
             raise ValueError("Google did not return an ID token")
         return token
@@ -317,21 +344,25 @@ class AtlasCloudApplication:
     def _start_google_login(self, start_response):
         state = self.token_factory(32)
         nonce = self.token_factory(32)
-        cookie_value = self._sign_payload(
-            {
-                "state": state,
-                "nonce": nonce,
-                "exp": int(self.clock()) + OAUTH_STATE_TTL_SECONDS,
-            }
-        )
         try:
-            location = self.oauth_client.authorization_url(state, nonce)
+            location, code_verifier = self.oauth_client.authorization_url(
+                state,
+                nonce,
+            )
         except Exception:
             return self._json_response(
                 start_response,
                 "503 Service Unavailable",
                 {"error": "authentication_unavailable"},
             )
+        cookie_value = self._sign_payload(
+            {
+                "state": state,
+                "nonce": nonce,
+                "code_verifier": code_verifier,
+                "exp": int(self.clock()) + OAUTH_STATE_TTL_SECONDS,
+            }
+        )
         return self._redirect(
             start_response,
             location,
@@ -367,12 +398,24 @@ class AtlasCloudApplication:
             raw_id_token = self.oauth_client.exchange_code(
                 code,
                 returned_state,
+                str(pending.get("code_verifier", "")),
             )
+        except Exception as exc:
+            LOGGER.warning(
+                "Google OAuth token exchange failed: %s",
+                type(exc).__name__,
+            )
+            return self._oauth_error(start_response, "invalid_google_identity")
+        try:
             claims = self.oidc_verifier(
                 raw_id_token,
                 self.settings.google_client_id,
             )
-        except Exception:
+        except Exception as exc:
+            LOGGER.warning(
+                "Google OAuth ID token verification failed: %s",
+                type(exc).__name__,
+            )
             return self._oauth_error(start_response, "invalid_google_identity")
         issuer = str(claims.get("iss", ""))
         email = str(claims.get("email", "")).lower()

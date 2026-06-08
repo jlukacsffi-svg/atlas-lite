@@ -10,6 +10,7 @@ from app.web_cloud import (
     AtlasCloudApplication,
     CloudWebSettings,
     GOOGLE_ISSUERS,
+    GoogleOAuthClient,
     IAP_ISSUER,
     OAUTH_STATE_COOKIE,
     SESSION_COOKIE,
@@ -75,11 +76,64 @@ class StubOAuthClient:
 
     def authorization_url(self, state, nonce):
         self.authorization = (state, nonce)
-        return f"https://accounts.google.com/o/oauth2/auth?state={state}"
+        return (
+            f"https://accounts.google.com/o/oauth2/auth?state={state}",
+            "pkce-verifier",
+        )
 
-    def exchange_code(self, code, state):
-        self.exchange = (code, state)
+    def exchange_code(self, code, state, code_verifier):
+        self.exchange = (code, state, code_verifier)
         return self.id_token
+
+
+class StubTokenResponse(dict):
+    pass
+
+
+class StubOAuthFlow:
+    def __init__(self, warning=None, id_token="google-id-token"):
+        self.warning = warning
+        self.credentials = type(
+            "Credentials",
+            (),
+            {"id_token": id_token},
+        )()
+
+    def fetch_token(self, code):
+        if self.warning:
+            raise self.warning
+
+
+class StubGoogleOAuthClient(GoogleOAuthClient):
+    def __init__(self, flow):
+        self.flow = flow
+
+    def _flow(self, state=None, code_verifier=None):
+        return self.flow
+
+
+class GoogleOAuthClientTests(unittest.TestCase):
+    def test_exchange_accepts_google_email_scope_alias_reduction(self):
+        warning = Warning("Equivalent Google email scopes")
+        warning.new_scope = {
+            "openid",
+            "https://www.googleapis.com/auth/userinfo.email",
+        }
+        warning.token = StubTokenResponse(id_token="signed-id-token")
+        client = StubGoogleOAuthClient(StubOAuthFlow(warning=warning))
+
+        token = client.exchange_code("code", "state", "verifier")
+
+        self.assertEqual(token, "signed-id-token")
+
+    def test_exchange_rejects_unexpected_scope_changes(self):
+        warning = Warning("Unexpected scope")
+        warning.new_scope = {"openid", "https://www.googleapis.com/auth/drive"}
+        warning.token = StubTokenResponse(id_token="signed-id-token")
+        client = StubGoogleOAuthClient(StubOAuthFlow(warning=warning))
+
+        with self.assertRaises(Warning):
+            client.exchange_code("code", "state", "verifier")
 
 
 class CloudWebSettingsTests(unittest.TestCase):
@@ -411,7 +465,10 @@ class CloudWebApplicationTests(unittest.TestCase):
         )
         self.assertEqual(response["status"], "302 Found")
         self.assertEqual(response["headers"]["Location"], "/")
-        self.assertEqual(oauth_client.exchange, ("auth-code", "random-token"))
+        self.assertEqual(
+            oauth_client.exchange,
+            ("auth-code", "random-token", "pkce-verifier"),
+        )
         self.assertEqual(observed["token"], "google-id-token")
         self.assertEqual(observed["audience"], "client-id")
         session_cookie = response_cookies(response)[SESSION_COOKIE]
