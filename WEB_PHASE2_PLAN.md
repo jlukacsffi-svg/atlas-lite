@@ -12,7 +12,7 @@ owner-only Google OAuth. Interactive owner login is working in the live
 staging service; cloud jobs, monitoring, cross-device testing, and final
 staging validation remain. Daily and weekly jobs are deployed and manually
 validated, while their recurring triggers remain paused.
-Estimated Web Phase 2 completion: 97%.
+Estimated Web Phase 2 completion: 98%.
 
 Completed foundation:
 
@@ -80,6 +80,9 @@ Completed foundation:
   verify job history plus monitoring before resume.
 - Artifact Registry retention is installed in dry-run mode, keeps the three
   newest images, and does not currently delete anything.
+- A read-only staging readiness audit checks 24 security, identity, scaling,
+  storage, job, schedule, monitoring, and retention controls. All automated
+  checks passed on June 8, 2026.
 
 Remaining before completing authenticated cloud staging:
 
@@ -88,7 +91,7 @@ Remaining before completing authenticated cloud staging:
 - Review one complete day of uptime and alert telemetry.
 - Review the Artifact Registry cleanup dry run before enabling deletion.
 - Activate schedules only after separate owner approval.
-- Complete staging deployment and security review before production.
+- Complete the remaining manual staging security review before production.
 
 Current external gate:
 

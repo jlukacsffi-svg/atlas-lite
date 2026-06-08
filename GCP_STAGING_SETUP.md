@@ -108,6 +108,24 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 
 This command changes nothing.
 
+Run the deeper final-staging audit with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_staging_readiness.ps1
+```
+
+This command is also read-only. It checks dashboard readiness and scale limits,
+OAuth and Secret Manager configuration, dedicated service accounts, bucket
+privacy and least-privilege roles, absence of the project `Editor` role, job
+limits and successful executions, paused schedules, monitoring, and
+non-destructive image retention. On June 8, 2026, all 24 automated checks
+passed.
+
+The audit intentionally does not mark the manual cross-device login,
+non-owner denial, one-day telemetry review, or schedule approval gates as
+complete.
+
 To inspect, pause, or explicitly approve recurring schedules:
 
 ```powershell

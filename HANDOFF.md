@@ -150,7 +150,7 @@ Secure web-platform direction:
 - Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
 - Web development must not weaken the research engine or grant additional trading authority.
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
-- Web Phase 2 is approximately 97% complete in `app/web_cloud.py`,
+- Web Phase 2 is approximately 98% complete in `app/web_cloud.py`,
   `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
 - Cloud mode is fail-closed. The personal-project deployment uses Google OpenID
   Connect, an owner-email allowlist, signed short-lived sessions, and explicit
@@ -221,6 +221,8 @@ Secure web-platform direction:
   and configured monitoring.
 - Artifact Registry is 464.400 MB. Its retention policy is installed in
   dry-run mode, keeps the three newest images, and currently deletes nothing.
+- `scripts/gcp_staging_readiness.ps1` passed all 24 automated cloud security,
+  identity, scaling, storage, job, schedule, monitoring, and retention checks.
 - Cross-device validation, manual non-owner validation, schedule activation,
   cleanup dry-run review, and final staging review remain.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation
@@ -253,6 +255,8 @@ Estimated overall Atlas program completion: 61%.
   explicit resume workflow.
 - `scripts/gcp_configure_artifact_cleanup.ps1`: plan-first image-retention
   setup that defaults to dry run.
+- `scripts/gcp_staging_readiness.ps1`: read-only final-staging audit with
+  explicit manual validation gates.
 - `app/cloud_storage.py`: private durable artifact synchronization.
 - `app/backup_restore.py`: private backup creation, inspection, validation, and
   guarded restoration.

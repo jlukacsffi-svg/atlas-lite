@@ -14,6 +14,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             root / "scripts" / "gcp_configure_monitoring_staging.ps1",
             root / "scripts" / "gcp_configure_artifact_cleanup.ps1",
             root / "scripts" / "gcp_set_schedules_staging.ps1",
+            root / "scripts" / "gcp_staging_readiness.ps1",
             root / "scripts" / "gcp_staging_status.ps1",
             root / "scripts" / "gcp_disable_billing.ps1",
             root / "scripts" / "gcp_zero_cost_audit.ps1",
@@ -159,6 +160,27 @@ class GoogleCloudScriptTests(unittest.TestCase):
             "Cleanup policy is configured in dry-run mode",
             script,
         )
+
+    def test_staging_readiness_is_read_only_and_preserves_manual_gates(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_staging_readiness.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Mode: READ ONLY", content)
+        self.assertIn("No project Editor role", content)
+        self.assertIn("Artifact cleanup is non-destructive", content)
+        self.assertIn("Cross-device owner login", content)
+        self.assertIn("Non-owner Google account denial", content)
+        self.assertIn("Separate owner approval before schedule resume", content)
+        for mutation in (
+            "'deploy'",
+            "'update'",
+            "'resume'",
+            "'create'",
+            "'delete'",
+            "'set-iam-policy'",
+        ):
+            self.assertNotIn(mutation, content)
 
     def test_oauth_secret_setup_never_prints_secret_values(self):
         root = Path(__file__).resolve().parent.parent
