@@ -10,6 +10,7 @@ import logging
 import os
 from pathlib import Path
 import secrets
+import threading
 import time
 from urllib.parse import parse_qs, unquote
 
@@ -589,6 +590,53 @@ class AtlasCloudApplication:
                 )
             )
         return headers
+
+
+class RefreshingDashboardDataService:
+    """Refresh cloud artifacts periodically while retaining last-known data."""
+
+    def __init__(
+        self,
+        data_service,
+        refresh,
+        interval_seconds=60,
+        clock=None,
+    ):
+        self.data_service = data_service
+        self.refresh = refresh
+        self.interval_seconds = interval_seconds
+        self.clock = clock or time.monotonic
+        self.last_attempt = self.clock()
+        self.lock = threading.Lock()
+
+    def build(self):
+        self._refresh_if_due()
+        return self.data_service.build()
+
+    def _latest_snapshot(self):
+        self._refresh_if_due()
+        return self.data_service._latest_snapshot()
+
+    def _refresh_if_due(self):
+        now = self.clock()
+        if now - self.last_attempt < self.interval_seconds:
+            return
+        with self.lock:
+            now = self.clock()
+            if now - self.last_attempt < self.interval_seconds:
+                return
+            self.last_attempt = now
+            try:
+                downloaded = self.refresh()
+                LOGGER.info(
+                    "Refreshed %d private cloud artifacts",
+                    len(downloaded),
+                )
+            except Exception as exc:
+                LOGGER.warning(
+                    "Cloud artifact refresh failed; serving last-known data: %s",
+                    type(exc).__name__,
+                )
 
 
 def data_service_from_environment():

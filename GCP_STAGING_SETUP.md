@@ -23,9 +23,12 @@ Current cloud status:
 - The first dashboard container image was built successfully.
 - Cloud Run service `atlas-dashboard-stg` exists with zero minimum instances
   and one maximum instance.
-- The service currently returns `403` to unauthenticated requests and remains
-  intentionally dark until application-level Google OAuth is configured.
-- No Cloud Run jobs or schedules are active.
+- Owner-only Google OAuth is working on the live dashboard.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` exist and have each
+  completed one successful manual execution.
+- Daily and weekly Cloud Scheduler triggers exist but remain paused.
+- Dashboard readiness and failed-job monitoring policies email
+  `jlukacsffi@gmail.com`.
 
 The controlling policy is `CLOUD_COST_POLICY.md`. Any additional deployment
 still requires plan review plus `-Apply -ConfirmCosts`.
@@ -156,16 +159,11 @@ Completed:
 
 Next:
 
-1. Complete the one-time owner sign-in setup above.
-2. Review `gcp_deploy_staging.ps1` in plan-only mode.
-3. Deploy application-level OAuth with `-Apply -ConfirmCosts`.
-4. Verify Joe can sign in and a different Google account cannot.
-5. Verify signed-session expiry, logout, health, readiness, and private data.
-6. Deploy daily and weekly Cloud Run jobs with
-   `gcp_deploy_jobs_staging.ps1`.
-7. Execute each job manually once.
-8. Obtain separate owner approval before resuming the paused schedules.
-9. Configure monitoring and repeat restoration against the cloud bundle.
+1. Review one complete day of uptime and alert telemetry.
+2. Complete a cross-device owner login test.
+3. Perform a manual non-owner denial test.
+4. Obtain separate owner approval before resuming the paused schedules.
+5. Complete final staging security and cost review.
 
 Public registration and customer accounts remain prohibited in Web Phase 2.
 

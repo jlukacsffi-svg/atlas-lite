@@ -11,6 +11,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             root / "scripts" / "gcp_configure_oauth_secrets.ps1",
             root / "scripts" / "gcp_deploy_staging.ps1",
             root / "scripts" / "gcp_deploy_jobs_staging.ps1",
+            root / "scripts" / "gcp_configure_monitoring_staging.ps1",
             root / "scripts" / "gcp_staging_status.ps1",
             root / "scripts" / "gcp_disable_billing.ps1",
             root / "scripts" / "gcp_zero_cost_audit.ps1",
@@ -39,6 +40,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             "gcp_bootstrap_staging.ps1",
             "gcp_deploy_staging.ps1",
             "gcp_deploy_jobs_staging.ps1",
+            "gcp_configure_monitoring_staging.ps1",
         ):
             content = (root / "scripts" / name).read_text(encoding="utf-8")
             self.assertIn("[switch]$Apply", content)
@@ -50,6 +52,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             "gcp_bootstrap_staging.ps1",
             "gcp_deploy_staging.ps1",
             "gcp_deploy_jobs_staging.ps1",
+            "gcp_configure_monitoring_staging.ps1",
         ):
             content = (root / "scripts" / name).read_text(encoding="utf-8")
             self.assertIn("[switch]$ConfirmCosts", content)
@@ -62,6 +65,11 @@ class GoogleCloudScriptTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn("'scheduler', 'jobs', 'pause'", content)
         self.assertIn("separate owner approval", content)
+        self.assertIn("$previousErrorAction = $ErrorActionPreference", content)
+        self.assertIn(
+            "$ErrorActionPreference = 'SilentlyContinue'",
+            content,
+        )
 
     def test_dashboard_build_uses_purpose_built_cloud_build_role(self):
         root = Path(__file__).resolve().parent.parent
@@ -91,6 +99,29 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("atlas-google-oauth-client-id", content)
         self.assertIn("atlas-google-oauth-client-secret", content)
         self.assertIn("atlas-session-secret", content)
+
+    def test_monitoring_uses_low_frequency_checks_and_owner_alerts(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_configure_monitoring_staging.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("'--period=10'", content)
+        self.assertIn("'--regions=usa-oregon,usa-iowa,usa-virginia'", content)
+        self.assertIn("Atlas dashboard unavailable", content)
+        self.assertIn("Atlas cloud job failed", content)
+        self.assertIn("notificationChannels", content)
+        self.assertIn("email_address = $OwnerEmail", content)
+        self.assertIn("$0-$0.10 per month", content)
+
+    def test_staging_status_includes_jobs_schedules_and_monitoring(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_staging_status.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("'scheduler', 'jobs', 'describe'", content)
+        self.assertIn("'run', 'jobs', 'executions', 'list'", content)
+        self.assertIn("'monitoring', 'uptime', 'list-configs'", content)
+        self.assertIn("'monitoring', 'policies', 'list'", content)
 
     def test_oauth_secret_setup_never_prints_secret_values(self):
         root = Path(__file__).resolve().parent.parent

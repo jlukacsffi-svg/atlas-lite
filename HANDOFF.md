@@ -150,7 +150,7 @@ Secure web-platform direction:
 - Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
 - Web development must not weaken the research engine or grant additional trading authority.
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
-- Web Phase 2 is approximately 94% complete in `app/web_cloud.py`,
+- Web Phase 2 is approximately 97% complete in `app/web_cloud.py`,
   `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
 - Cloud mode is fail-closed. The personal-project deployment uses Google OpenID
   Connect, an owner-email allowlist, signed short-lived sessions, and explicit
@@ -193,7 +193,7 @@ Secure web-platform direction:
   callback URI.
 - OAuth client credentials and the generated session key are stored in Secret
   Manager; temporary local credential material was deleted.
-- Cloud Run revision `atlas-dashboard-stg-00006-8d5` serves the OAuth-enabled
+- Cloud Run revision `atlas-dashboard-stg-00007-r8c` serves the OAuth-enabled
   dashboard at zero minimum and one service-level maximum instance.
 - Unauthenticated dashboard access redirects to Google, and `/readyz` returns
   ready without exposing private data.
@@ -203,10 +203,21 @@ Secure web-platform direction:
   `https://atlas-dashboard-stg-851252682251.us-west1.run.app`.
 - OAuth uses PKCE, persists the verifier only in the signed short-lived state
   cookie, and accepts only Google's equivalent basic email-scope aliases.
+- The dashboard refreshes the private Cloud Storage bundle on a throttled
+  interval and serves last-known data if a refresh fails.
 - Automated tests cover non-owner denial, invalid state, nonce, issuer,
   audience, unverified email, session tampering, expiry, and logout.
-- Monitoring, daily and weekly Cloud Run jobs, paused-to-active schedule
-  review, cross-device validation, and final staging review remain.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` are deployed.
+- Manual daily execution `atlas-daily-stg-zvt5n` completed successfully in
+  3 minutes 42 seconds and published a new private manifest.
+- Manual weekly execution `atlas-weekly-stg-wnqhc` completed successfully in
+  34 seconds and published a new private manifest.
+- Daily and weekly Cloud Scheduler triggers exist and remain paused pending
+  separate owner approval.
+- Cloud Monitoring now checks `/readyz` every ten minutes from three US
+  regions and emails Joe for dashboard unavailability or a failed Atlas job.
+- Cross-device validation, manual non-owner validation, schedule activation,
+  and final staging review remain.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation
   gate and now fails by design. Use `gcp_staging_status.ps1` for active staging.
 - Joe reported approximately `$300` of Google Cloud promotional credit and
@@ -219,10 +230,11 @@ Secure web-platform direction:
   and refuses unapproved overwrites.
 - A local restoration drill passed, followed by a cloud pull restoration test
   of 197 files and 10,532,703 local bytes.
-- Authenticated redeployment is complete. Monitoring, scheduled jobs,
-  cross-device testing, and final staging validation remain.
+- Authenticated redeployment, manual cloud job validation, and monitoring are
+  complete. Schedule activation, cross-device testing, and final staging
+  validation remain.
 
-Estimated overall Atlas program completion: 60%.
+Estimated overall Atlas program completion: 61%.
 
 ## Useful Files
 

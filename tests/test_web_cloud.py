@@ -13,6 +13,7 @@ from app.web_cloud import (
     GoogleOAuthClient,
     IAP_ISSUER,
     OAUTH_STATE_COOKIE,
+    RefreshingDashboardDataService,
     SESSION_COOKIE,
     data_service_from_environment,
 )
@@ -27,6 +28,44 @@ class StubDataService:
 
     def build(self):
         return {"generated_at": "2026-06-07T08:00:00", "overview": {}}
+
+
+class RefreshingDashboardDataServiceTests(unittest.TestCase):
+    def test_refreshes_only_after_interval(self):
+        clock = [100.0]
+        refreshes = []
+        service = RefreshingDashboardDataService(
+            StubDataService(),
+            lambda: refreshes.append("refresh") or ["artifact"],
+            interval_seconds=60,
+            clock=lambda: clock[0],
+        )
+
+        service.build()
+        clock[0] = 159.0
+        service.build()
+        clock[0] = 160.0
+        service.build()
+
+        self.assertEqual(refreshes, ["refresh"])
+
+    def test_refresh_failure_serves_last_known_data(self):
+        clock = [100.0]
+
+        def fail_refresh():
+            raise RuntimeError("network unavailable")
+
+        service = RefreshingDashboardDataService(
+            StubDataService(),
+            fail_refresh,
+            interval_seconds=60,
+            clock=lambda: clock[0],
+        )
+        clock[0] = 160.0
+
+        data = service.build()
+
+        self.assertEqual(data["generated_at"], "2026-06-07T08:00:00")
 
 
 def call_wsgi(

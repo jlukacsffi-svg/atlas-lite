@@ -5,7 +5,12 @@ import os
 import sys
 
 from app.cloud_storage import sync_from_environment
-from app.web_cloud import CloudWebSettings, create_application
+from app.web_cloud import (
+    CloudWebSettings,
+    RefreshingDashboardDataService,
+    create_application,
+    data_service_from_environment,
+)
 
 
 def main():
@@ -26,9 +31,15 @@ def main():
     if settings.mode == "cloud":
         downloaded = sync_from_environment("pull")
         print(f"[cloud-storage] Loaded {len(downloaded)} private artifacts")
+    data_service = data_service_from_environment()
+    if settings.mode == "cloud":
+        data_service = RefreshingDashboardDataService(
+            data_service,
+            lambda: sync_from_environment("pull"),
+        )
     print(f"[web] Atlas {settings.mode} dashboard listening on {host}:{port}")
     serve(
-        create_application(settings=settings),
+        create_application(settings=settings, data_service=data_service),
         host=host,
         port=port,
         threads=4,

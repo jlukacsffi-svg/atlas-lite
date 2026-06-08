@@ -10,8 +10,9 @@ Authentication, durable storage, backup restoration, and controlled-cost cloud
 foundations are implemented. The dashboard service is deployed behind
 owner-only Google OAuth. Interactive owner login is working in the live
 staging service; cloud jobs, monitoring, cross-device testing, and final
-staging validation remain.
-Estimated Web Phase 2 completion: 94%.
+staging validation remain. Daily and weekly jobs are deployed and manually
+validated, while their recurring triggers remain paused.
+Estimated Web Phase 2 completion: 97%.
 
 Completed foundation:
 
@@ -70,14 +71,18 @@ Completed foundation:
   globally relaxing OAuth scope validation.
 - Successful authenticated dashboard access after a fresh Cloud Run
   redeployment.
+- Throttled cloud-artifact refresh with last-known-data fallback.
+- Successful manual daily and weekly Cloud Run job executions.
+- Paused daily and weekly Cloud Scheduler triggers.
+- A low-frequency public readiness check and owner email alerting for
+  dashboard outages and Cloud Run job failures.
 
 Remaining before completing authenticated cloud staging:
 
 - Complete a cross-device owner login test.
 - Perform a manual non-owner denial check; automated denial coverage passes.
-- Configure scheduled Cloud Run jobs for daily and weekly Atlas execution.
-- Add centralized logs, uptime checks, and alerts.
-- Activate schedules only after reviewing expected monthly cost and alerting.
+- Review one complete day of uptime and alert telemetry.
+- Activate schedules only after separate owner approval.
 - Complete staging deployment and security review before production.
 
 Current external gate:
@@ -87,6 +92,9 @@ Current external gate:
 - Private storage, Artifact Registry, a container image, and a scale-to-zero
   Cloud Run service exist.
 - No scheduled jobs are active.
+- Daily and weekly jobs exist and have each completed one successful manual
+  execution.
+- Monitoring and owner email notification policies are active.
 - The current service redirects unauthenticated users to Google and admits only
   the configured owner after signed identity verification.
 

@@ -67,6 +67,44 @@ $weeklyJob = Get-GcloudValue @(
     "--region=$Region",
     '--format=value(metadata.name)'
 )
+$dailySchedule = Get-GcloudValue @(
+    'scheduler', 'jobs', 'describe', 'atlas-daily-stg',
+    "--project=$ProjectId",
+    "--location=$Region",
+    '--format=value(state)'
+)
+$weeklySchedule = Get-GcloudValue @(
+    'scheduler', 'jobs', 'describe', 'atlas-weekly-stg',
+    "--project=$ProjectId",
+    "--location=$Region",
+    '--format=value(state)'
+)
+$dailyExecution = Get-GcloudValue @(
+    'run', 'jobs', 'executions', 'list',
+    '--job=atlas-daily-stg',
+    "--project=$ProjectId",
+    "--region=$Region",
+    '--limit=1',
+    '--format=value(metadata.name,status.completionTime,status.succeededCount,status.failedCount)'
+)
+$weeklyExecution = Get-GcloudValue @(
+    'run', 'jobs', 'executions', 'list',
+    '--job=atlas-weekly-stg',
+    "--project=$ProjectId",
+    "--region=$Region",
+    '--limit=1',
+    '--format=value(metadata.name,status.completionTime,status.succeededCount,status.failedCount)'
+)
+$uptimeChecks = Get-GcloudValue @(
+    'monitoring', 'uptime', 'list-configs',
+    "--project=$ProjectId",
+    '--format=value(displayName)'
+)
+$alertPolicies = Get-GcloudValue @(
+    'monitoring', 'policies', 'list',
+    "--project=$ProjectId",
+    '--format=value(displayName)'
+)
 
 Write-Host 'Atlas Google Cloud staging status'
 Write-Host "  Account: $account"
@@ -76,7 +114,13 @@ Write-Host "  Private bucket: $bucket"
 Write-Host "  Artifact repository: $repository"
 Write-Host "  Dashboard service: $service"
 Write-Host "  Daily job: $dailyJob"
+Write-Host "  Daily schedule: $dailySchedule"
+Write-Host "  Latest daily execution: $dailyExecution"
 Write-Host "  Weekly job: $weeklyJob"
+Write-Host "  Weekly schedule: $weeklySchedule"
+Write-Host "  Latest weekly execution: $weeklyExecution"
+Write-Host "  Uptime checks: $uptimeChecks"
+Write-Host "  Alert policies: $alertPolicies"
 if ($billing -eq 'True') {
     Write-Warning 'Billing is enabled. Review CLOUD_COST_POLICY.md before continuing.'
 }

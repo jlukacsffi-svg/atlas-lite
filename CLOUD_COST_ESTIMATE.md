@@ -1,6 +1,6 @@
 # Atlas Staging Cloud Cost Estimate
 
-Estimate date: June 7, 2026
+Estimate date: June 8, 2026
 
 This estimate covers the private, owner-only Atlas staging deployment in
 `us-west1`. The initial foundation has been explicitly authorized and created;
@@ -30,7 +30,7 @@ credit balance and expiration date during each cost review.
 | Artifact Registry | One small container image with old images cleaned up | First 0.5 GB is currently free; storage above that is metered |
 | Cloud Build | Occasional small staging builds | Expected within the billing-account monthly free build-minute allowance |
 | Cloud Scheduler | Two jobs, initially paused | Currently within the first three jobs free per billing account; paused jobs still count |
-| Logging and Monitoring | Basic staging logs and health signals | Expected to be small; verbose logging and long retention can create charges |
+| Logging and Monitoring | Basic logs, one 10-minute uptime check from three regions, and two alert policies | Approximately 12,960 uptime executions per month, below the current one-million-execution project allowance; the Cloud Run job metric condition may add about `$0.10` per month |
 | Google OAuth and IAM | Owner-only authentication and authorization | No meaningful usage charge expected for this design |
 | Secret Manager | Three small OAuth/session secrets | Small metered storage/access cost may apply; expected within the free allowance at this scale |
 

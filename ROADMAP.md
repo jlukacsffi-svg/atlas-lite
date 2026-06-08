@@ -240,10 +240,12 @@ Current Web Phase 2 result:
   implemented and passing.
 - The owner-only Cloud Run dashboard is live and Google sign-in has completed
   successfully.
-- The next gate is monitored daily and weekly cloud execution, followed by
-  cross-device and final staging validation.
+- Daily and weekly Cloud Run jobs have completed successful manual executions.
+- Dashboard readiness and failed-job alerting are active.
+- The next gate is separate approval to activate the paused schedules,
+  followed by cross-device and final staging validation.
 
-Estimated overall Atlas program completion: 60%.
+Estimated overall Atlas program completion: 61%.
 
 ## Current Recommended Sequence
 

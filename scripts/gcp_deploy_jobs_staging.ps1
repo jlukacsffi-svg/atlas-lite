@@ -52,8 +52,14 @@ function Test-GcloudResource {
     if (-not $Apply) {
         return $false
     }
-    & $Gcloud @Arguments *> $null
-    return $LASTEXITCODE -eq 0
+    $previousErrorAction = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'SilentlyContinue'
+        & $Gcloud @Arguments *> $null
+        return $LASTEXITCODE -eq 0
+    } finally {
+        $ErrorActionPreference = $previousErrorAction
+    }
 }
 
 Write-Host "Atlas staging scheduled jobs"
