@@ -80,9 +80,13 @@ Completed foundation:
   verify job history plus monitoring before resume.
 - Artifact Registry retention is installed in dry-run mode, keeps the three
   newest images, and does not currently delete anything.
-- A read-only staging readiness audit checks 24 security, identity, scaling,
-  storage, job, schedule, monitoring, and retention controls. All automated
-  checks passed on June 8, 2026.
+- A read-only staging readiness audit checks 25 security, identity, scaling,
+  storage, job, schedule, monitoring, and retention controls.
+- Preliminary monitoring found no Cloud Run error logs but exposed regional
+  probe noise under a 10-second scale-to-zero cold-start timeout. The timeout
+  is now 30 seconds at the same ten-minute frequency.
+- The live sidebar identifies the hosted environment as `Secure owner cloud`
+  and exposes a session sign-out link.
 
 Remaining before completing authenticated cloud staging:
 

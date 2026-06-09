@@ -21,6 +21,7 @@ $UptimeDisplayName = 'Atlas dashboard readiness'
 $ChannelDisplayName = 'Atlas staging alerts'
 $DashboardPolicyName = 'Atlas dashboard unavailable'
 $JobPolicyName = 'Atlas cloud job failed'
+$UptimeTimeoutSeconds = 30
 
 if (-not (Test-Path $Gcloud)) {
     throw 'Google Cloud CLI is not installed.'
@@ -143,7 +144,7 @@ if (-not $Apply) {
         '--matcher-content=ready',
         '--matcher-type=contains-string',
         '--period=10',
-        '--timeout=10',
+        "--timeout=$UptimeTimeoutSeconds",
         '--regions=usa-oregon,usa-iowa,usa-virginia',
         '--user-labels=environment=staging,service=atlas-dashboard'
     )
@@ -191,7 +192,7 @@ if (-not $uptime) {
         '--matcher-content=ready',
         '--matcher-type=contains-string',
         '--period=10',
-        '--timeout=10',
+        "--timeout=$UptimeTimeoutSeconds",
         '--regions=usa-oregon,usa-iowa,usa-virginia',
         '--user-labels=environment=staging,service=atlas-dashboard'
     )
@@ -201,7 +202,13 @@ if (-not $uptime) {
         $_.displayName -eq $UptimeDisplayName
     } | Select-Object -First 1
 } else {
-    Write-Host '[ok] Dashboard readiness uptime check already exists.'
+    $checkId = ($uptime.name -split '/')[-1]
+    Invoke-Gcloud @(
+        'monitoring', 'uptime', 'update', $checkId,
+        "--project=$ProjectId",
+        "--timeout=$UptimeTimeoutSeconds"
+    )
+    Write-Host "[ok] Dashboard readiness uptime check uses a ${UptimeTimeoutSeconds}-second timeout."
 }
 if (-not $uptime) {
     throw 'Dashboard readiness uptime check could not be resolved.'

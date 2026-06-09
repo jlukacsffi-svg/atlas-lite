@@ -87,6 +87,18 @@ nav { display: grid; gap: 4px; }
   color: var(--nav-muted);
   font-size: 12px;
 }
+
+.sign-out {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin-top: 12px;
+  text-decoration: none;
+}
+
+.sign-out:hover,
+.sign-out:focus-visible {
+  color: var(--text);
+}
 .status-dot {
   width: 8px;
   height: 8px;

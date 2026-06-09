@@ -1,6 +1,14 @@
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 
+function renderEnvironment() {
+  const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
+  const cloud = !localHosts.has(window.location.hostname);
+  document.getElementById("workspace-status").textContent =
+    cloud ? "Secure owner cloud" : "Local read-only workspace";
+  document.getElementById("sign-out").hidden = !cloud;
+}
+
 function signed(value, suffix = "%") {
   if (value === null || value === undefined) return "--";
   return `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}${suffix}`;
@@ -173,4 +181,5 @@ async function loadDashboard() {
 }
 
 document.getElementById("refresh").addEventListener("click", loadDashboard);
+renderEnvironment();
 loadDashboard();

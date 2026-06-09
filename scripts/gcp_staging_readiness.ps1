@@ -185,11 +185,17 @@ Add-Check 'Artifact rollback retention' `
     'three recent images are kept'
 
 $uptimeNames = @($uptimeChecks | ForEach-Object { $_.displayName })
+$dashboardUptime = @($uptimeChecks | Where-Object {
+    $_.displayName -eq 'Atlas dashboard readiness'
+}) | Select-Object -First 1
 $policyNames = @($alertPolicies | Where-Object { $_.enabled -ne $false } |
     ForEach-Object { $_.displayName })
 Add-Check 'Dashboard uptime monitoring' `
     ($uptimeNames -contains 'Atlas dashboard readiness') `
     'ten-minute readiness monitoring is configured'
+Add-Check 'Cold-start monitoring tolerance' `
+    ($dashboardUptime.timeout -eq '30s') `
+    "timeout=$($dashboardUptime.timeout)"
 Add-Check 'Required alert policies' `
     ($policyNames -contains 'Atlas dashboard unavailable' -and
      $policyNames -contains 'Atlas cloud job failed') `

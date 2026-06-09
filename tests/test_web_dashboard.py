@@ -79,6 +79,16 @@ class WebDashboardTests(unittest.TestCase):
     def test_static_routes_are_explicit_and_read_only(self):
         self.assertEqual(set(STATIC_FILES), {"/", "/index.html", "/styles.css", "/app.js"})
 
+    def test_browser_labels_local_and_cloud_environments(self):
+        root = Path(__file__).resolve().parent.parent
+        html = (root / "web" / "index.html").read_text(encoding="utf-8")
+        script = (root / "web" / "app.js").read_text(encoding="utf-8")
+        self.assertIn('id="workspace-status"', html)
+        self.assertIn('id="sign-out"', html)
+        self.assertIn("Secure owner cloud", script)
+        self.assertIn("Local read-only workspace", script)
+        self.assertIn("window.location.hostname", script)
+
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

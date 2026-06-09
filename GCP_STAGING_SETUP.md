@@ -34,6 +34,8 @@ Current cloud status:
   days without deleting them.
 - Dashboard readiness and failed-job monitoring policies email
   `jlukacsffi@gmail.com`.
+- The readiness check runs every ten minutes from three US regions and allows
+  30 seconds for scale-to-zero cold starts without increasing check frequency.
 
 The controlling policy is `CLOUD_COST_POLICY.md`. Any additional deployment
 still requires plan review plus `-Apply -ConfirmCosts`.
@@ -119,8 +121,20 @@ This command is also read-only. It checks dashboard readiness and scale limits,
 OAuth and Secret Manager configuration, dedicated service accounts, bucket
 privacy and least-privilege roles, absence of the project `Editor` role, job
 limits and successful executions, paused schedules, monitoring, and
-non-destructive image retention. On June 8, 2026, all 24 automated checks
-passed.
+non-destructive image retention. The current audit contains 25 automated
+checks, including cold-start timeout validation.
+
+Preliminary telemetry review on June 8, 2026:
+
+- 21.7 hours of regional samples were available.
+- 2,220 of 2,358 samples passed.
+- No Cloud Run service or job error logs were present.
+- Virginia was fully healthy; earlier Oregon and Iowa samples showed
+  cold-start-sensitive failures under the original 10-second timeout.
+- The readiness timeout was increased to 30 seconds at the same ten-minute
+  frequency and expected cost.
+- A fresh complete observation window is still required before closing the
+  telemetry gate.
 
 The audit intentionally does not mark the manual cross-device login,
 non-owner denial, one-day telemetry review, or schedule approval gates as

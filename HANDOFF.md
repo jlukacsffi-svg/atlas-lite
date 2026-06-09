@@ -221,8 +221,13 @@ Secure web-platform direction:
   and configured monitoring.
 - Artifact Registry is 464.400 MB. Its retention policy is installed in
   dry-run mode, keeps the three newest images, and currently deletes nothing.
-- `scripts/gcp_staging_readiness.ps1` passed all 24 automated cloud security,
+- `scripts/gcp_staging_readiness.ps1` passed all automated cloud security,
   identity, scaling, storage, job, schedule, monitoring, and retention checks.
+- Preliminary monitoring covered 21.7 hours with no Cloud Run service or job
+  error logs. Regional probe noise under the original 10-second cold-start
+  timeout led to a 30-second timeout at unchanged frequency and expected cost.
+- Cloud Run revision `atlas-dashboard-stg-00008-9qd` labels the live workspace
+  `Secure owner cloud` and provides a visible sign-out link.
 - Cross-device validation, manual non-owner validation, schedule activation,
   cleanup dry-run review, and final staging review remain.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation

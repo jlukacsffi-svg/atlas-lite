@@ -245,7 +245,10 @@ Current Web Phase 2 result:
 - Recurring schedule activation now has a separate approval gate and validates
   successful jobs plus monitoring before resume.
 - Artifact Registry retention is installed in non-destructive dry-run mode.
-- The read-only staging readiness audit passes all 24 automated checks.
+- The read-only staging readiness audit now includes 25 checks, including
+  cold-start timeout validation.
+- The hosted dashboard visibly identifies itself as the secure owner cloud and
+  provides session sign-out.
 - The next gate is separate approval to activate the paused schedules,
   followed by cross-device, retention-policy, and final staging validation.
 

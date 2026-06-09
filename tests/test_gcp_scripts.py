@@ -111,6 +111,8 @@ class GoogleCloudScriptTests(unittest.TestCase):
             root / "scripts" / "gcp_configure_monitoring_staging.ps1"
         ).read_text(encoding="utf-8")
         self.assertIn("'--period=10'", content)
+        self.assertIn("$UptimeTimeoutSeconds = 30", content)
+        self.assertIn("'monitoring', 'uptime', 'update'", content)
         self.assertIn("'--regions=usa-oregon,usa-iowa,usa-virginia'", content)
         self.assertIn("Atlas dashboard unavailable", content)
         self.assertIn("Atlas cloud job failed", content)
@@ -169,6 +171,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("Mode: READ ONLY", content)
         self.assertIn("No project Editor role", content)
         self.assertIn("Artifact cleanup is non-destructive", content)
+        self.assertIn("Cold-start monitoring tolerance", content)
         self.assertIn("Cross-device owner login", content)
         self.assertIn("Non-owner Google account denial", content)
         self.assertIn("Separate owner approval before schedule resume", content)
