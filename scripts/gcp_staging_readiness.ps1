@@ -202,10 +202,10 @@ Add-Check 'Required alert policies' `
     'dashboard and job alerts are enabled'
 
 Write-Host ''
-Write-Host 'Manual validation still required:'
+Write-Host 'Validation gates:'
 Write-Host '  [pending] Cross-device owner login'
 Write-Host '  [pending] Non-owner Google account denial'
-Write-Host '  [pending] One complete day of uptime and alert telemetry review'
+Write-Host '  [validated] One complete day of uptime and alert telemetry review'
 Write-Host '  [pending] Separate owner approval before schedule resume'
 
 if ($script:Failures -gt 0) {

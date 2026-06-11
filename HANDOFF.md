@@ -150,7 +150,7 @@ Secure web-platform direction:
 - Later phases add secure cloud hosting, invite-only user accounts, strict tenant isolation, and eventually a controlled customer product.
 - Web development must not weaken the research engine or grant additional trading authority.
 - Public account creation is prohibited until authentication, authorization, tenant isolation, privacy, backups, monitoring, and incident-response controls are validated.
-- Web Phase 2 is approximately 98% complete in `app/web_cloud.py`,
+- Web Phase 2 is approximately 99% complete in `app/web_cloud.py`,
   `cloud_dashboard.py`, `Dockerfile`, and `WEB_PHASE2_PLAN.md`.
 - Cloud mode is fail-closed. The personal-project deployment uses Google OpenID
   Connect, an owner-email allowlist, signed short-lived sessions, and explicit
@@ -226,6 +226,8 @@ Secure web-platform direction:
 - Preliminary monitoring covered 21.7 hours with no Cloud Run service or job
   error logs. Regional probe noise under the original 10-second cold-start
   timeout led to a 30-second timeout at unchanged frequency and expected cost.
+- The subsequent 23.89-hour validation window passed all 2,592 regional
+  samples with 100% measured availability and no Cloud Run error logs.
 - Cloud Run revision `atlas-dashboard-stg-00008-9qd` labels the live workspace
   `Secure owner cloud` and provides a visible sign-out link.
 - Cross-device validation, manual non-owner validation, schedule activation,
@@ -246,7 +248,7 @@ Secure web-platform direction:
   complete. Schedule activation, cross-device testing, and final staging
   validation remain.
 
-Estimated overall Atlas program completion: 61%.
+Estimated overall Atlas program completion: 62%.
 
 ## Useful Files
 
@@ -262,6 +264,8 @@ Estimated overall Atlas program completion: 61%.
   setup that defaults to dry run.
 - `scripts/gcp_staging_readiness.ps1`: read-only final-staging audit with
   explicit manual validation gates.
+- `scripts/gcp_uptime_report.ps1`: repeatable read-only regional availability
+  report.
 - `app/cloud_storage.py`: private durable artifact synchronization.
 - `app/backup_restore.py`: private backup creation, inspection, validation, and
   guarded restoration.

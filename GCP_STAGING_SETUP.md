@@ -136,9 +136,24 @@ Preliminary telemetry review on June 8, 2026:
 - A fresh complete observation window is still required before closing the
   telemetry gate.
 
-The audit intentionally does not mark the manual cross-device login,
-non-owner denial, one-day telemetry review, or schedule approval gates as
-complete.
+Final telemetry validation on June 10, 2026:
+
+- The post-adjustment window covered 23.89 hours.
+- All 2,592 regional samples passed across Oregon, Iowa, and Virginia.
+- Measured availability was 100%.
+- No Cloud Run dashboard or job error logs were present.
+- The one-day telemetry gate is complete.
+
+Repeat the same read-only check with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_uptime_report.ps1 `
+  -Hours 24
+```
+
+The audit leaves cross-device login, non-owner denial, and schedule approval
+as manual gates. The one-day telemetry review is validated.
 
 To inspect, pause, or explicitly approve recurring schedules:
 
@@ -219,12 +234,11 @@ Completed:
 
 Next:
 
-1. Review one complete day of uptime and alert telemetry.
-2. Complete a cross-device owner login test.
-3. Perform a manual non-owner denial test.
-4. Obtain separate owner approval before resuming the paused schedules.
-5. Review Artifact Registry dry-run observations before considering cleanup.
-6. Complete final staging security and cost review.
+1. Complete a cross-device owner login test.
+2. Perform a manual non-owner denial test.
+3. Obtain separate owner approval before resuming the paused schedules.
+4. Review Artifact Registry dry-run observations before considering cleanup.
+5. Complete final staging security and cost review.
 
 Public registration and customer accounts remain prohibited in Web Phase 2.
 

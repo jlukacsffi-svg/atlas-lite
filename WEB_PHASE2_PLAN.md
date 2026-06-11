@@ -12,7 +12,7 @@ owner-only Google OAuth. Interactive owner login is working in the live
 staging service; cloud jobs, monitoring, cross-device testing, and final
 staging validation remain. Daily and weekly jobs are deployed and manually
 validated, while their recurring triggers remain paused.
-Estimated Web Phase 2 completion: 98%.
+Estimated Web Phase 2 completion: 99%.
 
 Completed foundation:
 
@@ -85,6 +85,8 @@ Completed foundation:
 - Preliminary monitoring found no Cloud Run error logs but exposed regional
   probe noise under a 10-second scale-to-zero cold-start timeout. The timeout
   is now 30 seconds at the same ten-minute frequency.
+- A fresh 23.89-hour window then passed all 2,592 checks across three regions,
+  with 100% measured availability and no Cloud Run error logs.
 - The live sidebar identifies the hosted environment as `Secure owner cloud`
   and exposes a session sign-out link.
 
@@ -92,7 +94,6 @@ Remaining before completing authenticated cloud staging:
 
 - Complete a cross-device owner login test.
 - Perform a manual non-owner denial check; automated denial coverage passes.
-- Review one complete day of uptime and alert telemetry.
 - Review the Artifact Registry cleanup dry run before enabling deletion.
 - Activate schedules only after separate owner approval.
 - Complete the remaining manual staging security review before production.

@@ -249,10 +249,12 @@ Current Web Phase 2 result:
   cold-start timeout validation.
 - The hosted dashboard visibly identifies itself as the secure owner cloud and
   provides session sign-out.
+- The post-adjustment 23.89-hour telemetry window passed all 2,592 regional
+  samples with 100% measured availability.
 - The next gate is separate approval to activate the paused schedules,
   followed by cross-device, retention-policy, and final staging validation.
 
-Estimated overall Atlas program completion: 61%.
+Estimated overall Atlas program completion: 62%.
 
 ## Current Recommended Sequence
 
