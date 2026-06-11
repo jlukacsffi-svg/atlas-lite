@@ -219,8 +219,10 @@ Secure web-platform direction:
 - Schedule control is now separately guarded: resume requires explicit cost
   confirmation and recurring-execution approval, plus successful manual jobs
   and configured monitoring.
-- Artifact Registry is 464.400 MB. Its retention policy is installed in
-  dry-run mode, keeps the three newest images, and currently deletes nothing.
+- Artifact Registry is 524.483 MB across eight recent images. Its retention
+  policy is installed in dry-run mode, keeps the three newest images, and
+  currently deletes nothing. The measured size is approximately 24.5 MB over
+  the included 0.5 GB allowance, an estimated `$0.0025/month` storage overage.
 - `scripts/gcp_staging_readiness.ps1` passed all automated cloud security,
   identity, scaling, storage, job, schedule, monitoring, and retention checks.
 - Preliminary monitoring covered 21.7 hours with no Cloud Run service or job
@@ -231,7 +233,7 @@ Secure web-platform direction:
 - Cloud Run revision `atlas-dashboard-stg-00008-9qd` labels the live workspace
   `Secure owner cloud` and provides a visible sign-out link.
 - Cross-device validation, manual non-owner validation, schedule activation,
-  cleanup dry-run review, and final staging review remain.
+  and final staging review remain.
 - `FINAL_STAGING_REVIEW.md` and `scripts/gcp_final_staging_review.ps1`
   package the final read-only review and the remaining owner-assisted gates.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation

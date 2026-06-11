@@ -36,15 +36,29 @@ These are the only remaining items before Web Phase 2 can be called complete:
 2. Non-owner denial
    Confirm that a Google account outside the allowlist is denied dashboard
    access.
-3. Artifact Registry dry-run observation review
-   Confirm the current dry-run retention policy is acceptable before any future
-   deletion is considered.
-4. Schedule decision
+3. Schedule decision
    Keep schedules paused, or explicitly approve recurring execution with the
    guarded resume script.
-5. Final sign-off
+4. Final sign-off
    Confirm staging is acceptable from the perspectives of cost, security, and
    day-to-day operation.
+
+## Artifact Registry Review
+
+Validated on June 10, 2026:
+
+- Repository size: 524.483 MB.
+- Google Cloud includes the first 0.5 GB of Artifact Registry storage each
+  month at no charge.
+- The measured repository is approximately 24.5 MB above that allowance.
+- At the published `$0.10/GB-month` storage rate, the estimated overage is
+  approximately `$0.0025/month`.
+- Eight Atlas images exist, all created June 7-8, 2026.
+- The retention policy remains in dry-run mode, keeps the three newest images,
+  and only observes images older than 14 days.
+- No image is old enough to be a deletion candidate yet.
+- Active deletion remains prohibited without a separate future review and
+  explicit owner approval.
 
 ## Evidence To Record
 

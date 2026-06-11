@@ -29,9 +29,11 @@ Current cloud status:
 - Daily and weekly Cloud Scheduler triggers exist but remain paused.
 - Schedule changes use a dedicated guarded script; recurring execution cannot
   be resumed without explicit cost and recurring-execution approval flags.
-- Artifact Registry is 464.400 MB and has a cleanup policy in dry-run mode.
+- Artifact Registry is 524.483 MB and has a cleanup policy in dry-run mode.
   The policy keeps the three newest images and observes images older than 14
-  days without deleting them.
+  days without deleting them. The repository is about 24.5 MB above the
+  included 0.5 GB allowance, an estimated storage overage of approximately
+  `$0.0025/month` at the published `$0.10/GB-month` rate.
 - Dashboard readiness and failed-job monitoring policies email
   `jlukacsffi@gmail.com`.
 - The readiness check runs every ten minutes from three US regions and allows
@@ -245,8 +247,11 @@ Next:
 1. Complete a cross-device owner login test.
 2. Perform a manual non-owner denial test.
 3. Obtain separate owner approval before resuming the paused schedules.
-4. Review Artifact Registry dry-run observations before considering cleanup.
-5. Complete final staging security and cost review.
+4. Complete final staging security and cost review.
+
+The Artifact Registry review was completed on June 10, 2026. Eight images
+exist, none is old enough to match the 14-day observation rule, and active
+deletion remains disabled pending a separate future review and owner approval.
 
 Public registration and customer accounts remain prohibited in Web Phase 2.
 

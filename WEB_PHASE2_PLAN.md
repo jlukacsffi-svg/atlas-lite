@@ -80,6 +80,10 @@ Completed foundation:
   verify job history plus monitoring before resume.
 - Artifact Registry retention is installed in dry-run mode, keeps the three
   newest images, and does not currently delete anything.
+- The June 10 Artifact Registry review measured 524.483 MB across eight recent
+  images. That is approximately 24.5 MB above the included 0.5 GB allowance,
+  with an estimated storage overage of about `$0.0025/month`; deletion remains
+  disabled.
 - A read-only staging readiness audit checks 25 security, identity, scaling,
   storage, job, schedule, monitoring, and retention controls.
 - Preliminary monitoring found no Cloud Run error logs but exposed regional
@@ -94,7 +98,6 @@ Remaining before completing authenticated cloud staging:
 
 - Complete a cross-device owner login test.
 - Perform a manual non-owner denial check; automated denial coverage passes.
-- Review the Artifact Registry cleanup dry run before enabling deletion.
 - Activate schedules only after separate owner approval.
 - Complete the remaining manual staging security review before production.
 - `FINAL_STAGING_REVIEW.md` and `gcp_final_staging_review.ps1` now package the

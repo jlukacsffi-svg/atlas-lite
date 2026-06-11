@@ -177,6 +177,10 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("Cross-device owner login", content)
         self.assertIn("Non-owner Google account denial", content)
         self.assertIn("[validated] One complete day", content)
+        self.assertIn(
+            "[validated] Artifact Registry cost and dry-run retention review",
+            content,
+        )
         self.assertIn("Separate owner approval before schedule resume", content)
         for mutation in (
             "'deploy'",
@@ -210,6 +214,14 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("gcp_uptime_report.ps1", content)
         self.assertIn("Cross-device owner login", content)
         self.assertIn("Non-owner Google account denial", content)
+        self.assertIn(
+            "[validated] Artifact Registry cost and dry-run retention review",
+            content,
+        )
+        self.assertNotIn(
+            "[pending] Artifact Registry dry-run observation review",
+            content,
+        )
         self.assertIn("AUTOMATED FINAL REVIEW PASS", content)
         self.assertNotIn("[switch]$Apply", content)
 
