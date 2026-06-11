@@ -16,6 +16,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             root / "scripts" / "gcp_set_schedules_staging.ps1",
             root / "scripts" / "gcp_staging_readiness.ps1",
             root / "scripts" / "gcp_uptime_report.ps1",
+            root / "scripts" / "gcp_final_staging_review.ps1",
             root / "scripts" / "gcp_staging_status.ps1",
             root / "scripts" / "gcp_disable_billing.ps1",
             root / "scripts" / "gcp_zero_cost_audit.ps1",
@@ -196,6 +197,20 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("uptime_check/check_passed", content)
         self.assertIn("[result] REVIEW REQUIRED", content)
         self.assertIn("$totalFailed -gt 0", content)
+        self.assertNotIn("[switch]$Apply", content)
+
+    def test_final_staging_review_aggregates_read_only_checks(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_final_staging_review.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Mode: READ ONLY", content)
+        self.assertIn("gcp_staging_status.ps1", content)
+        self.assertIn("gcp_staging_readiness.ps1", content)
+        self.assertIn("gcp_uptime_report.ps1", content)
+        self.assertIn("Cross-device owner login", content)
+        self.assertIn("Non-owner Google account denial", content)
+        self.assertIn("AUTOMATED FINAL REVIEW PASS", content)
         self.assertNotIn("[switch]$Apply", content)
 
     def test_oauth_secret_setup_never_prints_secret_values(self):

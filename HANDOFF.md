@@ -232,6 +232,8 @@ Secure web-platform direction:
   `Secure owner cloud` and provides a visible sign-out link.
 - Cross-device validation, manual non-owner validation, schedule activation,
   cleanup dry-run review, and final staging review remain.
+- `FINAL_STAGING_REVIEW.md` and `scripts/gcp_final_staging_review.ps1`
+  package the final read-only review and the remaining owner-assisted gates.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation
   gate and now fails by design. Use `gcp_staging_status.ps1` for active staging.
 - Joe reported approximately `$300` of Google Cloud promotional credit and
@@ -266,6 +268,9 @@ Estimated overall Atlas program completion: 62%.
   explicit manual validation gates.
 - `scripts/gcp_uptime_report.ps1`: repeatable read-only regional availability
   report.
+- `scripts/gcp_final_staging_review.ps1`: aggregate read-only final-staging
+  review command.
+- `FINAL_STAGING_REVIEW.md`: operator runbook for the last Web Phase 2 gates.
 - `app/cloud_storage.py`: private durable artifact synchronization.
 - `app/backup_restore.py`: private backup creation, inspection, validation, and
   guarded restoration.

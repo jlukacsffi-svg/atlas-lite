@@ -155,6 +155,14 @@ powershell -NoProfile -ExecutionPolicy Bypass `
 The audit leaves cross-device login, non-owner denial, and schedule approval
 as manual gates. The one-day telemetry review is validated.
 
+Run the complete read-only final review with:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_final_staging_review.ps1 `
+  -TelemetryHours 24
+```
+
 To inspect, pause, or explicitly approve recurring schedules:
 
 ```powershell

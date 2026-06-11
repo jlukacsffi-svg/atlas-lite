@@ -97,6 +97,8 @@ Remaining before completing authenticated cloud staging:
 - Review the Artifact Registry cleanup dry run before enabling deletion.
 - Activate schedules only after separate owner approval.
 - Complete the remaining manual staging security review before production.
+- `FINAL_STAGING_REVIEW.md` and `gcp_final_staging_review.ps1` now package the
+  remaining owner-assisted sign-off flow.
 
 Current external gate:
 
