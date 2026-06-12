@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "accounts": [
+    {
+      "tenant_id": "atlas-owner",
+      "user_id": "owner",
+      "provider": "google",
+      "subject": "replace-with-verified-google-subject",
+      "email": "owner@example.com",
+      "role": "owner",
+      "status": "active"
+    }
+  ]
+}

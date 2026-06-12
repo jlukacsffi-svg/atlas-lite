@@ -179,6 +179,9 @@ are in `WEB_PHASE2_PLAN.md`.
 
 Introduce private user workspaces.
 
+Status: Local identity, role, permission, and tenant-path foundation complete.
+Tenant-aware persistence is next. The live cloud service remains owner-only.
+
 Includes:
 
 - Invite-only account creation.
@@ -187,6 +190,9 @@ Includes:
 - Role and permission model.
 - Tenant-isolation tests and security review.
 - Administrative support tools.
+
+The detailed safety boundary and delivery checklist are in
+`WEB_PHASE3_PLAN.md`.
 
 ### Web Phase 4: Customer Product Beta
 

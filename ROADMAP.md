@@ -209,7 +209,9 @@ Phases:
 
 1. Read-only local owner dashboard with modern charts and responsive design. Complete.
 2. Secure single-user cloud hosting independent of Joe's laptop. Foundation in progress.
-3. Invite-only multi-user accounts with strict tenant isolation.
+3. Invite-only multi-user accounts with strict tenant isolation. Local
+   identity, role, permission, and tenant-path foundation complete;
+   tenant-aware persistence is next.
 4. Controlled customer beta with privacy, support, and subscription foundations.
 5. Public self-service product only after security and operational readiness.
 
@@ -242,19 +244,20 @@ Current Web Phase 2 result:
   successfully.
 - Daily and weekly Cloud Run jobs have completed successful manual executions.
 - Dashboard readiness and failed-job alerting are active.
-- Recurring schedule activation now has a separate approval gate and validates
-  successful jobs plus monitoring before resume.
-- Artifact Registry retention is installed in non-destructive dry-run mode.
+- Recurring schedules remain paused by owner policy. Future activation has a
+  separate approval gate and validates successful jobs plus monitoring.
+- Artifact Registry retention is installed in non-destructive dry-run mode,
+  and its initial cost and retention review is complete.
 - The read-only staging readiness audit now includes 25 checks, including
   cold-start timeout validation.
 - The hosted dashboard visibly identifies itself as the secure owner cloud and
   provides session sign-out.
 - The post-adjustment 23.89-hour telemetry window passed all 2,592 regional
   samples with 100% measured availability.
-- The next gate is separate approval to activate the paused schedules,
-  followed by cross-device, retention-policy, and final staging validation.
+- The remaining gates are cross-device owner login, manual non-owner denial,
+  and final staging sign-off.
 
-Estimated overall Atlas program completion: 62%.
+Estimated overall Atlas program completion: 63%.
 
 ## Current Recommended Sequence
 

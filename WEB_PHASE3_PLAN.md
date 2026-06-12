@@ -1,0 +1,63 @@
+# Atlas Web Phase 3: Multi-User Foundation
+
+Web Phase 3 introduces private tenant-aware workspaces without enabling public
+registration or changing the live owner-only cloud service prematurely.
+
+## Safety Boundary
+
+The current owner dashboard remains the live staging application. Phase 3 code
+is local-only until its database, migration, authentication, authorization,
+backup, and incident-response controls pass review.
+
+Phase 3 must not:
+
+- Enable public registration.
+- Accept an identity based on email alone.
+- Allow one tenant to read or write another tenant's records.
+- Store passwords or OAuth credentials in the account registry.
+- Deploy a paid database without a fresh cost estimate and explicit approval.
+- Expand trading authority.
+
+## Foundation Milestone
+
+Status: Complete.
+
+The first local foundation includes:
+
+- Stable tenant and user identifiers.
+- Google identity binding by verified provider subject plus verified email.
+- Owner, administrator, analyst, and viewer roles.
+- Explicit permissions with least-privilege defaults.
+- Disabled-account handling.
+- Tenant-scoped workspace paths.
+- Fail-closed duplicate, malformed, and unknown identity handling.
+- Automated cross-tenant and role-isolation tests.
+
+The example JSON registry is a development contract, not the planned production
+database. It contains no real identity subject or secret.
+
+## Next Milestones
+
+1. Define the relational schema and migration workflow.
+2. Add tenant-aware repositories for reports, watchlists, portfolios, research,
+   and paper accounts.
+3. Introduce an invite-only administration workflow.
+4. Integrate tenant resolution into a separate local application boundary.
+5. Test object-level authorization across every private route.
+6. Complete a threat model, backup design, and cost review.
+7. Deploy only after the owner-only service remains available for rollback.
+
+## Exit Criteria
+
+Web Phase 3 is complete only when:
+
+- Every user-owned database record has a tenant identifier.
+- Database constraints reinforce application authorization.
+- Cross-tenant read and write tests pass for every resource type.
+- Invite, disable, role-change, session-revocation, export, and deletion
+  workflows are audited.
+- Backups and isolated restoration tests pass.
+- Security and privacy reviews are complete.
+- Invite-only staging is explicitly approved.
+
+Estimated Web Phase 3 completion after the foundation milestone: 10%.

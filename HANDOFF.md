@@ -252,10 +252,10 @@ Secure web-platform direction:
 - A local restoration drill passed, followed by a cloud pull restoration test
   of 197 files and 10,532,703 local bytes.
 - Authenticated redeployment, manual cloud job validation, and monitoring are
-  complete. Schedule activation, cross-device testing, and final staging
-  validation remain.
+  complete. Cross-device testing, manual non-owner denial, and final staging
+  sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 62%.
+Estimated overall Atlas program completion: 63%.
 
 ## Useful Files
 
@@ -263,6 +263,12 @@ Estimated overall Atlas program completion: 62%.
 - `STAGE4_PLAN.md`: first Stage 4 multi-agent research organization plan.
 - `STAGE5_PLAN.md`: Stage 5 paper-trading policy and milestones.
 - `WEB_PLATFORM_PLAN.md`: secure modern dashboard and multi-user platform plan.
+- `WEB_PHASE3_PLAN.md`: local tenant-isolation foundation and release gates.
+- Web Phase 3 is approximately 10% complete. `app/tenant_accounts.py` provides
+  fail-closed provider-subject identity resolution, tenant roles and
+  permissions, disabled-account handling, and tenant-scoped workspace paths.
+  The live cloud service remains owner-only, and no new cloud resource or
+  recurring charge was created.
 - `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
 - `GCP_STAGING_SETUP.md`: guarded Google Cloud staging setup and billing gate.
 - `scripts/gcp_set_schedules_staging.ps1`: guarded schedule status, pause, and
