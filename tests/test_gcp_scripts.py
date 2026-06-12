@@ -17,6 +17,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
             root / "scripts" / "gcp_staging_readiness.ps1",
             root / "scripts" / "gcp_uptime_report.ps1",
             root / "scripts" / "gcp_final_staging_review.ps1",
+            root / "scripts" / "gcp_manual_validation.ps1",
             root / "scripts" / "gcp_staging_status.ps1",
             root / "scripts" / "gcp_disable_billing.ps1",
             root / "scripts" / "gcp_zero_cost_audit.ps1",
@@ -181,7 +182,10 @@ class GoogleCloudScriptTests(unittest.TestCase):
             "[validated] Artifact Registry cost and dry-run retention review",
             content,
         )
-        self.assertIn("Separate owner approval before schedule resume", content)
+        self.assertIn(
+            "Recurring schedules remain paused by owner policy",
+            content,
+        )
         for mutation in (
             "'deploy'",
             "'update'",
@@ -212,8 +216,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("gcp_staging_status.ps1", content)
         self.assertIn("gcp_staging_readiness.ps1", content)
         self.assertIn("gcp_uptime_report.ps1", content)
-        self.assertIn("Cross-device owner login", content)
-        self.assertIn("Non-owner Google account denial", content)
+        self.assertIn("gcp_manual_validation.ps1", content)
         self.assertIn(
             "[validated] Artifact Registry cost and dry-run retention review",
             content,
@@ -224,6 +227,23 @@ class GoogleCloudScriptTests(unittest.TestCase):
         )
         self.assertIn("AUTOMATED FINAL REVIEW PASS", content)
         self.assertNotIn("[switch]$Apply", content)
+
+    def test_manual_validation_requires_observed_confirmation(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_manual_validation.ps1"
+        ).read_text(encoding="utf-8")
+        evidence = (
+            root / "cloud" / "staging_manual_validation.json"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Mode: READ ONLY", content)
+        self.assertIn("[switch]$ConfirmedExpectedResult", content)
+        self.assertIn("Recording a result requires -ObservedAt", content)
+        self.assertIn("RecordCrossDevice", content)
+        self.assertIn("RecordNonOwnerDenial", content)
+        self.assertNotIn("gcloud", content.lower())
+        self.assertIn('"status": "pending"', evidence)
+        self.assertIn('"decision": "paused"', evidence)
 
     def test_oauth_secret_setup_never_prints_secret_values(self):
         root = Path(__file__).resolve().parent.parent

@@ -36,12 +36,38 @@ These are the only remaining items before Web Phase 2 can be called complete:
 2. Non-owner denial
    Confirm that a Google account outside the allowlist is denied dashboard
    access.
-3. Schedule decision
-   Keep schedules paused, or explicitly approve recurring execution with the
-   guarded resume script.
-4. Final sign-off
+3. Final sign-off
    Confirm staging is acceptable from the perspectives of cost, security, and
    day-to-day operation.
+
+The schedule decision is complete: daily and weekly recurring execution remain
+paused. Resuming either schedule still requires a separate explicit approval.
+
+## Record Identity Evidence
+
+After observing a successful owner login from a second device:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_manual_validation.ps1 `
+  -Action RecordCrossDevice `
+  -ObservedAt "2026-06-11T12:00:00-07:00" `
+  -ConfirmedExpectedResult
+```
+
+After observing a different Google account being denied:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass `
+  -File scripts\gcp_manual_validation.ps1 `
+  -Action RecordNonOwnerDenial `
+  -ObservedAt "2026-06-11T12:05:00-07:00" `
+  -ConfirmedExpectedResult
+```
+
+Use the actual observation times. Optional `-Notes` may record a concise,
+non-secret detail. The script only updates the local evidence file; it does not
+change Google Cloud, OAuth, IAM, or schedule state.
 
 ## Artifact Registry Review
 

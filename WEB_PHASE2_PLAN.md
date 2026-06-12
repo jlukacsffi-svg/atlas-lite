@@ -98,10 +98,13 @@ Remaining before completing authenticated cloud staging:
 
 - Complete a cross-device owner login test.
 - Perform a manual non-owner denial check; automated denial coverage passes.
-- Activate schedules only after separate owner approval.
 - Complete the remaining manual staging security review before production.
 - `FINAL_STAGING_REVIEW.md` and `gcp_final_staging_review.ps1` now package the
   remaining owner-assisted sign-off flow.
+
+Recurring daily and weekly schedules remain paused by owner policy. Their
+activation is outside the remaining sign-off path and still requires a
+separate explicit approval.
 
 Current external gate:
 

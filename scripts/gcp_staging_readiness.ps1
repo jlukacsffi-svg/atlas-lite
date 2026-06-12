@@ -207,7 +207,7 @@ Write-Host '  [pending] Cross-device owner login'
 Write-Host '  [pending] Non-owner Google account denial'
 Write-Host '  [validated] One complete day of uptime and alert telemetry review'
 Write-Host '  [validated] Artifact Registry cost and dry-run retention review'
-Write-Host '  [pending] Separate owner approval before schedule resume'
+Write-Host '  [validated] Recurring schedules remain paused by owner policy'
 
 if ($script:Failures -gt 0) {
     Write-Host ""

@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "project_id": "atlas-capital-research-stg",
+  "cross_device_owner_login": {
+    "status": "pending",
+    "observed_at": null,
+    "notes": ""
+  },
+  "non_owner_denial": {
+    "status": "pending",
+    "observed_at": null,
+    "notes": ""
+  },
+  "schedule_decision": {
+    "status": "validated",
+    "decision": "paused",
+    "observed_at": "2026-06-11",
+    "notes": "Schedules remain paused. Activation requires separate explicit owner approval."
+  }
+}

@@ -50,11 +50,17 @@ if ($uptimeExitCode -ne 0) {
 }
 
 Write-Host ''
-Write-Host 'Manual gates still require owner action:'
-Write-Host '  [pending] Cross-device owner login'
-Write-Host '  [pending] Non-owner Google account denial'
+& powershell.exe -NoProfile -ExecutionPolicy Bypass `
+    -File (Join-Path $scriptRoot 'gcp_manual_validation.ps1') `
+    -Action Status
+if ($LASTEXITCODE -ne 0) {
+    throw 'Manual validation evidence review failed.'
+}
+
+Write-Host ''
+Write-Host 'Final staging gates:'
 Write-Host '  [validated] Artifact Registry cost and dry-run retention review'
-Write-Host '  [pending] Separate owner approval before schedule resume'
+Write-Host '  [validated] Recurring schedules remain paused'
 Write-Host '  [pending] Final staging security and cost sign-off'
 Write-Host ''
 Write-Host '[result] AUTOMATED FINAL REVIEW PASS - manual owner gates remain.'

@@ -246,12 +246,15 @@ Next:
 
 1. Complete a cross-device owner login test.
 2. Perform a manual non-owner denial test.
-3. Obtain separate owner approval before resuming the paused schedules.
-4. Complete final staging security and cost review.
+3. Complete final staging security and cost review.
 
 The Artifact Registry review was completed on June 10, 2026. Eight images
 exist, none is old enough to match the 14-day observation rule, and active
 deletion remains disabled pending a separate future review and owner approval.
+
+The recurring schedule decision was recorded on June 11, 2026: daily and
+weekly schedules remain paused. Use `scripts/gcp_manual_validation.ps1` to
+record the two identity observations without changing cloud configuration.
 
 Public registration and customer accounts remain prohibited in Web Phase 2.
 

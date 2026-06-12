@@ -232,10 +232,13 @@ Secure web-platform direction:
   samples with 100% measured availability and no Cloud Run error logs.
 - Cloud Run revision `atlas-dashboard-stg-00008-9qd` labels the live workspace
   `Secure owner cloud` and provides a visible sign-out link.
-- Cross-device validation, manual non-owner validation, schedule activation,
-  and final staging review remain.
+- Cross-device validation, manual non-owner validation, and final staging
+  review remain. Recurring schedules remain paused by owner policy and are not
+  required to close Web Phase 2.
 - `FINAL_STAGING_REVIEW.md` and `scripts/gcp_final_staging_review.ps1`
   package the final read-only review and the remaining owner-assisted gates.
+- `scripts/gcp_manual_validation.ps1` records the two observed identity checks
+  locally without changing Google Cloud, OAuth, IAM, or schedule state.
 - `scripts/gcp_zero_cost_audit.ps1` preserves the historical pre-activation
   gate and now fails by design. Use `gcp_staging_status.ps1` for active staging.
 - Joe reported approximately `$300` of Google Cloud promotional credit and
