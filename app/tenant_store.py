@@ -17,7 +17,7 @@ from app.tenant_accounts import (
 )
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3
 
 
 MIGRATION_1 = """
@@ -190,6 +190,40 @@ BEGIN
 END;
 """
 
+MIGRATION_3 = """
+CREATE TABLE privacy_requests (
+    tenant_id TEXT NOT NULL,
+    request_id TEXT NOT NULL,
+    request_type TEXT NOT NULL CHECK (
+        request_type IN ('tenant_export', 'account_deletion')
+    ),
+    requested_by_user_id TEXT NOT NULL,
+    target_user_id TEXT,
+    status TEXT NOT NULL CHECK (
+        status IN ('pending', 'completed', 'cancelled')
+    ),
+    created_at TEXT NOT NULL,
+    completed_at TEXT,
+    completed_by_user_id TEXT,
+    result_json TEXT NOT NULL DEFAULT '{}',
+    PRIMARY KEY (tenant_id, request_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants (tenant_id) ON DELETE CASCADE,
+    FOREIGN KEY (requested_by_user_id) REFERENCES users (user_id),
+    FOREIGN KEY (target_user_id) REFERENCES users (user_id),
+    FOREIGN KEY (completed_by_user_id) REFERENCES users (user_id)
+);
+
+CREATE UNIQUE INDEX one_pending_deletion_per_user
+    ON privacy_requests (tenant_id, target_user_id)
+    WHERE request_type = 'account_deletion' AND status = 'pending';
+
+CREATE INDEX privacy_requests_by_tenant_time
+    ON privacy_requests (tenant_id, created_at DESC);
+"""
+
+
+TENANT_EXPORT_VERSION = 1
+
 
 class TenantStore:
     """Persist tenant data while requiring authorization for every resource."""
@@ -243,6 +277,12 @@ class TenantStore:
                 connection.execute(
                     "INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
                     (2, self.clock()),
+                )
+            if 3 not in applied:
+                connection.executescript(MIGRATION_3)
+                connection.execute(
+                    "INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
+                    (3, self.clock()),
                 )
         return SCHEMA_VERSION
 
@@ -634,6 +674,239 @@ class TenantStore:
             json_fields=("details_json",),
         )
 
+    def export_tenant_data(self, actor, request_id=None):
+        """Return a complete tenant-scoped export without invitation secrets."""
+        self._authorize(actor, "account:manage")
+        request_id = request_id or self._id("privacy")
+        generated_at = self.clock()
+        with self.connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO privacy_requests (
+                    tenant_id, request_id, request_type,
+                    requested_by_user_id, target_user_id, status,
+                    created_at, completed_at, completed_by_user_id,
+                    result_json
+                ) VALUES (?, ?, 'tenant_export', ?, NULL, 'completed',
+                          ?, ?, ?, ?)
+                """,
+                (
+                    actor.tenant_id,
+                    request_id,
+                    actor.user_id,
+                    generated_at,
+                    generated_at,
+                    actor.user_id,
+                    self._json({"format": "json", "export_version": 1}),
+                ),
+            )
+            self._audit(
+                connection,
+                actor,
+                "privacy.export_completed",
+                "privacy_request",
+                request_id,
+                {"format": "json", "export_version": TENANT_EXPORT_VERSION},
+            )
+            payload = self._tenant_export_payload(
+                connection,
+                actor.tenant_id,
+                generated_at,
+                request_id,
+            )
+        return payload
+
+    def request_account_deletion(self, actor, request_id=None):
+        """Create an audited deletion request for the active non-owner account."""
+        self._authorize(actor, "workspace:read")
+        if actor.role == "owner":
+            raise ValueError(
+                "Owner deletion requires ownership transfer or tenant closure"
+            )
+        request_id = request_id or self._id("privacy")
+        with self.connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO privacy_requests (
+                    tenant_id, request_id, request_type,
+                    requested_by_user_id, target_user_id, status, created_at
+                ) VALUES (?, ?, 'account_deletion', ?, ?, 'pending', ?)
+                """,
+                (
+                    actor.tenant_id,
+                    request_id,
+                    actor.user_id,
+                    actor.user_id,
+                    self.clock(),
+                ),
+            )
+            self._audit(
+                connection,
+                actor,
+                "privacy.deletion_requested",
+                "privacy_request",
+                request_id,
+                {"target_user_id": actor.user_id},
+            )
+        return request_id
+
+    def cancel_account_deletion(self, actor, request_id):
+        """Cancel a pending self-request or allow the owner to cancel it."""
+        self._authorize(actor, "workspace:read")
+        request_id = str(request_id)
+        with self.connect() as connection:
+            request = connection.execute(
+                """
+                SELECT target_user_id, status
+                FROM privacy_requests
+                WHERE tenant_id = ? AND request_id = ?
+                  AND request_type = 'account_deletion'
+                """,
+                (actor.tenant_id, request_id),
+            ).fetchone()
+            if request is None or request["status"] != "pending":
+                raise ValueError("Pending account deletion request not found")
+            if request["target_user_id"] != actor.user_id:
+                self._authorize(actor, "account:manage")
+            connection.execute(
+                """
+                UPDATE privacy_requests
+                SET status = 'cancelled', completed_at = ?,
+                    completed_by_user_id = ?,
+                    result_json = ?
+                WHERE tenant_id = ? AND request_id = ?
+                """,
+                (
+                    self.clock(),
+                    actor.user_id,
+                    self._json({"outcome": "cancelled"}),
+                    actor.tenant_id,
+                    request_id,
+                ),
+            )
+            self._audit(
+                connection,
+                actor,
+                "privacy.deletion_cancelled",
+                "privacy_request",
+                request_id,
+                {"target_user_id": request["target_user_id"]},
+            )
+
+    def complete_account_deletion(self, actor, request_id, confirmation):
+        """Remove membership and pseudonymize identity after owner approval."""
+        self._authorize(actor, "account:manage")
+        request_id = str(request_id)
+        with self.connect() as connection:
+            request = connection.execute(
+                """
+                SELECT target_user_id, status
+                FROM privacy_requests
+                WHERE tenant_id = ? AND request_id = ?
+                  AND request_type = 'account_deletion'
+                """,
+                (actor.tenant_id, request_id),
+            ).fetchone()
+            if request is None or request["status"] != "pending":
+                raise ValueError("Pending account deletion request not found")
+            target = self._account_by_user(
+                connection,
+                actor.tenant_id,
+                request["target_user_id"],
+            )
+            if target.role == "owner":
+                raise ValueError("Owner account cannot be deleted here")
+            expected = f"DELETE {target.user_id}"
+            if str(confirmation).strip() != expected:
+                raise ValueError(f"Deletion confirmation must be: {expected}")
+
+            completed_at = self.clock()
+            connection.execute(
+                """
+                UPDATE privacy_requests
+                SET status = 'completed', completed_at = ?,
+                    completed_by_user_id = ?, result_json = ?
+                WHERE tenant_id = ? AND request_id = ?
+                """,
+                (
+                    completed_at,
+                    actor.user_id,
+                    self._json(
+                        {
+                            "outcome": "membership_removed",
+                            "audit_retained": True,
+                        }
+                    ),
+                    actor.tenant_id,
+                    request_id,
+                ),
+            )
+            self._audit(
+                connection,
+                actor,
+                "privacy.deletion_completed",
+                "membership",
+                target.user_id,
+                {
+                    "request_id": request_id,
+                    "audit_retained": True,
+                },
+            )
+            connection.execute(
+                """
+                DELETE FROM memberships
+                WHERE tenant_id = ? AND user_id = ?
+                """,
+                (actor.tenant_id, target.user_id),
+            )
+            pseudonym = uuid.uuid4().hex
+            deleted_email = f"deleted+{pseudonym}@atlas.invalid"
+            connection.execute(
+                """
+                UPDATE users
+                SET subject = ?, email = ?
+                WHERE user_id = ?
+                """,
+                (f"deleted:{pseudonym}", deleted_email, target.user_id),
+            )
+            connection.execute(
+                """
+                UPDATE invitations
+                SET email = ?
+                WHERE tenant_id = ? AND accepted_user_id = ?
+                """,
+                (deleted_email, actor.tenant_id, target.user_id),
+            )
+        return {
+            "request_id": request_id,
+            "target_user_id": target.user_id,
+            "status": "completed",
+            "audit_retained": True,
+        }
+
+    def list_privacy_requests(self, actor):
+        """List all tenant requests for owners or only the caller's requests."""
+        self._authorize(actor, "workspace:read")
+        query = """
+            SELECT request_id, request_type, requested_by_user_id,
+                   target_user_id, status, created_at, completed_at,
+                   completed_by_user_id, result_json
+            FROM privacy_requests
+            WHERE tenant_id = ?
+        """
+        parameters = [actor.tenant_id]
+        if not actor.permits("account:manage"):
+            query += (
+                " AND (requested_by_user_id = ? OR target_user_id = ?)"
+            )
+            parameters.extend([actor.user_id, actor.user_id])
+        query += " ORDER BY created_at DESC, request_id"
+        return self._rows(
+            query,
+            tuple(parameters),
+            json_fields=("result_json",),
+        )
+
     def create_report(
         self,
         actor,
@@ -939,6 +1212,7 @@ class TenantStore:
                 "portfolios",
                 "research_tasks",
                 "paper_accounts",
+                "privacy_requests",
             ):
                 row = connection.execute(
                     f"SELECT COUNT(*) AS total FROM {table} WHERE tenant_id = ?",
@@ -955,6 +1229,153 @@ class TenantStore:
             },
             "counts": counts,
         }
+
+    def _tenant_export_payload(
+        self,
+        connection,
+        tenant_id,
+        generated_at,
+        request_id,
+    ):
+        tenant = dict(
+            connection.execute(
+                """
+                SELECT tenant_id, name, status, created_at
+                FROM tenants WHERE tenant_id = ?
+                """,
+                (tenant_id,),
+            ).fetchone()
+        )
+        collections = {
+            "members": self._export_rows(
+                connection,
+                """
+                SELECT u.user_id, u.provider, u.subject, u.email,
+                       m.role, m.status, m.created_at
+                FROM memberships m
+                JOIN users u ON u.user_id = m.user_id
+                WHERE m.tenant_id = ?
+                ORDER BY u.user_id
+                """,
+                tenant_id,
+            ),
+            "invitations": self._export_rows(
+                connection,
+                """
+                SELECT invitation_id, email, role, status,
+                       invited_by_user_id, created_at, expires_at,
+                       accepted_at, accepted_user_id
+                FROM invitations
+                WHERE tenant_id = ?
+                ORDER BY invitation_id
+                """,
+                tenant_id,
+            ),
+            "reports": self._export_rows(
+                connection,
+                """
+                SELECT report_id, generated_at, title, markdown_path,
+                       html_path, summary_json
+                FROM reports WHERE tenant_id = ? ORDER BY report_id
+                """,
+                tenant_id,
+                ("summary_json",),
+            ),
+            "watchlists": self._export_rows(
+                connection,
+                """
+                SELECT watchlist_id, name, created_at
+                FROM watchlists WHERE tenant_id = ? ORDER BY watchlist_id
+                """,
+                tenant_id,
+            ),
+            "watchlist_items": self._export_rows(
+                connection,
+                """
+                SELECT watchlist_id, ticker, category, notes
+                FROM watchlist_items
+                WHERE tenant_id = ? ORDER BY watchlist_id, ticker
+                """,
+                tenant_id,
+            ),
+            "portfolios": self._export_rows(
+                connection,
+                """
+                SELECT portfolio_id, name, currency, created_at
+                FROM portfolios WHERE tenant_id = ? ORDER BY portfolio_id
+                """,
+                tenant_id,
+            ),
+            "positions": self._export_rows(
+                connection,
+                """
+                SELECT portfolio_id, ticker, shares, cost_basis
+                FROM positions
+                WHERE tenant_id = ? ORDER BY portfolio_id, ticker
+                """,
+                tenant_id,
+            ),
+            "research_tasks": self._export_rows(
+                connection,
+                """
+                SELECT task_id, role, subject, prompt, status, priority,
+                       created_at, payload_json
+                FROM research_tasks WHERE tenant_id = ? ORDER BY task_id
+                """,
+                tenant_id,
+                ("payload_json",),
+            ),
+            "paper_accounts": self._export_rows(
+                connection,
+                """
+                SELECT account_id, name, starting_cash, status, created_at
+                FROM paper_accounts WHERE tenant_id = ? ORDER BY account_id
+                """,
+                tenant_id,
+            ),
+            "privacy_requests": self._export_rows(
+                connection,
+                """
+                SELECT request_id, request_type, requested_by_user_id,
+                       target_user_id, status, created_at, completed_at,
+                       completed_by_user_id, result_json
+                FROM privacy_requests
+                WHERE tenant_id = ? ORDER BY request_id
+                """,
+                tenant_id,
+                ("result_json",),
+            ),
+            "audit_events": self._export_rows(
+                connection,
+                """
+                SELECT event_id, actor_user_id, action, target_type,
+                       target_id, occurred_at, details_json
+                FROM audit_events
+                WHERE tenant_id = ? ORDER BY event_id
+                """,
+                tenant_id,
+                ("details_json",),
+            ),
+        }
+        return {
+            "export_version": TENANT_EXPORT_VERSION,
+            "schema_version": SCHEMA_VERSION,
+            "generated_at": generated_at,
+            "request_id": request_id,
+            "tenant": tenant,
+            "collections": collections,
+        }
+
+    @staticmethod
+    def _export_rows(connection, query, tenant_id, json_fields=()):
+        rows = [
+            dict(row)
+            for row in connection.execute(query, (tenant_id,)).fetchall()
+        ]
+        for row in rows:
+            for field in json_fields:
+                row[field.removesuffix("_json")] = json.loads(row.pop(field))
+        return rows
 
     def _authorize(self, actor, permission):
         if not isinstance(actor, TenantAccount):

@@ -505,6 +505,157 @@ class TenantStoreTests(unittest.TestCase):
                 "2026-06-12T12:00:00+00:00",
             )
 
+    def test_owner_export_is_tenant_scoped_audited_and_excludes_tokens(self):
+        invitation = self.store.invite_member(
+            self.alpha_owner,
+            "viewer@example.com",
+            "viewer",
+            "2026-06-12T12:00:00+00:00",
+            token="private-export-token",
+        )
+        self.store.create_report(
+            self.alpha_owner,
+            "Alpha Export Brief",
+            "2026-06-11T12:00:00+00:00",
+            summary={"ticker": "NVDA"},
+            report_id="alpha-export",
+        )
+        self.store.create_report(
+            self.beta_owner,
+            "Beta Private Brief",
+            "2026-06-11T12:00:00+00:00",
+            report_id="beta-private",
+        )
+
+        exported = self.store.export_tenant_data(
+            self.alpha_owner,
+            request_id="privacy-export",
+        )
+        serialized = str(exported)
+        self.assertEqual(exported["tenant"]["tenant_id"], "alpha-workspace")
+        self.assertIn("Alpha Export Brief", serialized)
+        self.assertNotIn("Beta Private Brief", serialized)
+        self.assertNotIn(invitation["token"], serialized)
+        self.assertNotIn("token_hash", serialized)
+        self.assertEqual(
+            exported["collections"]["privacy_requests"][0]["status"],
+            "completed",
+        )
+        self.assertEqual(
+            exported["collections"]["audit_events"][-1]["action"],
+            "privacy.export_completed",
+        )
+
+        viewer = self._account(
+            "alpha-workspace",
+            "alpha-export-viewer",
+            "google-export-viewer",
+            "export-viewer@example.com",
+            "viewer",
+        )
+        self.store.add_membership(self.alpha_owner, viewer)
+        with self.assertRaisesRegex(TenantAccessError, "Role"):
+            self.store.export_tenant_data(viewer)
+
+    def test_non_owner_deletion_requires_request_confirmation_and_is_audited(self):
+        analyst = self._account(
+            "alpha-workspace",
+            "alpha-delete",
+            "google-alpha-delete",
+            "delete@example.com",
+            "analyst",
+        )
+        self.store.add_membership(self.alpha_owner, analyst)
+        invitation = self.store.invite_member(
+            self.alpha_owner,
+            analyst.email,
+            "analyst",
+            "2026-06-12T12:00:00+00:00",
+            token="accepted-delete-token",
+        )
+        with self.store.connect() as connection:
+            connection.execute(
+                """
+                UPDATE invitations
+                SET status = 'accepted', accepted_at = ?,
+                    accepted_user_id = ?
+                WHERE tenant_id = ? AND invitation_id = ?
+                """,
+                (
+                    "2026-06-11T12:00:00+00:00",
+                    analyst.user_id,
+                    analyst.tenant_id,
+                    invitation["invitation_id"],
+                ),
+            )
+
+        request_id = self.store.request_account_deletion(
+            analyst,
+            request_id="delete-request",
+        )
+        with self.assertRaisesRegex(ValueError, "DELETE alpha-delete"):
+            self.store.complete_account_deletion(
+                self.alpha_owner,
+                request_id,
+                "DELETE something-else",
+            )
+        result = self.store.complete_account_deletion(
+            self.alpha_owner,
+            request_id,
+            "DELETE alpha-delete",
+        )
+        self.assertEqual(result["status"], "completed")
+        with self.assertRaisesRegex(PermissionError, "not invited"):
+            self.store.resolve(
+                analyst.provider,
+                analyst.subject,
+                analyst.email,
+            )
+        with self.store.connect() as connection:
+            user = connection.execute(
+                "SELECT subject, email FROM users WHERE user_id = ?",
+                (analyst.user_id,),
+            ).fetchone()
+            accepted = connection.execute(
+                """
+                SELECT email FROM invitations
+                WHERE tenant_id = ? AND invitation_id = ?
+                """,
+                (analyst.tenant_id, invitation["invitation_id"]),
+            ).fetchone()
+        self.assertTrue(user["subject"].startswith("deleted:"))
+        self.assertTrue(user["email"].endswith("@atlas.invalid"))
+        self.assertEqual(accepted["email"], user["email"])
+        requests = self.store.list_privacy_requests(self.alpha_owner)
+        self.assertEqual(requests[0]["status"], "completed")
+        events = self.store.list_audit_events(self.alpha_owner)
+        self.assertEqual(events[0]["action"], "privacy.deletion_completed")
+
+    def test_deletion_request_can_be_cancelled_and_owner_cannot_self_delete(self):
+        viewer = self._account(
+            "alpha-workspace",
+            "alpha-cancel",
+            "google-alpha-cancel",
+            "cancel@example.com",
+            "viewer",
+        )
+        self.store.add_membership(self.alpha_owner, viewer)
+        request_id = self.store.request_account_deletion(
+            viewer,
+            request_id="cancel-request",
+        )
+        self.store.cancel_account_deletion(viewer, request_id)
+        self.assertEqual(
+            self.store.list_privacy_requests(viewer)[0]["status"],
+            "cancelled",
+        )
+        self.assertEqual(
+            self.store.resolve(viewer.provider, viewer.subject, viewer.email),
+            viewer,
+        )
+        with self.assertRaisesRegex(ValueError, "ownership transfer"):
+            self.store.request_account_deletion(self.alpha_owner)
+
 
 if __name__ == "__main__":
     unittest.main()

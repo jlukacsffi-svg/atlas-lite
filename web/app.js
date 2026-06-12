@@ -82,6 +82,10 @@ function renderAccess(access) {
     access.threat_model || "--";
   document.getElementById("recovery-status").textContent =
     access.recovery || "--";
+  document.getElementById("privacy-export-status").textContent =
+    access.privacy_export || "--";
+  document.getElementById("account-deletion-status").textContent =
+    access.account_deletion || "--";
   document.getElementById("access-roles").innerHTML = (access.roles || [])
     .map(role => `<span class="role-chip">${role}</span>`)
     .join("");

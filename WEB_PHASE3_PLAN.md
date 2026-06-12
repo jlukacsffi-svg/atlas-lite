@@ -47,8 +47,9 @@ database. It contains no real identity subject or secret.
 5. Test object-level authorization across every private route. Complete for
    the initial read-only route set.
 6. Complete a threat model and backup design. Complete locally.
-7. Complete privacy, production database, deployment, and cost review.
-8. Deploy only after the owner-only service remains available for rollback.
+7. Complete privacy export and account deletion controls. Complete locally.
+8. Complete production database, deployment, legal/privacy, and cost review.
+9. Deploy only after the owner-only service remains available for rollback.
 
 ## Persistence Milestone
 
@@ -145,6 +146,35 @@ remain in private encrypted-at-rest storage and must never be committed.
 See `TENANT_THREAT_MODEL.md` for the control matrix and remaining production
 risks.
 
+## Privacy Lifecycle Milestone
+
+Status: Complete locally.
+
+The privacy foundation provides:
+
+- Owner-only tenant JSON exports.
+- Tenant-scoped export queries across memberships and private resources.
+- Exclusion of invitation token hashes from export packages.
+- Git-ignored private export storage and refusal to overwrite an existing
+  export.
+- Self-service deletion requests and cancellation for non-owner accounts.
+- Explicit owner confirmation before deletion completion.
+- Membership removal, identity pseudonymization, and immediate session
+  invalidation.
+- Retention of append-only security audit history and tenant-owned records.
+- Audited export, deletion request, cancellation, and completion events.
+
+Create a local preview export with:
+
+```powershell
+py -3.12 tenant_privacy.py export --output privacy_exports\preview.json
+```
+
+The JSON export contains private account and financial data. It must remain in
+private encrypted-at-rest storage and must never be committed or emailed.
+Owner deletion remains prohibited until ownership transfer or tenant-closure
+workflows are designed.
+
 ## Exit Criteria
 
 Web Phase 3 is complete only when:
@@ -158,5 +188,4 @@ Web Phase 3 is complete only when:
 - Security and privacy reviews are complete.
 - Invite-only staging is explicitly approved.
 
-Estimated Web Phase 3 completion after the threat-model and recovery
-milestone: 70%.
+Estimated Web Phase 3 completion after the privacy lifecycle milestone: 82%.

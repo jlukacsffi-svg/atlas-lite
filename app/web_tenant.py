@@ -168,6 +168,11 @@ class TenantWebApplication:
                 start_response,
                 lambda: {"items": self.store.list_audit_events(account)},
             )
+        if path == "/api/privacy/requests":
+            return self._guarded(
+                start_response,
+                lambda: {"items": self.store.list_privacy_requests(account)},
+            )
         if path == "/api/dashboard":
             summary = self.store.workspace_summary(account)
             return self._json(
@@ -207,7 +212,9 @@ class TenantWebApplication:
                         "audit_log": "Append-only administration events",
                         "threat_model": "Documented control matrix",
                         "recovery": "Integrity-checked restore drill",
-                        "phase_completion": 70,
+                        "privacy_export": "Secret-free tenant package",
+                        "account_deletion": "Requested, confirmed, audited",
+                        "phase_completion": 82,
                     },
                 },
             )

@@ -183,9 +183,10 @@ Status: Local identity, role, permission, tenant-path, and relational
 persistence foundations complete. Invite-only administration and its
 read-only dashboard status are complete locally. The separate tenant-aware
 local application boundary and initial object-level route tests are complete.
-The threat model, tenant database backup validation, and isolated recovery
-drill are complete locally. Production deployment review is next. The live
-cloud service remains owner-only.
+The threat model, tenant database recovery drill, tenant-scoped privacy export,
+and guarded account deletion workflow are complete locally. Production
+database, legal/privacy, and deployment review are next. The live cloud service
+remains owner-only.
 
 Includes:
 

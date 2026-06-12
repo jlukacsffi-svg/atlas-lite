@@ -89,6 +89,12 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 - Tenant SQLite backups are integrity-checked but not application-encrypted.
   Keep them only in private encrypted-at-rest storage and run
   `tenant_backup.py drill` before a production migration or restore.
+- Tenant privacy exports belong only in the ignored `privacy_exports/` folder.
+  They contain private identity and financial data, exclude invitation
+  secrets, and must remain in private encrypted-at-rest storage.
+- Preserve append-only security audit history when pseudonymizing a deleted
+  account. Owner deletion requires a future ownership-transfer or
+  tenant-closure workflow.
 - Run a local `backup_restore.py drill` before the first cloud deployment and a
   cloud-backed restoration drill before production.
 - Treat every user-owned record as tenant-scoped and test that users cannot access one another's data.

@@ -680,6 +680,20 @@ Tenant backup archives are ignored by Git. They are checksum-validated but not
 application-encrypted, so keep them only in private encrypted-at-rest storage.
 See `TENANT_THREAT_MODEL.md` for the current security boundary.
 
+## Tenant Privacy Controls
+
+Create an owner-only export of the local preview workspace with:
+
+```powershell
+py -3.12 tenant_privacy.py export --output privacy_exports\preview.json
+```
+
+The export is tenant-scoped and excludes invitation token hashes. Privacy
+exports are ignored by Git, contain sensitive account data, and must remain in
+private encrypted-at-rest storage. Non-owner deletion requests, cancellation,
+and owner-confirmed completion are implemented in the tenant repository and
+covered by automated authorization and audit tests.
+
 ```
 Atlas-lite/
 ├── app/                          # Core application modules

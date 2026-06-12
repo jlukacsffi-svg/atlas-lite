@@ -265,12 +265,13 @@ Current Web Phase 3 result:
   object-level authorization are complete locally.
 - The tenant threat model and integrity-checked SQLite backup/restore drill are
   complete locally.
-- Web Phase 3 is approximately 70% complete. Privacy/export/deletion controls,
-  production identity/database selection, and deployment review remain.
+- Web Phase 3 is approximately 82% complete. Tenant-scoped privacy exports and
+  guarded account deletion are complete locally. Production identity/database
+  selection, retention/legal review, and deployment review remain.
 - The live cloud service remains owner-only and recurring schedules remain
   paused.
 
-Estimated overall Atlas program completion: 67%.
+Estimated overall Atlas program completion: 68%.
 
 ## Current Recommended Sequence
 

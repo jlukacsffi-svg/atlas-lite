@@ -308,6 +308,14 @@ class TenantWebApplicationTests(unittest.TestCase):
         )
         self.assertEqual(owner["status"], "200 OK")
 
+        privacy = call_wsgi(
+            self.app,
+            "/api/privacy/requests",
+            headers=viewer_headers,
+        )
+        self.assertEqual(privacy["status"], "200 OK")
+        self.assertEqual(privacy["json"]["items"], [])
+
     def test_disabled_membership_invalidates_existing_session(self):
         viewer = self._account(
             "alpha-workspace",
@@ -353,11 +361,15 @@ class TenantWebApplicationTests(unittest.TestCase):
         )
         self.assertEqual(
             response["json"]["access"]["phase_completion"],
-            70,
+            82,
         )
         self.assertIn(
             "restore drill",
             response["json"]["access"]["recovery"],
+        )
+        self.assertIn(
+            "tenant package",
+            response["json"]["access"]["privacy_export"],
         )
 
     def test_mutating_methods_are_rejected_and_static_files_are_protected(self):

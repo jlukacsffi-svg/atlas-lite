@@ -9,6 +9,7 @@ research_tasks/
 paper_trading/
 data_cache/
 backups/
+privacy_exports/
 tenant_data/
 *.sqlite3
 

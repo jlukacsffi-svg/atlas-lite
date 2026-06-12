@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 67%.
+Estimated overall Atlas program completion: 68%.
 
 ## Useful Files
 
@@ -291,6 +291,12 @@ Estimated overall Atlas program completion: 67%.
   Security panel now shows the threat-model and recovery status. Archives are
   not application-encrypted and must remain in private encrypted-at-rest
   storage.
+- Web Phase 3 is approximately 82% complete. Schema version 3 adds audited
+  privacy requests. `tenant_privacy.py` and `TenantStore` now provide
+  owner-only secret-free tenant exports plus guarded non-owner account
+  deletion requests, cancellation, explicit completion confirmation,
+  membership removal, and identity pseudonymization. Security audit history
+  and tenant-owned records remain intact.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

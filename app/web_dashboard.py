@@ -68,7 +68,9 @@ class DashboardDataService:
             "audit_log": "Append-only administration events",
             "threat_model": "Documented control matrix",
             "recovery": "Integrity-checked restore drill",
-            "phase_completion": 55,
+            "privacy_export": "Secret-free tenant package",
+            "account_deletion": "Requested, confirmed, audited",
+            "phase_completion": 60,
             "next_step": "Production deployment review",
         }
 
