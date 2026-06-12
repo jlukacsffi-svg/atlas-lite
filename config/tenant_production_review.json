@@ -1,0 +1,59 @@
+{
+  "review_version": 1,
+  "decision": "conditional_go",
+  "public_registration": false,
+  "cloud_changes_authorized": false,
+  "database": {
+    "provider": "cloud_sql_postgresql",
+    "engine_major": 16,
+    "region": "us-west1",
+    "staging_availability": "zonal",
+    "beta_availability": "regional_ha",
+    "automatic_iam_authentication": true,
+    "static_database_passwords": false,
+    "connection_pooling": true,
+    "automated_backups": true,
+    "point_in_time_recovery": true,
+    "activation_approved": false
+  },
+  "identity": {
+    "provider": "identity_platform",
+    "application_tenant_model": true,
+    "provider_tenants_required": false,
+    "registration": "invite_only",
+    "email_verification": true,
+    "session_revocation": true,
+    "mfa_factor": "totp",
+    "mfa_required_roles": [
+      "owner",
+      "admin"
+    ],
+    "activation_approved": false
+  },
+  "deployment": {
+    "separate_tenant_service": true,
+    "preserve_owner_service_for_rollback": true,
+    "separate_staging_data": true,
+    "minimum_instances": 0,
+    "maximum_instances": 1,
+    "schedules_remain_paused": true
+  },
+  "cost": {
+    "current_target_monthly_usd": 5,
+    "current_alert_monthly_usd": 10,
+    "estimated_staging_low_usd": 9,
+    "estimated_staging_expected_usd": 15,
+    "estimated_staging_high_usd": 25,
+    "fresh_owner_approval_required": true,
+    "credit_expiration_confirmed": false
+  },
+  "release_gates": {
+    "privacy_policy": "required_before_invites",
+    "terms_of_service": "required_before_invites",
+    "investment_adviser_review": "attorney_required_before_external_beta",
+    "market_data_licensing": "required_before_external_beta",
+    "incident_response": "required_before_invites",
+    "retention_schedule": "required_before_invites",
+    "external_security_test": "required_before_public_registration"
+  }
+}

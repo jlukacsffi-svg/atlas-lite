@@ -59,6 +59,11 @@ spending, production deployment, or a changed architecture.
 
 The current estimate is maintained in `CLOUD_COST_ESTIMATE.md`.
 
+The proposed multi-user staging architecture is not authorized. Its expected
+cost is approximately `$15/month`, with a `$9-$25/month` engineering range.
+Cloud SQL and Identity Platform must remain disabled until Joe approves a
+revised budget after confirming the exact promotional-credit expiration.
+
 Current Artifact Registry status on June 8, 2026:
 
 - Repository size: `464.400 MB`.

@@ -49,6 +49,7 @@ database. It contains no real identity subject or secret.
 6. Complete a threat model and backup design. Complete locally.
 7. Complete privacy export and account deletion controls. Complete locally.
 8. Complete production database, deployment, legal/privacy, and cost review.
+   Complete as a conditional architecture approval; deployment remains blocked.
 9. Deploy only after the owner-only service remains available for rollback.
 
 ## Persistence Milestone
@@ -188,4 +189,27 @@ Web Phase 3 is complete only when:
 - Security and privacy reviews are complete.
 - Invite-only staging is explicitly approved.
 
-Estimated Web Phase 3 completion after the privacy lifecycle milestone: 82%.
+## Production Architecture Review
+
+Status: Complete as a local release-gate decision.
+
+The review selects Cloud SQL for PostgreSQL 16, automatic IAM database
+authentication, Google Identity Platform, invite-only registration, TOTP for
+privileged roles, and a separate tenant service that preserves the owner
+dashboard as a rollback path.
+
+The expected staging cost is approximately `$15/month`, above the current
+`$0-$5` target and potentially above the `$10` alert. Cloud SQL, Identity
+Platform, public registration, external invitations, and recurring schedules
+remain disabled. See `PRODUCTION_ARCHITECTURE_REVIEW.md`.
+
+Run the fail-closed review with:
+
+```powershell
+py -3.12 tenant_readiness.py
+```
+
+Exit code `2` is expected until deployment receives a fresh cost approval and
+all legal, privacy, licensing, incident-response, and security gates close.
+
+Estimated Web Phase 3 completion after the production review: 92%.

@@ -72,6 +72,9 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 
 - Read `WEB_PLATFORM_PLAN.md` before web-platform work.
 - Read `WEB_PHASE2_PLAN.md` before cloud deployment work.
+- Read `PRODUCTION_ARCHITECTURE_REVIEW.md` before multi-user production work.
+- Run `py -3.12 tenant_readiness.py`; exit code `2` is the expected blocked
+  state until Joe approves the revised cost envelope and release gates close.
 - Build the website incrementally without disrupting the research and paper-evaluation engine.
 - Start with a read-only local owner dashboard.
 - Use modern, responsive, accessible financial-workspace design with meaningful charts.

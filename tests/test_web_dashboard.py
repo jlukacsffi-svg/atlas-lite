@@ -78,9 +78,10 @@ class WebDashboardTests(unittest.TestCase):
         self.assertFalse(data["access"]["public_registration"])
         self.assertEqual(data["access"]["mode"], "invite_only")
         self.assertEqual(data["access"]["schema_version"], 3)
-        self.assertEqual(data["access"]["phase_completion"], 60)
+        self.assertEqual(data["access"]["phase_completion"], 65)
         self.assertIn("restore drill", data["access"]["recovery"])
         self.assertIn("tenant package", data["access"]["privacy_export"])
+        self.assertIn("deployment blocked", data["access"]["production_review"])
 
     def test_static_routes_are_explicit_and_read_only(self):
         self.assertEqual(set(STATIC_FILES), {"/", "/index.html", "/styles.css", "/app.js"})
@@ -99,6 +100,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn('id="recovery-status"', html)
         self.assertIn('id="privacy-export-status"', html)
         self.assertIn('id="account-deletion-status"', html)
+        self.assertIn('id="production-review-status"', html)
         self.assertIn("renderAccess", script)
         self.assertIn('id="workspace-identity"', html)
         self.assertIn("renderWorkspace", script)

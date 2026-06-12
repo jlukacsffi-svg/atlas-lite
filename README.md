@@ -694,6 +694,20 @@ private encrypted-at-rest storage. Non-owner deletion requests, cancellation,
 and owner-confirmed completion are implemented in the tenant repository and
 covered by automated authorization and audit tests.
 
+## Tenant Production Readiness
+
+Review the conditional managed PostgreSQL, identity, privacy, legal, and cost
+decision with:
+
+```powershell
+py -3.12 tenant_readiness.py
+```
+
+Exit code `2` is expected: the architecture checks pass, but deployment is
+intentionally blocked. No Cloud SQL instance, Identity Platform activation,
+public registration, external invitation, or recurring schedule is approved.
+See `PRODUCTION_ARCHITECTURE_REVIEW.md`.
+
 ```
 Atlas-lite/
 ├── app/                          # Core application modules

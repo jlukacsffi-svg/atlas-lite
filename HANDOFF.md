@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-06-08
+Last updated: 2026-06-12
 
 ## Current Roadmap Position
 
@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 68%.
+Estimated overall Atlas program completion: 69%.
 
 ## Useful Files
 
@@ -297,6 +297,12 @@ Estimated overall Atlas program completion: 68%.
   deletion requests, cancellation, explicit completion confirmation,
   membership removal, and identity pseudonymization. Security audit history
   and tenant-owned records remain intact.
+- Web Phase 3 is approximately 92% complete.
+  `PRODUCTION_ARCHITECTURE_REVIEW.md`, `config/tenant_production_review.json`,
+  and `tenant_readiness.py` select the managed PostgreSQL and identity
+  direction while blocking deployment. The expected staging cost is about
+  `$15/month`, so no Cloud SQL, Identity Platform, public registration,
+  external invitations, or recurring schedules were activated.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

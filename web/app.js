@@ -86,6 +86,8 @@ function renderAccess(access) {
     access.privacy_export || "--";
   document.getElementById("account-deletion-status").textContent =
     access.account_deletion || "--";
+  document.getElementById("production-review-status").textContent =
+    access.production_review || "--";
   document.getElementById("access-roles").innerHTML = (access.roles || [])
     .map(role => `<span class="role-chip">${role}</span>`)
     .join("");

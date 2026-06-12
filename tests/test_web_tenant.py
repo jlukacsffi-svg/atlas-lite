@@ -361,7 +361,7 @@ class TenantWebApplicationTests(unittest.TestCase):
         )
         self.assertEqual(
             response["json"]["access"]["phase_completion"],
-            82,
+            92,
         )
         self.assertIn(
             "restore drill",
@@ -370,6 +370,10 @@ class TenantWebApplicationTests(unittest.TestCase):
         self.assertIn(
             "tenant package",
             response["json"]["access"]["privacy_export"],
+        )
+        self.assertIn(
+            "deployment blocked",
+            response["json"]["access"]["production_review"],
         )
 
     def test_mutating_methods_are_rejected_and_static_files_are_protected(self):

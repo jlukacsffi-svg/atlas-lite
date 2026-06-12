@@ -184,9 +184,11 @@ persistence foundations complete. Invite-only administration and its
 read-only dashboard status are complete locally. The separate tenant-aware
 local application boundary and initial object-level route tests are complete.
 The threat model, tenant database recovery drill, tenant-scoped privacy export,
-and guarded account deletion workflow are complete locally. Production
-database, legal/privacy, and deployment review are next. The live cloud service
-remains owner-only.
+guarded account deletion workflow, and conditional production architecture
+review are complete locally. Cloud SQL for PostgreSQL and Google Identity
+Platform are selected, but activation remains blocked pending revised cost
+approval and legal, licensing, operational, and security gates. The live cloud
+service remains owner-only.
 
 Includes:
 

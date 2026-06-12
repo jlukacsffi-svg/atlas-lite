@@ -70,7 +70,8 @@ class DashboardDataService:
             "recovery": "Integrity-checked restore drill",
             "privacy_export": "Secret-free tenant package",
             "account_deletion": "Requested, confirmed, audited",
-            "phase_completion": 60,
+            "production_review": "Conditional go; deployment blocked",
+            "phase_completion": 65,
             "next_step": "Production deployment review",
         }
 

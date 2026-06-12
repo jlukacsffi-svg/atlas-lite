@@ -211,9 +211,10 @@ Phases:
 2. Secure single-user cloud hosting independent of Joe's laptop. Foundation in progress.
 3. Invite-only multi-user accounts with strict tenant isolation. Local
    identity, role, permission, tenant-path, and relational persistence
-   foundations, invite-only administration, and a separate tenant-aware local
-   application boundary are complete; threat modeling and recovery design are
-   next.
+   foundations, invite-only administration, a separate tenant-aware local
+   application boundary, privacy lifecycle controls, and the conditional
+   production architecture review are complete. Managed deployment remains
+   blocked pending cost approval and release gates.
 4. Controlled customer beta with privacy, support, and subscription foundations.
 5. Public self-service product only after security and operational readiness.
 
@@ -265,13 +266,14 @@ Current Web Phase 3 result:
   object-level authorization are complete locally.
 - The tenant threat model and integrity-checked SQLite backup/restore drill are
   complete locally.
-- Web Phase 3 is approximately 82% complete. Tenant-scoped privacy exports and
-  guarded account deletion are complete locally. Production identity/database
-  selection, retention/legal review, and deployment review remain.
+- Web Phase 3 is approximately 92% complete. Production identity and database
+  architecture are selected conditionally, with a fail-closed readiness
+  audit. Activation remains blocked pending cost approval, PostgreSQL adapter
+  validation, legal/licensing work, and invite-only staging sign-off.
 - The live cloud service remains owner-only and recurring schedules remain
   paused.
 
-Estimated overall Atlas program completion: 68%.
+Estimated overall Atlas program completion: 69%.
 
 ## Current Recommended Sequence
 

@@ -1,6 +1,6 @@
 # Atlas Staging Cloud Cost Estimate
 
-Estimate date: June 8, 2026
+Estimate date: June 12, 2026
 
 This estimate covers the private, owner-only Atlas staging deployment in
 `us-west1`. The initial foundation has been explicitly authorized and created;
@@ -52,6 +52,27 @@ These are engineering estimates, not Google quotes:
 If forecast or actual spend approaches `$5`, pause jobs and investigate. If it
 approaches `$10`, disable Atlas billing unless Joe explicitly approves a new
 budget.
+
+## Proposed Multi-User Staging
+
+The production architecture review selects Cloud SQL for PostgreSQL and Google
+Identity Platform, but neither service is approved for activation.
+
+Engineering estimate:
+
+- Low: approximately `$9/month`.
+- Expected: approximately `$15/month`.
+- High: approximately `$25/month`.
+
+The smallest published shared-core Cloud SQL compute price is approximately
+`$7.67/month` at 730 hours before storage, backups, operations, and transfer.
+Identity Platform Tier 1 providers are currently free through 50,000 monthly
+active users; SMS and some MFA usage are separately metered. Atlas plans TOTP
+for privileged roles.
+
+This proposal exceeds the current `$0-$5` target and may exceed the `$10`
+alert. It requires a revised budget, exact promotional-credit expiration
+confirmation, and explicit owner approval before any resource is created.
 
 ## Before The Next Activation
 
