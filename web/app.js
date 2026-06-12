@@ -48,6 +48,23 @@ function renderDashboard(data) {
   renderSectors(data.sectors || []);
   renderPositions(paper.positions || []);
   renderTasks(data.research?.tasks || []);
+  renderAccess(data.access || {});
+}
+
+function renderAccess(access) {
+  document.getElementById("access-mode").textContent =
+    access.mode === "invite_only" ? "Invite only" : "Restricted";
+  document.getElementById("registration-status").textContent =
+    access.public_registration ? "Enabled" : "Disabled";
+  document.getElementById("tenant-isolation").textContent =
+    access.tenant_isolation || "--";
+  document.getElementById("identity-binding").textContent =
+    access.identity_binding || "--";
+  document.getElementById("audit-status").textContent =
+    access.audit_log || "--";
+  document.getElementById("access-roles").innerHTML = (access.roles || [])
+    .map(role => `<span class="role-chip">${role}</span>`)
+    .join("");
 }
 
 function renderMarketPills(rows) {

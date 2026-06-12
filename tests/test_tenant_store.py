@@ -294,6 +294,217 @@ class TenantStoreTests(unittest.TestCase):
         with self.assertRaisesRegex(PermissionError, "Cross-tenant"):
             self.store.add_membership(self.alpha_owner, outsider)
 
+    def test_invitation_token_is_hashed_and_accepts_exact_identity(self):
+        invitation = self.store.invite_member(
+            self.alpha_owner,
+            "Analyst@Example.com",
+            "analyst",
+            "2026-06-12T12:00:00+00:00",
+            invitation_id="invite-analyst",
+            token="secure-invitation-token",
+        )
+        self.assertEqual(invitation["email"], "analyst@example.com")
+        with self.store.connect() as connection:
+            row = connection.execute(
+                """
+                SELECT token_hash FROM invitations
+                WHERE tenant_id = ? AND invitation_id = ?
+                """,
+                ("alpha-workspace", "invite-analyst"),
+            ).fetchone()
+        self.assertNotEqual(row["token_hash"], invitation["token"])
+        self.assertNotIn("secure-invitation-token", row["token_hash"])
+
+        account = self.store.accept_invitation(
+            invitation["token"],
+            "google",
+            "google-analyst",
+            "analyst@example.com",
+            user_id="alpha-analyst",
+        )
+
+        self.assertEqual(account.role, "analyst")
+        self.assertEqual(
+            self.store.resolve(
+                "google",
+                "google-analyst",
+                "analyst@example.com",
+            ),
+            account,
+        )
+        with self.assertRaisesRegex(PermissionError, "no longer active"):
+            self.store.accept_invitation(
+                invitation["token"],
+                "google",
+                "replay",
+                "analyst@example.com",
+            )
+
+    def test_invitation_rejects_email_mismatch_expiry_and_owner_role(self):
+        with self.assertRaisesRegex(ValueError, "admin, analyst, or viewer"):
+            self.store.invite_member(
+                self.alpha_owner,
+                "owner2@example.com",
+                "owner",
+                "2026-06-12T12:00:00+00:00",
+            )
+        with self.assertRaisesRegex(ValueError, "future"):
+            self.store.invite_member(
+                self.alpha_owner,
+                "expired@example.com",
+                "viewer",
+                "2026-06-10T12:00:00+00:00",
+            )
+
+        invitation = self.store.invite_member(
+            self.alpha_owner,
+            "viewer@example.com",
+            "viewer",
+            "2026-06-12T12:00:00+00:00",
+            token="another-secure-token",
+        )
+        with self.assertRaisesRegex(PermissionError, "does not match"):
+            self.store.accept_invitation(
+                invitation["token"],
+                "google",
+                "google-attacker",
+                "attacker@example.com",
+            )
+
+        expiring = self.store.invite_member(
+            self.alpha_owner,
+            "late@example.com",
+            "viewer",
+            "2026-06-11T13:00:00+00:00",
+            token="expiring-token-value",
+        )
+        later_store = TenantStore(
+            self.database,
+            clock=lambda: "2026-06-11T14:00:00+00:00",
+        )
+        with self.assertRaisesRegex(PermissionError, "expired"):
+            later_store.accept_invitation(
+                expiring["token"],
+                "google",
+                "google-late",
+                "late@example.com",
+            )
+        statuses = {
+            item["invitation_id"]: item["status"]
+            for item in self.store.list_invitations(self.alpha_owner)
+        }
+        self.assertEqual(statuses[expiring["invitation_id"]], "expired")
+
+    def test_invitation_can_be_revoked_and_duplicate_pending_is_blocked(self):
+        invitation = self.store.invite_member(
+            self.alpha_owner,
+            "viewer@example.com",
+            "viewer",
+            "2026-06-12T12:00:00+00:00",
+            token="revocable-token-value",
+        )
+        with self.assertRaises(sqlite3.IntegrityError):
+            self.store.invite_member(
+                self.alpha_owner,
+                "VIEWER@example.com",
+                "viewer",
+                "2026-06-13T12:00:00+00:00",
+                token="duplicate-token-value",
+            )
+
+        self.store.revoke_invitation(
+            self.alpha_owner,
+            invitation["invitation_id"],
+        )
+        self.assertEqual(
+            self.store.list_invitations(self.alpha_owner)[0]["status"],
+            "revoked",
+        )
+        with self.assertRaisesRegex(PermissionError, "no longer active"):
+            self.store.accept_invitation(
+                invitation["token"],
+                "google",
+                "google-viewer",
+                "viewer@example.com",
+            )
+
+    def test_role_status_changes_are_guarded_and_audited(self):
+        analyst = self._account(
+            "alpha-workspace",
+            "alpha-analyst",
+            "google-alpha-analyst",
+            "analyst@example.com",
+            "analyst",
+        )
+        self.store.add_membership(self.alpha_owner, analyst)
+
+        self.store.change_member_role(
+            self.alpha_owner,
+            analyst.user_id,
+            "viewer",
+        )
+        viewer = self.store.resolve(
+            "google",
+            analyst.subject,
+            analyst.email,
+        )
+        self.assertEqual(viewer.role, "viewer")
+        self.store.set_member_status(
+            self.alpha_owner,
+            analyst.user_id,
+            "disabled",
+        )
+        with self.assertRaisesRegex(PermissionError, "disabled"):
+            self.store.resolve("google", analyst.subject, analyst.email)
+
+        events = self.store.list_audit_events(self.alpha_owner)
+        self.assertEqual(
+            [event["action"] for event in events[:2]],
+            ["membership.status_changed", "membership.role_changed"],
+        )
+        with self.store.connect() as connection:
+            with self.assertRaisesRegex(
+                sqlite3.IntegrityError,
+                "append-only",
+            ):
+                connection.execute(
+                    "DELETE FROM audit_events WHERE event_id = ?",
+                    (events[0]["event_id"],),
+                )
+
+    def test_owner_membership_cannot_be_downgraded_or_disabled(self):
+        with self.assertRaisesRegex(ValueError, "Owner role"):
+            self.store.change_member_role(
+                self.alpha_owner,
+                self.alpha_owner.user_id,
+                "admin",
+            )
+        with self.assertRaisesRegex(ValueError, "Owner account"):
+            self.store.set_member_status(
+                self.alpha_owner,
+                self.alpha_owner.user_id,
+                "disabled",
+            )
+
+    def test_non_manager_cannot_list_or_create_invitations(self):
+        viewer = self._account(
+            "alpha-workspace",
+            "alpha-viewer",
+            "google-alpha-viewer",
+            "viewer@example.com",
+            "viewer",
+        )
+        self.store.add_membership(self.alpha_owner, viewer)
+        with self.assertRaisesRegex(TenantAccessError, "Role"):
+            self.store.list_invitations(viewer)
+        with self.assertRaisesRegex(TenantAccessError, "Role"):
+            self.store.invite_member(
+                viewer,
+                "other@example.com",
+                "viewer",
+                "2026-06-12T12:00:00+00:00",
+            )
+
 
 if __name__ == "__main__":
     unittest.main()

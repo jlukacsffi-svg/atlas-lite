@@ -41,7 +41,7 @@ database. It contains no real identity subject or secret.
 1. Define the relational schema and migration workflow. Complete locally.
 2. Add tenant-aware repositories for reports, watchlists, portfolios, research,
    and paper accounts. Complete at the initial local foundation level.
-3. Introduce an invite-only administration workflow.
+3. Introduce an invite-only administration workflow. Complete locally.
 4. Integrate tenant resolution into a separate local application boundary.
 5. Test object-level authorization across every private route.
 6. Complete a threat model, backup design, and cost review.
@@ -68,6 +68,25 @@ The initial SQLite persistence layer provides:
 SQLite is a local proving environment, not the final production database.
 Production database selection requires a separate architecture and cost review.
 
+## Invite Administration Milestone
+
+Status: Complete locally.
+
+The administration foundation provides:
+
+- Expiring invitations for administrator, analyst, and viewer roles.
+- One-time invitation tokens stored only as SHA-256 hashes.
+- Acceptance bound to the invited email and a verified Google subject.
+- Replay, revoked, expired, mismatched-email, and duplicate-pending rejection.
+- Guarded role changes and immediate account disabling.
+- Owner protection from ordinary downgrade or disable workflows.
+- Append-only audit events protected by database triggers.
+- A read-only Access & Security dashboard panel showing the current release
+  boundary without enabling account creation.
+
+No invitation email is sent and no live account is created in this milestone.
+The live Google Cloud service remains owner-only.
+
 ## Exit Criteria
 
 Web Phase 3 is complete only when:
@@ -81,4 +100,4 @@ Web Phase 3 is complete only when:
 - Security and privacy reviews are complete.
 - Invite-only staging is explicitly approved.
 
-Estimated Web Phase 3 completion after the persistence milestone: 25%.
+Estimated Web Phase 3 completion after invite administration: 40%.

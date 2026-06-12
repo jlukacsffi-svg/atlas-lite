@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 64%.
+Estimated overall Atlas program completion: 65%.
 
 ## Useful Files
 
@@ -273,6 +273,11 @@ Estimated overall Atlas program completion: 64%.
   foreign keys and active-membership checks reject cross-tenant or forged
   access. The live cloud service remains owner-only; this milestone is
   local-only and creates no cloud cost.
+- Web Phase 3 is approximately 40% complete. Invite administration now uses
+  expiring hashed tokens, verified identity binding, guarded role and status
+  changes, owner protection, and append-only audit events. The local dashboard
+  visibly reports this boundary in its Access & Security panel. No public
+  registration, invitation delivery, or cloud account rollout is enabled.
 - `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
 - `GCP_STAGING_SETUP.md`: guarded Google Cloud staging setup and billing gate.
 - `scripts/gcp_set_schedules_staging.ps1`: guarded schedule status, pause, and

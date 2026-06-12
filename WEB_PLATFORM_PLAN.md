@@ -180,8 +180,9 @@ are in `WEB_PHASE2_PLAN.md`.
 Introduce private user workspaces.
 
 Status: Local identity, role, permission, tenant-path, and relational
-persistence foundations complete. Invite-only administration is next. The
-live cloud service remains owner-only.
+persistence foundations complete. Invite-only administration and its
+read-only dashboard status are complete locally. A separate tenant-aware local
+application boundary is next. The live cloud service remains owner-only.
 
 Includes:
 

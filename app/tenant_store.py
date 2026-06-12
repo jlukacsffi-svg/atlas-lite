@@ -2,8 +2,10 @@
 
 from contextlib import contextmanager
 from datetime import datetime, timezone
+import hashlib
 import json
 from pathlib import Path
+import secrets
 import sqlite3
 import uuid
 
@@ -15,7 +17,7 @@ from app.tenant_accounts import (
 )
 
 
-SCHEMA_VERSION = 1
+SCHEMA_VERSION = 2
 
 
 MIGRATION_1 = """
@@ -134,6 +136,61 @@ CREATE INDEX research_tasks_by_tenant_status
 """
 
 
+MIGRATION_2 = """
+CREATE TABLE invitations (
+    tenant_id TEXT NOT NULL,
+    invitation_id TEXT NOT NULL,
+    email TEXT NOT NULL COLLATE NOCASE,
+    role TEXT NOT NULL CHECK (role IN ('admin', 'analyst', 'viewer')),
+    token_hash TEXT NOT NULL UNIQUE,
+    status TEXT NOT NULL CHECK (
+        status IN ('pending', 'accepted', 'revoked', 'expired')
+    ),
+    invited_by_user_id TEXT NOT NULL,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    accepted_at TEXT,
+    accepted_user_id TEXT,
+    PRIMARY KEY (tenant_id, invitation_id),
+    FOREIGN KEY (tenant_id) REFERENCES tenants (tenant_id) ON DELETE CASCADE,
+    FOREIGN KEY (invited_by_user_id) REFERENCES users (user_id),
+    FOREIGN KEY (accepted_user_id) REFERENCES users (user_id)
+);
+
+CREATE UNIQUE INDEX one_pending_invitation_per_email
+    ON invitations (tenant_id, email)
+    WHERE status = 'pending';
+
+CREATE TABLE audit_events (
+    event_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    tenant_id TEXT NOT NULL,
+    actor_user_id TEXT NOT NULL,
+    action TEXT NOT NULL,
+    target_type TEXT NOT NULL,
+    target_id TEXT NOT NULL,
+    occurred_at TEXT NOT NULL,
+    details_json TEXT NOT NULL DEFAULT '{}',
+    FOREIGN KEY (tenant_id) REFERENCES tenants (tenant_id) ON DELETE CASCADE,
+    FOREIGN KEY (actor_user_id) REFERENCES users (user_id)
+);
+
+CREATE INDEX audit_events_by_tenant_time
+    ON audit_events (tenant_id, event_id DESC);
+
+CREATE TRIGGER audit_events_no_update
+BEFORE UPDATE ON audit_events
+BEGIN
+    SELECT RAISE(ABORT, 'audit events are append-only');
+END;
+
+CREATE TRIGGER audit_events_no_delete
+BEFORE DELETE ON audit_events
+BEGIN
+    SELECT RAISE(ABORT, 'audit events are append-only');
+END;
+"""
+
+
 class TenantStore:
     """Persist tenant data while requiring authorization for every resource."""
 
@@ -180,6 +237,12 @@ class TenantStore:
                 connection.execute(
                     "INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
                     (1, self.clock()),
+                )
+            if 2 not in applied:
+                connection.executescript(MIGRATION_2)
+                connection.execute(
+                    "INSERT INTO schema_migrations (version, applied_at) VALUES (?, ?)",
+                    (2, self.clock()),
                 )
         return SCHEMA_VERSION
 
@@ -302,6 +365,274 @@ class TenantStore:
                 ),
             )
         return account
+
+    def invite_member(
+        self,
+        actor,
+        email,
+        role,
+        expires_at,
+        invitation_id=None,
+        token=None,
+    ):
+        self._authorize(actor, "members:manage")
+        role = str(role).strip().lower()
+        if role not in {"admin", "analyst", "viewer"}:
+            raise ValueError("Invitation role must be admin, analyst, or viewer")
+        email = self._email(email)
+        expires_at = str(expires_at).strip()
+        if self._timestamp(expires_at) <= self._timestamp(self.clock()):
+            raise ValueError("Invitation expiration must be in the future")
+        invitation_id = invitation_id or self._id("invite")
+        raw_token = token or secrets.token_urlsafe(32)
+        token_hash = self._token_hash(raw_token)
+        with self.connect() as connection:
+            connection.execute(
+                """
+                INSERT INTO invitations (
+                    tenant_id, invitation_id, email, role, token_hash, status,
+                    invited_by_user_id, created_at, expires_at
+                ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?)
+                """,
+                (
+                    actor.tenant_id,
+                    invitation_id,
+                    email,
+                    role,
+                    token_hash,
+                    actor.user_id,
+                    self.clock(),
+                    expires_at,
+                ),
+            )
+            self._audit(
+                connection,
+                actor,
+                "invitation.created",
+                "invitation",
+                invitation_id,
+                {"email": email, "role": role, "expires_at": expires_at},
+            )
+        return {
+            "invitation_id": invitation_id,
+            "email": email,
+            "role": role,
+            "expires_at": expires_at,
+            "token": raw_token,
+        }
+
+    def accept_invitation(
+        self,
+        token,
+        provider,
+        subject,
+        verified_email,
+        user_id=None,
+    ):
+        token_hash = self._token_hash(token)
+        now = self.clock()
+        with self.connect() as connection:
+            row = connection.execute(
+                """
+                SELECT *
+                FROM invitations
+                WHERE token_hash = ?
+                """,
+                (token_hash,),
+            ).fetchone()
+            if row is None:
+                raise PermissionError("Invitation is invalid")
+            if row["status"] != "pending":
+                raise PermissionError("Invitation is no longer active")
+        if self._timestamp(row["expires_at"]) <= self._timestamp(now):
+            with self.connect() as connection:
+                connection.execute(
+                    """
+                    UPDATE invitations
+                    SET status = 'expired'
+                    WHERE tenant_id = ? AND invitation_id = ?
+                    """,
+                    (row["tenant_id"], row["invitation_id"]),
+                )
+            raise PermissionError("Invitation has expired")
+        with self.connect() as connection:
+            email = self._email(verified_email)
+            if email != str(row["email"]).lower():
+                raise PermissionError("Verified email does not match invitation")
+            account = TenantAccount(
+                tenant_id=row["tenant_id"],
+                user_id=user_id or self._id("user"),
+                provider=str(provider).strip().lower(),
+                subject=str(subject).strip(),
+                email=email,
+                role=row["role"],
+                status="active",
+            )
+            account.validate()
+            connection.execute(
+                """
+                INSERT INTO users (
+                    user_id, provider, subject, email, created_at
+                ) VALUES (?, ?, ?, ?, ?)
+                """,
+                (
+                    account.user_id,
+                    account.provider,
+                    account.subject,
+                    account.email,
+                    now,
+                ),
+            )
+            connection.execute(
+                """
+                INSERT INTO memberships (
+                    tenant_id, user_id, role, status, created_at
+                ) VALUES (?, ?, ?, 'active', ?)
+                """,
+                (
+                    account.tenant_id,
+                    account.user_id,
+                    account.role,
+                    now,
+                ),
+            )
+            connection.execute(
+                """
+                UPDATE invitations
+                SET status = 'accepted', accepted_at = ?, accepted_user_id = ?
+                WHERE tenant_id = ? AND invitation_id = ?
+                """,
+                (
+                    now,
+                    account.user_id,
+                    account.tenant_id,
+                    row["invitation_id"],
+                ),
+            )
+            self._audit(
+                connection,
+                account,
+                "invitation.accepted",
+                "membership",
+                account.user_id,
+                {"email": account.email, "role": account.role},
+            )
+        return account
+
+    def revoke_invitation(self, actor, invitation_id):
+        self._authorize(actor, "members:manage")
+        with self.connect() as connection:
+            changed = connection.execute(
+                """
+                UPDATE invitations
+                SET status = 'revoked'
+                WHERE tenant_id = ? AND invitation_id = ? AND status = 'pending'
+                """,
+                (actor.tenant_id, str(invitation_id)),
+            ).rowcount
+            if changed != 1:
+                raise ValueError("Pending invitation not found")
+            self._audit(
+                connection,
+                actor,
+                "invitation.revoked",
+                "invitation",
+                str(invitation_id),
+                {},
+            )
+
+    def list_invitations(self, actor):
+        self._authorize(actor, "members:manage")
+        rows = self._rows(
+            """
+            SELECT invitation_id, email, role, status, created_at, expires_at,
+                   accepted_at
+            FROM invitations
+            WHERE tenant_id = ?
+            ORDER BY created_at DESC, invitation_id
+            """,
+            (actor.tenant_id,),
+        )
+        return rows
+
+    def list_members(self, actor):
+        self._authorize(actor, "members:manage")
+        return self._rows(
+            """
+            SELECT u.user_id, u.email, m.role, m.status, m.created_at
+            FROM memberships m
+            JOIN users u ON u.user_id = m.user_id
+            WHERE m.tenant_id = ?
+            ORDER BY u.email
+            """,
+            (actor.tenant_id,),
+        )
+
+    def change_member_role(self, actor, user_id, role):
+        self._authorize(actor, "members:manage")
+        role = str(role).strip().lower()
+        if role not in VALID_ROLES:
+            raise ValueError("Invalid tenant role")
+        target = self._membership(actor.tenant_id, user_id)
+        if target.role == "owner" or role == "owner":
+            raise ValueError("Owner role changes require a separate transfer workflow")
+        with self.connect() as connection:
+            connection.execute(
+                """
+                UPDATE memberships SET role = ?
+                WHERE tenant_id = ? AND user_id = ?
+                """,
+                (role, actor.tenant_id, str(user_id)),
+            )
+            self._audit(
+                connection,
+                actor,
+                "membership.role_changed",
+                "membership",
+                str(user_id),
+                {"from": target.role, "to": role},
+            )
+
+    def set_member_status(self, actor, user_id, status):
+        self._authorize(actor, "members:manage")
+        status = str(status).strip().lower()
+        if status not in VALID_STATUSES:
+            raise ValueError("Invalid account status")
+        target = self._membership(actor.tenant_id, user_id)
+        if target.role == "owner":
+            raise ValueError("Owner account cannot be disabled here")
+        with self.connect() as connection:
+            connection.execute(
+                """
+                UPDATE memberships SET status = ?
+                WHERE tenant_id = ? AND user_id = ?
+                """,
+                (status, actor.tenant_id, str(user_id)),
+            )
+            self._audit(
+                connection,
+                actor,
+                "membership.status_changed",
+                "membership",
+                str(user_id),
+                {"from": target.status, "to": status},
+            )
+
+    def list_audit_events(self, actor, limit=100):
+        self._authorize(actor, "account:manage")
+        limit = max(1, min(int(limit), 500))
+        return self._rows(
+            """
+            SELECT event_id, actor_user_id, action, target_type, target_id,
+                   occurred_at, details_json
+            FROM audit_events
+            WHERE tenant_id = ?
+            ORDER BY event_id DESC
+            LIMIT ?
+            """,
+            (actor.tenant_id, limit),
+            json_fields=("details_json",),
+        )
 
     def create_report(
         self,
@@ -582,6 +913,53 @@ class TenantStore:
             permission,
         )
 
+    def _membership(self, tenant_id, user_id):
+        with self.connect() as connection:
+            return self._account_by_user(connection, tenant_id, user_id)
+
+    @staticmethod
+    def _account_by_user(connection, tenant_id, user_id):
+        row = connection.execute(
+            """
+            SELECT m.tenant_id, u.user_id, u.provider, u.subject, u.email,
+                   m.role, m.status
+            FROM memberships m
+            JOIN users u ON u.user_id = m.user_id
+            WHERE m.tenant_id = ? AND u.user_id = ?
+            """,
+            (str(tenant_id), str(user_id)),
+        ).fetchone()
+        if row is None:
+            raise ValueError("Tenant membership not found")
+        return TenantAccount.from_record(dict(row))
+
+    def _audit(
+        self,
+        connection,
+        actor,
+        action,
+        target_type,
+        target_id,
+        details,
+    ):
+        connection.execute(
+            """
+            INSERT INTO audit_events (
+                tenant_id, actor_user_id, action, target_type, target_id,
+                occurred_at, details_json
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                actor.tenant_id,
+                actor.user_id,
+                str(action),
+                str(target_type),
+                str(target_id),
+                self.clock(),
+                self._json(details),
+            ),
+        )
+
     def _rows(self, query, parameters, json_fields=()):
         with self.connect() as connection:
             rows = [dict(row) for row in connection.execute(query, parameters)]
@@ -603,6 +981,28 @@ class TenantStore:
         if not ticker or len(ticker) > 12:
             raise ValueError("Valid ticker is required")
         return ticker
+
+    @staticmethod
+    def _email(value):
+        email = str(value).strip().lower()
+        if "@" not in email or len(email) > 254:
+            raise ValueError("Valid email is required")
+        return email
+
+    @staticmethod
+    def _timestamp(value):
+        normalized = str(value).strip().replace("Z", "+00:00")
+        parsed = datetime.fromisoformat(normalized)
+        if parsed.tzinfo is None:
+            raise ValueError("Timestamp must include a timezone")
+        return parsed.astimezone(timezone.utc)
+
+    @staticmethod
+    def _token_hash(value):
+        token = str(value).strip()
+        if len(token) < 16:
+            raise ValueError("Invitation token is invalid")
+        return hashlib.sha256(token.encode("utf-8")).hexdigest()
 
     @staticmethod
     def _optional_path(value):

@@ -9,6 +9,7 @@ from urllib.parse import urlparse
 from app.paper_trading import PaperTradingAccount
 from app.paths import data_path, project_path
 from app.research_tasks import ResearchTaskQueue
+from app.tenant_store import SCHEMA_VERSION
 
 
 WEB_DIR = project_path("web")
@@ -53,6 +54,19 @@ class DashboardDataService:
             "paper": self._paper(available),
             "research": self._research(),
             "history": self._history(),
+            "access": self._access(),
+        }
+
+    def _access(self):
+        return {
+            "mode": "invite_only",
+            "public_registration": False,
+            "roles": ["Owner", "Administrator", "Analyst", "Viewer"],
+            "schema_version": SCHEMA_VERSION,
+            "tenant_isolation": "Database enforced",
+            "identity_binding": "Verified Google subject and email",
+            "audit_log": "Append-only administration events",
+            "next_step": "Local invite administration review",
         }
 
     def _latest_snapshot(self):
