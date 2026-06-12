@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 65%.
+Estimated overall Atlas program completion: 66%.
 
 ## Useful Files
 
@@ -278,6 +278,15 @@ Estimated overall Atlas program completion: 65%.
   changes, owner protection, and append-only audit events. The local dashboard
   visibly reports this boundary in its Access & Security panel. No public
   registration, invitation delivery, or cloud account rollout is enabled.
+- Web Phase 3 is approximately 55% complete. `app/web_tenant.py` and
+  `tenant_dashboard.py` provide a separate localhost-only tenant application
+  that re-resolves active membership for every request, checks session claims,
+  applies role controls, and tenant-filters every private route. The dashboard
+  visibly shows the resolved workspace, role, and account. The live cloud
+  service remains owner-only and unchanged.
+- Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
+  `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
+  `tenant_data/`.
 - `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
 - `GCP_STAGING_SETUP.md`: guarded Google Cloud staging setup and billing gate.
 - `scripts/gcp_set_schedules_staging.ps1`: guarded schedule status, pause, and

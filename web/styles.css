@@ -130,6 +130,29 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 }
 .topbar-actions { display: flex; align-items: center; gap: 12px; }
 .as-of { color: var(--muted); font-size: 12px; }
+.workspace-identity {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+.workspace-identity span {
+  min-height: 23px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 7px;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--muted);
+  background: var(--surface);
+  font-size: 10px;
+}
+.workspace-identity #workspace-name {
+  color: var(--green);
+  border-color: #b8d8cc;
+  background: var(--green-soft);
+  font-weight: 800;
+}
 #refresh {
   min-height: 36px;
   padding: 0 14px;

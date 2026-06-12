@@ -49,6 +49,22 @@ function renderDashboard(data) {
   renderPositions(paper.positions || []);
   renderTasks(data.research?.tasks || []);
   renderAccess(data.access || {});
+  renderWorkspace(data.workspace || null);
+}
+
+function renderWorkspace(workspace) {
+  const identity = document.getElementById("workspace-identity");
+  if (!workspace?.tenant || !workspace?.account) {
+    identity.hidden = true;
+    return;
+  }
+  identity.hidden = false;
+  document.getElementById("workspace-name").textContent =
+    workspace.tenant.name;
+  document.getElementById("workspace-role").textContent =
+    workspace.account.role;
+  document.getElementById("workspace-email").textContent =
+    workspace.account.email;
 }
 
 function renderAccess(access) {
@@ -65,6 +81,11 @@ function renderAccess(access) {
   document.getElementById("access-roles").innerHTML = (access.roles || [])
     .map(role => `<span class="role-chip">${role}</span>`)
     .join("");
+  if (access.tenant_isolation === "Request enforced") {
+    document.getElementById("phase-progress-label").textContent =
+      "55% complete";
+    document.getElementById("phase-progress-bar").style.width = "55%";
+  }
 }
 
 function renderMarketPills(rows) {

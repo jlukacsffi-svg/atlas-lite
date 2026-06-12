@@ -43,7 +43,9 @@ database. It contains no real identity subject or secret.
    and paper accounts. Complete at the initial local foundation level.
 3. Introduce an invite-only administration workflow. Complete locally.
 4. Integrate tenant resolution into a separate local application boundary.
-5. Test object-level authorization across every private route.
+   Complete locally.
+5. Test object-level authorization across every private route. Complete for
+   the initial read-only route set.
 6. Complete a threat model, backup design, and cost review.
 7. Deploy only after the owner-only service remains available for rollback.
 
@@ -87,6 +89,35 @@ The administration foundation provides:
 No invitation email is sent and no live account is created in this milestone.
 The live Google Cloud service remains owner-only.
 
+## Tenant Web Boundary Milestone
+
+Status: Complete locally.
+
+The separate tenant preview application provides:
+
+- A short-lived, HMAC-signed, HttpOnly, SameSite=Strict local session.
+- Database membership resolution on every request.
+- Session tenant and user claims checked against the resolved membership.
+- Read-only APIs for workspace identity, reports, watchlists, portfolios,
+  research tasks, paper accounts, members, invitations, and audit events.
+- Object-level tenant filtering for watchlist items and portfolio positions.
+- Role enforcement for administrative routes.
+- Immediate invalidation of existing sessions after account disabling.
+- Protected static files and rejection of all mutating HTTP methods.
+- A visible workspace name, role, and account identity in the dashboard.
+
+The preview login is localhost-only and exists solely to test the boundary.
+It is not a production authentication mechanism and is not deployed to cloud.
+
+Run the isolated preview with:
+
+```powershell
+py -3.12 tenant_dashboard.py
+```
+
+Then open `http://127.0.0.1:8766`. The ignored SQLite database is created under
+`tenant_data/`.
+
 ## Exit Criteria
 
 Web Phase 3 is complete only when:
@@ -100,4 +131,4 @@ Web Phase 3 is complete only when:
 - Security and privacy reviews are complete.
 - Invite-only staging is explicitly approved.
 
-Estimated Web Phase 3 completion after invite administration: 40%.
+Estimated Web Phase 3 completion after the tenant web boundary: 55%.

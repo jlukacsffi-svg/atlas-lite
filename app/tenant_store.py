@@ -680,6 +680,18 @@ class TenantStore:
             json_fields=("summary_json",),
         )
 
+    def list_watchlists(self, actor):
+        self._authorize(actor, "workspace:read")
+        return self._rows(
+            """
+            SELECT watchlist_id, name, created_at
+            FROM watchlists
+            WHERE tenant_id = ?
+            ORDER BY name, watchlist_id
+            """,
+            (actor.tenant_id,),
+        )
+
     def create_watchlist(self, actor, name, watchlist_id=None):
         self._authorize(actor, "research:write")
         watchlist_id = watchlist_id or self._id("watchlist")
@@ -806,6 +818,18 @@ class TenantStore:
             (actor.tenant_id, str(portfolio_id)),
         )
 
+    def list_portfolios(self, actor):
+        self._authorize(actor, "workspace:read")
+        return self._rows(
+            """
+            SELECT portfolio_id, name, currency, created_at
+            FROM portfolios
+            WHERE tenant_id = ?
+            ORDER BY name, portfolio_id
+            """,
+            (actor.tenant_id,),
+        )
+
     def create_research_task(
         self,
         actor,
@@ -896,6 +920,41 @@ class TenantStore:
             """,
             (actor.tenant_id,),
         )
+
+    def workspace_summary(self, actor):
+        self._authorize(actor, "workspace:read")
+        with self.connect() as connection:
+            tenant = connection.execute(
+                """
+                SELECT tenant_id, name, status, created_at
+                FROM tenants
+                WHERE tenant_id = ?
+                """,
+                (actor.tenant_id,),
+            ).fetchone()
+            counts = {}
+            for table in (
+                "reports",
+                "watchlists",
+                "portfolios",
+                "research_tasks",
+                "paper_accounts",
+            ):
+                row = connection.execute(
+                    f"SELECT COUNT(*) AS total FROM {table} WHERE tenant_id = ?",
+                    (actor.tenant_id,),
+                ).fetchone()
+                counts[table] = int(row["total"])
+        return {
+            "tenant": dict(tenant),
+            "account": {
+                "user_id": actor.user_id,
+                "email": actor.email,
+                "role": actor.role,
+                "status": actor.status,
+            },
+            "counts": counts,
+        }
 
     def _authorize(self, actor, permission):
         if not isinstance(actor, TenantAccount):

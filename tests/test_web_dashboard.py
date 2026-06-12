@@ -94,7 +94,10 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn('id="access"', html)
         self.assertIn("Access &amp; security foundation", html)
         self.assertIn("renderAccess", script)
+        self.assertIn('id="workspace-identity"', html)
+        self.assertIn("renderWorkspace", script)
         self.assertIn("40% complete", html)
+        self.assertIn('"55% complete"', script)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:

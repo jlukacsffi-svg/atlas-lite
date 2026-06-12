@@ -32,6 +32,11 @@
         <div>
           <p class="eyebrow">Owner workspace</p>
           <h1>Executive dashboard</h1>
+          <div id="workspace-identity" class="workspace-identity" hidden>
+            <span id="workspace-name">--</span>
+            <span id="workspace-role">--</span>
+            <span id="workspace-email">--</span>
+          </div>
         </div>
         <div class="topbar-actions">
           <span id="as-of" class="as-of">Loading latest run...</span>
@@ -190,8 +195,8 @@
           </div>
           <div class="phase-progress">
             <span class="access-label">Web Phase 3</span>
-            <strong>40% complete</strong>
-            <div class="progress-track"><span style="width:40%"></span></div>
+            <strong id="phase-progress-label">40% complete</strong>
+            <div class="progress-track"><span id="phase-progress-bar" style="width:40%"></span></div>
           </div>
         </div>
       </section>
