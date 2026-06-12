@@ -708,6 +708,17 @@ intentionally blocked. No Cloud SQL instance, Identity Platform activation,
 public registration, external invitation, or recurring schedule is approved.
 See `PRODUCTION_ARCHITECTURE_REVIEW.md`.
 
+Validate the PostgreSQL repository and migration contract without connecting
+to a database:
+
+```powershell
+py -3.12 tenant_postgres_check.py
+```
+
+Optional future Cloud SQL runtime dependencies are isolated in
+`requirements-postgres.txt`; they are not required by the current local
+preview and do not activate any cloud service.
+
 ```
 Atlas-lite/
 ├── app/                          # Core application modules

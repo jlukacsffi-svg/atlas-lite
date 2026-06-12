@@ -29,6 +29,25 @@ Selected direction:
 - Migration job runs before traffic moves to a new revision.
 - Restore drill and tenant-isolation test run before promotion.
 
+Local adapter validation is complete:
+
+- `app/tenant_postgres.py` reuses the existing authorization repository.
+- Native PostgreSQL migrations cover all 13 tenant tables.
+- `pg8000` query binding is adapted without interpolating values into SQL.
+- Migrations use a transaction-scoped advisory lock.
+- Composite tenant keys, partial unique indexes, identity columns, and
+  append-only audit triggers are preserved.
+- All 22 migration statements pass PostgreSQL parser validation.
+- The Cloud SQL connection factory requires automatic IAM authentication.
+
+Run the offline contract check with:
+
+```powershell
+py -3.12 tenant_postgres_check.py
+```
+
+This command never connects to a database or creates a cloud resource.
+
 Cloud SQL is the correct operational database, but not a scale-to-zero service.
 The smallest shared-core price published by Google is `$0.0105/hour`, or about
 `$7.67/month` for compute alone at 730 hours, before storage, backups,
@@ -124,7 +143,6 @@ Blocking items:
 
 - Fresh Cloud SQL and Identity Platform cost approval.
 - Exact cloud-credit expiration confirmation.
-- PostgreSQL repository adapter and migration validation.
 - Privacy policy and terms.
 - Investment-adviser counsel review.
 - Market-data licensing review.

@@ -50,7 +50,9 @@ database. It contains no real identity subject or secret.
 7. Complete privacy export and account deletion controls. Complete locally.
 8. Complete production database, deployment, legal/privacy, and cost review.
    Complete as a conditional architecture approval; deployment remains blocked.
-9. Deploy only after the owner-only service remains available for rollback.
+9. Build and validate the PostgreSQL adapter and native migrations. Complete
+   locally without a database or cloud connection.
+10. Deploy only after the owner-only service remains available for rollback.
 
 ## Persistence Milestone
 
@@ -212,4 +214,23 @@ py -3.12 tenant_readiness.py
 Exit code `2` is expected until deployment receives a fresh cost approval and
 all legal, privacy, licensing, incident-response, and security gates close.
 
-Estimated Web Phase 3 completion after the production review: 92%.
+## PostgreSQL Adapter Milestone
+
+Status: Complete locally.
+
+The adapter foundation provides:
+
+- Native PostgreSQL migrations for all 13 tenant tables.
+- Reuse of the existing tenant authorization and repository behavior.
+- Safe translation to `pg8000` parameter binding.
+- Dictionary-shaped result rows compatible with the proven repository.
+- Transaction rollback and serialized migrations.
+- Composite tenant foreign keys and partial uniqueness controls.
+- PostgreSQL append-only audit triggers.
+- A Cloud SQL connection factory configured for automatic IAM authentication.
+- Offline contract and PostgreSQL parser validation for all 22 statements.
+
+No database server, Cloud SQL instance, API, IAM role, or recurring task was
+created. Managed deployment remains blocked.
+
+Estimated Web Phase 3 completion after the PostgreSQL adapter milestone: 96%.

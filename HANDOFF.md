@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 69%.
+Estimated overall Atlas program completion: 70%.
 
 ## Useful Files
 
@@ -303,6 +303,12 @@ Estimated overall Atlas program completion: 69%.
   direction while blocking deployment. The expected staging cost is about
   `$15/month`, so no Cloud SQL, Identity Platform, public registration,
   external invitations, or recurring schedules were activated.
+- Web Phase 3 is approximately 96% complete. `app/tenant_postgres.py` adds
+  native PostgreSQL migrations, a `pg8000` compatibility adapter, transaction
+  handling, serialized migrations, and an automatic-IAM Cloud SQL connection
+  factory. `tenant_postgres_check.py` validates the full contract offline.
+  All 22 migration statements passed PostgreSQL parser validation. No database
+  or cloud resource was created.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

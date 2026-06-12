@@ -70,8 +70,10 @@ class DashboardDataService:
             "recovery": "Integrity-checked restore drill",
             "privacy_export": "Secret-free tenant package",
             "account_deletion": "Requested, confirmed, audited",
-            "production_review": "Conditional go; deployment blocked",
-            "phase_completion": 65,
+            "production_review": (
+                "PostgreSQL adapter validated; deployment blocked"
+            ),
+            "phase_completion": 68,
             "next_step": "Production deployment review",
         }
 

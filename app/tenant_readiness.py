@@ -71,6 +71,13 @@ class TenantProductionReadiness:
             "automated backups and point-in-time recovery",
         )
         check(
+            "PostgreSQL adapter validated locally",
+            database.get("driver") == "pg8000"
+            and database.get("native_migrations") is True
+            and database.get("adapter_validated_locally") is True,
+            database.get("driver", "missing"),
+        )
+        check(
             "Identity Platform selected",
             identity.get("provider") == "identity_platform",
             identity.get("provider", "missing"),

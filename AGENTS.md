@@ -75,6 +75,8 @@ For broader project context, long-term vision, future autonomy levels, scoring p
 - Read `PRODUCTION_ARCHITECTURE_REVIEW.md` before multi-user production work.
 - Run `py -3.12 tenant_readiness.py`; exit code `2` is the expected blocked
   state until Joe approves the revised cost envelope and release gates close.
+- Run `py -3.12 tenant_postgres_check.py` after tenant schema changes. It must
+  pass without connecting to a database or activating Cloud SQL.
 - Build the website incrementally without disrupting the research and paper-evaluation engine.
 - Start with a read-only local owner dashboard.
 - Use modern, responsive, accessible financial-workspace design with meaningful charts.

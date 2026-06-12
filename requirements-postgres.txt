@@ -1,0 +1,2 @@
+cloud-sql-python-connector[pg8000]==1.20.3
+pg8000==1.31.5

@@ -78,10 +78,13 @@ class WebDashboardTests(unittest.TestCase):
         self.assertFalse(data["access"]["public_registration"])
         self.assertEqual(data["access"]["mode"], "invite_only")
         self.assertEqual(data["access"]["schema_version"], 3)
-        self.assertEqual(data["access"]["phase_completion"], 65)
+        self.assertEqual(data["access"]["phase_completion"], 68)
         self.assertIn("restore drill", data["access"]["recovery"])
         self.assertIn("tenant package", data["access"]["privacy_export"])
-        self.assertIn("deployment blocked", data["access"]["production_review"])
+        self.assertIn(
+            "PostgreSQL adapter validated",
+            data["access"]["production_review"],
+        )
 
     def test_static_routes_are_explicit_and_read_only(self):
         self.assertEqual(set(STATIC_FILES), {"/", "/index.html", "/styles.css", "/app.js"})

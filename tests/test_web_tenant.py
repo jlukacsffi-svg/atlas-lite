@@ -361,7 +361,7 @@ class TenantWebApplicationTests(unittest.TestCase):
         )
         self.assertEqual(
             response["json"]["access"]["phase_completion"],
-            92,
+            96,
         )
         self.assertIn(
             "restore drill",
@@ -372,7 +372,7 @@ class TenantWebApplicationTests(unittest.TestCase):
             response["json"]["access"]["privacy_export"],
         )
         self.assertIn(
-            "deployment blocked",
+            "PostgreSQL adapter validated",
             response["json"]["access"]["production_review"],
         )
 
