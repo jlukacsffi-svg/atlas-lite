@@ -210,8 +210,8 @@ Phases:
 1. Read-only local owner dashboard with modern charts and responsive design. Complete.
 2. Secure single-user cloud hosting independent of Joe's laptop. Foundation in progress.
 3. Invite-only multi-user accounts with strict tenant isolation. Local
-   identity, role, permission, and tenant-path foundation complete;
-   tenant-aware persistence is next.
+   identity, role, permission, tenant-path, and relational persistence
+   foundations complete; invite-only administration is next.
 4. Controlled customer beta with privacy, support, and subscription foundations.
 5. Public self-service product only after security and operational readiness.
 
@@ -257,7 +257,7 @@ Current Web Phase 2 result:
 - The remaining gates are cross-device owner login, manual non-owner denial,
   and final staging sign-off.
 
-Estimated overall Atlas program completion: 63%.
+Estimated overall Atlas program completion: 64%.
 
 ## Current Recommended Sequence
 

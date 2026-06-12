@@ -179,8 +179,9 @@ are in `WEB_PHASE2_PLAN.md`.
 
 Introduce private user workspaces.
 
-Status: Local identity, role, permission, and tenant-path foundation complete.
-Tenant-aware persistence is next. The live cloud service remains owner-only.
+Status: Local identity, role, permission, tenant-path, and relational
+persistence foundations complete. Invite-only administration is next. The
+live cloud service remains owner-only.
 
 Includes:
 

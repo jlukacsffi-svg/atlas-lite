@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 63%.
+Estimated overall Atlas program completion: 64%.
 
 ## Useful Files
 
@@ -264,11 +264,15 @@ Estimated overall Atlas program completion: 63%.
 - `STAGE5_PLAN.md`: Stage 5 paper-trading policy and milestones.
 - `WEB_PLATFORM_PLAN.md`: secure modern dashboard and multi-user platform plan.
 - `WEB_PHASE3_PLAN.md`: local tenant-isolation foundation and release gates.
-- Web Phase 3 is approximately 10% complete. `app/tenant_accounts.py` provides
-  fail-closed provider-subject identity resolution, tenant roles and
-  permissions, disabled-account handling, and tenant-scoped workspace paths.
-  The live cloud service remains owner-only, and no new cloud resource or
-  recurring charge was created.
+- `app/tenant_accounts.py` provides fail-closed provider-subject identity
+  resolution, tenant roles and permissions, disabled-account handling, and
+  tenant-scoped workspace paths.
+- Web Phase 3 is approximately 25% complete. `app/tenant_store.py` adds a
+  versioned local SQLite schema and tenant-aware repositories for reports,
+  watchlists, portfolios, research tasks, and paper accounts. Composite
+  foreign keys and active-membership checks reject cross-tenant or forged
+  access. The live cloud service remains owner-only; this milestone is
+  local-only and creates no cloud cost.
 - `WEB_PHASE2_PLAN.md`: secure single-user cloud architecture and deployment gate.
 - `GCP_STAGING_SETUP.md`: guarded Google Cloud staging setup and billing gate.
 - `scripts/gcp_set_schedules_staging.ps1`: guarded schedule status, pause, and

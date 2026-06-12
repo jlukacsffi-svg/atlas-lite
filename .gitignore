@@ -9,6 +9,8 @@ research_tasks/
 paper_trading/
 data_cache/
 backups/
+tenant_data/
+*.sqlite3
 
 .vscode/
 

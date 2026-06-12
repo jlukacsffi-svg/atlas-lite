@@ -38,14 +38,35 @@ database. It contains no real identity subject or secret.
 
 ## Next Milestones
 
-1. Define the relational schema and migration workflow.
+1. Define the relational schema and migration workflow. Complete locally.
 2. Add tenant-aware repositories for reports, watchlists, portfolios, research,
-   and paper accounts.
+   and paper accounts. Complete at the initial local foundation level.
 3. Introduce an invite-only administration workflow.
 4. Integrate tenant resolution into a separate local application boundary.
 5. Test object-level authorization across every private route.
 6. Complete a threat model, backup design, and cost review.
 7. Deploy only after the owner-only service remains available for rollback.
+
+## Persistence Milestone
+
+Status: Complete locally.
+
+The initial SQLite persistence layer provides:
+
+- Versioned, idempotent schema migration.
+- Foreign-key enforcement on every connection.
+- Tenants, users, memberships, reports, watchlists, portfolios, research
+  tasks, and paper accounts.
+- Composite tenant/resource keys that prevent a child record from referencing
+  another tenant's parent record.
+- Tenant-filtered repository queries.
+- Role authorization before repository reads and writes.
+- Relative report-path enforcement.
+- Database checks for roles, statuses, priorities, positive shares, and
+  positive paper starting cash.
+
+SQLite is a local proving environment, not the final production database.
+Production database selection requires a separate architecture and cost review.
 
 ## Exit Criteria
 
@@ -60,4 +81,4 @@ Web Phase 3 is complete only when:
 - Security and privacy reviews are complete.
 - Invite-only staging is explicitly approved.
 
-Estimated Web Phase 3 completion after the foundation milestone: 10%.
+Estimated Web Phase 3 completion after the persistence milestone: 25%.
