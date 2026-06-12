@@ -66,7 +66,10 @@ class DashboardDataService:
             "tenant_isolation": "Database enforced",
             "identity_binding": "Verified Google subject and email",
             "audit_log": "Append-only administration events",
-            "next_step": "Local invite administration review",
+            "threat_model": "Documented control matrix",
+            "recovery": "Integrity-checked restore drill",
+            "phase_completion": 55,
+            "next_step": "Production deployment review",
         }
 
     def _latest_snapshot(self):

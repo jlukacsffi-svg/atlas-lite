@@ -205,6 +205,9 @@ class TenantWebApplication:
                         "tenant_isolation": "Request enforced",
                         "identity_binding": "Active database membership",
                         "audit_log": "Append-only administration events",
+                        "threat_model": "Documented control matrix",
+                        "recovery": "Integrity-checked restore drill",
+                        "phase_completion": 70,
                     },
                 },
             )
@@ -401,4 +404,3 @@ class TenantWebApplication:
     @staticmethod
     def _b64decode(value):
         return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
-

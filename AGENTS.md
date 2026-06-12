@@ -86,6 +86,9 @@ For broader project context, long-term vision, future autonomy levels, scoring p
   separate and least-privileged.
 - Keep private backups in the ignored `backups/` folder; never commit or expose
   backup archives.
+- Tenant SQLite backups are integrity-checked but not application-encrypted.
+  Keep them only in private encrypted-at-rest storage and run
+  `tenant_backup.py drill` before a production migration or restore.
 - Run a local `backup_restore.py drill` before the first cloud deployment and a
   cloud-backed restoration drill before production.
 - Treat every user-owned record as tenant-scoped and test that users cannot access one another's data.

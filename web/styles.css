@@ -317,7 +317,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .access-panel { margin-bottom: 12px; }
 .access-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   border: 1px solid var(--line);
   border-radius: 6px;
   overflow: hidden;
@@ -328,7 +328,8 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   border-right: 1px solid var(--line);
   background: var(--surface-subtle);
 }
-.access-summary:last-child { border-right: 0; }
+.access-summary:nth-child(3n) { border-right: 0; }
+.access-summary:nth-child(-n+3) { border-bottom: 1px solid var(--line); }
 .access-summary strong {
   display: block;
   margin: 12px 0 8px;
@@ -371,8 +372,9 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .lower-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sector-panel { grid-column: 1 / -1; }
   .access-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .access-summary:nth-child(2) { border-right: 0; }
-  .access-summary:nth-child(-n+2) { border-bottom: 1px solid var(--line); }
+  .access-summary:nth-child(3n) { border-right: 1px solid var(--line); }
+  .access-summary:nth-child(2n) { border-right: 0; }
+  .access-summary:nth-child(-n+4) { border-bottom: 1px solid var(--line); }
 }
 
 @media (max-width: 760px) {

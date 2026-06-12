@@ -259,7 +259,18 @@ Current Web Phase 2 result:
 - The remaining gates are cross-device owner login, manual non-owner denial,
   and final staging sign-off.
 
-Estimated overall Atlas program completion: 66%.
+Current Web Phase 3 result:
+
+- Tenant persistence, invite administration, request-level isolation, and
+  object-level authorization are complete locally.
+- The tenant threat model and integrity-checked SQLite backup/restore drill are
+  complete locally.
+- Web Phase 3 is approximately 70% complete. Privacy/export/deletion controls,
+  production identity/database selection, and deployment review remain.
+- The live cloud service remains owner-only and recurring schedules remain
+  paused.
+
+Estimated overall Atlas program completion: 67%.
 
 ## Current Recommended Sequence
 

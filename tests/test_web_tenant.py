@@ -351,6 +351,14 @@ class TenantWebApplicationTests(unittest.TestCase):
             response["json"]["access"]["tenant_isolation"],
             "Request enforced",
         )
+        self.assertEqual(
+            response["json"]["access"]["phase_completion"],
+            70,
+        )
+        self.assertIn(
+            "restore drill",
+            response["json"]["access"]["recovery"],
+        )
 
     def test_mutating_methods_are_rejected_and_static_files_are_protected(self):
         rejected = call_wsgi(

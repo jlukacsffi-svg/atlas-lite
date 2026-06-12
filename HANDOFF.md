@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 66%.
+Estimated overall Atlas program completion: 67%.
 
 ## Useful Files
 
@@ -284,6 +284,13 @@ Estimated overall Atlas program completion: 66%.
   applies role controls, and tenant-filters every private route. The dashboard
   visibly shows the resolved workspace, role, and account. The live cloud
   service remains owner-only and unchanged.
+- Web Phase 3 is approximately 70% complete. `TENANT_THREAT_MODEL.md`,
+  `app/tenant_backup.py`, and `tenant_backup.py` add the control matrix,
+  consistent SQLite snapshots, checksum/schema/integrity validation, guarded
+  isolated restoration, and an automated recovery drill. The preview Access &
+  Security panel now shows the threat-model and recovery status. Archives are
+  not application-encrypted and must remain in private encrypted-at-rest
+  storage.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

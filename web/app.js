@@ -78,14 +78,17 @@ function renderAccess(access) {
     access.identity_binding || "--";
   document.getElementById("audit-status").textContent =
     access.audit_log || "--";
+  document.getElementById("threat-model-status").textContent =
+    access.threat_model || "--";
+  document.getElementById("recovery-status").textContent =
+    access.recovery || "--";
   document.getElementById("access-roles").innerHTML = (access.roles || [])
     .map(role => `<span class="role-chip">${role}</span>`)
     .join("");
-  if (access.tenant_isolation === "Request enforced") {
-    document.getElementById("phase-progress-label").textContent =
-      "55% complete";
-    document.getElementById("phase-progress-bar").style.width = "55%";
-  }
+  const completion = Math.max(0, Math.min(100, Number(access.phase_completion) || 40));
+  document.getElementById("phase-progress-label").textContent =
+    `${completion}% complete`;
+  document.getElementById("phase-progress-bar").style.width = `${completion}%`;
 }
 
 function renderMarketPills(rows) {

@@ -46,8 +46,9 @@ database. It contains no real identity subject or secret.
    Complete locally.
 5. Test object-level authorization across every private route. Complete for
    the initial read-only route set.
-6. Complete a threat model, backup design, and cost review.
-7. Deploy only after the owner-only service remains available for rollback.
+6. Complete a threat model and backup design. Complete locally.
+7. Complete privacy, production database, deployment, and cost review.
+8. Deploy only after the owner-only service remains available for rollback.
 
 ## Persistence Milestone
 
@@ -118,6 +119,32 @@ py -3.12 tenant_dashboard.py
 Then open `http://127.0.0.1:8766`. The ignored SQLite database is created under
 `tenant_data/`.
 
+## Threat Model And Recovery Milestone
+
+Status: Complete locally.
+
+The recovery foundation provides:
+
+- A documented asset, trust-boundary, threat, control, and residual-risk model.
+- Consistent snapshots created through SQLite's online backup API.
+- Strict archive inventory, size, checksum, schema, integrity, foreign-key,
+  and logical table-count validation.
+- Isolated restoration before any operator-managed live replacement.
+- Explicit overwrite approval and refusal to replace the configured live path.
+- Automated tamper, corruption, unexpected-entry, and recovery tests.
+- A successful restore drill against the local preview tenant database.
+
+Run a local recovery drill with:
+
+```powershell
+py -3.12 tenant_backup.py --database tenant_data\preview.sqlite3 drill --output backups\tenant_recovery_drill.zip
+```
+
+The backup ZIP is integrity-checked but not application-encrypted. It must
+remain in private encrypted-at-rest storage and must never be committed.
+See `TENANT_THREAT_MODEL.md` for the control matrix and remaining production
+risks.
+
 ## Exit Criteria
 
 Web Phase 3 is complete only when:
@@ -131,4 +158,5 @@ Web Phase 3 is complete only when:
 - Security and privacy reviews are complete.
 - Invite-only staging is explicitly approved.
 
-Estimated Web Phase 3 completion after the tenant web boundary: 55%.
+Estimated Web Phase 3 completion after the threat-model and recovery
+milestone: 70%.

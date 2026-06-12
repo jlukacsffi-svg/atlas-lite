@@ -667,6 +667,19 @@ ATLAS_SMTP_USE_SSL=false
 
 The `scripts/` folder contains Windows scheduled execution helpers.
 
+## Tenant Preview Recovery
+
+The local Web Phase 3 tenant database can be backed up and restored through an
+integrity-checked recovery drill:
+
+```powershell
+py -3.12 tenant_backup.py --database tenant_data\preview.sqlite3 drill --output backups\tenant_recovery_drill.zip
+```
+
+Tenant backup archives are ignored by Git. They are checksum-validated but not
+application-encrypted, so keep them only in private encrypted-at-rest storage.
+See `TENANT_THREAT_MODEL.md` for the current security boundary.
+
 ```
 Atlas-lite/
 ├── app/                          # Core application modules

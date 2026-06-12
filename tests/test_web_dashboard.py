@@ -78,6 +78,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertFalse(data["access"]["public_registration"])
         self.assertEqual(data["access"]["mode"], "invite_only")
         self.assertEqual(data["access"]["schema_version"], 2)
+        self.assertEqual(data["access"]["phase_completion"], 55)
+        self.assertIn("restore drill", data["access"]["recovery"])
 
     def test_static_routes_are_explicit_and_read_only(self):
         self.assertEqual(set(STATIC_FILES), {"/", "/index.html", "/styles.css", "/app.js"})
@@ -93,11 +95,12 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("window.location.hostname", script)
         self.assertIn('id="access"', html)
         self.assertIn("Access &amp; security foundation", html)
+        self.assertIn('id="recovery-status"', html)
         self.assertIn("renderAccess", script)
         self.assertIn('id="workspace-identity"', html)
         self.assertIn("renderWorkspace", script)
         self.assertIn("40% complete", html)
-        self.assertIn('"55% complete"', script)
+        self.assertIn("access.phase_completion", script)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:
