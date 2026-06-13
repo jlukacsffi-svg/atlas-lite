@@ -76,13 +76,13 @@ class WebDashboardTests(unittest.TestCase):
         self.assertTrue(data["paper"]["configured"])
         self.assertEqual(data["research"]["open"], 1)
         self.assertFalse(data["access"]["public_registration"])
-        self.assertEqual(data["access"]["mode"], "invite_only")
+        self.assertEqual(data["access"]["mode"], "owner_only")
         self.assertEqual(data["access"]["schema_version"], 3)
-        self.assertEqual(data["access"]["phase_completion"], 70)
+        self.assertEqual(data["access"]["phase_completion"], 78)
         self.assertIn("restore drill", data["access"]["recovery"])
         self.assertIn("tenant package", data["access"]["privacy_export"])
         self.assertIn(
-            "Governance drafts complete",
+            "Owner profile active",
             data["access"]["production_review"],
         )
 

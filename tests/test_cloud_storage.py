@@ -12,9 +12,10 @@ class NotFound(Exception):
 
 
 class FakeBlob:
-    def __init__(self, name, objects):
+    def __init__(self, name, client):
         self.name = name
-        self.objects = objects
+        self.client = client
+        self.objects = client.objects
         self.generation = None
 
     def reload(self):
@@ -58,6 +59,9 @@ class FakeBlob:
 
     def _upload(self, body, content_type, expected_generation, checksum):
         self._assert_checksum(checksum)
+        self.client.uploads += 1
+        if self.client.fail_upload_number == self.client.uploads:
+            raise RuntimeError("simulated upload failure")
         current = self.objects.get(self.name)
         actual_generation = current["generation"] if current else 0
         if expected_generation != actual_generation:
@@ -75,20 +79,22 @@ class FakeBlob:
 
 
 class FakeBucket:
-    def __init__(self, objects):
-        self.objects = objects
+    def __init__(self, client):
+        self.client = client
 
     def blob(self, name):
-        return FakeBlob(name, self.objects)
+        return FakeBlob(name, self.client)
 
 
 class FakeStorageClient:
     def __init__(self):
         self.objects = {}
+        self.uploads = 0
+        self.fail_upload_number = None
 
     def bucket(self, name):
         self.bucket_name = name
-        return FakeBucket(self.objects)
+        return FakeBucket(self)
 
 
 class CloudArtifactSyncTests(unittest.TestCase):
@@ -110,6 +116,7 @@ class CloudArtifactSyncTests(unittest.TestCase):
                     data_root=source,
                 ),
                 storage_client=client,
+                release_factory=lambda: "release-test",
             ).push()
 
             pulled = CloudArtifactSync(
@@ -137,6 +144,11 @@ class CloudArtifactSyncTests(unittest.TestCase):
                 hashlib.sha256(
                     source.joinpath(manifest["files"][0]["path"]).read_bytes()
                 ).hexdigest(),
+            )
+            self.assertTrue(
+                manifest["files"][0]["object"].startswith(
+                    "owner-v1/releases/release-test/"
+                )
             )
 
     def test_pull_rejects_path_traversal_before_writing(self):
@@ -232,6 +244,91 @@ class CloudArtifactSyncTests(unittest.TestCase):
             ["research_archive/archive_index.json"],
         )
         self.assertNotIn("owner-v1/artifacts/.env", client.objects)
+
+    def test_failed_release_does_not_replace_published_manifest(self):
+        client = FakeStorageClient()
+        previous = {
+            "manifest_version": "1.0",
+            "generated_at": "2026-06-07T01:00:00+00:00",
+            "files": [],
+        }
+        client.objects["owner-v1/manifest.json"] = {
+            "body": json.dumps(previous).encode("utf-8"),
+            "content_type": "application/json",
+            "generation": 1,
+        }
+        client.fail_upload_number = 2
+        with tempfile.TemporaryDirectory() as source_dir:
+            source = Path(source_dir)
+            (source / "paper_trading").mkdir()
+            (source / "paper_trading" / "account.json").write_text(
+                "{}",
+                encoding="utf-8",
+            )
+            (source / "paper_trading" / "ledger.jsonl").write_text(
+                "{}\n",
+                encoding="utf-8",
+            )
+            sync = CloudArtifactSync(
+                CloudStorageSettings(
+                    bucket="atlas-private",
+                    data_root=source,
+                ),
+                storage_client=client,
+                release_factory=lambda: "failed-release",
+            )
+            with self.assertRaisesRegex(
+                RuntimeError,
+                "simulated upload failure",
+            ):
+                sync.push()
+
+        published = json.loads(
+            client.objects["owner-v1/manifest.json"]["body"].decode("utf-8")
+        )
+        self.assertEqual(published, previous)
+
+    def test_partial_push_reuses_unchanged_manifest_entries(self):
+        client = FakeStorageClient()
+        with tempfile.TemporaryDirectory() as source_dir:
+            source = Path(source_dir)
+            (source / "paper_trading").mkdir()
+            account = source / "paper_trading" / "account.json"
+            ledger = source / "paper_trading" / "ledger.jsonl"
+            account.write_text('{"cash":100}', encoding="utf-8")
+            ledger.write_text('{"event":"init"}\n', encoding="utf-8")
+            sync = CloudArtifactSync(
+                CloudStorageSettings(
+                    bucket="atlas-private",
+                    data_root=source,
+                ),
+                storage_client=client,
+                release_factory=lambda: "initial",
+            )
+            initial = sync.push()
+            original_ledger_object = next(
+                entry["object"]
+                for entry in initial["files"]
+                if entry["path"] == "paper_trading/ledger.jsonl"
+            )
+            account.write_text('{"cash":90}', encoding="utf-8")
+            sync.release_factory = lambda: "owner-action"
+
+            updated = sync.push(paths=[account])
+
+        self.assertEqual(len(updated["files"]), 2)
+        self.assertEqual(
+            next(
+                entry["object"]
+                for entry in updated["files"]
+                if entry["path"] == "paper_trading/ledger.jsonl"
+            ),
+            original_ledger_object,
+        )
+        self.assertIn(
+            "owner-v1/releases/owner-action/paper_trading/account.json",
+            client.objects,
+        )
 
 
 if __name__ == "__main__":

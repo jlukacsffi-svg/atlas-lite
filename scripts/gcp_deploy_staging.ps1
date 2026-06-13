@@ -93,6 +93,12 @@ foreach ($secretName in $OAuthSecrets) {
 }
 
 Invoke-Gcloud @(
+    'storage', 'buckets', 'add-iam-policy-binding', "gs://$Bucket",
+    "--member=serviceAccount:$DashboardServiceAccount",
+    '--role=roles/storage.objectUser'
+)
+
+Invoke-Gcloud @(
     'builds', 'submit', '.',
     "--tag=$Image",
     "--project=$ProjectId",
@@ -113,7 +119,7 @@ Invoke-Gcloud @(
     '--memory=512Mi',
     '--concurrency=20',
     '--timeout=60',
-    "--set-env-vars=ATLAS_WEB_MODE=cloud,ATLAS_AUTH_MODE=google_oauth,ATLAS_OWNER_EMAIL=$OwnerEmail,ATLAS_OAUTH_REDIRECT_URI=$RedirectUri,ATLAS_GCS_BUCKET=$Bucket,ATLAS_GCS_PREFIX=owner-v1,ATLAS_DATA_ROOT=/tmp/atlas-data",
+    "--set-env-vars=ATLAS_WEB_MODE=cloud,ATLAS_AUTH_MODE=google_oauth,ATLAS_OWNER_EMAIL=$OwnerEmail,ATLAS_OAUTH_REDIRECT_URI=$RedirectUri,ATLAS_GCS_BUCKET=$Bucket,ATLAS_GCS_PREFIX=owner-v1,ATLAS_DATA_ROOT=/tmp/atlas-data,ATLAS_OWNER_CONTROLS_ENABLED=true",
     "--set-secrets=ATLAS_GOOGLE_CLIENT_ID=$GoogleClientIdSecret`:latest,ATLAS_GOOGLE_CLIENT_SECRET=$GoogleClientSecretSecret`:latest,ATLAS_SESSION_SECRET=$SessionSecret`:latest"
 )
 

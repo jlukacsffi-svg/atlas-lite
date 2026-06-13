@@ -19,6 +19,7 @@
 }
 
 * { box-sizing: border-box; }
+[hidden] { display: none !important; }
 html { scroll-behavior: smooth; }
 body {
   margin: 0;
@@ -314,6 +315,93 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   font-size: 9px;
   font-weight: 800;
 }
+.control-panel { margin-bottom: 12px; }
+.control-notice {
+  padding: 18px;
+  border: 1px solid var(--line);
+  background: var(--surface-subtle);
+  color: var(--muted);
+  font-size: 12px;
+}
+.control-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px;
+}
+.control-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+.control-heading strong { font-size: 11px; }
+.decision-list { display: grid; }
+.decision-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  padding: 15px 0;
+  border-bottom: 1px solid var(--line);
+}
+.decision-row p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.decision-row .role-chip,
+.decision-row .tag { margin-bottom: 8px; }
+.decision-actions {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.decision-actions button {
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid var(--green);
+  border-radius: 5px;
+  color: #fff;
+  background: var(--green);
+  font-size: 10px;
+  font-weight: 700;
+}
+.decision-actions button.secondary {
+  color: var(--text);
+  border-color: #b9c1c9;
+  background: var(--surface);
+}
+.decision-actions button.danger {
+  color: var(--red);
+  border-color: #e1aeb3;
+  background: var(--red-soft);
+}
+.decision-actions button:disabled { cursor: wait; opacity: .55; }
+.authority-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 18px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  background: var(--line);
+}
+.authority-strip span {
+  min-height: 62px;
+  padding: 13px;
+  background: var(--surface-subtle);
+  color: var(--muted);
+  font-size: 11px;
+}
+.authority-strip b {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--text);
+}
 .access-panel { margin-bottom: 12px; }
 .access-grid {
   display: grid;
@@ -366,12 +454,15 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   background: #9d2f39;
   font-size: 12px;
 }
+.error-banner.success { background: var(--green); }
 
 @media (max-width: 1080px) {
   .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .lower-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .sector-panel { grid-column: 1 / -1; }
   .access-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .control-columns { grid-template-columns: 1fr; }
+  .authority-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .access-summary:nth-child(3n) { border-right: 1px solid var(--line); }
   .access-summary:nth-child(2n) { border-right: 0; }
   .access-summary:nth-child(-n+8) { border-bottom: 1px solid var(--line); }
@@ -386,7 +477,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
     padding: 14px 16px;
   }
   .brand { padding: 0 0 12px; }
-  nav { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+  nav { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; }
   .nav-item {
     min-width: 0;
     padding: 8px 6px;
@@ -405,6 +496,8 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .donut-wrap { grid-template-columns: 130px 1fr; }
   .donut { width: 130px; }
   .access-footer { grid-template-columns: 1fr; }
+  .decision-row { grid-template-columns: 1fr; }
+  .decision-actions { justify-content: flex-start; }
 }
 
 @media (max-width: 480px) {
@@ -422,6 +515,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .breadth-stats { width: 100%; grid-template-columns: 1fr 1fr; }
   .chart-wrap { min-height: 180px; }
   .access-grid { grid-template-columns: 1fr; }
+  .authority-strip { grid-template-columns: 1fr; }
   .access-summary,
   .access-summary:nth-child(2) {
     border-right: 0;

@@ -273,15 +273,20 @@ Current Web Phase 3 result:
   reviews, revised cost approval, and invite-only staging sign-off.
 - The live cloud service remains owner-only and recurring schedules remain
   paused.
+- The owner-only operations milestone adds authenticated research decisions,
+  paper proposal approvals, and explicitly confirmed simulated fills to the
+  secure dashboard. The dashboard service can update only the existing private
+  Atlas artifact bucket. Registration, invitations, external accounts,
+  brokerage integrations, and real-money execution remain blocked.
 
-Estimated overall Atlas program completion: 71%.
+Estimated overall Atlas program completion: 73%.
 
 ## Current Recommended Sequence
 
 1. Preserve and monitor the completed daily reporting, scoring, memory, portfolio, and research-organization foundations.
 2. Begin Stage 5 with a strictly simulated portfolio and immutable recommendation log.
 3. Establish paper-trading risk rules and benchmark evaluation.
-4. Operate and refine the completed read-only local owner dashboard while paper results accumulate.
-5. Plan secure single-user cloud hosting after the dashboard and service boundaries are stable.
+4. Operate and refine the secure owner control center while paper results accumulate.
+5. Validate owner decisions and simulated fills in the existing single-user cloud service.
 6. Add multi-user accounts only after tenant isolation and security controls are tested.
 7. Discuss real trading only after Atlas has proven reliability and discipline over a meaningful test period.

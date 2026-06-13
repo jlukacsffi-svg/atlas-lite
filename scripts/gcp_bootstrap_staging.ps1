@@ -236,7 +236,7 @@ foreach ($account in @(
     @{
         Id = 'atlas-dashboard-stg'
         Name = 'Atlas staging dashboard'
-        Description = 'Read-only Atlas staging dashboard identity'
+        Description = 'Owner-only Atlas staging dashboard identity'
     },
     @{
         Id = 'atlas-jobs-stg'
@@ -265,6 +265,11 @@ foreach ($account in @(
 
 Invoke-Gcloud @(
     'storage', 'buckets', 'add-iam-policy-binding', "gs://$Bucket",
+    "--member=serviceAccount:$DashboardServiceAccount",
+    '--role=roles/storage.objectUser'
+)
+Invoke-Gcloud -AllowFailure -Arguments @(
+    'storage', 'buckets', 'remove-iam-policy-binding', "gs://$Bucket",
     "--member=serviceAccount:$DashboardServiceAccount",
     '--role=roles/storage.objectViewer'
 )

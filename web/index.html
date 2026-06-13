@@ -18,6 +18,7 @@
         <a class="nav-item" href="#market">Market</a>
         <a class="nav-item" href="#research">Research</a>
         <a class="nav-item" href="#paper">Paper Portfolio</a>
+        <a class="nav-item" href="#controls">Controls</a>
         <a class="nav-item" href="#access">Access</a>
       </nav>
       <div class="sidebar-status">
@@ -158,6 +159,41 @@
         </article>
       </section>
 
+      <section id="controls" class="panel control-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Owner authority</p>
+            <h2>Decision control center</h2>
+          </div>
+          <span id="control-boundary" class="tag">Owner cloud only</span>
+        </div>
+        <div id="control-availability" class="control-notice">
+          Owner actions are available after secure Google sign-in.
+        </div>
+        <div id="control-content" class="control-columns" hidden>
+          <div>
+            <div class="control-heading">
+              <span class="access-label">Research recommendations</span>
+              <strong id="research-review-count">0 awaiting review</strong>
+            </div>
+            <div id="research-reviews" class="decision-list"></div>
+          </div>
+          <div>
+            <div class="control-heading">
+              <span class="access-label">Paper trade proposals</span>
+              <strong id="paper-proposal-count">0 proposals</strong>
+            </div>
+            <div id="paper-proposals" class="decision-list"></div>
+          </div>
+        </div>
+        <div class="authority-strip">
+          <span><b>Research decisions</b> Enabled</span>
+          <span><b>Paper simulation</b> Enabled</span>
+          <span><b>Real trading</b> Disabled</span>
+          <span><b>Brokerage access</b> Disabled</span>
+        </div>
+      </section>
+
       <section id="access" class="panel access-panel">
         <div class="panel-heading">
           <div>
@@ -170,7 +206,7 @@
           <div class="access-summary">
             <span class="access-label">Public registration</span>
             <strong id="registration-status">Disabled</strong>
-            <small>Accounts require an expiring invitation.</small>
+            <small>Owner-only profile; invitations are not active.</small>
           </div>
           <div class="access-summary">
             <span class="access-label">Tenant isolation</span>
@@ -210,7 +246,7 @@
           <div class="access-summary">
             <span class="access-label">Production review</span>
             <strong id="production-review-status">--</strong>
-            <small>Internal policies are drafted; counsel, licensing, security, and cost approval remain external gates.</small>
+            <small>Owner operation is separated from future public release gates.</small>
           </div>
         </div>
         <div class="access-footer">

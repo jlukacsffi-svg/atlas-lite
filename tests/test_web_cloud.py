@@ -74,6 +74,7 @@ def call_wsgi(
     method="GET",
     headers=None,
     query_string="",
+    body=None,
 ):
     captured = {}
 
@@ -82,11 +83,18 @@ def call_wsgi(
         captured["headers"] = dict(response_headers)
         captured["header_list"] = response_headers
 
+    raw_body = (
+        json.dumps(body).encode("utf-8")
+        if isinstance(body, (dict, list))
+        else body or b""
+    )
     environ = {
         "REQUEST_METHOD": method,
         "PATH_INFO": path,
         "QUERY_STRING": query_string,
-        "wsgi.input": io.BytesIO(),
+        "wsgi.input": io.BytesIO(raw_body),
+        "CONTENT_LENGTH": str(len(raw_body)),
+        "CONTENT_TYPE": "application/json",
     }
     for name, value in (headers or {}).items():
         environ[f"HTTP_{name.upper().replace('-', '_')}"] = value
@@ -123,6 +131,23 @@ class StubOAuthClient:
     def exchange_code(self, code, state, code_verifier):
         self.exchange = (code, state, code_verifier)
         return self.id_token
+
+
+class StubOwnerControl:
+    def __init__(self):
+        self.actions = []
+
+    def model(self):
+        return {
+            "enabled": True,
+            "boundary": "Owner only",
+            "research_reviews": [],
+            "paper_proposals": [],
+        }
+
+    def apply(self, action, payload):
+        self.actions.append((action, payload))
+        return {"action": action}
 
 
 class StubTokenResponse(dict):
@@ -199,6 +224,19 @@ class CloudWebSettingsTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "must use ATLAS_AUTH_MODE=local"):
             CloudWebSettings(mode="local", auth_mode="iap").validate()
 
+    def test_owner_controls_require_authenticated_google_cloud_mode(self):
+        with self.assertRaisesRegex(ValueError, "unauthenticated local"):
+            CloudWebSettings(owner_controls_enabled=True).validate()
+        with self.assertRaisesRegex(ValueError, "Google OAuth"):
+            CloudWebSettings(
+                mode="cloud",
+                auth_mode="iap",
+                owner_email="owner@example.com",
+                iap_audience="audience",
+                storage_bucket="atlas-private",
+                owner_controls_enabled=True,
+            ).validate()
+
     def test_google_oauth_mode_fails_closed_without_all_secrets(self):
         base = {
             "mode": "cloud",
@@ -258,7 +296,14 @@ class CloudWebApplicationTests(unittest.TestCase):
             token_verifier=verifier,
         )
 
-    def _oauth_app(self, oauth_client=None, verifier=None, now=1000):
+    def _oauth_app(
+        self,
+        oauth_client=None,
+        verifier=None,
+        now=1000,
+        owner_controls=False,
+        owner_control=None,
+    ):
         return AtlasCloudApplication(
             CloudWebSettings(
                 mode="cloud",
@@ -269,12 +314,14 @@ class CloudWebApplicationTests(unittest.TestCase):
                 oauth_redirect_uri="https://atlas.example/oauth/callback",
                 session_secret="session-secret-value-that-is-long-enough",
                 storage_bucket="atlas-private",
+                owner_controls_enabled=owner_controls,
             ),
             data_service=StubDataService(),
             oauth_client=oauth_client or StubOAuthClient(),
             oidc_verifier=verifier or (lambda token, audience: {}),
             clock=lambda: now,
             token_factory=lambda length: "random-token",
+            owner_control=owner_control,
         )
 
     def _begin_oauth(self, app):
@@ -562,6 +609,121 @@ class CloudWebApplicationTests(unittest.TestCase):
         response = call_wsgi(app, path="/api/dashboard", method="POST")
         self.assertEqual(response["status"], "405 Method Not Allowed")
         self.assertEqual(response["headers"]["Allow"], "GET")
+
+    def test_enabled_owner_controls_require_service(self):
+        with self.assertRaisesRegex(ValueError, "owner control service"):
+            self._oauth_app(owner_controls=True)
+
+    def test_owner_action_requires_session_and_csrf(self):
+        owner = StubOwnerControl()
+        app = self._oauth_app(
+            owner_controls=True,
+            owner_control=owner,
+        )
+        unauthenticated = call_wsgi(
+            app,
+            path="/api/owner/research-decision",
+            method="POST",
+            body={"task_id": "task-1", "decision": "approve"},
+        )
+        self.assertEqual(unauthenticated["status"], "401 Unauthorized")
+
+        session = app._sign_payload(
+            {
+                "email": "owner@example.com",
+                "sub": "owner-123",
+                "csrf": "csrf-value",
+                "exp": 2000,
+            }
+        )
+        forbidden = call_wsgi(
+            app,
+            path="/api/owner/research-decision",
+            method="POST",
+            headers={"Cookie": f"{SESSION_COOKIE}={session}"},
+            body={"task_id": "task-1", "decision": "approve"},
+        )
+        self.assertEqual(forbidden["status"], "403 Forbidden")
+
+        response = call_wsgi(
+            app,
+            path="/api/owner/research-decision",
+            method="POST",
+            headers={
+                "Cookie": f"{SESSION_COOKIE}={session}",
+                "X-Atlas-CSRF": "csrf-value",
+            },
+            body={"task_id": "task-1", "decision": "approve"},
+        )
+        self.assertEqual(response["status"], "200 OK")
+        self.assertEqual(
+            owner.actions,
+            [
+                (
+                    "research-decision",
+                    {"task_id": "task-1", "decision": "approve"},
+                )
+            ],
+        )
+
+    def test_owner_dashboard_includes_session_csrf(self):
+        owner = StubOwnerControl()
+        app = self._oauth_app(
+            owner_controls=True,
+            owner_control=owner,
+        )
+        session = app._sign_payload(
+            {
+                "email": "owner@example.com",
+                "sub": "owner-123",
+                "csrf": "csrf-value",
+                "exp": 2000,
+            }
+        )
+        response = call_wsgi(
+            app,
+            path="/api/dashboard",
+            headers={"Cookie": f"{SESSION_COOKIE}={session}"},
+        )
+        self.assertEqual(
+            response["json"]["owner_controls"]["csrf_token"],
+            "csrf-value",
+        )
+
+    def test_owner_action_rejects_invalid_or_oversized_json(self):
+        owner = StubOwnerControl()
+        app = self._oauth_app(
+            owner_controls=True,
+            owner_control=owner,
+        )
+        session = app._sign_payload(
+            {
+                "email": "owner@example.com",
+                "sub": "owner-123",
+                "csrf": "csrf-value",
+                "exp": 2000,
+            }
+        )
+        headers = {
+            "Cookie": f"{SESSION_COOKIE}={session}",
+            "X-Atlas-CSRF": "csrf-value",
+        }
+        invalid = call_wsgi(
+            app,
+            path="/api/owner/research-decision",
+            method="POST",
+            headers=headers,
+            body=b"{",
+        )
+        self.assertEqual(invalid["status"], "400 Bad Request")
+        oversized = call_wsgi(
+            app,
+            path="/api/owner/research-decision",
+            method="POST",
+            headers=headers,
+            body=b"x" * (16 * 1024 + 1),
+        )
+        self.assertEqual(oversized["status"], "413 Payload Too Large")
 
     def test_local_static_file_is_served(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -59,22 +59,22 @@ class DashboardDataService:
 
     def _access(self):
         return {
-            "mode": "invite_only",
+            "mode": "owner_only",
             "public_registration": False,
-            "roles": ["Owner", "Administrator", "Analyst", "Viewer"],
+            "roles": ["Owner"],
             "schema_version": SCHEMA_VERSION,
-            "tenant_isolation": "Database enforced",
+            "tenant_isolation": "Single-owner private workspace",
             "identity_binding": "Verified Google subject and email",
-            "audit_log": "Append-only administration events",
+            "audit_log": "Research and paper decisions retained",
             "threat_model": "Documented control matrix",
             "recovery": "Integrity-checked restore drill",
             "privacy_export": "Secret-free tenant package",
-            "account_deletion": "Requested, confirmed, audited",
+            "account_deletion": "Future member accounts disabled",
             "production_review": (
-                "Governance drafts complete; external review blocked"
+                "Owner profile active; public release remains gated"
             ),
-            "phase_completion": 70,
-            "next_step": "External counsel, licensing, and security review",
+            "phase_completion": 78,
+            "next_step": "Operate and validate the owner workspace",
         }
 
     def _latest_snapshot(self):

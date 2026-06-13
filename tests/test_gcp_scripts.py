@@ -107,6 +107,31 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("atlas-google-oauth-client-id", content)
         self.assertIn("atlas-google-oauth-client-secret", content)
         self.assertIn("atlas-session-secret", content)
+        self.assertIn("ATLAS_OWNER_CONTROLS_ENABLED=true", content)
+        self.assertIn("'--role=roles/storage.objectUser'", content)
+
+    def test_dashboard_storage_write_access_is_bucket_scoped(self):
+        root = Path(__file__).resolve().parent.parent
+        bootstrap = (
+            root / "scripts" / "gcp_bootstrap_staging.ps1"
+        ).read_text(encoding="utf-8")
+        readiness = (
+            root / "scripts" / "gcp_staging_readiness.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '"--member=serviceAccount:$DashboardServiceAccount"',
+            bootstrap,
+        )
+        self.assertIn("'--role=roles/storage.objectUser'", bootstrap)
+        self.assertIn(
+            "'storage', 'buckets', 'add-iam-policy-binding'",
+            bootstrap,
+        )
+        self.assertIn("Dashboard owner artifact storage", readiness)
+        self.assertIn(
+            "roles/storage.objectUser",
+            readiness,
+        )
 
     def test_monitoring_uses_low_frequency_checks_and_owner_alerts(self):
         root = Path(__file__).resolve().parent.parent

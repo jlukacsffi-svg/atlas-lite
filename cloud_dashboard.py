@@ -5,6 +5,7 @@ import os
 import sys
 
 from app.cloud_storage import sync_from_environment
+from app.owner_controls import OwnerControlService
 from app.web_cloud import (
     CloudWebSettings,
     RefreshingDashboardDataService,
@@ -32,6 +33,16 @@ def main():
         downloaded = sync_from_environment("pull")
         print(f"[cloud-storage] Loaded {len(downloaded)} private artifacts")
     data_service = data_service_from_environment()
+    owner_control = None
+    if settings.owner_controls_enabled:
+        owner_control = OwnerControlService(
+            data_service,
+            persist=lambda paths: sync_from_environment(
+                "push",
+                paths=paths,
+            ),
+            refresh=lambda: sync_from_environment("pull"),
+        )
     if settings.mode == "cloud":
         data_service = RefreshingDashboardDataService(
             data_service,
@@ -39,7 +50,11 @@ def main():
         )
     print(f"[web] Atlas {settings.mode} dashboard listening on {host}:{port}")
     serve(
-        create_application(settings=settings, data_service=data_service),
+        create_application(
+            settings=settings,
+            data_service=data_service,
+            owner_control=owner_control,
+        ),
         host=host,
         port=port,
         threads=4,

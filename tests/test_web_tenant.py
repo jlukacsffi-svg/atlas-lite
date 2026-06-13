@@ -357,11 +357,11 @@ class TenantWebApplicationTests(unittest.TestCase):
         )
         self.assertEqual(
             response["json"]["access"]["tenant_isolation"],
-            "Request enforced",
+            "Single-owner private workspace",
         )
         self.assertEqual(
             response["json"]["access"]["phase_completion"],
-            99,
+            78,
         )
         self.assertIn(
             "restore drill",
@@ -372,7 +372,7 @@ class TenantWebApplicationTests(unittest.TestCase):
             response["json"]["access"]["privacy_export"],
         )
         self.assertIn(
-            "Governance drafts complete",
+            "Owner profile active",
             response["json"]["access"]["production_review"],
         )
 

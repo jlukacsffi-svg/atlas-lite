@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 71%.
+Estimated overall Atlas program completion: 73%.
 
 ## Useful Files
 
@@ -315,6 +315,13 @@ Estimated overall Atlas program completion: 71%.
   `EXTERNAL_REVIEW_PACKET.md`. `governance_check.py` verifies the internal
   artifacts and exits blocked until every external review and owner release
   approval is recorded.
+- The active product direction is now a complete owner-only workspace before
+  any external account rollout. Authenticated owner controls support research
+  decisions, risk-gated paper proposal decisions, and explicitly confirmed
+  simulated fills. Public registration, invitations, brokerage connections,
+  and real trading remain disabled. The owner controls reuse the existing
+  scale-to-zero Cloud Run service and private bucket; recurring schedules
+  remain paused pending separate approval.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

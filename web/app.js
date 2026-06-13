@@ -1,5 +1,15 @@
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+let ownerControls = null;
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
 
 function renderEnvironment() {
   const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
@@ -48,6 +58,7 @@ function renderDashboard(data) {
   renderSectors(data.sectors || []);
   renderPositions(paper.positions || []);
   renderTasks(data.research?.tasks || []);
+  renderOwnerControls(data.owner_controls || null);
   renderAccess(data.access || {});
   renderWorkspace(data.workspace || null);
 }
@@ -69,7 +80,7 @@ function renderWorkspace(workspace) {
 
 function renderAccess(access) {
   document.getElementById("access-mode").textContent =
-    access.mode === "invite_only" ? "Invite only" : "Restricted";
+    access.mode === "owner_only" ? "Owner only" : "Restricted";
   document.getElementById("registration-status").textContent =
     access.public_registration ? "Enabled" : "Disabled";
   document.getElementById("tenant-isolation").textContent =
@@ -89,12 +100,68 @@ function renderAccess(access) {
   document.getElementById("production-review-status").textContent =
     access.production_review || "--";
   document.getElementById("access-roles").innerHTML = (access.roles || [])
-    .map(role => `<span class="role-chip">${role}</span>`)
+    .map(role => `<span class="role-chip">${escapeHtml(role)}</span>`)
     .join("");
   const completion = Math.max(0, Math.min(100, Number(access.phase_completion) || 40));
   document.getElementById("phase-progress-label").textContent =
     `${completion}% complete`;
   document.getElementById("phase-progress-bar").style.width = `${completion}%`;
+}
+
+function renderOwnerControls(controls) {
+  ownerControls = controls;
+  const available = Boolean(controls?.enabled && controls?.csrf_token);
+  document.getElementById("control-content").hidden = !available;
+  document.getElementById("control-availability").hidden = available;
+  document.getElementById("control-boundary").textContent =
+    controls?.boundary || "Owner cloud only";
+  if (!available) return;
+
+  const reviews = controls.research_reviews || [];
+  const proposals = controls.paper_proposals || [];
+  document.getElementById("research-review-count").textContent =
+    `${reviews.length} awaiting review`;
+  document.getElementById("paper-proposal-count").textContent =
+    `${proposals.length} active proposal${proposals.length === 1 ? "" : "s"}`;
+  document.getElementById("research-reviews").innerHTML = reviews.map(item => {
+    const result = item.result || {};
+    return `
+      <article class="decision-row">
+        <div>
+          <span class="role-chip">${escapeHtml(item.role)}</span>
+          <b class="row-title">${escapeHtml(item.subject)}</b>
+          <small class="row-meta">${escapeHtml(result.recommendation || "Review")} · ${escapeHtml(result.confidence || "Unrated")}</small>
+          <p>${escapeHtml(result.conclusion || "No conclusion supplied.")}</p>
+        </div>
+        <div class="decision-actions">
+          <button type="button" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="approve">Approve</button>
+          <button type="button" class="secondary" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="defer">Defer</button>
+          <button type="button" class="danger" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="reject">Reject</button>
+        </div>
+      </article>`;
+  }).join("") || `<div class="empty">No research recommendations await your decision.</div>`;
+
+  document.getElementById("paper-proposals").innerHTML = proposals.map(item => {
+    const review = item.risk_review || {};
+    const approved = item.status === "approved";
+    return `
+      <article class="decision-row">
+        <div>
+          <span class="tag">${escapeHtml(item.status)}</span>
+          <b class="row-title">${escapeHtml(item.side).toUpperCase()} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}</b>
+          <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} · Risk ${escapeHtml(review.verdict || "pending")}</small>
+          <p>${escapeHtml(item.thesis || "No thesis supplied.")}</p>
+        </div>
+        <div class="decision-actions">
+          ${approved ? `
+            <button type="button" data-owner-action="paper-fill" data-item-id="${escapeHtml(item.proposal_id)}">Simulate fill</button>
+          ` : `
+            <button type="button" data-owner-action="paper-decision" data-item-id="${escapeHtml(item.proposal_id)}" data-decision="approve">Approve</button>
+            <button type="button" class="danger" data-owner-action="paper-decision" data-item-id="${escapeHtml(item.proposal_id)}" data-decision="reject">Reject</button>
+          `}
+        </div>
+      </article>`;
+  }).join("") || `<div class="empty">No paper proposals require action.</div>`;
 }
 
 function renderMarketPills(rows) {
@@ -214,6 +281,57 @@ function renderTasks(rows) {
   `).join("") || `<div class="empty">No open research assignments.</div>`;
 }
 
+async function applyOwnerAction(button) {
+  const action = button.dataset.ownerAction;
+  const itemId = button.dataset.itemId;
+  const payload = {};
+  if (action === "research-decision") {
+    payload.task_id = itemId;
+    payload.decision = button.dataset.decision;
+  } else if (action === "paper-decision") {
+    payload.proposal_id = itemId;
+    payload.decision = button.dataset.decision;
+  } else if (action === "paper-fill") {
+    const expected = `SIMULATE ${itemId}`;
+    const confirmation = window.prompt(
+      `This changes only the Atlas paper portfolio.\nType ${expected} to continue.`
+    );
+    if (confirmation === null) return;
+    payload.proposal_id = itemId;
+    payload.confirmation = confirmation;
+  }
+
+  button.disabled = true;
+  try {
+    const response = await fetch(`/api/owner/${action}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Atlas-CSRF": ownerControls.csrf_token,
+      },
+      body: JSON.stringify(payload),
+    });
+    const result = await response.json();
+    if (!response.ok) {
+      throw new Error(result.detail || result.error || "Owner action failed");
+    }
+    showMessage("Owner action saved.", false);
+    await loadDashboard();
+  } catch (cause) {
+    showMessage(cause.message, true);
+  } finally {
+    button.disabled = false;
+  }
+}
+
+function showMessage(message, isError) {
+  const banner = document.getElementById("error-banner");
+  banner.textContent = message;
+  banner.classList.toggle("success", !isError);
+  banner.hidden = false;
+  window.setTimeout(() => { banner.hidden = true; }, 4500);
+}
+
 async function loadDashboard() {
   const error = document.getElementById("error-banner");
   error.hidden = true;
@@ -228,5 +346,9 @@ async function loadDashboard() {
 }
 
 document.getElementById("refresh").addEventListener("click", loadDashboard);
+document.getElementById("controls").addEventListener("click", event => {
+  const button = event.target.closest("[data-owner-action]");
+  if (button) applyOwnerAction(button);
+});
 renderEnvironment();
 loadDashboard();

@@ -8,6 +8,7 @@ import mimetypes
 import os
 from pathlib import Path, PurePosixPath
 import tempfile
+import uuid
 
 from app.paths import DATA_ROOT
 
@@ -60,54 +61,70 @@ class CloudStorageSettings:
 class CloudArtifactSync:
     """Push and pull an allowlisted Atlas artifact bundle."""
 
-    def __init__(self, settings, storage_client=None):
+    def __init__(self, settings, storage_client=None, release_factory=None):
         settings.validate()
         self.settings = settings
         self.storage_client = storage_client or self._default_client()
         self.bucket = self.storage_client.bucket(settings.bucket)
+        self.release_factory = release_factory or (lambda: uuid.uuid4().hex)
 
-    def push(self):
-        files = self._local_files()
-        entries = []
-        total_bytes = 0
+    def push(self, paths=None):
+        manifest_blob = self.bucket.blob(self._manifest_object())
+        manifest_generation = self._generation(manifest_blob)
+        entries_by_path = {}
+        if paths is not None and manifest_generation:
+            current = json.loads(
+                manifest_blob.download_as_bytes(checksum="auto")
+            )
+            self._validate_manifest(current)
+            entries_by_path = {
+                entry["path"]: entry
+                for entry in current["files"]
+            }
+        files = (
+            self._selected_files(paths)
+            if paths is not None
+            else self._local_files()
+        )
+        release_id = self.release_factory()
         for path in files:
             relative = path.relative_to(self.settings.data_root).as_posix()
             size = path.stat().st_size
             self._validate_size(relative, size)
-            total_bytes += size
-            if total_bytes > MAX_BUNDLE_BYTES:
-                raise ValueError("Atlas artifact bundle exceeds maximum size")
             body = path.read_bytes()
             digest = hashlib.sha256(body).hexdigest()
-            object_name = self._object_name(relative)
+            object_name = self._release_object(release_id, relative)
             blob = self.bucket.blob(object_name)
-            generation = self._generation(blob)
             blob.upload_from_filename(
                 str(path),
                 content_type=self._content_type(path),
-                if_generation_match=generation,
+                if_generation_match=0,
                 checksum="auto",
             )
-            entries.append(
-                {
-                    "path": relative,
-                    "size": size,
-                    "sha256": digest,
-                    "object": object_name,
-                }
-            )
+            entries_by_path[relative] = {
+                "path": relative,
+                "size": size,
+                "sha256": digest,
+                "object": object_name,
+            }
+
+        entries = [
+            entries_by_path[key]
+            for key in sorted(entries_by_path)
+        ]
+        total_bytes = sum(int(entry["size"]) for entry in entries)
+        if total_bytes > MAX_BUNDLE_BYTES:
+            raise ValueError("Atlas artifact bundle exceeds maximum size")
 
         manifest = {
             "manifest_version": MANIFEST_VERSION,
             "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "files": entries,
         }
-        manifest_blob = self.bucket.blob(self._manifest_object())
-        generation = self._generation(manifest_blob)
         manifest_blob.upload_from_string(
             json.dumps(manifest, indent=2, sort_keys=True),
             content_type="application/json",
-            if_generation_match=generation,
+            if_generation_match=manifest_generation,
             checksum="auto",
         )
         return manifest
@@ -126,10 +143,12 @@ class CloudArtifactSync:
             total_bytes += size
             if total_bytes > MAX_BUNDLE_BYTES:
                 raise ValueError("Atlas artifact bundle exceeds maximum size")
-            expected_object = self._object_name(relative.as_posix())
-            if entry.get("object") != expected_object:
+            object_name = entry.get("object")
+            if not self._is_expected_object(relative, object_name):
                 raise ValueError(f"Unexpected object mapping for {relative}")
-            body = self.bucket.blob(expected_object).download_as_bytes(checksum="auto")
+            body = self.bucket.blob(object_name).download_as_bytes(
+                checksum="auto"
+            )
             if len(body) != size:
                 raise ValueError(f"Size mismatch for {relative}")
             digest = hashlib.sha256(body).hexdigest()
@@ -148,6 +167,23 @@ class CloudArtifactSync:
                 if path.is_file() and not path.is_symlink():
                     files.add(path.resolve())
         return sorted(files)
+
+    def _selected_files(self, paths):
+        root = self.settings.data_root
+        selected = set()
+        for value in paths:
+            path = Path(value).resolve()
+            try:
+                relative = path.relative_to(root).as_posix()
+            except ValueError as exc:
+                raise ValueError(
+                    f"Atlas artifact is outside the data root: {path}"
+                ) from exc
+            if not self._is_allowed(relative):
+                raise ValueError(f"Disallowed Atlas cloud path: {relative}")
+            if path.exists() and path.is_file() and not path.is_symlink():
+                selected.add(path)
+        return sorted(selected)
 
     def _validate_manifest(self, manifest):
         if manifest.get("manifest_version") != MANIFEST_VERSION:
@@ -188,6 +224,34 @@ class CloudArtifactSync:
     def _object_name(self, relative):
         return f"{self.settings.prefix}/artifacts/{relative}"
 
+    def _release_object(self, release_id, relative):
+        return f"{self.settings.prefix}/releases/{release_id}/{relative}"
+
+    def _is_expected_object(self, relative, object_name):
+        if object_name == self._object_name(relative.as_posix()):
+            return True
+        try:
+            candidate = PurePosixPath(str(object_name))
+        except TypeError:
+            return False
+        prefix_parts = PurePosixPath(self.settings.prefix).parts
+        expected_start = (*prefix_parts, "releases")
+        parts = candidate.parts
+        if (
+            candidate.is_absolute()
+            or ".." in parts
+            or len(parts) <= len(expected_start)
+            or parts[:len(expected_start)] != expected_start
+        ):
+            return False
+        release_id = parts[len(expected_start)]
+        artifact_parts = parts[len(expected_start) + 1:]
+        return (
+            bool(release_id)
+            and "/" not in release_id
+            and tuple(artifact_parts) == relative.parts
+        )
+
     def _manifest_object(self):
         return f"{self.settings.prefix}/manifest.json"
 
@@ -227,10 +291,10 @@ class CloudArtifactSync:
         return storage.Client()
 
 
-def sync_from_environment(direction):
+def sync_from_environment(direction, paths=None):
     sync = CloudArtifactSync(CloudStorageSettings.from_environment())
     if direction == "pull":
         return sync.pull()
     if direction == "push":
-        return sync.push()
+        return sync.push(paths=paths)
     raise ValueError("direction must be pull or push")

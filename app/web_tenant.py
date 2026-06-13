@@ -199,25 +199,20 @@ class TenantWebApplication:
                     "history": [],
                     "workspace": summary,
                     "access": {
-                        "mode": "invite_only",
+                        "mode": "owner_only",
                         "public_registration": False,
-                        "roles": [
-                            "Owner",
-                            "Administrator",
-                            "Analyst",
-                            "Viewer",
-                        ],
-                        "tenant_isolation": "Request enforced",
+                        "roles": ["Owner"],
+                        "tenant_isolation": "Single-owner private workspace",
                         "identity_binding": "Active database membership",
-                        "audit_log": "Append-only administration events",
+                        "audit_log": "Research and paper decisions retained",
                         "threat_model": "Documented control matrix",
                         "recovery": "Integrity-checked restore drill",
                         "privacy_export": "Secret-free tenant package",
-                        "account_deletion": "Requested, confirmed, audited",
+                        "account_deletion": "Future member accounts disabled",
                         "production_review": (
-                            "Governance drafts complete; external review blocked"
+                            "Owner profile active; public release remains gated"
                         ),
-                        "phase_completion": 99,
+                        "phase_completion": 78,
                     },
                 },
             )

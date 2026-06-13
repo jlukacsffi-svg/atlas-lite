@@ -142,9 +142,9 @@ $bucketRoles = @{}
 foreach ($binding in $bucketIam.bindings) {
     $bucketRoles[[string]$binding.role] = @($binding.members)
 }
-Add-Check 'Dashboard read-only storage' `
-    ($bucketRoles['roles/storage.objectViewer'] -contains "serviceAccount:$DashboardAccount") `
-    'dedicated object viewer'
+Add-Check 'Dashboard owner artifact storage' `
+    ($bucketRoles['roles/storage.objectUser'] -contains "serviceAccount:$DashboardAccount") `
+    'bucket-scoped object user for authenticated owner controls'
 Add-Check 'Jobs storage writer' `
     ($bucketRoles['roles/storage.objectUser'] -contains "serviceAccount:$JobsAccount") `
     'dedicated object user'

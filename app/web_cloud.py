@@ -27,6 +27,7 @@ SESSION_COOKIE = "__Host-atlas_session"
 OAUTH_STATE_TTL_SECONDS = 300
 SESSION_TTL_SECONDS = 3600
 LOGGER = logging.getLogger(__name__)
+MAX_OWNER_REQUEST_BYTES = 16 * 1024
 
 
 @dataclass(frozen=True)
@@ -42,6 +43,7 @@ class CloudWebSettings:
     oauth_redirect_uri: str = ""
     session_secret: str = ""
     storage_bucket: str = ""
+    owner_controls_enabled: bool = False
     web_dir: Path = WEB_DIR
 
     @classmethod
@@ -60,6 +62,10 @@ class CloudWebSettings:
             ).strip(),
             session_secret=os.getenv("ATLAS_SESSION_SECRET", "").strip(),
             storage_bucket=os.getenv("ATLAS_GCS_BUCKET", "").strip(),
+            owner_controls_enabled=os.getenv(
+                "ATLAS_OWNER_CONTROLS_ENABLED",
+                "false",
+            ).strip().lower() == "true",
             web_dir=Path(os.getenv("ATLAS_WEB_DIR", str(WEB_DIR))),
         )
 
@@ -101,8 +107,16 @@ class CloudWebSettings:
                     )
             if not self.storage_bucket:
                 raise ValueError("Cloud mode requires ATLAS_GCS_BUCKET")
+            if self.owner_controls_enabled and self.auth_mode != "google_oauth":
+                raise ValueError(
+                    "Owner controls require Google OAuth cloud mode"
+                )
         elif self.auth_mode != "local":
             raise ValueError("Local mode must use ATLAS_AUTH_MODE=local")
+        elif self.owner_controls_enabled:
+            raise ValueError(
+                "Owner controls cannot run in unauthenticated local mode"
+            )
 
 
 class GoogleIAPTokenVerifier:
@@ -229,6 +243,7 @@ class AtlasCloudApplication:
         oidc_verifier=None,
         clock=None,
         token_factory=None,
+        owner_control=None,
     ):
         settings.validate()
         self.settings = settings
@@ -242,12 +257,24 @@ class AtlasCloudApplication:
         self.oidc_verifier = oidc_verifier or GoogleOIDCTokenVerifier()
         self.clock = clock or time.time
         self.token_factory = token_factory or secrets.token_urlsafe
+        self.owner_control = owner_control
+        if settings.owner_controls_enabled and owner_control is None:
+            raise ValueError(
+                "Enabled owner controls require an owner control service"
+            )
 
     def __call__(self, environ, start_response):
         method = environ.get("REQUEST_METHOD", "GET").upper()
         path = unquote(environ.get("PATH_INFO", "/"))
 
-        if method != "GET":
+        if method not in {"GET", "POST"}:
+            return self._json_response(
+                start_response,
+                "405 Method Not Allowed",
+                {"error": "read_only"},
+                extra_headers=[("Allow", "GET, POST")],
+            )
+        if method == "POST" and not path.startswith("/api/owner/"):
             return self._json_response(
                 start_response,
                 "405 Method Not Allowed",
@@ -290,11 +317,20 @@ class AtlasCloudApplication:
                 {"error": "authentication_required"},
             )
 
+        if method == "POST":
+            return self._owner_action(environ, start_response, path)
         if path == "/api/dashboard":
+            data = self.data_service.build()
+            if self.settings.owner_controls_enabled:
+                session = self._read_signed_cookie(environ, SESSION_COOKIE)
+                data["owner_controls"] = {
+                    **self.owner_control.model(),
+                    "csrf_token": session.get("csrf", "") if session else "",
+                }
             return self._json_response(
                 start_response,
                 "200 OK",
-                self.data_service.build(),
+                data,
             )
         static_file = STATIC_FILES.get(path)
         if static_file:
@@ -434,6 +470,7 @@ class AtlasCloudApplication:
             {
                 "email": email,
                 "sub": subject,
+                "csrf": self.token_factory(32),
                 "exp": int(self.clock()) + SESSION_TTL_SECONDS,
             }
         )
@@ -461,6 +498,66 @@ class AtlasCloudApplication:
             extra_headers=[
                 ("Set-Cookie", self._expired_cookie(OAUTH_STATE_COOKIE))
             ],
+        )
+
+    def _owner_action(self, environ, start_response, path):
+        if not self.settings.owner_controls_enabled or self.owner_control is None:
+            return self._json_response(
+                start_response,
+                "404 Not Found",
+                {"error": "not_found"},
+            )
+        session = self._read_signed_cookie(environ, SESSION_COOKIE)
+        supplied = environ.get("HTTP_X_ATLAS_CSRF", "")
+        expected = str((session or {}).get("csrf", ""))
+        if not expected or not hmac.compare_digest(supplied, expected):
+            return self._json_response(
+                start_response,
+                "403 Forbidden",
+                {"error": "invalid_csrf"},
+            )
+        try:
+            length = int(environ.get("CONTENT_LENGTH", "0") or 0)
+        except ValueError:
+            length = -1
+        if length < 0 or length > MAX_OWNER_REQUEST_BYTES:
+            return self._json_response(
+                start_response,
+                "413 Payload Too Large",
+                {"error": "invalid_request_size"},
+            )
+        try:
+            body = environ.get("wsgi.input").read(length)
+            payload = json.loads(body.decode("utf-8")) if body else {}
+        except (AttributeError, UnicodeDecodeError, json.JSONDecodeError):
+            return self._json_response(
+                start_response,
+                "400 Bad Request",
+                {"error": "invalid_json"},
+            )
+        action = path.removeprefix("/api/owner/")
+        try:
+            result = self.owner_control.apply(action, payload)
+        except ValueError as exc:
+            return self._json_response(
+                start_response,
+                "400 Bad Request",
+                {"error": "invalid_owner_action", "detail": str(exc)},
+            )
+        except Exception as exc:
+            LOGGER.error(
+                "Owner action failed: %s",
+                type(exc).__name__,
+            )
+            return self._json_response(
+                start_response,
+                "503 Service Unavailable",
+                {"error": "owner_action_not_persisted"},
+            )
+        return self._json_response(
+            start_response,
+            "200 OK",
+            {"status": "ok", "result": result},
         )
 
     def _sign_payload(self, payload):
@@ -666,6 +763,7 @@ def create_application(
     token_verifier=None,
     oauth_client=None,
     oidc_verifier=None,
+    owner_control=None,
 ):
     """Waitress-compatible application factory."""
 
@@ -675,4 +773,5 @@ def create_application(
         token_verifier=token_verifier,
         oauth_client=oauth_client,
         oidc_verifier=oidc_verifier,
+        owner_control=owner_control,
     )
