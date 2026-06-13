@@ -278,8 +278,11 @@ Current Web Phase 3 result:
   secure dashboard. The dashboard service can update only the existing private
   Atlas artifact bucket. Registration, invitations, external accounts,
   brokerage integrations, and real-money execution remain blocked.
+- The owner operations milestone is live as of June 13, 2026 on Cloud Run
+  revision `atlas-dashboard-stg-00009-wlz`. Automated staging readiness passed,
+  owner Google sign-in succeeded, and no recurring schedules were activated.
 
-Estimated overall Atlas program completion: 73%.
+Estimated overall Atlas program completion: 74%.
 
 ## Current Recommended Sequence
 

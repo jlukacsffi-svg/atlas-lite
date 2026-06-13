@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 73%.
+Estimated overall Atlas program completion: 74%.
 
 ## Useful Files
 
@@ -322,6 +322,12 @@ Estimated overall Atlas program completion: 73%.
   and real trading remain disabled. The owner controls reuse the existing
   scale-to-zero Cloud Run service and private bucket; recurring schedules
   remain paused pending separate approval.
+- On June 13, 2026, owner controls were deployed to Cloud Run revision
+  `atlas-dashboard-stg-00009-wlz` with 100% of service traffic. The live owner
+  Google login and control-center display were validated. The dashboard
+  identity has bucket-scoped `roles/storage.objectUser` access, public
+  registration remains disabled, and daily and weekly schedules remain
+  paused.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
