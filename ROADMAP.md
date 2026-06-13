@@ -281,8 +281,12 @@ Current Web Phase 3 result:
 - The owner operations milestone is live as of June 13, 2026 on Cloud Run
   revision `atlas-dashboard-stg-00009-wlz`. Automated staging readiness passed,
   owner Google sign-in succeeded, and no recurring schedules were activated.
+- Active owner use began with successful execution `atlas-daily-stg-2nppc`.
+  The secure dashboard now displays the June 13 research run, including
+  100-of-100 real-data coverage and three paper proposals awaiting owner
+  review. Corporate-action normalization is the next data-quality priority.
 
-Estimated overall Atlas program completion: 74%.
+Estimated overall Atlas program completion: 75%.
 
 ## Current Recommended Sequence
 

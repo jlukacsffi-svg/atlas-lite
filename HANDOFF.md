@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 74%.
+Estimated overall Atlas program completion: 75%.
 
 ## Useful Files
 
@@ -328,6 +328,11 @@ Estimated overall Atlas program completion: 74%.
   identity has bucket-scoped `roles/storage.objectUser` access, public
   registration remains disabled, and daily and weekly schedules remain
   paused.
+- The June 13 daily Cloud Run execution `atlas-daily-stg-2nppc` completed
+  successfully using the current application image. It published real data for
+  all 100 requested securities with no placeholders, refreshed the live
+  dashboard, and generated three risk-cleared paper proposals for owner review.
+  `CAPABILITY_LOG.md` now records owner-visible upgrades in plain language.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
