@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 75%.
+Estimated overall Atlas program completion: 76%.
 
 ## Useful Files
 
@@ -333,6 +333,11 @@ Estimated overall Atlas program completion: 75%.
   all 100 requested securities with no placeholders, refreshed the live
   dashboard, and generated three risk-cleared paper proposals for owner review.
   `CAPABILITY_LOG.md` now records owner-visible upgrades in plain language.
+- Cloud Run revision `atlas-dashboard-stg-00010-vzq` replaced the unsupported
+  paper-fill browser prompt with an in-page confirmation dialog. The owner
+  completed the approved KLAC, LRCX, and ANET simulated purchases, and the
+  secure dashboard now tracks all three positions alongside NVDA. Recurring
+  schedules remain paused pending the separate cost-activation decision.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

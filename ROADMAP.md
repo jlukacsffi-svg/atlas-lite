@@ -285,8 +285,13 @@ Current Web Phase 3 result:
   The secure dashboard now displays the June 13 research run, including
   100-of-100 real-data coverage and three paper proposals awaiting owner
   review. Corporate-action normalization is the next data-quality priority.
+- The active paper-portfolio milestone is complete. Approved KLAC, LRCX, and
+  ANET proposals were entered through the secure simulation-only workflow and
+  are now tracked as hypothetical holdings. The next operational decision is
+  whether to activate the low-cost daily research schedule after the owner
+  reviews the recurring cost envelope.
 
-Estimated overall Atlas program completion: 75%.
+Estimated overall Atlas program completion: 76%.
 
 ## Current Recommended Sequence
 

@@ -109,6 +109,10 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("renderWorkspace", script)
         self.assertIn("40% complete", html)
         self.assertIn("access.phase_completion", script)
+        self.assertIn('id="paper-fill-dialog"', html)
+        self.assertIn("openPaperFillDialog", script)
+        self.assertIn("SIMULATE ${proposalId}", script)
+        self.assertNotIn("window.prompt", script)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:

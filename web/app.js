@@ -1,6 +1,7 @@
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
 let ownerControls = null;
+let pendingPaperFill = null;
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -281,26 +282,34 @@ function renderTasks(rows) {
   `).join("") || `<div class="empty">No open research assignments.</div>`;
 }
 
-async function applyOwnerAction(button) {
-  const action = button.dataset.ownerAction;
-  const itemId = button.dataset.itemId;
-  const payload = {};
-  if (action === "research-decision") {
-    payload.task_id = itemId;
-    payload.decision = button.dataset.decision;
-  } else if (action === "paper-decision") {
-    payload.proposal_id = itemId;
-    payload.decision = button.dataset.decision;
-  } else if (action === "paper-fill") {
-    const expected = `SIMULATE ${itemId}`;
-    const confirmation = window.prompt(
-      `This changes only the Atlas paper portfolio.\nType ${expected} to continue.`
-    );
-    if (confirmation === null) return;
-    payload.proposal_id = itemId;
-    payload.confirmation = confirmation;
+function closePaperFillDialog() {
+  const dialog = document.getElementById("paper-fill-dialog");
+  pendingPaperFill = null;
+  document.getElementById("paper-fill-confirmation").value = "";
+  document.getElementById("paper-fill-submit").disabled = true;
+  if (dialog.open) dialog.close();
+}
+
+function openPaperFillDialog(proposalId, button) {
+  const proposal = (ownerControls?.paper_proposals || [])
+    .find(item => item.proposal_id === proposalId);
+  if (!proposal) {
+    showMessage("The approved paper proposal is no longer available.", true);
+    return;
   }
 
+  const expected = `SIMULATE ${proposalId}`;
+  pendingPaperFill = { proposalId, expected, button };
+  document.getElementById("paper-fill-summary").textContent =
+    `${proposal.side.toUpperCase()} ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} at the latest available market price.`;
+  document.getElementById("paper-fill-expected").textContent = expected;
+  document.getElementById("paper-fill-confirmation").value = "";
+  document.getElementById("paper-fill-submit").disabled = true;
+  document.getElementById("paper-fill-dialog").showModal();
+  document.getElementById("paper-fill-confirmation").focus();
+}
+
+async function submitOwnerAction(action, payload, button) {
   button.disabled = true;
   try {
     const response = await fetch(`/api/owner/${action}`, {
@@ -315,13 +324,35 @@ async function applyOwnerAction(button) {
     if (!response.ok) {
       throw new Error(result.detail || result.error || "Owner action failed");
     }
-    showMessage("Owner action saved.", false);
+    showMessage(
+      action === "paper-fill"
+        ? "Simulated purchase recorded. Portfolio tracking is active."
+        : "Owner action saved.",
+      false
+    );
     await loadDashboard();
   } catch (cause) {
     showMessage(cause.message, true);
   } finally {
     button.disabled = false;
   }
+}
+
+async function applyOwnerAction(button) {
+  const action = button.dataset.ownerAction;
+  const itemId = button.dataset.itemId;
+  const payload = {};
+  if (action === "research-decision") {
+    payload.task_id = itemId;
+    payload.decision = button.dataset.decision;
+  } else if (action === "paper-decision") {
+    payload.proposal_id = itemId;
+    payload.decision = button.dataset.decision;
+  } else if (action === "paper-fill") {
+    openPaperFillDialog(itemId, button);
+    return;
+  }
+  await submitOwnerAction(action, payload, button);
 }
 
 function showMessage(message, isError) {
@@ -349,6 +380,29 @@ document.getElementById("refresh").addEventListener("click", loadDashboard);
 document.getElementById("controls").addEventListener("click", event => {
   const button = event.target.closest("[data-owner-action]");
   if (button) applyOwnerAction(button);
+});
+document.getElementById("paper-fill-confirmation").addEventListener("input", event => {
+  document.getElementById("paper-fill-submit").disabled =
+    !pendingPaperFill || event.target.value !== pendingPaperFill.expected;
+});
+document.getElementById("paper-fill-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!pendingPaperFill) return;
+  const fill = pendingPaperFill;
+  const confirmation = document.getElementById("paper-fill-confirmation").value;
+  if (confirmation !== fill.expected) return;
+  closePaperFillDialog();
+  await submitOwnerAction(
+    "paper-fill",
+    { proposal_id: fill.proposalId, confirmation },
+    fill.button
+  );
+});
+document.getElementById("paper-fill-cancel").addEventListener("click", closePaperFillDialog);
+document.getElementById("paper-fill-close").addEventListener("click", closePaperFillDialog);
+document.getElementById("paper-fill-dialog").addEventListener("cancel", event => {
+  event.preventDefault();
+  closePaperFillDialog();
 });
 renderEnvironment();
 loadDashboard();

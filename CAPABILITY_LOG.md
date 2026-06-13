@@ -26,3 +26,31 @@ Current boundaries:
 - Daily and weekly schedules remain paused until separately approved.
 - Market information and model outputs require owner judgment and are not
   personalized financial advice.
+
+## June 13, 2026 - Active Paper Portfolio
+
+New capabilities:
+
+- Confirm approved simulated purchases through an accessible in-page dialog
+  that works in the secure Atlas application.
+- Track approved paper positions using the latest available market price,
+  including shares, average cost, market value, unrealized gain or loss, cash
+  reserve, total equity, and benchmark-relative history.
+- Persist the simulated fills in private cloud storage so later research runs
+  can revalue the positions and review their theses.
+- Display completed paper purchases immediately in the owner dashboard.
+
+Activated owner positions:
+
+- KLAC: 19 simulated shares.
+- LRCX: 13 simulated shares.
+- ANET: 30 simulated shares.
+- NVDA remains an existing simulated position with 24 shares.
+
+Current boundaries:
+
+- Simulation approval and simulation fill remain separate owner actions.
+- All positions use simulated capital only.
+- Real trading and brokerage access remain disabled.
+- Recurring daily and weekly cloud schedules remain paused pending separate
+  cost approval.
