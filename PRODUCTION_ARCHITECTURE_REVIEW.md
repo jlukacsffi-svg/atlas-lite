@@ -123,6 +123,24 @@ Before any external user is invited, Atlas needs:
   unlicensed scraping or redistribution.
 - Counsel review of investment-adviser status and financial disclaimers.
 
+Internal drafts are now complete:
+
+- `PRIVACY_POLICY_DRAFT.md`
+- `TERMS_OF_SERVICE_DRAFT.md`
+- `DATA_RETENTION_SCHEDULE.md`
+- `INCIDENT_RESPONSE_PLAN.md`
+- `EXTERNAL_REVIEW_PACKET.md`
+
+These drafts do not constitute legal approval. Run the fail-closed governance
+audit with:
+
+```powershell
+py -3.12 governance_check.py
+```
+
+Exit code `2` is expected until counsel, data-provider licensing, an
+independent security test, and Joe's invite-only release approval are recorded.
+
 The SEC notes that compensated securities analysis can meet the investment
 adviser definition, while a publisher exclusion depends on facts such as
 general, impersonal, bona fide, regular publication. Atlas plans personalized
@@ -143,10 +161,9 @@ Blocking items:
 
 - Fresh Cloud SQL and Identity Platform cost approval.
 - Exact cloud-credit expiration confirmation.
-- Privacy policy and terms.
 - Investment-adviser counsel review.
 - Market-data licensing review.
-- Incident-response and retention policies.
+- Independent security review.
 - Invite-only staging sign-off.
 
 Run the fail-closed local audit with:

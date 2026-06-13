@@ -51,12 +51,12 @@
     "credit_expiration_confirmed": false
   },
   "release_gates": {
-    "privacy_policy": "required_before_invites",
-    "terms_of_service": "required_before_invites",
-    "investment_adviser_review": "attorney_required_before_external_beta",
-    "market_data_licensing": "required_before_external_beta",
-    "incident_response": "required_before_invites",
-    "retention_schedule": "required_before_invites",
-    "external_security_test": "required_before_public_registration"
+    "privacy_policy": "draft_complete",
+    "terms_of_service": "draft_complete",
+    "investment_adviser_review": "pending_external_counsel",
+    "market_data_licensing": "pending_provider_review",
+    "incident_response": "internal_playbook_complete",
+    "retention_schedule": "internal_baseline_complete",
+    "external_security_test": "pending_external_test"
   }
 }

@@ -215,9 +215,9 @@ class TenantWebApplication:
                         "privacy_export": "Secret-free tenant package",
                         "account_deletion": "Requested, confirmed, audited",
                         "production_review": (
-                            "PostgreSQL adapter validated; deployment blocked"
+                            "Governance drafts complete; external review blocked"
                         ),
-                        "phase_completion": 96,
+                        "phase_completion": 99,
                     },
                 },
             )

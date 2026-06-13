@@ -719,6 +719,20 @@ Optional future Cloud SQL runtime dependencies are isolated in
 `requirements-postgres.txt`; they are not required by the current local
 preview and do not activate any cloud service.
 
+## Governance Readiness
+
+Validate the internal privacy, terms, retention, incident-response, licensing,
+legal, and security-review package with:
+
+```powershell
+py -3.12 governance_check.py
+```
+
+Exit code `2` is expected. It means Atlas's internal documents pass, while
+external counsel, market-data licensing, independent security testing, and
+owner release approval remain pending. The privacy policy and terms are drafts,
+not effective customer agreements.
+
 ```
 Atlas-lite/
 ├── app/                          # Core application modules

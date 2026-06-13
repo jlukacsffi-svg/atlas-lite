@@ -1,0 +1,40 @@
+{
+  "review_version": 1,
+  "draft_date": "2026-06-13",
+  "external_users_authorized": false,
+  "documents": {
+    "privacy_policy": {
+      "path": "PRIVACY_POLICY_DRAFT.md",
+      "status": "draft_complete"
+    },
+    "terms_of_service": {
+      "path": "TERMS_OF_SERVICE_DRAFT.md",
+      "status": "draft_complete"
+    },
+    "retention_schedule": {
+      "path": "DATA_RETENTION_SCHEDULE.md",
+      "status": "internal_baseline_complete"
+    },
+    "incident_response": {
+      "path": "INCIDENT_RESPONSE_PLAN.md",
+      "status": "internal_playbook_complete"
+    },
+    "external_review_packet": {
+      "path": "EXTERNAL_REVIEW_PACKET.md",
+      "status": "packet_complete"
+    }
+  },
+  "external_reviews": {
+    "investment_adviser_counsel": "pending",
+    "market_data_licensing": "pending",
+    "independent_security_test": "pending",
+    "owner_invite_only_release": "pending"
+  },
+  "release_rules": {
+    "public_registration": false,
+    "external_invitations": false,
+    "real_trading": false,
+    "brokerage_connection": false,
+    "customer_data_redistribution": false
+  }
+}

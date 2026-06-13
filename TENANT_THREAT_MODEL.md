@@ -82,8 +82,9 @@ unencrypted device.
   restoration.
 - The current audit log protects against application-level update and deletion,
   not an administrator with direct filesystem/database access.
-- Formal retention periods, legal review, incident response, and external
-  security testing remain required before inviting real customers.
+- Internal retention and incident-response baselines are complete. Counsel,
+  market-data licensing, and external security testing remain required before
+  inviting real customers.
 
 ## Reference Baseline
 

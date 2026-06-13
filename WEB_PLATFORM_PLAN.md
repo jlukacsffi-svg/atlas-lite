@@ -186,10 +186,12 @@ local application boundary and initial object-level route tests are complete.
 The threat model, tenant database recovery drill, tenant-scoped privacy export,
 guarded account deletion workflow, and conditional production architecture
 review are complete locally. The PostgreSQL repository adapter and native
-migration contract are also validated offline. Cloud SQL for PostgreSQL and
-Google Identity Platform are selected, but activation remains blocked pending
-revised cost approval and legal, licensing, operational, and security gates.
-The live cloud service remains owner-only.
+migration contract are also validated offline. Privacy, terms, retention, and
+incident-response drafts plus the external-review packet are complete. Cloud
+SQL for PostgreSQL and Google Identity Platform are selected, but activation
+remains blocked pending revised cost approval, counsel, data licensing,
+independent security testing, and owner sign-off. The live cloud service
+remains owner-only.
 
 Includes:
 

@@ -77,6 +77,9 @@ For broader project context, long-term vision, future autonomy levels, scoring p
   state until Joe approves the revised cost envelope and release gates close.
 - Run `py -3.12 tenant_postgres_check.py` after tenant schema changes. It must
   pass without connecting to a database or activating Cloud SQL.
+- Run `py -3.12 governance_check.py` after governance changes. Never mark
+  counsel, data licensing, independent security testing, or owner release
+  approval complete without the corresponding real-world evidence.
 - Build the website incrementally without disrupting the research and paper-evaluation engine.
 - Start with a read-only local owner dashboard.
 - Use modern, responsive, accessible financial-workspace design with meaningful charts.

@@ -15,7 +15,9 @@ class TenantProductionReadinessTests(unittest.TestCase):
 
         self.assertTrue(result["architecture_checks_passed"])
         self.assertFalse(result["deployment_approved"])
-        self.assertEqual(len(result["checks"]), 15)
+        self.assertEqual(len(result["checks"]), 16)
+        self.assertTrue(result["governance"]["engineering_ready"])
+        self.assertFalse(result["governance"]["external_release_approved"])
         self.assertGreater(
             result["cost"]["estimated_staging_expected_usd"],
             result["cost"]["current_target_monthly_usd"],

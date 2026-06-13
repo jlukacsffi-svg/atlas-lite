@@ -71,10 +71,10 @@ class DashboardDataService:
             "privacy_export": "Secret-free tenant package",
             "account_deletion": "Requested, confirmed, audited",
             "production_review": (
-                "PostgreSQL adapter validated; deployment blocked"
+                "Governance drafts complete; external review blocked"
             ),
-            "phase_completion": 68,
-            "next_step": "Production deployment review",
+            "phase_completion": 70,
+            "next_step": "External counsel, licensing, and security review",
         }
 
     def _latest_snapshot(self):

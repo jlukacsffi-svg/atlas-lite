@@ -78,11 +78,11 @@ class WebDashboardTests(unittest.TestCase):
         self.assertFalse(data["access"]["public_registration"])
         self.assertEqual(data["access"]["mode"], "invite_only")
         self.assertEqual(data["access"]["schema_version"], 3)
-        self.assertEqual(data["access"]["phase_completion"], 68)
+        self.assertEqual(data["access"]["phase_completion"], 70)
         self.assertIn("restore drill", data["access"]["recovery"])
         self.assertIn("tenant package", data["access"]["privacy_export"])
         self.assertIn(
-            "PostgreSQL adapter validated",
+            "Governance drafts complete",
             data["access"]["production_review"],
         )
 

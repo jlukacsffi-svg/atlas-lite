@@ -266,15 +266,15 @@ Current Web Phase 3 result:
   object-level authorization are complete locally.
 - The tenant threat model and integrity-checked SQLite backup/restore drill are
   complete locally.
-- Web Phase 3 is approximately 96% complete. The PostgreSQL repository adapter,
-  native migrations, IAM-authenticated Cloud SQL connection factory, offline
-  SQL contract, and conditional architecture audit are validated. Activation
-  remains blocked pending cost approval, legal/licensing work, and invite-only
-  staging sign-off.
+- Web Phase 3 is approximately 99% complete. The PostgreSQL foundation and
+  internal governance package are validated. Privacy, terms, retention,
+  incident response, counsel questions, licensing inventory, and independent
+  security scope are documented. Activation remains blocked pending external
+  reviews, revised cost approval, and invite-only staging sign-off.
 - The live cloud service remains owner-only and recurring schedules remain
   paused.
 
-Estimated overall Atlas program completion: 70%.
+Estimated overall Atlas program completion: 71%.
 
 ## Current Recommended Sequence
 

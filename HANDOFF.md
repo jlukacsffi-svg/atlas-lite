@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 70%.
+Estimated overall Atlas program completion: 71%.
 
 ## Useful Files
 
@@ -309,6 +309,12 @@ Estimated overall Atlas program completion: 70%.
   factory. `tenant_postgres_check.py` validates the full contract offline.
   All 22 migration statements passed PostgreSQL parser validation. No database
   or cloud resource was created.
+- Web Phase 3 is approximately 99% complete. Privacy, terms, retention, and
+  incident-response drafts are complete, with counsel, market-data licensing,
+  and independent-security review scopes assembled in
+  `EXTERNAL_REVIEW_PACKET.md`. `governance_check.py` verifies the internal
+  artifacts and exits blocked until every external review and owner release
+  approval is recorded.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

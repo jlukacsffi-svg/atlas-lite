@@ -52,7 +52,9 @@ database. It contains no real identity subject or secret.
    Complete as a conditional architecture approval; deployment remains blocked.
 9. Build and validate the PostgreSQL adapter and native migrations. Complete
    locally without a database or cloud connection.
-10. Deploy only after the owner-only service remains available for rollback.
+10. Draft privacy, terms, retention, incident response, and external review
+    packets. Complete locally; external approvals remain blocked.
+11. Deploy only after the owner-only service remains available for rollback.
 
 ## Persistence Milestone
 
@@ -234,3 +236,32 @@ No database server, Cloud SQL instance, API, IAM role, or recurring task was
 created. Managed deployment remains blocked.
 
 Estimated Web Phase 3 completion after the PostgreSQL adapter milestone: 96%.
+
+## Governance Readiness Milestone
+
+Status: Internal work complete; external release blocked.
+
+The governance foundation provides:
+
+- A privacy-policy draft and planned user-rights workflow.
+- Terms covering invite-only accounts, acceptable use, third-party data, and
+  the strict no-trading boundary.
+- A record-specific retention and deletion schedule.
+- A NIST-aligned incident-response playbook.
+- A counsel packet covering investment-adviser and product questions.
+- A source-by-source market-data licensing review packet.
+- An independent security-review scope.
+- A fail-closed audit that verifies every document and keeps external users
+  disabled while reviews are pending.
+
+Run:
+
+```powershell
+py -3.12 governance_check.py
+```
+
+Exit code `2` is expected. The remaining work cannot be self-approved by Atlas:
+counsel, data rights, independent security testing, revised cost approval, and
+owner release approval.
+
+Estimated Web Phase 3 completion after governance readiness: 99%.
