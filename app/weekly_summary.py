@@ -272,6 +272,7 @@ class WeeklySummaryGenerator:
                     "role": "CIO",
                     "subject": ticker,
                     "priority": "medium",
+                    "signal_type": "score_improvement",
                     "prompt": (
                         f"Review {ticker}: score improved {delta:+.1f} points "
                         f"from {first_score:.1f} to {latest_score:.1f}; confirm whether the change reflects durable fundamentals."
@@ -287,6 +288,7 @@ class WeeklySummaryGenerator:
                     "role": "CRO",
                     "subject": ticker,
                     "priority": "high",
+                    "signal_type": "score_decline",
                     "prompt": (
                         f"Challenge {ticker}: score declined {delta:+.1f} points "
                         f"from {first_score:.1f} to {latest_score:.1f}; identify whether this is temporary volatility or thesis damage."
@@ -302,6 +304,7 @@ class WeeklySummaryGenerator:
                     "role": "CRO" if largest_move < 0 else "CIO",
                     "subject": ticker,
                     "priority": "high" if largest_move <= -4 else "medium",
+                    "signal_type": "recurring_mover",
                     "prompt": (
                         f"Investigate {ticker}: appeared as a top mover {appearances} times; "
                         f"review catalysts behind the {largest_move:+.2f}% largest move."
@@ -317,6 +320,7 @@ class WeeklySummaryGenerator:
                     "role": "Sector Analyst",
                     "subject": weakest_sector[0],
                     "priority": "medium",
+                    "signal_type": "sector_weakness",
                     "prompt": (
                         f"Monitor {weakest_sector[0]}: weakest sector trend at "
                         f"{weakest_sector[1]:+.2f}% average movement; check for broad pressure or isolated names."
@@ -332,6 +336,7 @@ class WeeklySummaryGenerator:
                     "role": "CIO",
                     "subject": ticker,
                     "priority": "medium",
+                    "signal_type": "recurring_score_leader",
                     "prompt": (
                         f"Maintain thesis file for {ticker}: appeared as a recurring score leader "
                         f"{appearances} times with an average score of {avg_score:.1f}."

@@ -32,15 +32,14 @@ def main():
     print("[tasks] Updating research task queue from weekly signals...")
     try:
         queue = ResearchTaskQueue()
-        created_tasks = []
-        for suggestion in generator.research_task_suggestions(days=7):
-            task, created = queue.add_task(
-                **suggestion,
-                source=str(report_path),
-            )
-            if created:
-                created_tasks.append(task)
-        print(f"[ok] Generated {len(created_tasks)} new research tasks from weekly signals.")
+        refreshed_tasks = queue.refresh_generated_tasks(
+            generator.research_task_suggestions(days=7),
+            source=str(report_path),
+            generated_scope="weekly_research",
+        )
+        print(
+            f"[ok] Refreshed {len(refreshed_tasks)} research tasks from weekly signals."
+        )
         review_paths = queue.save_review_outputs()
         print(f"[ok] Research agenda refreshed: {review_paths['agenda']}")
     except Exception as task_error:

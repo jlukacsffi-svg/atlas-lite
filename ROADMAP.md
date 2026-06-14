@@ -247,8 +247,9 @@ Current Web Phase 2 result:
   successfully.
 - Daily and weekly Cloud Run jobs have completed successful manual executions.
 - Dashboard readiness and failed-job alerting are active.
-- Recurring schedules remain paused by owner policy. Future activation has a
-  separate approval gate and validates successful jobs plus monitoring.
+- Recurring schedules are active under the owner-approved `$5/month` target
+  and existing `$10` gross-usage alert. Daily research runs at 7:00 AM Pacific
+  and weekly strategy research runs Sundays at 8:00 AM Pacific.
 - Artifact Registry retention is installed in non-destructive dry-run mode,
   and its initial cost and retention review is complete.
 - The read-only staging readiness audit now includes 25 checks, including
@@ -271,8 +272,8 @@ Current Web Phase 3 result:
   incident response, counsel questions, licensing inventory, and independent
   security scope are documented. Activation remains blocked pending external
   reviews, revised cost approval, and invite-only staging sign-off.
-- The live cloud service remains owner-only and recurring schedules remain
-  paused.
+- The live cloud service remains owner-only. Daily and weekly research
+  schedules are active within the approved cost boundary.
 - The owner-only operations milestone adds authenticated research decisions,
   paper proposal approvals, and explicitly confirmed simulated fills to the
   secure dashboard. The dashboard service can update only the existing private
@@ -294,9 +295,14 @@ Current Web Phase 3 result:
 - Corporate-action normalization is complete for stock splits. Atlas now uses
   adjusted momentum history, stores authoritative split events, corrects
   cross-snapshot price comparisons, and displays detected actions in the
-  dashboard. Stale and duplicate research-task cleanup is the next priority.
+  dashboard.
+- Research-task lifecycle management is complete. Generated signals refresh
+  in place, stale daily and weekly work expires automatically, duplicates are
+  closed with audit history, and manual or owner-review work is preserved.
+  The next priority is deeper automated completion of the highest-value
+  research assignments and clearer evidence-backed recommendations.
 
-Estimated overall Atlas program completion: 79%.
+Estimated overall Atlas program completion: 81%.
 
 ## Current Recommended Sequence
 

@@ -132,6 +132,7 @@ def main():
         print("[tasks] Updating research task queue...")
         try:
             task_queue = ResearchTaskQueue()
+            closed_tasks = task_queue.maintain_generated_tasks()
             market_tasks = task_queue.generate_from_market_data(market_data)
             portfolio_tasks = task_queue.generate_from_portfolio_summary(portfolio_summary)
             review_paths = task_queue.save_review_outputs()
@@ -139,6 +140,11 @@ def main():
                 f"[ok] Generated {len(market_tasks)} market tasks and "
                 f"{len(portfolio_tasks)} portfolio tasks."
             )
+            if closed_tasks:
+                print(
+                    f"[ok] Closed {len(closed_tasks)} stale or duplicate "
+                    "generated tasks."
+                )
             print(f"[ok] Research agenda refreshed: {review_paths['agenda']}")
         except Exception as task_error:
             print(f"[warning] Research task generation unavailable: {task_error}")

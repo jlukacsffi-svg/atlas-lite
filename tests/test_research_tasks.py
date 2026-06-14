@@ -1,6 +1,7 @@
 import tempfile
 import unittest
 import json
+from datetime import datetime
 from pathlib import Path
 
 from app.research_tasks import ResearchTaskQueue
@@ -318,9 +319,159 @@ class ResearchTaskQueueTests(unittest.TestCase):
 
             first = queue.generate_from_market_data(market_data)
             second = queue.generate_from_market_data(market_data)
+            open_tasks = queue.list_tasks(status="open")
 
         self.assertGreaterEqual(len(first), 1)
-        self.assertEqual(second, [])
+        self.assertEqual(len(second), len(first))
+        self.assertEqual(len(open_tasks), len(first))
+
+    def test_generated_signal_refresh_updates_existing_task(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            first = queue.refresh_generated_tasks(
+                [
+                    {
+                        "role": "CRO",
+                        "subject": "MU",
+                        "priority": "high",
+                        "signal_type": "downside_move",
+                        "prompt": "Review downside risk after a -6.00% move.",
+                    }
+                ],
+                source="daily_run",
+                generated_scope="daily_market",
+                now=datetime(2026, 6, 10, 8, 0, 0),
+            )
+            second = queue.refresh_generated_tasks(
+                [
+                    {
+                        "role": "CRO",
+                        "subject": "MU",
+                        "priority": "medium",
+                        "signal_type": "downside_move",
+                        "prompt": "Review downside risk after a -4.10% move.",
+                    }
+                ],
+                source="daily_run",
+                generated_scope="daily_market",
+                now=datetime(2026, 6, 11, 8, 0, 0),
+            )
+            open_tasks = queue.list_tasks(status="open")
+
+        self.assertEqual(first[0]["id"], second[0]["id"])
+        self.assertEqual(second[0]["priority"], "medium")
+        self.assertIn("-4.10%", second[0]["prompt"])
+        self.assertEqual(len(open_tasks), 1)
+
+    def test_generated_signals_expire_without_refresh(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            queue.refresh_generated_tasks(
+                [
+                    {
+                        "role": "CRO",
+                        "subject": "MU",
+                        "priority": "high",
+                        "signal_type": "downside_move",
+                        "prompt": "Review downside risk.",
+                    }
+                ],
+                source="daily_run",
+                generated_scope="daily_market",
+                now=datetime(2026, 6, 5, 8, 0, 0),
+            )
+
+            closed = queue.maintain_generated_tasks(
+                now=datetime(2026, 6, 9, 8, 0, 0)
+            )
+            tasks = queue.list_tasks()
+
+        self.assertEqual(len(closed), 1)
+        self.assertEqual(tasks[0]["status"], "closed")
+        self.assertIn("expired after 3 days", tasks[0]["close_reason"])
+
+    def test_legacy_weekly_duplicates_are_closed_but_newest_is_retained(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            task_file = Path(temp_dir) / "tasks.json"
+            task_file.write_text(
+                json.dumps(
+                    {
+                        "tasks": [
+                            {
+                                "id": "old",
+                                "created_at": "2026-06-05T08:00:00",
+                                "role": "CRO",
+                                "priority": "high",
+                                "status": "open",
+                                "subject": "MU",
+                                "source": "weekly_summary_20260605.md",
+                                "prompt": (
+                                    "Investigate MU: appeared as a top mover 11 times; "
+                                    "review catalysts behind the -13.25% largest move."
+                                ),
+                            },
+                            {
+                                "id": "new",
+                                "created_at": "2026-06-08T08:00:00",
+                                "role": "CRO",
+                                "priority": "high",
+                                "status": "open",
+                                "subject": "MU",
+                                "source": "weekly_summary_20260608.md",
+                                "prompt": (
+                                    "Investigate MU: appeared as a top mover 24 times; "
+                                    "review catalysts behind the -13.25% largest move."
+                                ),
+                            },
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
+            queue = ResearchTaskQueue(task_file)
+
+            closed = queue.maintain_generated_tasks(
+                now=datetime(2026, 6, 10, 8, 0, 0)
+            )
+            open_tasks = queue.list_tasks(status="open")
+
+        self.assertEqual(len(closed), 1)
+        self.assertEqual(open_tasks[0]["id"], "new")
+        self.assertIn("Superseded", closed[0]["close_reason"])
+
+    def test_manual_and_owner_review_tasks_are_never_auto_closed(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            manual, _ = queue.add_task(
+                role="CIO",
+                subject="NVDA",
+                prompt="Owner-requested thesis review.",
+                created_at="2026-01-01T08:00:00",
+            )
+            owner, _ = queue.add_task(
+                role="CRO",
+                subject="Risk",
+                prompt="Review risk.",
+                created_at="2026-01-01T08:00:00",
+            )
+            queue.complete_research(
+                owner["id"],
+                conclusion="Review complete.",
+                recommendation="monitor",
+            )
+
+            closed = queue.maintain_generated_tasks(
+                now=datetime(2026, 6, 10, 8, 0, 0)
+            )
+            task_statuses = {
+                task["id"]: task["status"] for task in queue.list_tasks()
+            }
+
+        self.assertEqual(closed, [])
+        self.assertEqual(
+            task_statuses,
+            {manual["id"]: "open", owner["id"]: "awaiting_owner"},
+        )
 
     def test_generate_from_portfolio_summary_assigns_risk_and_data_tasks(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -347,6 +347,16 @@ Estimated overall Atlas program completion: 79%.
   normalize pre-split prices. KLAC's June 12 10-for-1 split was validated
   against real cloud artifacts. Dashboard revision
   `atlas-dashboard-stg-00012-w55` adds an owner-visible Data Integrity panel.
+- Research-task lifecycle management is deployed on dashboard revision
+  `atlas-dashboard-stg-00013-ml2` and image
+  `20260614-task-lifecycle`. Generated daily and weekly signals now refresh in
+  place, expire after three and eight days respectively, and retain closure
+  history. Controlled execution `atlas-daily-stg-xmqlx` completed
+  successfully; the live agenda now has 11 current assignments instead of 16
+  stale or duplicate assignments. All 277 tests pass.
+- Daily and weekly schedules are enabled under the approved $5 monthly target
+  and existing $10 gross-usage alert. Real trading and brokerage access remain
+  disabled.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

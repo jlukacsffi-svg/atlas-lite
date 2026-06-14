@@ -1,6 +1,6 @@
 """Local research task queue for Atlas Stage 4."""
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from collections import Counter
 import hashlib
 import json
@@ -24,6 +24,11 @@ VALID_RECOMMENDATIONS = {
     "risk_review",
 }
 VALID_OWNER_DECISIONS = {"approve", "reject", "defer"}
+GENERATED_TASK_TTLS = {
+    "daily_market": 3,
+    "daily_portfolio": 3,
+    "weekly_research": 8,
+}
 ROLE_PURPOSES = {
     "CEO": "Prioritize the research agenda, escalate urgent risks, and summarize owner decisions needed.",
     "CIO": "Review investment opportunities, catalyst quality, and thesis conviction.",
@@ -67,6 +72,8 @@ class ResearchTaskQueue:
         source=None,
         notes=None,
         created_at=None,
+        generated_scope=None,
+        signal_type=None,
     ):
         role = self._normalize_role(role)
         prompt = str(prompt).strip()
@@ -92,9 +99,119 @@ class ResearchTaskQueue:
             "prompt": prompt,
             "notes": notes or "",
         }
+        if generated_scope:
+            task["generated_scope"] = generated_scope
+        if signal_type:
+            task["signal_type"] = signal_type
+            task["signal_key"] = self._signal_key(
+                generated_scope,
+                role,
+                task["subject"],
+                signal_type,
+            )
+            task["last_seen_at"] = created_at
         payload["tasks"].append(task)
         self.save(payload)
         return task, True
+
+    def refresh_generated_tasks(
+        self,
+        suggestions,
+        source,
+        generated_scope,
+        limit=8,
+        now=None,
+    ):
+        """Refresh generated signals, closing stale or duplicate open work."""
+        if generated_scope not in GENERATED_TASK_TTLS:
+            raise ValueError(f"invalid generated task scope: {generated_scope}")
+        now = now or datetime.now()
+        now_text = now.isoformat(timespec="seconds")
+        payload = self.load()
+        self._normalize_generated_tasks(payload["tasks"])
+        self._close_stale_and_duplicate_tasks(payload["tasks"], now)
+
+        refreshed = []
+        active_keys = set()
+        for suggestion in list(suggestions)[:limit]:
+            suggestion = dict(suggestion)
+            signal_type = suggestion.pop("signal_type", "general")
+            role = self._normalize_role(suggestion["role"])
+            subject = suggestion.get("subject") or "General"
+            key = self._signal_key(generated_scope, role, subject, signal_type)
+            active_keys.add(key)
+            existing = next(
+                (
+                    task
+                    for task in payload["tasks"]
+                    if task.get("status") == "open"
+                    and task.get("signal_key") == key
+                ),
+                None,
+            )
+            if existing:
+                existing.update(
+                    {
+                        "role": role,
+                        "subject": subject,
+                        "priority": str(
+                            suggestion.get("priority", "medium")
+                        ).lower(),
+                        "prompt": str(suggestion["prompt"]).strip(),
+                        "source": source,
+                        "generated_scope": generated_scope,
+                        "signal_type": signal_type,
+                        "signal_key": key,
+                        "last_seen_at": now_text,
+                        "updated_at": now_text,
+                    }
+                )
+                refreshed.append(existing)
+                continue
+
+            task = {
+                "id": self._task_id(role, subject, key),
+                "created_at": now_text,
+                "last_seen_at": now_text,
+                "role": role,
+                "priority": str(suggestion.get("priority", "medium")).lower(),
+                "status": "open",
+                "subject": subject,
+                "source": source,
+                "prompt": str(suggestion["prompt"]).strip(),
+                "notes": str(suggestion.get("notes") or ""),
+                "generated_scope": generated_scope,
+                "signal_type": signal_type,
+                "signal_key": key,
+            }
+            payload["tasks"].append(task)
+            refreshed.append(task)
+
+        for task in payload["tasks"]:
+            if (
+                task.get("status") == "open"
+                and task.get("generated_scope") == generated_scope
+                and task.get("signal_key") not in active_keys
+            ):
+                self._close_generated_task(
+                    task,
+                    now_text,
+                    "Signal was not present in the latest refresh.",
+                )
+
+        payload["queue_version"] = "1.1"
+        self.save(payload)
+        return refreshed
+
+    def maintain_generated_tasks(self, now=None):
+        """Close stale and duplicate generated work without deleting history."""
+        now = now or datetime.now()
+        payload = self.load()
+        self._normalize_generated_tasks(payload["tasks"])
+        closed = self._close_stale_and_duplicate_tasks(payload["tasks"], now)
+        payload["queue_version"] = "1.1"
+        self.save(payload)
+        return closed
 
     def list_tasks(self, status=None):
         tasks = self.load()["tasks"]
@@ -401,14 +518,12 @@ class ResearchTaskQueue:
         latest = sorted(entries, key=lambda item: item.get("generated_at", ""), reverse=True)[0]
         snapshot = self._load_snapshot_for_entry(latest, archive_index_path.parent)
         suggestions = self._task_suggestions_from_entry(latest, snapshot=snapshot)
-        created = []
-
-        for suggestion in suggestions[:limit]:
-            task, was_created = self.add_task(**suggestion)
-            if was_created:
-                created.append(task)
-
-        return created
+        return self.refresh_generated_tasks(
+            suggestions,
+            source=str(latest.get("report_path") or "archive_index"),
+            generated_scope="daily_market",
+            limit=limit,
+        )
 
     def generate_from_market_data(self, market_data, source="daily_run", limit=8):
         """Create research tasks directly from the current market-data run."""
@@ -454,14 +569,12 @@ class ResearchTaskQueue:
         }
         snapshot = {"securities": market_data}
         suggestions = self._task_suggestions_from_entry(entry, snapshot=snapshot)
-        created = []
-
-        for suggestion in suggestions[:limit]:
-            task, was_created = self.add_task(**suggestion)
-            if was_created:
-                created.append(task)
-
-        return created
+        return self.refresh_generated_tasks(
+            suggestions,
+            source=source,
+            generated_scope="daily_market",
+            limit=limit,
+        )
 
     def generate_from_portfolio_summary(self, portfolio_summary, source="daily_portfolio", limit=8):
         """Create research tasks from configured portfolio risk alerts."""
@@ -485,12 +598,12 @@ class ResearchTaskQueue:
                 }
             )
 
-        created = []
-        for suggestion in suggestions[:limit]:
-            task, was_created = self.add_task(**suggestion)
-            if was_created:
-                created.append(task)
-        return created
+        return self.refresh_generated_tasks(
+            suggestions,
+            source=source,
+            generated_scope="daily_portfolio",
+            limit=limit,
+        )
 
     def _normalize_role(self, role):
         role = str(role).strip()
@@ -502,6 +615,126 @@ class ResearchTaskQueue:
         raw = f"{role}|{subject or 'General'}|{prompt}".lower()
         digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:12]
         return f"task_{digest}"
+
+    def _signal_key(self, scope, role, subject, signal_type):
+        raw = (
+            f"{scope or 'generated'}|{role}|{subject or 'General'}|"
+            f"{signal_type or 'general'}"
+        ).lower()
+        return hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+
+    def _normalize_generated_tasks(self, tasks):
+        for task in tasks:
+            if task.get("generated_scope") and task.get("signal_key"):
+                continue
+            scope, signal_type = self._infer_generated_identity(task)
+            if not scope:
+                continue
+            task["generated_scope"] = scope
+            task["signal_type"] = signal_type
+            task["signal_key"] = self._signal_key(
+                scope,
+                task.get("role"),
+                task.get("subject"),
+                signal_type,
+            )
+            task["last_seen_at"] = task.get("updated_at") or task.get("created_at")
+
+    def _close_stale_and_duplicate_tasks(self, tasks, now):
+        now = self._comparable_datetime(now)
+        now_text = now.isoformat(timespec="seconds")
+        closed = []
+        open_generated = [
+            task
+            for task in tasks
+            if task.get("status") == "open" and task.get("generated_scope")
+        ]
+        grouped = {}
+        for task in open_generated:
+            grouped.setdefault(task.get("signal_key"), []).append(task)
+        for duplicates in grouped.values():
+            duplicates.sort(
+                key=lambda task: task.get("last_seen_at")
+                or task.get("updated_at")
+                or task.get("created_at")
+                or "",
+                reverse=True,
+            )
+            for duplicate in duplicates[1:]:
+                self._close_generated_task(
+                    duplicate,
+                    now_text,
+                    "Superseded by a newer equivalent generated signal.",
+                )
+                closed.append(duplicate)
+
+        for task in open_generated:
+            if task.get("status") != "open":
+                continue
+            ttl_days = GENERATED_TASK_TTLS.get(task.get("generated_scope"))
+            seen_at = self._parse_datetime(
+                task.get("last_seen_at")
+                or task.get("updated_at")
+                or task.get("created_at")
+            )
+            if ttl_days and seen_at and now - seen_at > timedelta(days=ttl_days):
+                self._close_generated_task(
+                    task,
+                    now_text,
+                    f"Generated signal expired after {ttl_days} days without refresh.",
+                )
+                closed.append(task)
+        return closed
+
+    def _infer_generated_identity(self, task):
+        source = str(task.get("source") or "").lower()
+        prompt = str(task.get("prompt") or "").lower()
+        if "weekly_summary" in source:
+            scope = "weekly_research"
+        elif "morning_brief" in source or "daily_run" in source:
+            scope = "daily_market"
+        elif "daily_portfolio" in source:
+            scope = "daily_portfolio"
+        else:
+            return None, None
+
+        patterns = (
+            ("review downside risk", "downside_move"),
+            ("review catalyst quality", "catalyst_move"),
+            ("maintain or refresh", "score_leader"),
+            ("review portfolio alert", "portfolio_alert"),
+            ("score improved", "score_improvement"),
+            ("score declined", "score_decline"),
+            ("appeared as a top mover", "recurring_mover"),
+            ("weakest sector trend", "sector_weakness"),
+            ("recurring score leader", "recurring_score_leader"),
+        )
+        signal_type = next(
+            (value for phrase, value in patterns if phrase in prompt),
+            "general",
+        )
+        return scope, signal_type
+
+    def _close_generated_task(self, task, closed_at, reason):
+        task["status"] = "closed"
+        task["updated_at"] = closed_at
+        task["close_reason"] = reason
+        task["notes"] = self._append_note(task.get("notes", ""), reason)
+
+    @staticmethod
+    def _parse_datetime(value):
+        try:
+            return ResearchTaskQueue._comparable_datetime(
+                datetime.fromisoformat(str(value))
+            )
+        except (TypeError, ValueError):
+            return None
+
+    @staticmethod
+    def _comparable_datetime(value):
+        if value.tzinfo is not None:
+            return value.astimezone(timezone.utc).replace(tzinfo=None)
+        return value
 
     def _append_note(self, existing_notes, new_note):
         new_note = str(new_note).strip()
@@ -564,6 +797,7 @@ class ResearchTaskQueue:
                             f"Review downside risk for {ticker} after a {pct:+.2f}% move. "
                             "Identify whether this looks like temporary volatility or thesis damage."
                         ),
+                        "signal_type": "downside_move",
                     }
                 )
             elif abs(pct) >= 4:
@@ -577,6 +811,7 @@ class ResearchTaskQueue:
                             f"Review catalyst quality for {ticker} after a {pct:+.2f}% move. "
                             "Determine whether the move changes conviction or watchlist priority."
                         ),
+                        "signal_type": "catalyst_move",
                     }
                 )
 
@@ -595,6 +830,7 @@ class ResearchTaskQueue:
                         f"Maintain or refresh the investment thesis for {ticker}, "
                         f"a recurring high-score name at {score:.1f}."
                     ),
+                    "signal_type": "score_leader",
                 }
             )
 
@@ -614,6 +850,7 @@ class ResearchTaskQueue:
                             "Investigate missing market data for "
                             f"{', '.join(sorted(unavailable)[:10])}."
                         ),
+                        "signal_type": "data_quality",
                     }
                 )
 

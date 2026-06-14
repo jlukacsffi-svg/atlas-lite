@@ -104,3 +104,31 @@ Current boundaries:
 - Automatic research and reporting are enabled.
 - Investment decisions and paper fills still require owner review.
 - Real trading and brokerage access remain disabled.
+
+## June 13, 2026 - Current Research Agenda
+
+New capabilities:
+
+- Refresh recurring daily and weekly research signals in place instead of
+  adding duplicate assignments after every run.
+- Automatically close daily signals after three days and weekly signals after
+  eight days when they are no longer refreshed.
+- Preserve closed assignments, timestamps, and close reasons for audit history.
+- Leave manual, in-progress, and owner-review tasks untouched by automatic
+  maintenance.
+
+Validated result:
+
+- The live queue was reduced from 16 stale or duplicate open assignments to 11
+  current assignments after the June 13 daily run.
+- The current queue contains eight fresh daily signals and three still-valid
+  weekly signals.
+- The secure owner dashboard displays 11 open assignments, including three
+  high-priority risk reviews.
+
+Current boundaries:
+
+- Atlas organizes and prioritizes research; it does not independently complete
+  every research assignment.
+- Owner decisions remain required for paper fills and all financial actions.
+- Real trading and brokerage access remain disabled.
