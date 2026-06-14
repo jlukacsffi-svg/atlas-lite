@@ -57,6 +57,7 @@ function renderDashboard(data) {
   renderScores(data.score_leaders || []);
   renderMovers(data.movers || []);
   renderSectors(data.sectors || []);
+  renderCorporateActions(data.corporate_actions || []);
   renderPositions(paper.positions || []);
   renderTasks(data.research?.tasks || []);
   renderOwnerControls(data.owner_controls || null);
@@ -254,6 +255,21 @@ function renderSectors(rows) {
       <div class="bar-track"><div class="bar ${item.average_change >= 0 ? "up" : "down"}" style="width:${Math.max(5, (Math.abs(item.average_change) / maximum) * 100)}%"></div></div>
     </div>
   `).join("") || `<div class="empty">No sector data available.</div>`;
+}
+
+function renderCorporateActions(rows) {
+  document.getElementById("corporate-actions").innerHTML = rows.map(item => {
+    const date = item.date ? new Date(item.date).toLocaleDateString() : "Date unavailable";
+    return `
+      <div class="action-row">
+        <span>
+          <b class="row-title">${escapeHtml(item.ticker)} &middot; ${escapeHtml(item.ratio)}</b>
+          <small class="row-meta">${escapeHtml(item.type)} on ${escapeHtml(date)}</small>
+        </span>
+        <span class="integrity-status">${item.normalized ? "Normalized" : "Review"}</span>
+      </div>`;
+  }).join("") || `
+    <div class="empty">No recent corporate actions detected in the current research universe.</div>`;
 }
 
 function renderPositions(rows) {

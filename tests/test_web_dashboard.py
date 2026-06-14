@@ -75,6 +75,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertEqual(data["score_leaders"][0]["score"], 90)
         self.assertTrue(data["paper"]["configured"])
         self.assertEqual(data["research"]["open"], 1)
+        self.assertEqual(data["corporate_actions"], [])
         self.assertFalse(data["access"]["public_registration"])
         self.assertEqual(data["access"]["mode"], "owner_only")
         self.assertEqual(data["access"]["schema_version"], 3)
@@ -88,6 +89,28 @@ class WebDashboardTests(unittest.TestCase):
 
     def test_static_routes_are_explicit_and_read_only(self):
         self.assertEqual(set(STATIC_FILES), {"/", "/index.html", "/styles.css", "/app.js"})
+
+    def test_dashboard_exposes_normalized_corporate_actions(self):
+        rows = DashboardDataService._corporate_actions(
+            {
+                "KLAC": {
+                    "corporate_actions": {
+                        "splits": [
+                            {
+                                "date": "2026-06-12T13:30:00+00:00",
+                                "ratio": 10.0,
+                                "split_ratio": "10:1",
+                                "source": "yahoo_chart_event",
+                            }
+                        ]
+                    }
+                }
+            }
+        )
+
+        self.assertEqual(rows[0]["ticker"], "KLAC")
+        self.assertEqual(rows[0]["ratio"], "10:1")
+        self.assertTrue(rows[0]["normalized"])
 
     def test_browser_labels_local_and_cloud_environments(self):
         root = Path(__file__).resolve().parent.parent
@@ -109,6 +132,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("renderWorkspace", script)
         self.assertIn("40% complete", html)
         self.assertIn("access.phase_completion", script)
+        self.assertIn('id="corporate-actions"', html)
+        self.assertIn("renderCorporateActions", script)
         self.assertIn('id="paper-fill-dialog"', html)
         self.assertIn("openPaperFillDialog", script)
         self.assertIn("SIMULATE ${proposalId}", script)

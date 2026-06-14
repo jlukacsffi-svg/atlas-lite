@@ -5,6 +5,7 @@ import html
 import re
 
 from app.news_data import NewsFetcher
+from app.corporate_actions import describe_splits, normalize_prior_price
 from app.research_tasks import ResearchTaskQueue
 from app.scoring import ScoringEngine
 
@@ -1355,6 +1356,7 @@ class ReportGenerator:
         prior_securities = self.previous_snapshot.get("securities", {})
         comparisons = []
         score_changes = []
+        corporate_action_notes = []
 
         for ticker, data in self.market_data.items():
             prior = prior_securities.get(ticker)
@@ -1363,9 +1365,18 @@ class ReportGenerator:
 
             current_price = data.get("price")
             prior_price = prior.get("price")
+            normalized_prior_price, applied_splits = normalize_prior_price(
+                prior_price,
+                prior_generated_at,
+                data,
+            )
+            corporate_action_notes.extend(describe_splits(ticker, applied_splits))
             price_change_pct = None
-            if current_price is not None and prior_price not in (None, 0):
-                price_change_pct = ((current_price - prior_price) / prior_price) * 100
+            if current_price is not None and normalized_prior_price not in (None, 0):
+                price_change_pct = (
+                    (current_price - normalized_prior_price)
+                    / normalized_prior_price
+                ) * 100
 
             current_score = None
             if data.get("scores"):
@@ -1386,6 +1397,12 @@ class ReportGenerator:
         ]
 
         section.append(f"Compared with the prior snapshot from `{prior_generated_at}`.\n")
+        if corporate_action_notes:
+            section.append(
+                "Corporate-action normalization applied: "
+                + "; ".join(corporate_action_notes)
+                + ". Historical prices were adjusted before comparison.\n"
+            )
 
         if valid_price_changes:
             largest_moves = sorted(

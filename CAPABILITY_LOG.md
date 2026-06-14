@@ -52,6 +52,31 @@ Current boundaries:
 - Simulation approval and simulation fill remain separate owner actions.
 - All positions use simulated capital only.
 - Real trading and brokerage access remain disabled.
+
+## June 13, 2026 - Corporate-Action Normalization
+
+New capabilities:
+
+- Use split-adjusted Yahoo historical prices for momentum calculations.
+- Detect dated stock-split events and retain their source, ratio, and effective
+  date in the research archive.
+- Normalize pre-split snapshot prices before calculating historical changes.
+- Disclose applied adjustments in executive reports and display recent
+  corporate actions in the dashboard Data Integrity panel.
+
+Validated result:
+
+- Atlas detected KLAC's June 12, 2026 10-for-1 split.
+- The June 8 KLAC comparison price is normalized from $1,929.20 to $192.92.
+- The resulting June 8-to-June 13 comparison is +31.94%, replacing the false
+  unadjusted decline of approximately 86.8%.
+
+Current boundaries:
+
+- Split data depends on published Yahoo corporate-action events.
+- Other corporate actions such as spin-offs and symbol changes need future
+  normalization work.
+- Recommendations remain research outputs requiring owner judgment.
 - Recurring daily and weekly cloud schedules remain paused pending separate
   cost approval.
 

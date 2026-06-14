@@ -51,6 +51,7 @@ class DashboardDataService:
             "movers": self._movers(available),
             "score_leaders": self._score_leaders(available),
             "sectors": self._sectors(available),
+            "corporate_actions": self._corporate_actions(available),
             "paper": self._paper(available),
             "research": self._research(),
             "history": self._history(),
@@ -162,6 +163,28 @@ class DashboardDataService:
             for sector, changes in grouped.items()
         ]
         return sorted(rows, key=lambda item: item["average_change"], reverse=True)
+
+    @staticmethod
+    def _corporate_actions(available):
+        rows = []
+        for ticker, data in available.items():
+            actions = data.get("corporate_actions") or {}
+            for split in actions.get("splits") or []:
+                rows.append(
+                    {
+                        "ticker": ticker,
+                        "type": "Stock split",
+                        "date": split.get("date"),
+                        "ratio": split.get("split_ratio") or str(split.get("ratio")),
+                        "source": split.get("source") or actions.get("source"),
+                        "normalized": True,
+                    }
+                )
+        return sorted(
+            rows,
+            key=lambda item: item.get("date") or "",
+            reverse=True,
+        )[:8]
 
     def _paper(self, available):
         if not self.paper_account.account_file.exists():

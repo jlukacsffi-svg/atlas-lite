@@ -29,6 +29,7 @@ SNAPSHOT_FIELDS = [
     "growth_metrics",
     "quality_metrics",
     "momentum_metrics",
+    "corporate_actions",
 ]
 
 

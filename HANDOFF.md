@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 77%.
+Estimated overall Atlas program completion: 79%.
 
 ## Useful Files
 
@@ -342,6 +342,11 @@ Estimated overall Atlas program completion: 77%.
   with the existing $10 gross-usage alert. The daily 7:00 AM Pacific and Sunday
   8:00 AM Pacific schedules are now enabled. Monitoring remains active, and
   real trading and brokerage access remain disabled.
+- Corporate-action normalization is deployed. Momentum uses adjusted closes,
+  research snapshots retain dated split events, and historical comparisons
+  normalize pre-split prices. KLAC's June 12 10-for-1 split was validated
+  against real cloud artifacts. Dashboard revision
+  `atlas-dashboard-stg-00012-w55` adds an owner-visible Data Integrity panel.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

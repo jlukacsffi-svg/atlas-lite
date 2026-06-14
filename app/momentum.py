@@ -4,11 +4,12 @@ import json
 import logging
 import time
 import urllib.request
+from datetime import datetime, timezone
 
 
 YAHOO_MOMENTUM_URL = (
     "https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
-    "?range=1y&interval=1d&includePrePost=false"
+    "?range=1y&interval=1d&includePrePost=false&events=div%2Csplits"
 )
 MOMENTUM_TIMEOUT_SECONDS = 6
 
@@ -49,6 +50,7 @@ class MomentumEngine:
             "return_3m": self._round_optional(return_3m),
             "return_6m": self._round_optional(return_6m),
             "momentum_score": self.calculate_score(return_1m, return_3m),
+            "recent_splits": self._extract_splits(payload),
             "source": "yahoo_chart_1y",
         }
 
@@ -66,14 +68,49 @@ class MomentumEngine:
         results = payload.get("chart", {}).get("result") or []
         if not results:
             return []
-        quotes = results[0].get("indicators", {}).get("quote") or []
-        if not quotes:
+        indicators = results[0].get("indicators", {})
+        adjusted = indicators.get("adjclose") or []
+        quotes = indicators.get("quote") or []
+        values = (
+            adjusted[0].get("adjclose")
+            if adjusted and adjusted[0].get("adjclose")
+            else quotes[0].get("close") if quotes else []
+        )
+        if not values:
             return []
         return [
             float(value)
-            for value in (quotes[0].get("close") or [])
+            for value in values
             if value is not None
         ]
+
+    def _extract_splits(self, payload):
+        results = payload.get("chart", {}).get("result") or []
+        if not results:
+            return []
+        events = results[0].get("events", {}).get("splits", {})
+        splits = []
+        for event in events.values():
+            numerator = self._positive_float(event.get("numerator"))
+            denominator = self._positive_float(event.get("denominator"))
+            timestamp = event.get("date")
+            if numerator is None or denominator is None or timestamp is None:
+                continue
+            splits.append(
+                {
+                    "date": datetime.fromtimestamp(
+                        int(timestamp),
+                        tz=timezone.utc,
+                    ).isoformat(),
+                    "ratio": round(numerator / denominator, 8),
+                    "split_ratio": event.get(
+                        "splitRatio",
+                        f"{numerator:g}:{denominator:g}",
+                    ),
+                    "source": "yahoo_chart_event",
+                }
+            )
+        return sorted(splits, key=lambda item: item["date"])
 
     def _return_from_period(self, closes, trading_days):
         if len(closes) <= trading_days:
@@ -85,3 +122,11 @@ class MomentumEngine:
 
     def _round_optional(self, value):
         return round(value, 2) if value is not None else None
+
+    @staticmethod
+    def _positive_float(value):
+        try:
+            parsed = float(value)
+        except (TypeError, ValueError):
+            return None
+        return parsed if parsed > 0 else None

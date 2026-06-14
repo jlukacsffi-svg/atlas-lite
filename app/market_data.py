@@ -99,6 +99,11 @@ class MarketDataFetcher:
         momentum_metrics = self.momentum_engine.fetch_metrics(ticker)
         if momentum_metrics and momentum_metrics.get("momentum_score") is not None:
             record["momentum_metrics"] = momentum_metrics
+            if momentum_metrics.get("recent_splits"):
+                record["corporate_actions"] = {
+                    "splits": list(momentum_metrics["recent_splits"]),
+                    "source": momentum_metrics.get("source"),
+                }
             record["scores"]["momentum"] = momentum_metrics["momentum_score"]
             automated_scores.append("momentum")
 
@@ -218,13 +223,19 @@ class MarketDataFetcher:
 
         result = results[0]
         meta = result.get('meta', {})
-        indicators = result.get('indicators', {}).get('quote', [])
+        all_indicators = result.get('indicators', {})
+        indicators = all_indicators.get('quote', [])
         if not indicators:
             self.logger.warning("No quote indicators in Yahoo response for %s", ticker)
             return None
 
         quote = indicators[0]
-        closes = quote.get('close') or []
+        adjusted = all_indicators.get('adjclose') or []
+        closes = (
+            adjusted[0].get('adjclose')
+            if adjusted and adjusted[0].get('adjclose')
+            else quote.get('close') or []
+        )
         opens = quote.get('open') or []
         highs = quote.get('high') or []
         lows = quote.get('low') or []

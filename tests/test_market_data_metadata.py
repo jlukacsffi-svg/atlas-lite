@@ -63,6 +63,28 @@ class MarketDataMetadataTests(unittest.TestCase):
         self.assertEqual(record["scores"]["momentum"], 65.0)
         self.assertEqual(record["score_source"], "hybrid_v1")
 
+    def test_split_events_are_attached_as_corporate_actions(self):
+        fetcher = MarketDataFetcher(["AAA"], universe=_Universe())
+        fetcher.growth_engine.fetch_company_facts = lambda ticker: None
+        fetcher.momentum_engine = _MetricsEngine(
+            {
+                "momentum_score": 65.0,
+                "source": "yahoo_chart_1y",
+                "recent_splits": [
+                    {
+                        "date": "2026-06-12T13:30:00+00:00",
+                        "ratio": 10.0,
+                        "split_ratio": "10:1",
+                    }
+                ],
+            }
+        )
+
+        record = fetcher._apply_universe_metadata("AAA", {})
+
+        self.assertEqual(record["corporate_actions"]["splits"][0]["ratio"], 10.0)
+        self.assertEqual(record["corporate_actions"]["source"], "yahoo_chart_1y")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -290,10 +290,13 @@ Current Web Phase 3 result:
   are now tracked as hypothetical holdings.
 - Recurring owner research is active under the approved $5 monthly target and
   $10 alert. Daily research runs at 7:00 AM Pacific, with a weekly strategy run
-  Sundays at 8:00 AM Pacific. The next development priority is recommendation
-  quality: corporate-action normalization followed by stale-task cleanup.
+  Sundays at 8:00 AM Pacific.
+- Corporate-action normalization is complete for stock splits. Atlas now uses
+  adjusted momentum history, stores authoritative split events, corrects
+  cross-snapshot price comparisons, and displays detected actions in the
+  dashboard. Stale and duplicate research-task cleanup is the next priority.
 
-Estimated overall Atlas program completion: 77%.
+Estimated overall Atlas program completion: 79%.
 
 ## Current Recommended Sequence
 
