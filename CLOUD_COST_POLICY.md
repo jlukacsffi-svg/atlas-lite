@@ -44,7 +44,9 @@ spending, production deployment, or a changed architecture.
 - Billing and the budget were activated before Atlas runtime resources.
 - Dashboard instances remain at minimum `0` and maximum `1`.
 - Scheduled jobs use one task and conservative resource limits.
-- Scheduler triggers are created or updated, then left paused.
+- Scheduler triggers were activated on June 13, 2026 after explicit owner
+  approval for recurring Atlas research up to a $5 monthly target with the
+  existing $10 gross-usage alert.
 - Schedule resume requires `-Apply -ConfirmCosts
   -ApproveRecurringExecution` and verifies successful manual jobs plus active
   monitoring before changing either trigger.

@@ -173,6 +173,8 @@ class GoogleCloudScriptTests(unittest.TestCase):
         )
         self.assertIn("Latest execution for $job", content)
         self.assertIn("Required staging monitoring", content)
+        self.assertNotIn("--filter=displayName=Atlas dashboard readiness", content)
+        self.assertIn("'--format=value(displayName,enabled)'", content)
 
     def test_artifact_cleanup_defaults_to_dry_run_and_keeps_rollbacks(self):
         root = Path(__file__).resolve().parent.parent
@@ -207,10 +209,8 @@ class GoogleCloudScriptTests(unittest.TestCase):
             "[validated] Artifact Registry cost and dry-run retention review",
             content,
         )
-        self.assertIn(
-            "Recurring schedules remain paused by owner policy",
-            content,
-        )
+        self.assertIn("[string]$ExpectedScheduleState = 'ENABLED'", content)
+        self.assertIn("Recurring schedules are $(", content)
         for mutation in (
             "'deploy'",
             "'update'",

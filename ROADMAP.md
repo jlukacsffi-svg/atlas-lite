@@ -287,11 +287,13 @@ Current Web Phase 3 result:
   review. Corporate-action normalization is the next data-quality priority.
 - The active paper-portfolio milestone is complete. Approved KLAC, LRCX, and
   ANET proposals were entered through the secure simulation-only workflow and
-  are now tracked as hypothetical holdings. The next operational decision is
-  whether to activate the low-cost daily research schedule after the owner
-  reviews the recurring cost envelope.
+  are now tracked as hypothetical holdings.
+- Recurring owner research is active under the approved $5 monthly target and
+  $10 alert. Daily research runs at 7:00 AM Pacific, with a weekly strategy run
+  Sundays at 8:00 AM Pacific. The next development priority is recommendation
+  quality: corporate-action normalization followed by stale-task cleanup.
 
-Estimated overall Atlas program completion: 76%.
+Estimated overall Atlas program completion: 77%.
 
 ## Current Recommended Sequence
 

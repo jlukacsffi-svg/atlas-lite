@@ -77,17 +77,16 @@ if ($Action -eq 'Resume') {
     $uptime = Get-GcloudValue @(
         'monitoring', 'uptime', 'list-configs',
         "--project=$ProjectId",
-        '--filter=displayName=Atlas dashboard readiness',
         '--format=value(displayName)'
     )
     $policies = Get-GcloudValue @(
         'monitoring', 'policies', 'list',
         "--project=$ProjectId",
-        '--filter=enabled=true',
-        '--format=value(displayName)'
+        '--format=value(displayName,enabled)'
     )
-    if (-not $uptime -or $policies -notmatch 'Atlas dashboard unavailable' -or
-        $policies -notmatch 'Atlas cloud job failed') {
+    if ($uptime -notmatch 'Atlas dashboard readiness' -or
+        $policies -notmatch 'Atlas dashboard unavailable\s+True' -or
+        $policies -notmatch 'Atlas cloud job failed\s+True') {
         throw 'Required staging monitoring is not configured.'
     }
 }

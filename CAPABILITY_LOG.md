@@ -54,3 +54,28 @@ Current boundaries:
 - Real trading and brokerage access remain disabled.
 - Recurring daily and weekly cloud schedules remain paused pending separate
   cost approval.
+
+## June 13, 2026 - Recurring Owner Research
+
+New capabilities:
+
+- Run the daily Atlas research cycle automatically at 7:00 AM Pacific.
+- Run the weekly Atlas strategy cycle automatically at 8:00 AM Pacific each
+  Sunday.
+- Refresh private dashboard research and paper-position valuations without the
+  owner's laptop being online.
+- Monitor dashboard availability and failed cloud jobs through Google Cloud
+  alert policies.
+
+Approved cost boundary:
+
+- Target recurring Atlas usage is no more than $5 per month.
+- The existing $10 monthly gross-usage budget remains active with alerts at
+  25%, 50%, 80%, and 100%.
+- Promotional credits do not replace the budget controls.
+
+Current boundaries:
+
+- Automatic research and reporting are enabled.
+- Investment decisions and paper fills still require owner review.
+- Real trading and brokerage access remain disabled.

@@ -60,7 +60,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host ''
 Write-Host 'Final staging gates:'
 Write-Host '  [validated] Artifact Registry cost and dry-run retention review'
-Write-Host '  [validated] Recurring schedules remain paused'
+Write-Host '  [validated] Recurring schedules are enabled under owner-approved cost controls'
 Write-Host '  [pending] Final staging security and cost sign-off'
 Write-Host ''
 Write-Host '[result] AUTOMATED FINAL REVIEW PASS - manual owner gates remain.'

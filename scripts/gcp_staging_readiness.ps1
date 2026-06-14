@@ -2,7 +2,9 @@ param(
     [string]$ProjectId = 'atlas-capital-research-stg',
     [ValidateSet('us-west1', 'us-central1', 'us-east1')]
     [string]$Region = 'us-west1',
-    [string]$OwnerEmail = 'jlukacsffi@gmail.com'
+    [string]$OwnerEmail = 'jlukacsffi@gmail.com',
+    [ValidateSet('PAUSED', 'ENABLED')]
+    [string]$ExpectedScheduleState = 'ENABLED'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -169,8 +171,8 @@ foreach ($item in @(
     Add-Check "$($item.Name) manual execution" `
         ($item.Job.status.latestCreatedExecution.completionStatus -eq 'EXECUTION_SUCCEEDED') `
         ([string]$item.Job.status.latestCreatedExecution.name)
-    Add-Check "$($item.Name) schedule paused" `
-        ($item.Schedule.state -eq 'PAUSED') `
+    Add-Check "$($item.Name) schedule $($ExpectedScheduleState.ToLowerInvariant())" `
+        ($item.Schedule.state -eq $ExpectedScheduleState) `
         "$($item.Schedule.state), $($item.Schedule.schedule) $($item.Schedule.timeZone)"
     Add-Check "$($item.Name) scheduler identity" `
         ($item.Schedule.httpTarget.oauthToken.serviceAccountEmail -eq $SchedulerAccount) `
@@ -207,7 +209,7 @@ Write-Host '  [pending] Cross-device owner login'
 Write-Host '  [pending] Non-owner Google account denial'
 Write-Host '  [validated] One complete day of uptime and alert telemetry review'
 Write-Host '  [validated] Artifact Registry cost and dry-run retention review'
-Write-Host '  [validated] Recurring schedules remain paused by owner policy'
+Write-Host "  [validated] Recurring schedules are $($ExpectedScheduleState.ToLowerInvariant()) by owner policy"
 
 if ($script:Failures -gt 0) {
     Write-Host ""

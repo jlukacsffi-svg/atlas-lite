@@ -14,7 +14,8 @@ new services or higher recurring usage still require review.
 - Expected promotional-credit impact: minimal
 - Dashboard minimum instances: `0`
 - Dashboard maximum instances: `1`
-- Daily and weekly schedules: paused during initial validation
+- Daily and weekly schedules: active as of June 13, 2026 under the approved
+  $5 monthly operating target
 
 Google Cloud budgets notify; they do not stop usage automatically. Promotional
 credits can expire or exclude some products. Joe should verify the displayed

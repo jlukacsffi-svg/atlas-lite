@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 76%.
+Estimated overall Atlas program completion: 77%.
 
 ## Useful Files
 
@@ -338,6 +338,10 @@ Estimated overall Atlas program completion: 76%.
   completed the approved KLAC, LRCX, and ANET simulated purchases, and the
   secure dashboard now tracks all three positions alongside NVDA. Recurring
   schedules remain paused pending the separate cost-activation decision.
+- Joe approved recurring Atlas research up to a $5 monthly operating target
+  with the existing $10 gross-usage alert. The daily 7:00 AM Pacific and Sunday
+  8:00 AM Pacific schedules are now enabled. Monitoring remains active, and
+  real trading and brokerage access remain disabled.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
