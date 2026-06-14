@@ -373,6 +373,29 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 }
 .decision-row .role-chip,
 .decision-row .tag { margin-bottom: 8px; }
+.evidence-list {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 11px;
+}
+.evidence-list summary {
+  width: fit-content;
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 700;
+}
+.evidence-list ul {
+  display: grid;
+  gap: 7px;
+  margin: 9px 0 0;
+  padding-left: 18px;
+}
+.evidence-list a { color: var(--blue); }
+.evidence-list small { display: block; margin-top: 2px; }
+.evidence-source {
+  margin-left: 4px;
+  color: var(--muted);
+}
 .decision-actions {
   display: flex;
   align-items: flex-start;

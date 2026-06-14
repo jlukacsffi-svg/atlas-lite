@@ -132,3 +132,33 @@ Current boundaries:
   every research assignment.
 - Owner decisions remain required for paper fills and all financial actions.
 - Real trading and brokerage access remain disabled.
+
+## June 14, 2026 - Evidence-Backed Research Reviews
+
+New capabilities:
+
+- Complete up to three fresh high-priority generated market assignments during
+  each daily research run.
+- Combine the measured market move with company-specific public headlines.
+- Produce a conservative conclusion, recommendation, and confidence rating.
+- Route completed work to the secure owner decision center with expandable,
+  clickable evidence.
+- Preserve a pending owner review when the same signal appears again instead
+  of creating a duplicate task.
+
+Validated result:
+
+- Cloud execution `atlas-daily-stg-6j2wr` completed successfully.
+- Atlas produced medium-confidence risk reviews for AVAV and ADBE.
+- The AVAV review displays the measured 7.14% decline and one
+  company-specific headline; unrelated broad-search results are excluded.
+- The ADBE review includes three company-specific headlines.
+- The full automated test suite passes with 283 tests.
+
+Current boundaries:
+
+- Headline evidence provides research context and does not prove causality.
+- Atlas limits automatic completion to a small number of high-priority
+  generated assignments.
+- Every conclusion still requires an owner approve, defer, or reject decision.
+- Real trading and brokerage access remain disabled.

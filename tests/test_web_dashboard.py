@@ -138,6 +138,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("openPaperFillDialog", script)
         self.assertIn("SIMULATE ${proposalId}", script)
         self.assertNotIn("window.prompt", script)
+        self.assertIn("Review evidence", script)
+        self.assertIn("safeExternalUrl", script)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:

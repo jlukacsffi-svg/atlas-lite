@@ -299,10 +299,15 @@ Current Web Phase 3 result:
 - Research-task lifecycle management is complete. Generated signals refresh
   in place, stale daily and weekly work expires automatically, duplicates are
   closed with audit history, and manual or owner-review work is preserved.
-  The next priority is deeper automated completion of the highest-value
-  research assignments and clearer evidence-backed recommendations.
+  Evidence-backed completion is now active for a controlled number of
+  high-priority daily market assignments.
+- Automated research reviews now combine measured price movement with
+  company-specific public headlines, assign a conservative confidence and
+  recommendation, and route the result to the owner decision center. The next
+  priority is deeper catalyst classification and thesis-aware analysis using
+  earnings, analyst actions, filings, and portfolio context.
 
-Estimated overall Atlas program completion: 81%.
+Estimated overall Atlas program completion: 83%.
 
 ## Current Recommended Sequence
 

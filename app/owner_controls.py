@@ -36,6 +36,7 @@ class OwnerControlService:
                     "priority": task.get("priority"),
                     "subject": task.get("subject"),
                     "result": task.get("result", {}),
+                    "source": task.get("source"),
                 }
                 for task in self.research_queue._sorted_tasks(awaiting)
             ],

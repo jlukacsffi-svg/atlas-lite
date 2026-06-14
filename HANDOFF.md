@@ -357,6 +357,14 @@ Estimated overall Atlas program completion: 79%.
 - Daily and weekly schedules are enabled under the approved $5 monthly target
   and existing $10 gross-usage alert. Real trading and brokerage access remain
   disabled.
+- Evidence-backed automated research is deployed on dashboard revision
+  `atlas-dashboard-stg-00015-hrd` and image
+  `20260614-evidence-research-v2`. Each daily run may complete up to three
+  high-priority generated market tasks using measured price movement and
+  company-specific Yahoo headline evidence. Results include a conservative
+  recommendation and confidence rating, remain pending for owner review, and
+  cannot authorize trades. Execution `atlas-daily-stg-6j2wr` produced AVAV
+  and ADBE risk reviews. All 283 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

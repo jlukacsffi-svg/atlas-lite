@@ -12,6 +12,15 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function safeExternalUrl(value) {
+  try {
+    const url = new URL(String(value || ""));
+    return ["http:", "https:"].includes(url.protocol) ? url.href : "";
+  } catch {
+    return "";
+  }
+}
+
 function renderEnvironment() {
   const localHosts = new Set(["localhost", "127.0.0.1", "::1"]);
   const cloud = !localHosts.has(window.location.hostname);
@@ -127,6 +136,21 @@ function renderOwnerControls(controls) {
     `${proposals.length} active proposal${proposals.length === 1 ? "" : "s"}`;
   document.getElementById("research-reviews").innerHTML = reviews.map(item => {
     const result = item.result || {};
+    const evidence = (result.evidence || [])
+      .filter(entry => typeof entry === "string" || entry.detail !== "Sector or broad-market context")
+      .map(entry => {
+      if (typeof entry === "string") {
+        return `<li>${escapeHtml(entry)}</li>`;
+      }
+      const title = escapeHtml(entry.title || entry.detail || "Evidence");
+      const source = escapeHtml(entry.source || "");
+      const detail = escapeHtml(entry.detail || "");
+      const url = safeExternalUrl(entry.url);
+      const label = url
+        ? `<a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${title}</a>`
+        : title;
+      return `<li>${label}${source ? ` <span class="evidence-source">${source}</span>` : ""}${detail ? `<small>${detail}</small>` : ""}</li>`;
+      }).join("");
     return `
       <article class="decision-row">
         <div>
@@ -134,6 +158,7 @@ function renderOwnerControls(controls) {
           <b class="row-title">${escapeHtml(item.subject)}</b>
           <small class="row-meta">${escapeHtml(result.recommendation || "Review")} · ${escapeHtml(result.confidence || "Unrated")}</small>
           <p>${escapeHtml(result.conclusion || "No conclusion supplied.")}</p>
+          ${evidence ? `<details class="evidence-list"><summary>Review evidence</summary><ul>${evidence}</ul></details>` : ""}
         </div>
         <div class="decision-actions">
           <button type="button" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="approve">Approve</button>

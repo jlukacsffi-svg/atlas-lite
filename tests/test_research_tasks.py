@@ -363,6 +363,82 @@ class ResearchTaskQueueTests(unittest.TestCase):
         self.assertIn("-4.10%", second[0]["prompt"])
         self.assertEqual(len(open_tasks), 1)
 
+    def test_generated_signal_refresh_preserves_pending_owner_review(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            task = queue.refresh_generated_tasks(
+                [
+                    {
+                        "role": "CRO",
+                        "subject": "MU",
+                        "priority": "high",
+                        "signal_type": "downside_move",
+                        "prompt": "Review downside risk after a -6.00% move.",
+                    }
+                ],
+                source="daily_run",
+                generated_scope="daily_market",
+                now=datetime(2026, 6, 10, 8, 0, 0),
+            )[0]
+            queue.complete_research(
+                task["id"],
+                conclusion="The catalyst remains uncertain.",
+                recommendation="research_further",
+                confidence="low",
+            )
+
+            refreshed = queue.refresh_generated_tasks(
+                [
+                    {
+                        "role": "CRO",
+                        "subject": "MU",
+                        "priority": "high",
+                        "signal_type": "downside_move",
+                        "prompt": "Review downside risk after a -4.50% move.",
+                    }
+                ],
+                source="new_daily_run",
+                generated_scope="daily_market",
+                now=datetime(2026, 6, 11, 8, 0, 0),
+            )
+            tasks = queue.list_tasks()
+
+        self.assertEqual(len(tasks), 1)
+        self.assertEqual(refreshed[0]["status"], "awaiting_owner")
+        self.assertEqual(
+            refreshed[0]["result"]["conclusion"],
+            "The catalyst remains uncertain.",
+        )
+        self.assertEqual(refreshed[0]["source"], "new_daily_run")
+
+    def test_complete_research_preserves_structured_evidence(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            task, _ = queue.add_task(
+                role="CRO",
+                subject="MU",
+                prompt="Review risk.",
+            )
+
+            completed = queue.complete_research(
+                task["id"],
+                conclusion="Evidence reviewed.",
+                recommendation="risk_review",
+                evidence=[
+                    {
+                        "title": "Company update",
+                        "source": "Example News",
+                        "url": "https://example.com/update",
+                        "detail": "Company-specific headline",
+                    }
+                ],
+            )
+
+        self.assertEqual(
+            completed["result"]["evidence"][0]["url"],
+            "https://example.com/update",
+        )
+
     def test_generated_signals_expire_without_refresh(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")

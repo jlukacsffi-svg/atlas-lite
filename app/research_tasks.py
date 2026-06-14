@@ -144,28 +144,29 @@ class ResearchTaskQueue:
                 (
                     task
                     for task in payload["tasks"]
-                    if task.get("status") == "open"
+                    if task.get("status") != "closed"
                     and task.get("signal_key") == key
                 ),
                 None,
             )
             if existing:
-                existing.update(
-                    {
-                        "role": role,
-                        "subject": subject,
-                        "priority": str(
-                            suggestion.get("priority", "medium")
-                        ).lower(),
-                        "prompt": str(suggestion["prompt"]).strip(),
-                        "source": source,
-                        "generated_scope": generated_scope,
-                        "signal_type": signal_type,
-                        "signal_key": key,
-                        "last_seen_at": now_text,
-                        "updated_at": now_text,
-                    }
-                )
+                existing["source"] = source
+                existing["last_seen_at"] = now_text
+                existing["updated_at"] = now_text
+                if existing.get("status") == "open":
+                    existing.update(
+                        {
+                            "role": role,
+                            "subject": subject,
+                            "priority": str(
+                                suggestion.get("priority", "medium")
+                            ).lower(),
+                            "prompt": str(suggestion["prompt"]).strip(),
+                            "generated_scope": generated_scope,
+                            "signal_type": signal_type,
+                            "signal_key": key,
+                        }
+                    )
                 refreshed.append(existing)
                 continue
 
@@ -388,7 +389,11 @@ class ResearchTaskQueue:
             evidence = []
         elif isinstance(evidence, str):
             evidence = [evidence]
-        evidence = [str(item).strip() for item in evidence if str(item).strip()]
+        evidence = [
+            normalized
+            for item in evidence
+            if (normalized := self._normalize_evidence(item))
+        ]
 
         payload = self.load()
         for task in payload["tasks"]:
@@ -743,6 +748,19 @@ class ResearchTaskQueue:
         if not existing_notes:
             return new_note
         return f"{existing_notes}\n{new_note}"
+
+    @staticmethod
+    def _normalize_evidence(item):
+        if isinstance(item, dict):
+            normalized = {
+                "title": str(item.get("title") or "").strip(),
+                "source": str(item.get("source") or "").strip(),
+                "url": str(item.get("url") or "").strip(),
+                "detail": str(item.get("detail") or "").strip(),
+            }
+            return normalized if any(normalized.values()) else None
+        text = str(item).strip()
+        return text or None
 
     def _task_table(self, tasks):
         lines = [

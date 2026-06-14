@@ -27,6 +27,7 @@ from app.paper_monitor import PaperPositionMonitor
 from app.portfolio import Portfolio
 from app.research_memory import ResearchMemory
 from app.research_tasks import ResearchTaskQueue
+from app.research_analyst import ResearchAnalyst
 from app.security_universe import SecurityUniverse
 from app.paths import data_path
 
@@ -135,11 +136,20 @@ def main():
             closed_tasks = task_queue.maintain_generated_tasks()
             market_tasks = task_queue.generate_from_market_data(market_data)
             portfolio_tasks = task_queue.generate_from_portfolio_summary(portfolio_summary)
+            completed_research = ResearchAnalyst().complete_priority_tasks(
+                task_queue,
+                market_data,
+            )
             review_paths = task_queue.save_review_outputs()
             print(
                 f"[ok] Generated {len(market_tasks)} market tasks and "
                 f"{len(portfolio_tasks)} portfolio tasks."
             )
+            if completed_research:
+                print(
+                    f"[ok] Completed {len(completed_research)} priority research "
+                    "reviews for owner decision."
+                )
             if closed_tasks:
                 print(
                     f"[ok] Closed {len(closed_tasks)} stale or duplicate "
