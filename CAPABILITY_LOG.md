@@ -162,3 +162,23 @@ Current boundaries:
   generated assignments.
 - Every conclusion still requires an owner approve, defer, or reject decision.
 - Real trading and brokerage access remain disabled.
+
+## June 22, 2026 - Monitoring Alert Tuning
+
+Operational update:
+
+- Verified the live dashboard readiness endpoint returns `200 {"status":"ready"}`.
+- Confirmed Cloud Run revision `atlas-dashboard-stg-00015-hrd` is healthy and
+  serving traffic.
+- Identified noisy dashboard-unavailable email alerts caused by a strict
+  perfect-uptime threshold on a low-cost scale-to-zero staging service.
+- Tuned the dashboard availability alert to require sustained multi-region
+  readiness failure below a 0.67 pass fraction for 600 seconds.
+- Left daily and weekly Cloud Run job-failure alerts immediate.
+
+Current boundaries:
+
+- The dashboard still scales to zero to preserve the low-cost staging target.
+- A brief cold start should no longer produce unnecessary dashboard-down
+  emails.
+- Sustained multi-region readiness failure should still alert the owner.

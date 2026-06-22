@@ -365,6 +365,12 @@ Estimated overall Atlas program completion: 79%.
   recommendation and confidence rating, remain pending for owner review, and
   cannot authorize trades. Execution `atlas-daily-stg-6j2wr` produced AVAV
   and ADBE risk reviews. All 283 tests pass.
+- On June 22, 2026, dashboard readiness notifications were tuned after noisy
+  Google alert emails. `/readyz` returned `200 {"status":"ready"}`, Cloud Run
+  revision `atlas-dashboard-stg-00015-hrd` was healthy, and recent readiness
+  logs showed successful checks. The dashboard alert now requires sustained
+  multi-region pass fraction below `0.67` for `600s`. Job-failure alerts remain
+  immediate.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

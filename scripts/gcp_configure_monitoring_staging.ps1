@@ -22,6 +22,8 @@ $ChannelDisplayName = 'Atlas staging alerts'
 $DashboardPolicyName = 'Atlas dashboard unavailable'
 $JobPolicyName = 'Atlas cloud job failed'
 $UptimeTimeoutSeconds = 30
+$DashboardAlertThreshold = 0.67
+$DashboardAlertDuration = '600s'
 
 if (-not (Test-Path $Gcloud)) {
     throw 'Google Cloud CLI is not installed.'
@@ -82,6 +84,7 @@ function New-AlertPolicy {
         [Parameter(Mandatory = $true)][string]$Filter,
         [Parameter(Mandatory = $true)][string]$Comparison,
         [Parameter(Mandatory = $true)][double]$Threshold,
+        [Parameter(Mandatory = $true)][string]$Duration,
         [Parameter(Mandatory = $true)][string]$Aligner,
         [Parameter(Mandatory = $true)][string]$Documentation,
         [Parameter(Mandatory = $true)][string]$ServiceLabel,
@@ -108,7 +111,7 @@ function New-AlertPolicy {
                     filter = $Filter
                     comparison = $Comparison
                     thresholdValue = $Threshold
-                    duration = '0s'
+                    duration = $Duration
                     trigger = @{ count = 1 }
                     aggregations = @(
                         @{
@@ -120,6 +123,19 @@ function New-AlertPolicy {
             }
         )
     }
+}
+
+function Update-AlertPolicy {
+    param(
+        [Parameter(Mandatory = $true)][object]$Policy,
+        [Parameter(Mandatory = $true)][hashtable]$Headers
+    )
+    $uri = (
+        "https://monitoring.googleapis.com/v3/$($Policy.name)" +
+        "?updateMask=conditions,documentation,enabled,notificationChannels,userLabels,combiner"
+    )
+    $body = $Policy | ConvertTo-Json -Depth 20
+    return Invoke-RestMethod -Method Patch -Uri $uri -Headers $Headers -Body $body
 }
 
 Write-Host 'Atlas staging monitoring'
@@ -218,26 +234,51 @@ $policies = Get-MonitoringCollection -Collection 'alertPolicies' -Headers $heade
 $policyList = @($policies.alertPolicies)
 $checkId = ($uptime.name -split '/')[-1]
 
-if (-not ($policyList | Where-Object displayName -eq $DashboardPolicyName)) {
-    $filter = (
-        'metric.type="monitoring.googleapis.com/uptime_check/check_passed" ' +
-        'AND resource.type="uptime_url" ' +
-        "AND metric.label.`"check_id`"=`"$checkId`""
-    )
+$dashboardFilter = (
+    'metric.type="monitoring.googleapis.com/uptime_check/check_passed" ' +
+    'AND resource.type="uptime_url" ' +
+    "AND metric.label.`"check_id`"=`"$checkId`""
+)
+$dashboardDocumentation = (
+    'The Atlas staging readiness endpoint is failing from multiple checkers ' +
+    'for a sustained period. Verify Cloud Run revision health before enabling schedules.'
+)
+$dashboardPolicy = $policyList | Where-Object displayName -eq $DashboardPolicyName | Select-Object -First 1
+if (-not $dashboardPolicy) {
     New-AlertPolicy `
         -DisplayName $DashboardPolicyName `
         -ConditionName 'Dashboard readiness check is failing' `
-        -Filter $filter `
+        -Filter $dashboardFilter `
         -Comparison 'COMPARISON_LT' `
-        -Threshold 1 `
+        -Threshold $DashboardAlertThreshold `
+        -Duration $DashboardAlertDuration `
         -Aligner 'ALIGN_FRACTION_TRUE' `
-        -Documentation 'The Atlas staging readiness endpoint is not returning a healthy response. Verify Cloud Run revision health before enabling schedules.' `
+        -Documentation $dashboardDocumentation `
         -ServiceLabel 'atlas-dashboard' `
         -ChannelName $channel.name `
         -Headers $headers > $null
     Write-Host '[ok] Created dashboard availability alert.'
 } else {
-    Write-Host '[ok] Dashboard availability alert already exists.'
+    $dashboardPolicy.conditions[0].conditionThreshold.filter = $dashboardFilter
+    $dashboardPolicy.conditions[0].conditionThreshold.comparison = 'COMPARISON_LT'
+    $dashboardPolicy.conditions[0].conditionThreshold.thresholdValue = $DashboardAlertThreshold
+    $dashboardPolicy.conditions[0].conditionThreshold.duration = $DashboardAlertDuration
+    $dashboardPolicy.conditions[0].conditionThreshold.trigger = @{ count = 1 }
+    $dashboardPolicy.conditions[0].conditionThreshold.aggregations = @(
+        @{
+            alignmentPeriod = '300s'
+            perSeriesAligner = 'ALIGN_FRACTION_TRUE'
+        }
+    )
+    $dashboardPolicy.documentation = @{
+        content = $dashboardDocumentation
+        mimeType = 'text/markdown'
+    }
+    Update-AlertPolicy -Policy $dashboardPolicy -Headers $headers > $null
+    Write-Host (
+        "[ok] Dashboard availability alert requires sustained multi-region " +
+        "failure below $DashboardAlertThreshold for $DashboardAlertDuration."
+    )
 }
 
 if (-not ($policyList | Where-Object displayName -eq $JobPolicyName)) {
@@ -254,6 +295,7 @@ if (-not ($policyList | Where-Object displayName -eq $JobPolicyName)) {
         -Filter $filter `
         -Comparison 'COMPARISON_GT' `
         -Threshold 0 `
+        -Duration '0s' `
         -Aligner 'ALIGN_DELTA' `
         -Documentation 'An Atlas daily or weekly Cloud Run execution failed. Keep scheduler triggers paused until the execution logs and private-state integrity are reviewed.' `
         -ServiceLabel 'atlas-jobs' `
