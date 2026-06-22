@@ -236,3 +236,32 @@ Current boundaries:
 - Catalyst classification is a research label, not proof of causality.
 - Thesis action is a recommendation for owner review only.
 - Real trading and brokerage access remain disabled.
+
+## June 22, 2026 - Thesis-Memory Research Reviews
+
+New capabilities:
+
+- Compare automated research reviews against the stored Atlas thesis profile
+  for each security when a profile is available.
+- Add `thesis_alignment` to owner-review results, including labels such as
+  `risk_to_thesis`, `supports_driver`, `pending_validation`, `neutral_context`,
+  `unprofiled`, and `unconfirmed`.
+- Include the stored thesis, key driver, and key risk as evidence in the owner
+  decision center.
+- Display thesis alignment in the secure dashboard so recommendations show
+  whether new evidence supports, threatens, or merely touches the thesis.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00018-gtc` is serving 100% traffic.
+- Cloud execution `atlas-daily-stg-pbbqx` completed successfully.
+- Atlas produced thesis-aware owner reviews for AVAV, ARM, and MDB. AVAV was
+  classified as `score_risk` with `risk_to_thesis`.
+- Daily and weekly schedules were resumed after the controlled run.
+- The full automated test suite passes with 287 tests.
+
+Current boundaries:
+
+- Thesis alignment is a conservative research label, not proof of causality.
+- Older pending reviews may not have a thesis-alignment field until refreshed.
+- Real trading and brokerage access remain disabled.

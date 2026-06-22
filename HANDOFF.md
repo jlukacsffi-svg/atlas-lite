@@ -386,6 +386,14 @@ Estimated overall Atlas program completion: 79%.
   `atlas-daily-stg-2ltsk` classified AVAV as `score_risk` and ARM/NFLX as
   `company_news`. Daily and weekly schedules were resumed afterward. All 286
   tests pass.
+- Thesis-memory research reviews are deployed on dashboard revision
+  `atlas-dashboard-stg-00018-gtc` and image `20260622-thesis-memory`.
+  Completed reviews now include `thesis_alignment`, add stored thesis-profile
+  evidence when available, and display thesis alignment in the owner decision
+  center. Controlled execution `atlas-daily-stg-pbbqx` produced thesis-aware
+  reviews for AVAV, ARM, and MDB; AVAV was `score_risk` with
+  `risk_to_thesis`. Daily and weekly schedules were resumed afterward. All 287
+  tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

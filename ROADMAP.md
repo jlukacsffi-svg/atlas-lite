@@ -303,15 +303,15 @@ Current Web Phase 3 result:
   high-priority daily market assignments.
 - Automated research reviews now combine measured price movement with
   company-specific public headlines, assign a conservative confidence and
-  recommendation, and route the result to the owner decision center. The next
-  layer is underway: reviews now add internal Atlas score/category/sector,
-  earnings, analyst actions, insider Form 4 activity, and tracked portfolio
-  exposure when available. Catalyst classification and thesis-action language
-  are now active. The next priority is thesis-memory integration so reviews can
-  compare new evidence against the stored bull/base/bear thesis for each
-  company.
+  recommendation, and route the result to the owner decision center. Reviews
+  add internal Atlas score/category/sector, earnings, analyst actions, insider
+  Form 4 activity, and tracked portfolio exposure when available. Catalyst
+  classification, thesis-action language, and thesis-memory alignment are now
+  active. The next priority is thesis-drift tracking so Atlas can compare new
+  evidence against prior owner decisions and stored bull/base/bear thesis
+  history over time.
 
-Estimated overall Atlas program completion: 85%.
+Estimated overall Atlas program completion: 86%.
 
 ## Current Recommended Sequence
 

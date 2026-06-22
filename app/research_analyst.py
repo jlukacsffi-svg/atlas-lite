@@ -56,6 +56,7 @@ class ResearchAnalyst:
                     evidence=result["evidence"],
                     catalyst_type=result["catalyst_type"],
                     thesis_action=result["thesis_action"],
+                    thesis_alignment=result["thesis_alignment"],
                 )
             )
         return completed
@@ -96,10 +97,16 @@ class ResearchAnalyst:
                 score = self.scoring_engine.score(scores)
             except (TypeError, ValueError):
                 score = None
+        profile = security.get("profile") or {}
         return {
             "score": score,
             "category": security.get("category"),
             "sector": security.get("sector"),
+            "profile": {
+                "thesis": str(profile.get("thesis") or "").strip(),
+                "key_driver": str(profile.get("key_driver") or "").strip(),
+                "key_risk": str(profile.get("key_risk") or "").strip(),
+            },
             "earnings": earnings,
             "analyst_actions": analyst,
             "insider_transactions": insiders,
@@ -146,8 +153,15 @@ class ResearchAnalyst:
             company_headlines=company_headlines,
         )
         thesis_action = self._thesis_action(task, context, catalyst_type)
+        thesis_alignment = self._thesis_alignment(
+            task=task,
+            context=context,
+            catalyst_type=catalyst_type,
+            company_headlines=company_headlines,
+        )
         context_phrases = self._context_phrases(context)
         catalyst_text = catalyst_type.replace("_", " ")
+        alignment_text = thesis_alignment.replace("_", " ")
         if task.get("signal_type") == "downside_move":
             if company_headlines:
                 conclusion = (
@@ -169,7 +183,7 @@ class ResearchAnalyst:
                 confidence = "low"
             conclusion = (
                 f"{conclusion} Catalyst classification: {catalyst_text}. "
-                f"Thesis action: {thesis_action}."
+                f"Thesis alignment: {alignment_text}. Thesis action: {thesis_action}."
             )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
@@ -183,7 +197,7 @@ class ResearchAnalyst:
             confidence = "medium"
             conclusion = (
                 f"{conclusion} Catalyst classification: {catalyst_text}. "
-                f"Thesis action: {thesis_action}."
+                f"Thesis alignment: {alignment_text}. Thesis action: {thesis_action}."
             )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
@@ -196,7 +210,7 @@ class ResearchAnalyst:
             confidence = "low"
             conclusion = (
                 f"{conclusion} Catalyst classification: {catalyst_text}. "
-                f"Thesis action: {thesis_action}."
+                f"Thesis alignment: {alignment_text}. Thesis action: {thesis_action}."
             )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
@@ -208,6 +222,7 @@ class ResearchAnalyst:
             "evidence": evidence,
             "catalyst_type": catalyst_type,
             "thesis_action": thesis_action,
+            "thesis_alignment": thesis_alignment,
         }
 
     def _classify_catalyst(self, task, context, company_headlines):
@@ -253,7 +268,70 @@ class ResearchAnalyst:
             return "Maintain thesis but verify catalyst quality"
         return "Research further before changing thesis status"
 
+    def _thesis_alignment(self, task, context, catalyst_type, company_headlines):
+        profile = context.get("profile") or {}
+        if not any(profile.values()):
+            return "unprofiled"
+        if catalyst_type in {"score_risk", "analyst_negative"}:
+            return "risk_to_thesis"
+        if task.get("signal_type") == "downside_move":
+            return "risk_to_thesis"
+        if catalyst_type == "upcoming_earnings":
+            return "pending_validation"
+        if catalyst_type in {"analyst_positive", "company_news"}:
+            driver_tokens = self._meaningful_tokens(profile.get("key_driver"))
+            headline_tokens = self._meaningful_tokens(
+                " ".join(str(headline.get("title") or "") for headline in company_headlines)
+            )
+            if driver_tokens and driver_tokens.intersection(headline_tokens):
+                return "supports_driver"
+            return "neutral_context"
+        return "unconfirmed"
+
+    def _meaningful_tokens(self, text):
+        stop_words = {
+            "and",
+            "the",
+            "for",
+            "from",
+            "with",
+            "into",
+            "its",
+            "are",
+            "but",
+            "this",
+            "that",
+            "growth",
+            "demand",
+        }
+        normalized = "".join(
+            character.lower() if character.isalnum() else " "
+            for character in str(text or "")
+        )
+        return {
+            token
+            for token in normalized.split()
+            if len(token) >= 4 and token not in stop_words
+        }
+
     def _append_context_evidence(self, ticker, evidence, context):
+        profile = context.get("profile") or {}
+        if any(profile.values()):
+            detail_parts = []
+            if profile.get("thesis"):
+                detail_parts.append(f"Thesis: {profile['thesis']}")
+            if profile.get("key_driver"):
+                detail_parts.append(f"Driver: {profile['key_driver']}")
+            if profile.get("key_risk"):
+                detail_parts.append(f"Risk: {profile['key_risk']}")
+            evidence.append(
+                {
+                    "title": f"{ticker} thesis profile",
+                    "source": "Atlas security universe",
+                    "detail": " | ".join(detail_parts),
+                }
+            )
+
         score = context.get("score")
         if score is not None:
             evidence.append(
@@ -347,4 +425,7 @@ class ResearchAnalyst:
             phrases.append("recent insider Form 4 activity")
         if context.get("portfolio_positions"):
             phrases.append("tracked portfolio exposure exists")
+        profile = context.get("profile") or {}
+        if any(profile.values()):
+            phrases.append("stored thesis profile is available")
         return phrases

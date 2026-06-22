@@ -426,6 +426,7 @@ class ResearchTaskQueueTests(unittest.TestCase):
                 recommendation="risk_review",
                 catalyst_type="score_risk",
                 thesis_action="Recheck thesis quality.",
+                thesis_alignment="risk_to_thesis",
                 evidence=[
                     {
                         "title": "Company update",
@@ -445,6 +446,7 @@ class ResearchTaskQueueTests(unittest.TestCase):
             completed["result"]["thesis_action"],
             "Recheck thesis quality.",
         )
+        self.assertEqual(completed["result"]["thesis_alignment"], "risk_to_thesis")
 
     def test_generated_signals_expire_without_refresh(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -158,6 +158,7 @@ function renderOwnerControls(controls) {
           <b class="row-title">${escapeHtml(item.subject)}</b>
           <small class="row-meta">${escapeHtml(result.recommendation || "Review")} · ${escapeHtml(result.confidence || "Unrated")}${result.catalyst_type ? ` · ${escapeHtml(result.catalyst_type).replaceAll("_", " ")}` : ""}</small>
           <p>${escapeHtml(result.conclusion || "No conclusion supplied.")}</p>
+          ${result.thesis_alignment ? `<small class="row-meta">Thesis alignment: ${escapeHtml(result.thesis_alignment).replaceAll("_", " ")}</small>` : ""}
           ${result.thesis_action ? `<small class="row-meta">Thesis action: ${escapeHtml(result.thesis_action)}</small>` : ""}
           ${evidence ? `<details class="evidence-list"><summary>Review evidence</summary><ul>${evidence}</ul></details>` : ""}
         </div>

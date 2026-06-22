@@ -155,6 +155,11 @@ class ResearchAnalystTests(unittest.TestCase):
                         "percent_change": -6.5,
                         "category": "Watchlist",
                         "sector": "AI & Semiconductors",
+                        "profile": {
+                            "thesis": "Memory-cycle beneficiary with AI infrastructure exposure.",
+                            "key_driver": "HBM demand and data-center memory growth.",
+                            "key_risk": "Commodity cycles and volatile margins.",
+                        },
                         "scores": {
                             "growth": 80,
                             "quality": 75,
@@ -201,12 +206,15 @@ class ResearchAnalystTests(unittest.TestCase):
         result = completed[0]["result"]
         evidence_titles = {item["title"] for item in result["evidence"]}
         self.assertIn("MU Atlas score", evidence_titles)
+        self.assertIn("MU thesis profile", evidence_titles)
         self.assertIn("MU upcoming earnings", evidence_titles)
         self.assertIn("Analyst raises Micron price target", evidence_titles)
         self.assertIn("MU insider Sale", evidence_titles)
         self.assertIn("MU tracked portfolio exposure", evidence_titles)
         self.assertIn("upcoming earnings", result["conclusion"])
         self.assertIn("tracked portfolio exposure", result["conclusion"])
+        self.assertIn("stored thesis profile", result["conclusion"])
+        self.assertIn("thesis_alignment", result)
 
     def test_low_score_downside_move_is_classified_as_score_risk(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -236,6 +244,11 @@ class ResearchAnalystTests(unittest.TestCase):
                         "percent_change": -8.0,
                         "category": "Emerging",
                         "sector": "Defense & Aerospace",
+                        "profile": {
+                            "thesis": "Unmanned systems specialist aligned to defense modernization.",
+                            "key_driver": "Drone demand and defense program wins.",
+                            "key_risk": "Contract lumpiness and elevated expectations.",
+                        },
                         "scores": {
                             "growth": 55,
                             "quality": 60,
@@ -249,8 +262,49 @@ class ResearchAnalystTests(unittest.TestCase):
 
         result = completed[0]["result"]
         self.assertEqual(result["catalyst_type"], "score_risk")
+        self.assertEqual(result["thesis_alignment"], "risk_to_thesis")
         self.assertIn("Recheck thesis quality", result["thesis_action"])
+        self.assertIn("Thesis alignment: risk to thesis", result["conclusion"])
         self.assertIn("Catalyst classification: score risk", result["conclusion"])
+
+    def test_positive_company_news_can_support_stored_driver(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            queue = self._queue_with_signal(root, ticker="NVDA", signal_type="catalyst_move")
+            news = StubNewsFetcher(
+                {
+                    "NVDA": [
+                        {
+                            "title": "Nvidia data-center platform demand accelerates",
+                            "publisher": "Example News",
+                            "url": "https://example.com/nvda",
+                            "relevance": "company",
+                        }
+                    ]
+                }
+            )
+
+            completed = ResearchAnalyst(news_fetcher=news).complete_priority_tasks(
+                queue,
+                {
+                    "NVDA": {
+                        "status": "available",
+                        "company_name": "NVIDIA",
+                        "price": 220.0,
+                        "percent_change": 5.0,
+                        "profile": {
+                            "thesis": "Core AI infrastructure leader.",
+                            "key_driver": "AI data-center demand and platform adoption.",
+                            "key_risk": "Valuation pressure.",
+                        },
+                    }
+                },
+            )
+
+        result = completed[0]["result"]
+        self.assertEqual(result["catalyst_type"], "company_news")
+        self.assertEqual(result["thesis_alignment"], "supports_driver")
+        self.assertIn("Thesis alignment: supports driver", result["conclusion"])
 
     def test_analyst_action_classification_takes_precedence_after_score(self):
         with tempfile.TemporaryDirectory() as temp_dir:
