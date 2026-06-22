@@ -139,6 +139,10 @@ def main():
             completed_research = ResearchAnalyst().complete_priority_tasks(
                 task_queue,
                 market_data,
+                earnings_events=earnings_events,
+                analyst_actions=analyst_actions,
+                insider_transactions=insider_transactions,
+                portfolio_summary=portfolio_summary,
             )
             review_paths = task_queue.save_review_outputs()
             print(

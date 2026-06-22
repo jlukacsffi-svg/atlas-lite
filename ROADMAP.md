@@ -304,10 +304,12 @@ Current Web Phase 3 result:
 - Automated research reviews now combine measured price movement with
   company-specific public headlines, assign a conservative confidence and
   recommendation, and route the result to the owner decision center. The next
-  priority is deeper catalyst classification and thesis-aware analysis using
-  earnings, analyst actions, filings, and portfolio context.
+  layer is underway: reviews now add internal Atlas score/category/sector,
+  earnings, analyst actions, insider Form 4 activity, and tracked portfolio
+  exposure when available. The next priority is explicit catalyst
+  classification and thesis-aware recommendation language.
 
-Estimated overall Atlas program completion: 83%.
+Estimated overall Atlas program completion: 84%.
 
 ## Current Recommended Sequence
 

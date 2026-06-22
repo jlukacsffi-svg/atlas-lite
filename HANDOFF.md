@@ -371,6 +371,14 @@ Estimated overall Atlas program completion: 79%.
   logs showed successful checks. The dashboard alert now requires sustained
   multi-region pass fraction below `0.67` for `600s`. Job-failure alerts remain
   immediate.
+- Context-aware research reviews are deployed on dashboard revision
+  `atlas-dashboard-stg-00016-mgp` and image `20260622-context-research`.
+  Automated reviews now include Atlas score/category/sector, plus upcoming
+  earnings, analyst actions, insider Form 4 activity, and tracked portfolio
+  exposure when those signals are available. Controlled execution
+  `atlas-daily-stg-wpcqs` produced AVAV, ARM, and MDB risk reviews with internal
+  score context and company-specific headline evidence. Daily and weekly
+  schedules were resumed afterward. All 284 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

@@ -182,3 +182,29 @@ Current boundaries:
 - A brief cold start should no longer produce unnecessary dashboard-down
   emails.
 - Sustained multi-region readiness failure should still alert the owner.
+
+## June 22, 2026 - Context-Aware Research Reviews
+
+New capabilities:
+
+- Enrich automated owner-review research with Atlas score, watchlist category,
+  and sector context.
+- Add upcoming earnings, analyst-action headlines, insider Form 4 activity,
+  and tracked portfolio exposure to research evidence when available.
+- Include these context signals in the conclusion so owner reviews read more
+  like a compact analyst memo than a headline-only note.
+
+Validated result:
+
+- Cloud execution `atlas-daily-stg-wpcqs` completed successfully.
+- Atlas produced context-aware risk reviews for AVAV, ARM, and MDB.
+- Each review includes the measured move, Atlas score/category/sector evidence,
+  and company-specific public headlines.
+- Daily and weekly schedules were resumed after the controlled run.
+- The full automated test suite passes with 284 tests.
+
+Current boundaries:
+
+- Context signals improve research quality but do not prove causality.
+- Completed research remains pending for owner approval, deferral, or rejection.
+- Real trading and brokerage access remain disabled.

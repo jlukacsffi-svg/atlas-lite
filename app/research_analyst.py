@@ -1,6 +1,7 @@
 """Conservative automated completion of selected Atlas research tasks."""
 
 from app.news_data import NewsFetcher
+from app.scoring import ScoringEngine
 
 
 SUPPORTED_SIGNALS = {"downside_move", "catalyst_move"}
@@ -12,8 +13,17 @@ class ResearchAnalyst:
     def __init__(self, news_fetcher=None, max_tasks=3):
         self.news_fetcher = news_fetcher or NewsFetcher(max_headlines=3)
         self.max_tasks = max_tasks
+        self.scoring_engine = ScoringEngine()
 
-    def complete_priority_tasks(self, queue, market_data):
+    def complete_priority_tasks(
+        self,
+        queue,
+        market_data,
+        earnings_events=None,
+        analyst_actions=None,
+        insider_transactions=None,
+        portfolio_summary=None,
+    ):
         candidates = [
             task
             for task in queue._sorted_tasks(queue.list_tasks(status="open"))
@@ -28,7 +38,15 @@ class ResearchAnalyst:
             security = market_data.get(ticker, {})
             if security.get("status") != "available":
                 continue
-            result = self._analyze(task, security)
+            context = self._context(
+                ticker=ticker,
+                security=security,
+                earnings_events=earnings_events,
+                analyst_actions=analyst_actions,
+                insider_transactions=insider_transactions,
+                portfolio_summary=portfolio_summary,
+            )
+            result = self._analyze(task, security, context)
             completed.append(
                 queue.complete_research(
                     task["id"],
@@ -40,7 +58,54 @@ class ResearchAnalyst:
             )
         return completed
 
-    def _analyze(self, task, security):
+    def _context(
+        self,
+        ticker,
+        security,
+        earnings_events=None,
+        analyst_actions=None,
+        insider_transactions=None,
+        portfolio_summary=None,
+    ):
+        earnings = [
+            event
+            for event in earnings_events or []
+            if event.get("ticker") == ticker
+        ]
+        analyst = [
+            action
+            for action in analyst_actions or []
+            if action.get("ticker") == ticker
+        ]
+        insiders = [
+            transaction
+            for transaction in insider_transactions or []
+            if transaction.get("ticker") == ticker
+        ]
+        positions = [
+            position
+            for position in (portfolio_summary or {}).get("positions", [])
+            if position.get("ticker") == ticker
+        ]
+        score = None
+        scores = security.get("scores")
+        if scores:
+            try:
+                score = self.scoring_engine.score(scores)
+            except (TypeError, ValueError):
+                score = None
+        return {
+            "score": score,
+            "category": security.get("category"),
+            "sector": security.get("sector"),
+            "earnings": earnings,
+            "analyst_actions": analyst,
+            "insider_transactions": insiders,
+            "portfolio_positions": positions,
+        }
+
+    def _analyze(self, task, security, context=None):
+        context = context or {}
         ticker = task["subject"]
         percent_change = float(security.get("percent_change") or 0)
         price = security.get("price")
@@ -62,6 +127,7 @@ class ResearchAnalyst:
                 ),
             }
         ]
+        self._append_context_evidence(ticker, evidence, context)
         evidence.extend(
             {
                 "title": headline.get("title"),
@@ -72,6 +138,7 @@ class ResearchAnalyst:
             for headline in company_headlines
         )
 
+        context_phrases = self._context_phrases(context)
         if task.get("signal_type") == "downside_move":
             if company_headlines:
                 conclusion = (
@@ -91,6 +158,8 @@ class ResearchAnalyst:
                 )
                 recommendation = "research_further"
                 confidence = "low"
+            if context_phrases:
+                conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
         elif company_headlines:
             conclusion = (
                 f"{ticker} moved {percent_change:+.2f}%. Recent company-specific "
@@ -99,6 +168,8 @@ class ResearchAnalyst:
             )
             recommendation = "monitor"
             confidence = "medium"
+            if context_phrases:
+                conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
         else:
             conclusion = (
                 f"{ticker} moved {percent_change:+.2f}% without a retrieved "
@@ -106,6 +177,8 @@ class ResearchAnalyst:
             )
             recommendation = "research_further"
             confidence = "low"
+            if context_phrases:
+                conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
 
         return {
             "conclusion": conclusion,
@@ -113,3 +186,99 @@ class ResearchAnalyst:
             "confidence": confidence,
             "evidence": evidence,
         }
+
+    def _append_context_evidence(self, ticker, evidence, context):
+        score = context.get("score")
+        if score is not None:
+            evidence.append(
+                {
+                    "title": f"{ticker} Atlas score",
+                    "source": "Atlas scoring engine",
+                    "detail": (
+                        f"Score {score:.1f}"
+                        + (
+                            f" · {context.get('category')}"
+                            if context.get("category")
+                            else ""
+                        )
+                        + (
+                            f" · {context.get('sector')}"
+                            if context.get("sector")
+                            else ""
+                        )
+                    ),
+                }
+            )
+
+        for event in context.get("earnings", [])[:2]:
+            evidence.append(
+                {
+                    "title": f"{ticker} upcoming earnings",
+                    "source": "Nasdaq earnings calendar",
+                    "detail": (
+                        f"{event.get('date')} · {event.get('time')} · "
+                        f"EPS forecast {event.get('eps_forecast', 'N/A')}"
+                    ),
+                }
+            )
+
+        for action in context.get("analyst_actions", [])[:2]:
+            evidence.append(
+                {
+                    "title": action.get("title"),
+                    "source": action.get("publisher") or "Analyst action",
+                    "url": action.get("url") or "",
+                    "detail": action.get("action_type") or "Analyst action",
+                }
+            )
+
+        for transaction in context.get("insider_transactions", [])[:2]:
+            evidence.append(
+                {
+                    "title": f"{ticker} insider {transaction.get('transaction_label', 'transaction')}",
+                    "source": "SEC Form 4",
+                    "url": transaction.get("filing_url") or "",
+                    "detail": (
+                        f"{transaction.get('transaction_date', 'N/A')} · "
+                        f"{transaction.get('owner_name', 'Unknown owner')}"
+                    ),
+                }
+            )
+
+        for position in context.get("portfolio_positions", [])[:1]:
+            allocation = position.get("allocation_pct")
+            allocation_text = (
+                f"{float(allocation):.1f}% allocation"
+                if allocation is not None
+                else "allocation unavailable"
+            )
+            evidence.append(
+                {
+                    "title": f"{ticker} tracked portfolio exposure",
+                    "source": "Atlas portfolio monitor",
+                    "detail": allocation_text,
+                }
+            )
+
+    def _context_phrases(self, context):
+        phrases = []
+        score = context.get("score")
+        if score is not None:
+            phrases.append(f"Atlas score {score:.1f}")
+        if context.get("earnings"):
+            phrases.append("upcoming earnings are on the calendar")
+        if context.get("analyst_actions"):
+            action_types = {
+                action.get("action_type")
+                for action in context["analyst_actions"]
+                if action.get("action_type")
+            }
+            phrases.append(
+                "recent analyst action"
+                + (f" ({', '.join(sorted(action_types))})" if action_types else "")
+            )
+        if context.get("insider_transactions"):
+            phrases.append("recent insider Form 4 activity")
+        if context.get("portfolio_positions"):
+            phrases.append("tracked portfolio exposure exists")
+        return phrases

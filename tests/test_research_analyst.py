@@ -125,6 +125,86 @@ class ResearchAnalystTests(unittest.TestCase):
         self.assertEqual(len(result["evidence"]), 1)
         self.assertEqual(result["recommendation"], "research_further")
 
+    def test_context_sources_are_added_to_owner_review_evidence(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            queue = self._queue_with_signal(root)
+            news = StubNewsFetcher(
+                {
+                    "MU": [
+                        {
+                            "title": "Micron updates its outlook",
+                            "publisher": "Example News",
+                            "url": "https://example.com/mu",
+                            "relevance": "company",
+                        }
+                    ]
+                }
+            )
+
+            completed = ResearchAnalyst(news_fetcher=news).complete_priority_tasks(
+                queue,
+                {
+                    "MU": {
+                        "status": "available",
+                        "company_name": "Micron Technology",
+                        "price": 190.0,
+                        "percent_change": -6.5,
+                        "category": "Watchlist",
+                        "sector": "AI & Semiconductors",
+                        "scores": {
+                            "growth": 80,
+                            "quality": 75,
+                            "moat": 70,
+                            "momentum": 65,
+                            "risk": 60,
+                        },
+                    }
+                },
+                earnings_events=[
+                    {
+                        "ticker": "MU",
+                        "date": "2026-06-25",
+                        "time": "After hours",
+                        "eps_forecast": "1.58",
+                    }
+                ],
+                analyst_actions=[
+                    {
+                        "ticker": "MU",
+                        "action_type": "Price target raised",
+                        "title": "Analyst raises Micron price target",
+                        "publisher": "Example Research",
+                        "url": "https://example.com/pt",
+                    }
+                ],
+                insider_transactions=[
+                    {
+                        "ticker": "MU",
+                        "transaction_label": "Sale",
+                        "transaction_date": "2026-06-20",
+                        "owner_name": "Insider Name",
+                        "filing_url": "https://sec.gov/example",
+                    }
+                ],
+                portfolio_summary={
+                    "configured": True,
+                    "positions": [
+                        {"ticker": "MU", "allocation_pct": 12.5}
+                    ],
+                },
+            )
+
+        result = completed[0]["result"]
+        evidence_titles = {item["title"] for item in result["evidence"]}
+        self.assertIn("MU Atlas score", evidence_titles)
+        self.assertIn("MU upcoming earnings", evidence_titles)
+        self.assertIn("Analyst raises Micron price target", evidence_titles)
+        self.assertIn("MU insider Sale", evidence_titles)
+        self.assertIn("MU tracked portfolio exposure", evidence_titles)
+        self.assertIn("upcoming earnings", result["conclusion"])
+        self.assertIn("tracked portfolio exposure", result["conclusion"])
+
     def test_only_high_priority_supported_generated_tasks_are_completed(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
