@@ -45,6 +45,7 @@ class ResearchAnalyst:
                 analyst_actions=analyst_actions,
                 insider_transactions=insider_transactions,
                 portfolio_summary=portfolio_summary,
+                thesis_history=queue.thesis_history_summary(ticker),
             )
             result = self._analyze(task, security, context)
             completed.append(
@@ -57,6 +58,7 @@ class ResearchAnalyst:
                     catalyst_type=result["catalyst_type"],
                     thesis_action=result["thesis_action"],
                     thesis_alignment=result["thesis_alignment"],
+                    thesis_drift=result["thesis_drift"],
                 )
             )
         return completed
@@ -69,6 +71,7 @@ class ResearchAnalyst:
         analyst_actions=None,
         insider_transactions=None,
         portfolio_summary=None,
+        thesis_history=None,
     ):
         earnings = [
             event
@@ -111,6 +114,7 @@ class ResearchAnalyst:
             "analyst_actions": analyst,
             "insider_transactions": insiders,
             "portfolio_positions": positions,
+            "thesis_history": thesis_history,
         }
 
     def _analyze(self, task, security, context=None):
@@ -159,9 +163,11 @@ class ResearchAnalyst:
             catalyst_type=catalyst_type,
             company_headlines=company_headlines,
         )
+        thesis_drift = self._thesis_drift(context, thesis_alignment)
         context_phrases = self._context_phrases(context)
         catalyst_text = catalyst_type.replace("_", " ")
         alignment_text = thesis_alignment.replace("_", " ")
+        drift_text = thesis_drift.replace("_", " ")
         if task.get("signal_type") == "downside_move":
             if company_headlines:
                 conclusion = (
@@ -183,7 +189,8 @@ class ResearchAnalyst:
                 confidence = "low"
             conclusion = (
                 f"{conclusion} Catalyst classification: {catalyst_text}. "
-                f"Thesis alignment: {alignment_text}. Thesis action: {thesis_action}."
+                f"Thesis alignment: {alignment_text}. Thesis drift: {drift_text}. "
+                f"Thesis action: {thesis_action}."
             )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
@@ -197,7 +204,8 @@ class ResearchAnalyst:
             confidence = "medium"
             conclusion = (
                 f"{conclusion} Catalyst classification: {catalyst_text}. "
-                f"Thesis alignment: {alignment_text}. Thesis action: {thesis_action}."
+                f"Thesis alignment: {alignment_text}. Thesis drift: {drift_text}. "
+                f"Thesis action: {thesis_action}."
             )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
@@ -210,7 +218,8 @@ class ResearchAnalyst:
             confidence = "low"
             conclusion = (
                 f"{conclusion} Catalyst classification: {catalyst_text}. "
-                f"Thesis alignment: {alignment_text}. Thesis action: {thesis_action}."
+                f"Thesis alignment: {alignment_text}. Thesis drift: {drift_text}. "
+                f"Thesis action: {thesis_action}."
             )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
@@ -223,6 +232,7 @@ class ResearchAnalyst:
             "catalyst_type": catalyst_type,
             "thesis_action": thesis_action,
             "thesis_alignment": thesis_alignment,
+            "thesis_drift": thesis_drift,
         }
 
     def _classify_catalyst(self, task, context, company_headlines):
@@ -314,6 +324,26 @@ class ResearchAnalyst:
             if len(token) >= 4 and token not in stop_words
         }
 
+    def _thesis_drift(self, context, thesis_alignment):
+        history = context.get("thesis_history") or {}
+        if not history:
+            if thesis_alignment == "risk_to_thesis":
+                return "new_risk"
+            if thesis_alignment == "supports_driver":
+                return "new_support"
+            return "no_history"
+        if thesis_alignment == "risk_to_thesis":
+            if int(history.get("risk_to_thesis_count") or 0) > 0:
+                return "recurring_risk"
+            return "new_risk"
+        if thesis_alignment == "supports_driver":
+            if int(history.get("supports_driver_count") or 0) > 0:
+                return "reinforcing_support"
+            return "new_support"
+        if thesis_alignment == "pending_validation":
+            return "pending_validation"
+        return "stable_monitoring"
+
     def _append_context_evidence(self, ticker, evidence, context):
         profile = context.get("profile") or {}
         if any(profile.values()):
@@ -329,6 +359,26 @@ class ResearchAnalyst:
                     "title": f"{ticker} thesis profile",
                     "source": "Atlas security universe",
                     "detail": " | ".join(detail_parts),
+                }
+            )
+
+        thesis_history = context.get("thesis_history") or {}
+        if thesis_history:
+            detail = (
+                f"{thesis_history.get('review_count', 0)} prior review"
+                f"{'' if thesis_history.get('review_count') == 1 else 's'}"
+            )
+            if thesis_history.get("risk_to_thesis_count"):
+                detail = f"{detail} | {thesis_history['risk_to_thesis_count']} prior risk-to-thesis"
+            if thesis_history.get("supports_driver_count"):
+                detail = f"{detail} | {thesis_history['supports_driver_count']} prior support signal"
+            if thesis_history.get("latest_decision"):
+                detail = f"{detail} | latest owner decision: {thesis_history['latest_decision']}"
+            evidence.append(
+                {
+                    "title": f"{ticker} thesis history",
+                    "source": "Atlas research task memory",
+                    "detail": detail,
                 }
             )
 
@@ -428,4 +478,10 @@ class ResearchAnalyst:
         profile = context.get("profile") or {}
         if any(profile.values()):
             phrases.append("stored thesis profile is available")
+        thesis_history = context.get("thesis_history") or {}
+        if thesis_history:
+            phrases.append(
+                f"{thesis_history.get('review_count', 0)} prior thesis review"
+                f"{'' if thesis_history.get('review_count') == 1 else 's'} recorded"
+            )
         return phrases

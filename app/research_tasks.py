@@ -376,6 +376,7 @@ class ResearchTaskQueue:
         catalyst_type=None,
         thesis_action=None,
         thesis_alignment=None,
+        thesis_drift=None,
     ):
         """Record a research finding and route it to owner review."""
         recommendation = str(recommendation).strip().lower()
@@ -416,10 +417,59 @@ class ResearchTaskQueue:
                 task["result"]["thesis_action"] = str(thesis_action).strip()
             if thesis_alignment:
                 task["result"]["thesis_alignment"] = str(thesis_alignment).strip()
+            if thesis_drift:
+                task["result"]["thesis_drift"] = str(thesis_drift).strip()
             self.save(payload)
             return task
 
         raise ValueError(f"task not found: {task_id}")
+
+    def thesis_history_summary(self, subject, limit=5):
+        """Summarize prior owner-review outcomes for one security."""
+        subject = str(subject or "").strip().upper()
+        if not subject:
+            return None
+
+        matches = [
+            task
+            for task in self.load().get("tasks", [])
+            if str(task.get("subject") or "").strip().upper() == subject
+            and task.get("result")
+        ]
+        if not matches:
+            return None
+
+        matches = sorted(
+            matches,
+            key=lambda task: task.get("updated_at") or task.get("created_at") or "",
+            reverse=True,
+        )
+        recent = matches[:limit]
+        alignments = Counter(
+            task.get("result", {}).get("thesis_alignment")
+            for task in matches
+            if task.get("result", {}).get("thesis_alignment")
+        )
+        decisions = Counter(
+            task.get("owner_decision", {}).get("decision")
+            for task in matches
+            if task.get("owner_decision", {}).get("decision")
+        )
+        latest = recent[0]
+        latest_decision = latest.get("owner_decision", {}).get("decision")
+        latest_result = latest.get("result", {})
+        return {
+            "subject": subject,
+            "review_count": len(matches),
+            "recent_review_count": len(recent),
+            "alignment_counts": dict(alignments),
+            "decision_counts": dict(decisions),
+            "risk_to_thesis_count": alignments.get("risk_to_thesis", 0),
+            "supports_driver_count": alignments.get("supports_driver", 0),
+            "latest_alignment": latest_result.get("thesis_alignment"),
+            "latest_decision": latest_decision,
+            "latest_updated_at": latest.get("updated_at") or latest.get("created_at"),
+        }
 
     def record_owner_decision(self, task_id, decision, notes=None):
         """Record Joe's disposition of a research recommendation."""

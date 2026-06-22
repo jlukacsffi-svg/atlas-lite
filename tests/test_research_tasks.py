@@ -194,6 +194,35 @@ class ResearchTaskQueueTests(unittest.TestCase):
         self.assertEqual(decided["owner_decision"]["decision"], "approve")
         self.assertEqual(decided["owner_decision"]["notes"], "Reviewed.")
 
+    def test_thesis_history_summary_counts_prior_reviews(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
+            first, _ = queue.add_task(role="CRO", subject="NVDA", prompt="Review risk.")
+            queue.complete_research(
+                first["id"],
+                conclusion="Risk reviewed.",
+                recommendation="risk_review",
+                thesis_alignment="risk_to_thesis",
+                thesis_drift="new_risk",
+            )
+            queue.record_owner_decision(first["id"], "defer", notes="Watch closely.")
+            second, _ = queue.add_task(role="CIO", subject="NVDA", prompt="Review upside.")
+            queue.complete_research(
+                second["id"],
+                conclusion="Driver reviewed.",
+                recommendation="monitor",
+                thesis_alignment="supports_driver",
+                thesis_drift="new_support",
+            )
+
+            summary = queue.thesis_history_summary("nvda")
+
+        self.assertEqual(summary["subject"], "NVDA")
+        self.assertEqual(summary["review_count"], 2)
+        self.assertEqual(summary["risk_to_thesis_count"], 1)
+        self.assertEqual(summary["supports_driver_count"], 1)
+        self.assertEqual(summary["decision_counts"]["defer"], 1)
+
     def test_invalid_role_is_rejected(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             queue = ResearchTaskQueue(Path(temp_dir) / "tasks.json")
@@ -427,6 +456,7 @@ class ResearchTaskQueueTests(unittest.TestCase):
                 catalyst_type="score_risk",
                 thesis_action="Recheck thesis quality.",
                 thesis_alignment="risk_to_thesis",
+                thesis_drift="recurring_risk",
                 evidence=[
                     {
                         "title": "Company update",
@@ -447,6 +477,7 @@ class ResearchTaskQueueTests(unittest.TestCase):
             "Recheck thesis quality.",
         )
         self.assertEqual(completed["result"]["thesis_alignment"], "risk_to_thesis")
+        self.assertEqual(completed["result"]["thesis_drift"], "recurring_risk")
 
     def test_generated_signals_expire_without_refresh(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -220,6 +220,14 @@ class ResearchAnalystTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             queue = self._queue_with_signal(root, ticker="AVAV")
+            prior, _ = queue.add_task(role="CRO", subject="AVAV", prompt="Review prior risk.")
+            queue.complete_research(
+                prior["id"],
+                conclusion="Prior risk-to-thesis review.",
+                recommendation="risk_review",
+                thesis_alignment="risk_to_thesis",
+                thesis_drift="new_risk",
+            )
 
             completed = ResearchAnalyst(
                 news_fetcher=StubNewsFetcher(
@@ -263,9 +271,13 @@ class ResearchAnalystTests(unittest.TestCase):
         result = completed[0]["result"]
         self.assertEqual(result["catalyst_type"], "score_risk")
         self.assertEqual(result["thesis_alignment"], "risk_to_thesis")
+        self.assertEqual(result["thesis_drift"], "recurring_risk")
         self.assertIn("Recheck thesis quality", result["thesis_action"])
         self.assertIn("Thesis alignment: risk to thesis", result["conclusion"])
+        self.assertIn("Thesis drift: recurring risk", result["conclusion"])
         self.assertIn("Catalyst classification: score risk", result["conclusion"])
+        evidence_titles = {item["title"] for item in result["evidence"]}
+        self.assertIn("AVAV thesis history", evidence_titles)
 
     def test_positive_company_news_can_support_stored_driver(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -304,6 +316,7 @@ class ResearchAnalystTests(unittest.TestCase):
         result = completed[0]["result"]
         self.assertEqual(result["catalyst_type"], "company_news")
         self.assertEqual(result["thesis_alignment"], "supports_driver")
+        self.assertEqual(result["thesis_drift"], "new_support")
         self.assertIn("Thesis alignment: supports driver", result["conclusion"])
 
     def test_analyst_action_classification_takes_precedence_after_score(self):

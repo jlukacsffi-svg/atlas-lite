@@ -265,3 +265,32 @@ Current boundaries:
 - Thesis alignment is a conservative research label, not proof of causality.
 - Older pending reviews may not have a thesis-alignment field until refreshed.
 - Real trading and brokerage access remain disabled.
+
+## June 22, 2026 - Thesis-Drift Tracking
+
+New capabilities:
+
+- Summarize prior owner-review history for each ticker before generating a new
+  automated research review.
+- Add `thesis_drift` to completed research results, including labels such as
+  `new_risk`, `recurring_risk`, `new_support`, `reinforcing_support`,
+  `stable_monitoring`, and `no_history`.
+- Add thesis-history evidence so owner reviews can show prior thesis-risk or
+  support signals.
+- Display thesis drift in the secure owner decision center.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00019-627` is serving 100% traffic.
+- Cloud execution `atlas-daily-stg-vgxcx` completed successfully.
+- Atlas marked AVAV and ARM as `recurring_risk` because prior thesis-risk
+  reviews were already recorded.
+- Atlas marked NFLX as `new_risk`.
+- Daily and weekly schedules were resumed after the controlled run.
+- The full automated test suite passes with 288 tests.
+
+Current boundaries:
+
+- Thesis drift is a memory signal for owner review, not proof of causality.
+- Drift labels do not authorize simulated or real trades.
+- Real trading and brokerage access remain disabled.
