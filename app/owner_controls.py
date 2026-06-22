@@ -21,6 +21,7 @@ class OwnerControlService:
 
     def model(self):
         awaiting = self.research_queue.list_tasks(status="awaiting_owner")
+        ranked_reviews = self._rank_research_reviews(awaiting)
         proposals = [
             proposal
             for proposal in self.paper_account.proposals()
@@ -29,17 +30,7 @@ class OwnerControlService:
         return {
             "enabled": True,
             "boundary": "Owner only; simulation and research decisions",
-            "research_reviews": [
-                {
-                    "id": task["id"],
-                    "role": task.get("role"),
-                    "priority": task.get("priority"),
-                    "subject": task.get("subject"),
-                    "result": task.get("result", {}),
-                    "source": task.get("source"),
-                }
-                for task in self.research_queue._sorted_tasks(awaiting)
-            ],
+            "research_reviews": ranked_reviews,
             "paper_proposals": [
                 {
                     "proposal_id": item["proposal_id"],
@@ -60,6 +51,99 @@ class OwnerControlService:
                 "real_trading": False,
                 "brokerage_connection": False,
             },
+        }
+
+    def _rank_research_reviews(self, tasks):
+        reviews = []
+        for task in self.research_queue._sorted_tasks(tasks):
+            attention = self._attention_score(task)
+            reviews.append(
+                {
+                    "id": task["id"],
+                    "role": task.get("role"),
+                    "priority": task.get("priority"),
+                    "subject": task.get("subject"),
+                    "result": task.get("result", {}),
+                    "source": task.get("source"),
+                    "attention_score": attention["score"],
+                    "attention_label": attention["label"],
+                    "attention_reasons": attention["reasons"],
+                }
+            )
+        return sorted(
+            reviews,
+            key=lambda item: (-item["attention_score"], item.get("subject") or ""),
+        )
+
+    def _attention_score(self, task):
+        result = task.get("result", {})
+        score = 0
+        reasons = []
+        priority = task.get("priority")
+        if priority == "high":
+            score += 30
+            reasons.append("high priority")
+        elif priority == "medium":
+            score += 15
+            reasons.append("medium priority")
+        recommendation = result.get("recommendation")
+        if recommendation == "risk_review":
+            score += 25
+            reasons.append("risk review")
+        elif recommendation == "watchlist_review":
+            score += 18
+            reasons.append("watchlist review")
+        elif recommendation == "research_further":
+            score += 12
+            reasons.append("needs more research")
+        elif recommendation == "monitor":
+            score += 8
+            reasons.append("monitor")
+        drift = result.get("thesis_drift")
+        if drift == "recurring_risk":
+            score += 25
+            reasons.append("recurring thesis risk")
+        elif drift == "new_risk":
+            score += 20
+            reasons.append("new thesis risk")
+        elif drift == "reinforcing_support":
+            score += 12
+            reasons.append("reinforcing support")
+        elif drift == "new_support":
+            score += 10
+            reasons.append("new support signal")
+        alignment = result.get("thesis_alignment")
+        if alignment == "risk_to_thesis":
+            score += 15
+            reasons.append("risk to thesis")
+        elif alignment == "supports_driver":
+            score += 8
+            reasons.append("supports key driver")
+        catalyst = result.get("catalyst_type")
+        if catalyst == "score_risk":
+            score += 12
+            reasons.append("score risk")
+        elif catalyst in {"analyst_negative", "analyst_positive"}:
+            score += 8
+            reasons.append("analyst action")
+        confidence = result.get("confidence")
+        if confidence == "high":
+            score += 5
+        elif confidence == "low":
+            score -= 5
+        score = max(0, min(100, score))
+        if score >= 80:
+            label = "Urgent"
+        elif score >= 55:
+            label = "High"
+        elif score >= 30:
+            label = "Medium"
+        else:
+            label = "Low"
+        return {
+            "score": score,
+            "label": label,
+            "reasons": reasons[:4],
         }
 
     def apply(self, action, payload):

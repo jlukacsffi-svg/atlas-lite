@@ -294,3 +294,25 @@ Current boundaries:
 - Thesis drift is a memory signal for owner review, not proof of causality.
 - Drift labels do not authorize simulated or real trades.
 - Real trading and brokerage access remain disabled.
+
+## June 22, 2026 - Owner Review Ranking
+
+New capabilities:
+
+- Rank owner-review research cards by an attention score.
+- Combine priority, recommendation type, catalyst type, thesis alignment,
+  thesis drift, and confidence into a conservative review score.
+- Display an attention badge and concise attention drivers on each owner
+  decision card.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00020-dx7` is serving 100% traffic.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 289 tests.
+
+Current boundaries:
+
+- Attention ranking only prioritizes owner review; it does not approve,
+  reject, simulate, or execute any transaction.
+- Real trading and brokerage access remain disabled.

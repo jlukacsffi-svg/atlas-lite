@@ -145,6 +145,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Thesis alignment:", script)
         self.assertIn("thesis_drift", script)
         self.assertIn("Thesis drift:", script)
+        self.assertIn("attention_label", script)
+        self.assertIn("Attention drivers:", script)
         self.assertIn("Thesis action:", script)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):

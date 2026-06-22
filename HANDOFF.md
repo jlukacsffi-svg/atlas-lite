@@ -400,6 +400,11 @@ Estimated overall Atlas program completion: 79%.
   Controlled execution `atlas-daily-stg-vgxcx` produced AVAV and ARM as
   `recurring_risk` and NFLX as `new_risk`. Daily and weekly schedules were
   resumed afterward. All 288 tests pass.
+- Owner review ranking is deployed on dashboard revision
+  `atlas-dashboard-stg-00020-dx7` and image `20260622-review-ranking`.
+  Owner decision cards now include `attention_score`, `attention_label`, and
+  `attention_reasons`, and are sorted by review urgency. Daily and weekly
+  schedules remained enabled. All 289 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

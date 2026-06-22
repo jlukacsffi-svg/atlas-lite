@@ -307,13 +307,13 @@ Current Web Phase 3 result:
   add internal Atlas score/category/sector, earnings, analyst actions, insider
   Form 4 activity, and tracked portfolio exposure when available. Catalyst
   classification, thesis-action language, thesis-memory alignment, and
-  thesis-drift tracking are now active. Atlas can compare a new review against
-  prior ticker-specific owner-review history and label risks as new or
-  recurring. The next priority is recommendation ranking so recurring risks,
-  new support signals, score strength, and owner decisions can be prioritized
-  into a clearer daily action list.
+  thesis-drift tracking, and owner-review ranking are now active. Atlas can
+  compare a new review against prior ticker-specific owner-review history,
+  label risks as new or recurring, and sort the owner decision center by
+  attention score. The next priority is turning these ranked reviews into a
+  concise daily action list with clearer recommended owner dispositions.
 
-Estimated overall Atlas program completion: 87%.
+Estimated overall Atlas program completion: 88%.
 
 ## Current Recommended Sequence
 

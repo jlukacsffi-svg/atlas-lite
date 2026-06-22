@@ -68,6 +68,50 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertFalse(model["capabilities"]["real_trading"])
         self.assertFalse(model["capabilities"]["brokerage_connection"])
 
+    def test_model_ranks_recurring_thesis_risks_first(self):
+        low_task, _ = self.dashboard.research_queue.add_task(
+            role="CIO",
+            subject="LOW",
+            prompt="Monitor.",
+            priority="medium",
+        )
+        self.dashboard.research_queue.complete_research(
+            low_task["id"],
+            conclusion="Monitor only.",
+            recommendation="monitor",
+            confidence="medium",
+            thesis_alignment="neutral_context",
+            thesis_drift="stable_monitoring",
+        )
+        urgent_task, _ = self.dashboard.research_queue.add_task(
+            role="CRO",
+            subject="RISK",
+            prompt="Review recurring risk.",
+            priority="high",
+        )
+        self.dashboard.research_queue.complete_research(
+            urgent_task["id"],
+            conclusion="Recurring risk.",
+            recommendation="risk_review",
+            confidence="medium",
+            catalyst_type="score_risk",
+            thesis_alignment="risk_to_thesis",
+            thesis_drift="recurring_risk",
+        )
+
+        model = self.service.model()
+
+        self.assertEqual(model["research_reviews"][0]["subject"], "RISK")
+        self.assertEqual(model["research_reviews"][0]["attention_label"], "Urgent")
+        self.assertGreater(
+            model["research_reviews"][0]["attention_score"],
+            model["research_reviews"][-1]["attention_score"],
+        )
+        self.assertIn(
+            "recurring thesis risk",
+            model["research_reviews"][0]["attention_reasons"],
+        )
+
     def test_research_decision_is_saved_and_persisted(self):
         persisted = []
         service = OwnerControlService(

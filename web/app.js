@@ -155,9 +155,11 @@ function renderOwnerControls(controls) {
       <article class="decision-row">
         <div>
           <span class="role-chip">${escapeHtml(item.role)}</span>
+          ${item.attention_label ? `<span class="tag">${escapeHtml(item.attention_label)} ${Number(item.attention_score || 0).toFixed(0)}</span>` : ""}
           <b class="row-title">${escapeHtml(item.subject)}</b>
           <small class="row-meta">${escapeHtml(result.recommendation || "Review")} · ${escapeHtml(result.confidence || "Unrated")}${result.catalyst_type ? ` · ${escapeHtml(result.catalyst_type).replaceAll("_", " ")}` : ""}</small>
           <p>${escapeHtml(result.conclusion || "No conclusion supplied.")}</p>
+          ${(item.attention_reasons || []).length ? `<small class="row-meta">Attention drivers: ${item.attention_reasons.map(reason => escapeHtml(reason)).join(", ")}</small>` : ""}
           ${result.thesis_alignment ? `<small class="row-meta">Thesis alignment: ${escapeHtml(result.thesis_alignment).replaceAll("_", " ")}</small>` : ""}
           ${result.thesis_drift ? `<small class="row-meta">Thesis drift: ${escapeHtml(result.thesis_drift).replaceAll("_", " ")}</small>` : ""}
           ${result.thesis_action ? `<small class="row-meta">Thesis action: ${escapeHtml(result.thesis_action)}</small>` : ""}
