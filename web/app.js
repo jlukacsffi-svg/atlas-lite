@@ -156,8 +156,9 @@ function renderOwnerControls(controls) {
         <div>
           <span class="role-chip">${escapeHtml(item.role)}</span>
           <b class="row-title">${escapeHtml(item.subject)}</b>
-          <small class="row-meta">${escapeHtml(result.recommendation || "Review")} · ${escapeHtml(result.confidence || "Unrated")}</small>
+          <small class="row-meta">${escapeHtml(result.recommendation || "Review")} · ${escapeHtml(result.confidence || "Unrated")}${result.catalyst_type ? ` · ${escapeHtml(result.catalyst_type).replaceAll("_", " ")}` : ""}</small>
           <p>${escapeHtml(result.conclusion || "No conclusion supplied.")}</p>
+          ${result.thesis_action ? `<small class="row-meta">Thesis action: ${escapeHtml(result.thesis_action)}</small>` : ""}
           ${evidence ? `<details class="evidence-list"><summary>Review evidence</summary><ul>${evidence}</ul></details>` : ""}
         </div>
         <div class="decision-actions">

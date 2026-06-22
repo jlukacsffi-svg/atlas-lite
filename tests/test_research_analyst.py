@@ -66,6 +66,8 @@ class ResearchAnalystTests(unittest.TestCase):
         result = completed[0]["result"]
         self.assertEqual(result["recommendation"], "risk_review")
         self.assertEqual(result["confidence"], "medium")
+        self.assertEqual(result["catalyst_type"], "company_news")
+        self.assertIn("thesis_action", result)
         self.assertEqual(result["evidence"][1]["url"], "https://example.com/mu")
 
     def test_missing_company_headline_uses_low_confidence_research_further(self):
@@ -90,6 +92,7 @@ class ResearchAnalystTests(unittest.TestCase):
         result = completed[0]["result"]
         self.assertEqual(result["recommendation"], "research_further")
         self.assertEqual(result["confidence"], "low")
+        self.assertEqual(result["catalyst_type"], "unconfirmed")
         self.assertIn("unconfirmed", result["conclusion"])
 
     def test_broad_headlines_are_not_used_as_review_evidence(self):
@@ -204,6 +207,86 @@ class ResearchAnalystTests(unittest.TestCase):
         self.assertIn("MU tracked portfolio exposure", evidence_titles)
         self.assertIn("upcoming earnings", result["conclusion"])
         self.assertIn("tracked portfolio exposure", result["conclusion"])
+
+    def test_low_score_downside_move_is_classified_as_score_risk(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            queue = self._queue_with_signal(root, ticker="AVAV")
+
+            completed = ResearchAnalyst(
+                news_fetcher=StubNewsFetcher(
+                    {
+                        "AVAV": [
+                            {
+                                "title": "AeroVironment operational update",
+                                "publisher": "Example News",
+                                "url": "https://example.com/avav",
+                                "relevance": "company",
+                            }
+                        ]
+                    }
+                )
+            ).complete_priority_tasks(
+                queue,
+                {
+                    "AVAV": {
+                        "status": "available",
+                        "company_name": "AeroVironment",
+                        "price": 150.0,
+                        "percent_change": -8.0,
+                        "category": "Emerging",
+                        "sector": "Defense & Aerospace",
+                        "scores": {
+                            "growth": 55,
+                            "quality": 60,
+                            "moat": 55,
+                            "momentum": 45,
+                            "risk": 50,
+                        },
+                    }
+                },
+            )
+
+        result = completed[0]["result"]
+        self.assertEqual(result["catalyst_type"], "score_risk")
+        self.assertIn("Recheck thesis quality", result["thesis_action"])
+        self.assertIn("Catalyst classification: score risk", result["conclusion"])
+
+    def test_analyst_action_classification_takes_precedence_after_score(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            queue = self._queue_with_signal(root, ticker="ARM")
+
+            completed = ResearchAnalyst(news_fetcher=StubNewsFetcher()).complete_priority_tasks(
+                queue,
+                {
+                    "ARM": {
+                        "status": "available",
+                        "company_name": "Arm Holdings",
+                        "price": 400.0,
+                        "percent_change": -5.0,
+                        "scores": {
+                            "growth": 90,
+                            "quality": 85,
+                            "moat": 85,
+                            "momentum": 80,
+                            "risk": 75,
+                        },
+                    }
+                },
+                analyst_actions=[
+                    {
+                        "ticker": "ARM",
+                        "action_type": "Downgrade",
+                        "title": "Research firm downgrades ARM",
+                        "publisher": "Example Research",
+                    }
+                ],
+            )
+
+        result = completed[0]["result"]
+        self.assertEqual(result["catalyst_type"], "analyst_negative")
+        self.assertIn("external estimates", result["thesis_action"])
 
     def test_only_high_priority_supported_generated_tasks_are_completed(self):
         with tempfile.TemporaryDirectory() as temp_dir:

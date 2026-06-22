@@ -208,3 +208,31 @@ Current boundaries:
 - Context signals improve research quality but do not prove causality.
 - Completed research remains pending for owner approval, deferral, or rejection.
 - Real trading and brokerage access remain disabled.
+
+## June 22, 2026 - Catalyst Classification
+
+New capabilities:
+
+- Label each completed automated review with a catalyst classification such as
+  `score_risk`, `company_news`, `analyst_negative`, `analyst_positive`,
+  `upcoming_earnings`, `insider_activity`, or `unconfirmed`.
+- Add a thesis-action line that tells the owner what kind of follow-up Atlas
+  recommends before any conviction change.
+- Display catalyst type and thesis action in the secure owner decision center.
+
+Validated result:
+
+- Cloud execution `atlas-daily-stg-2ltsk` completed successfully.
+- Atlas classified AVAV as `score_risk` because the downside move coincided
+  with a low Atlas score.
+- Atlas classified ARM and NFLX as `company_news` because the available
+  evidence was company-headline context rather than a stronger structured
+  catalyst.
+- Daily and weekly schedules were resumed after the controlled run.
+- The full automated test suite passes with 286 tests.
+
+Current boundaries:
+
+- Catalyst classification is a research label, not proof of causality.
+- Thesis action is a recommendation for owner review only.
+- Real trading and brokerage access remain disabled.

@@ -379,6 +379,13 @@ Estimated overall Atlas program completion: 79%.
   `atlas-daily-stg-wpcqs` produced AVAV, ARM, and MDB risk reviews with internal
   score context and company-specific headline evidence. Daily and weekly
   schedules were resumed afterward. All 284 tests pass.
+- Catalyst classification is deployed on dashboard revision
+  `atlas-dashboard-stg-00017-w94` and image
+  `20260622-catalyst-classification`. Completed reviews now include
+  `catalyst_type` and `thesis_action`. Controlled execution
+  `atlas-daily-stg-2ltsk` classified AVAV as `score_risk` and ARM/NFLX as
+  `company_news`. Daily and weekly schedules were resumed afterward. All 286
+  tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

@@ -373,6 +373,8 @@ class ResearchTaskQueue:
         recommendation,
         confidence="medium",
         evidence=None,
+        catalyst_type=None,
+        thesis_action=None,
     ):
         """Record a research finding and route it to owner review."""
         recommendation = str(recommendation).strip().lower()
@@ -407,6 +409,10 @@ class ResearchTaskQueue:
                 "confidence": confidence,
                 "evidence": evidence,
             }
+            if catalyst_type:
+                task["result"]["catalyst_type"] = str(catalyst_type).strip()
+            if thesis_action:
+                task["result"]["thesis_action"] = str(thesis_action).strip()
             self.save(payload)
             return task
 

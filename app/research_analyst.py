@@ -54,6 +54,8 @@ class ResearchAnalyst:
                     recommendation=result["recommendation"],
                     confidence=result["confidence"],
                     evidence=result["evidence"],
+                    catalyst_type=result["catalyst_type"],
+                    thesis_action=result["thesis_action"],
                 )
             )
         return completed
@@ -138,7 +140,14 @@ class ResearchAnalyst:
             for headline in company_headlines
         )
 
+        catalyst_type = self._classify_catalyst(
+            task=task,
+            context=context,
+            company_headlines=company_headlines,
+        )
+        thesis_action = self._thesis_action(task, context, catalyst_type)
         context_phrases = self._context_phrases(context)
+        catalyst_text = catalyst_type.replace("_", " ")
         if task.get("signal_type") == "downside_move":
             if company_headlines:
                 conclusion = (
@@ -158,6 +167,10 @@ class ResearchAnalyst:
                 )
                 recommendation = "research_further"
                 confidence = "low"
+            conclusion = (
+                f"{conclusion} Catalyst classification: {catalyst_text}. "
+                f"Thesis action: {thesis_action}."
+            )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
         elif company_headlines:
@@ -168,6 +181,10 @@ class ResearchAnalyst:
             )
             recommendation = "monitor"
             confidence = "medium"
+            conclusion = (
+                f"{conclusion} Catalyst classification: {catalyst_text}. "
+                f"Thesis action: {thesis_action}."
+            )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
         else:
@@ -177,6 +194,10 @@ class ResearchAnalyst:
             )
             recommendation = "research_further"
             confidence = "low"
+            conclusion = (
+                f"{conclusion} Catalyst classification: {catalyst_text}. "
+                f"Thesis action: {thesis_action}."
+            )
             if context_phrases:
                 conclusion = f"{conclusion} Context: {'; '.join(context_phrases)}."
 
@@ -185,7 +206,52 @@ class ResearchAnalyst:
             "recommendation": recommendation,
             "confidence": confidence,
             "evidence": evidence,
+            "catalyst_type": catalyst_type,
+            "thesis_action": thesis_action,
         }
+
+    def _classify_catalyst(self, task, context, company_headlines):
+        score = context.get("score")
+        analyst_actions = context.get("analyst_actions", [])
+        if task.get("signal_type") == "downside_move" and score is not None and score < 65:
+            return "score_risk"
+        if analyst_actions:
+            action_text = " ".join(
+                str(action.get("action_type") or "").lower()
+                for action in analyst_actions
+            )
+            if any(word in action_text for word in ("downgrade", "cut")):
+                return "analyst_negative"
+            if any(word in action_text for word in ("upgrade", "raised", "initiated")):
+                return "analyst_positive"
+            return "analyst_action"
+        if context.get("earnings"):
+            return "upcoming_earnings"
+        if context.get("insider_transactions"):
+            return "insider_activity"
+        if company_headlines:
+            return "company_news"
+        return "unconfirmed"
+
+    def _thesis_action(self, task, context, catalyst_type):
+        score = context.get("score")
+        if catalyst_type == "score_risk":
+            return "Recheck thesis quality and risk controls before adding exposure"
+        if catalyst_type == "analyst_negative":
+            return "Review whether external estimates changed the risk/reward"
+        if catalyst_type == "analyst_positive":
+            return "Monitor for confirmation before raising conviction"
+        if catalyst_type == "upcoming_earnings":
+            return "Defer conviction change until earnings details are reviewed"
+        if catalyst_type == "insider_activity":
+            return "Review Form 4 context before changing thesis status"
+        if catalyst_type == "company_news":
+            if task.get("signal_type") == "downside_move":
+                return "Review company news for thesis damage versus temporary volatility"
+            return "Monitor whether the catalyst improves durable conviction"
+        if score is not None and score >= 80:
+            return "Maintain thesis but verify catalyst quality"
+        return "Research further before changing thesis status"
 
     def _append_context_evidence(self, ticker, evidence, context):
         score = context.get("score")
