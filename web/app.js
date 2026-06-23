@@ -130,10 +130,21 @@ function renderOwnerControls(controls) {
 
   const reviews = controls.research_reviews || [];
   const proposals = controls.paper_proposals || [];
+  const actions = controls.daily_action_list || [];
   document.getElementById("research-review-count").textContent =
     `${reviews.length} awaiting review`;
   document.getElementById("paper-proposal-count").textContent =
     `${proposals.length} active proposal${proposals.length === 1 ? "" : "s"}`;
+  document.getElementById("daily-action-list").innerHTML = actions.map(item => `
+    <article class="decision-row">
+      <div>
+        <span class="tag">${escapeHtml(item.attention_label || "Review")} ${Number(item.attention_score || 0).toFixed(0)}</span>
+        <b class="row-title">${escapeHtml(item.subject || "Review")}</b>
+        <p>${escapeHtml(item.summary || "Review this item.")}</p>
+        <small class="row-meta">Suggested disposition: ${escapeHtml(item.suggested_disposition || "Review")}</small>
+      </div>
+    </article>
+  `).join("") || `<div class="empty">No daily owner actions are awaiting review.</div>`;
   document.getElementById("research-reviews").innerHTML = reviews.map(item => {
     const result = item.result || {};
     const evidence = (result.evidence || [])

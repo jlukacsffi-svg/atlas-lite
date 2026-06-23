@@ -309,11 +309,12 @@ Current Web Phase 3 result:
   classification, thesis-action language, thesis-memory alignment, and
   thesis-drift tracking, and owner-review ranking are now active. Atlas can
   compare a new review against prior ticker-specific owner-review history,
-  label risks as new or recurring, and sort the owner decision center by
-  attention score. The next priority is turning these ranked reviews into a
-  concise daily action list with clearer recommended owner dispositions.
+  label risks as new or recurring, sort the owner decision center by attention
+  score, and produce a concise daily owner action list. The next priority is
+  adding a safer explanation layer that ties each suggested disposition to
+  recent evidence, portfolio exposure, and paper-performance context.
 
-Estimated overall Atlas program completion: 88%.
+Estimated overall Atlas program completion: 89%.
 
 ## Current Recommended Sequence
 

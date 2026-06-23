@@ -316,3 +316,26 @@ Current boundaries:
 - Attention ranking only prioritizes owner review; it does not approve,
   reject, simulate, or execute any transaction.
 - Real trading and brokerage access remain disabled.
+
+## June 23, 2026 - Daily Owner Action List
+
+New capabilities:
+
+- Generate a concise daily action list from the ranked owner-review queue.
+- Add suggested owner dispositions such as reviewing recurring risks first,
+  deferring low-confidence items for more evidence, or monitoring support
+  signals for confirmation.
+- Display the action list above detailed research cards in the secure Controls
+  page.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00021-g9z` is serving 100% traffic.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 289 tests.
+
+Current boundaries:
+
+- Suggested dispositions guide owner review only.
+- The action list does not approve, reject, simulate, or execute transactions.
+- Real trading and brokerage access remain disabled.

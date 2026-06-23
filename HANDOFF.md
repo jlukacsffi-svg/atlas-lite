@@ -405,6 +405,11 @@ Estimated overall Atlas program completion: 79%.
   Owner decision cards now include `attention_score`, `attention_label`, and
   `attention_reasons`, and are sorted by review urgency. Daily and weekly
   schedules remained enabled. All 289 tests pass.
+- Daily owner action list is deployed on dashboard revision
+  `atlas-dashboard-stg-00021-g9z` and image `20260623-daily-action-list`.
+  The Controls page now shows `daily_action_list` above detailed research
+  cards, including suggested owner dispositions. Daily and weekly schedules
+  remained enabled. All 289 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

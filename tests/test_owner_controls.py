@@ -111,6 +111,12 @@ class OwnerControlServiceTests(unittest.TestCase):
             "recurring thesis risk",
             model["research_reviews"][0]["attention_reasons"],
         )
+        self.assertEqual(model["daily_action_list"][0]["subject"], "RISK")
+        self.assertIn(
+            "Review first",
+            model["daily_action_list"][0]["suggested_disposition"],
+        )
+        self.assertIn("recurring thesis risk", model["daily_action_list"][0]["summary"])
 
     def test_research_decision_is_saved_and_persisted(self):
         persisted = []

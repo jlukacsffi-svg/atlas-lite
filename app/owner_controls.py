@@ -30,6 +30,7 @@ class OwnerControlService:
         return {
             "enabled": True,
             "boundary": "Owner only; simulation and research decisions",
+            "daily_action_list": self._daily_action_list(ranked_reviews),
             "research_reviews": ranked_reviews,
             "paper_proposals": [
                 {
@@ -74,6 +75,48 @@ class OwnerControlService:
             reviews,
             key=lambda item: (-item["attention_score"], item.get("subject") or ""),
         )
+
+    def _daily_action_list(self, ranked_reviews, limit=3):
+        actions = []
+        for review in ranked_reviews[:limit]:
+            result = review.get("result", {})
+            subject = review.get("subject") or "Review"
+            disposition = self._suggested_disposition(review)
+            reasons = review.get("attention_reasons") or []
+            reason_text = ", ".join(reasons[:3]) if reasons else "owner review"
+            actions.append(
+                {
+                    "subject": subject,
+                    "attention_score": review.get("attention_score", 0),
+                    "attention_label": review.get("attention_label", "Low"),
+                    "suggested_disposition": disposition,
+                    "summary": (
+                        f"{subject}: {disposition}. "
+                        f"{reason_text}."
+                    ),
+                    "thesis_drift": result.get("thesis_drift"),
+                    "thesis_alignment": result.get("thesis_alignment"),
+                    "recommendation": result.get("recommendation"),
+                }
+            )
+        return actions
+
+    def _suggested_disposition(self, review):
+        result = review.get("result", {})
+        drift = result.get("thesis_drift")
+        recommendation = result.get("recommendation")
+        confidence = result.get("confidence")
+        if drift == "recurring_risk":
+            return "Review first; likely defer until risk is resolved"
+        if drift == "new_risk":
+            return "Review today and decide whether follow-up is needed"
+        if recommendation == "research_further" or confidence == "low":
+            return "Defer for more evidence"
+        if result.get("thesis_alignment") == "supports_driver":
+            return "Monitor for confirmation"
+        if recommendation == "risk_review":
+            return "Review risk before approving"
+        return "Review when higher-priority items are handled"
 
     def _attention_score(self, task):
         result = task.get("result", {})
