@@ -311,10 +311,13 @@ Current Web Phase 3 result:
   compare a new review against prior ticker-specific owner-review history,
   label risks as new or recurring, sort the owner decision center by attention
   score, and produce a concise daily owner action list with evidence anchors
-  for each suggested disposition. The next priority is adding portfolio
-  exposure and paper-performance context to the same explanation layer.
+  for each suggested disposition. The action list now also includes simulated
+  portfolio exposure and paper-performance context so owner review can see
+  whether Atlas already has exposure and how the paper account is behaving.
+  The next priority is tracking owner action outcomes so Atlas can learn which
+  recommendations were approved, deferred, or rejected over time.
 
-Estimated overall Atlas program completion: 90%.
+Estimated overall Atlas program completion: 91%.
 
 ## Current Recommended Sequence
 

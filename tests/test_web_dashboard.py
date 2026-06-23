@@ -151,6 +151,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("daily_action_list", script)
         self.assertIn("Suggested disposition:", script)
         self.assertIn("Evidence anchor:", script)
+        self.assertIn("Portfolio context:", script)
+        self.assertIn("Paper context:", script)
         self.assertIn("Thesis action:", script)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):

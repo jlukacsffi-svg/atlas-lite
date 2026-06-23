@@ -22,6 +22,7 @@ class OwnerControlService:
     def model(self):
         awaiting = self.research_queue.list_tasks(status="awaiting_owner")
         ranked_reviews = self._rank_research_reviews(awaiting)
+        action_context = self._action_context()
         proposals = [
             proposal
             for proposal in self.paper_account.proposals()
@@ -30,7 +31,10 @@ class OwnerControlService:
         return {
             "enabled": True,
             "boundary": "Owner only; simulation and research decisions",
-            "daily_action_list": self._daily_action_list(ranked_reviews),
+            "daily_action_list": self._daily_action_list(
+                ranked_reviews,
+                action_context,
+            ),
             "research_reviews": ranked_reviews,
             "paper_proposals": [
                 {
@@ -76,7 +80,8 @@ class OwnerControlService:
             key=lambda item: (-item["attention_score"], item.get("subject") or ""),
         )
 
-    def _daily_action_list(self, ranked_reviews, limit=3):
+    def _daily_action_list(self, ranked_reviews, action_context=None, limit=3):
+        action_context = action_context or {}
         actions = []
         for review in ranked_reviews[:limit]:
             result = review.get("result", {})
@@ -85,6 +90,7 @@ class OwnerControlService:
             reasons = review.get("attention_reasons") or []
             reason_text = ", ".join(reasons[:3]) if reasons else "owner review"
             evidence_anchor = self._evidence_anchor(result)
+            ticker_context = action_context.get("tickers", {}).get(subject, {})
             actions.append(
                 {
                     "subject": subject,
@@ -96,6 +102,14 @@ class OwnerControlService:
                         f"{reason_text}."
                     ),
                     "evidence_anchor": evidence_anchor,
+                    "portfolio_context": ticker_context.get(
+                        "portfolio_context",
+                        action_context.get("default_portfolio_context", ""),
+                    ),
+                    "paper_context": ticker_context.get(
+                        "paper_context",
+                        action_context.get("default_paper_context", ""),
+                    ),
                     "thesis_drift": result.get("thesis_drift"),
                     "thesis_alignment": result.get("thesis_alignment"),
                     "recommendation": result.get("recommendation"),
@@ -140,6 +154,104 @@ class OwnerControlService:
                 return detail[:180]
         conclusion = str(result.get("conclusion") or "").strip()
         return conclusion[:180] if conclusion else ""
+
+    def _action_context(self):
+        if not self.paper_account.account_file.exists():
+            return {
+                "tickers": {},
+                "default_portfolio_context": "No simulated paper account is initialized.",
+                "default_paper_context": "Paper-performance context is not available yet.",
+            }
+        prices = self._latest_prices()
+        try:
+            status = self.paper_account.status(prices=prices)
+        except ValueError:
+            return {
+                "tickers": {},
+                "default_portfolio_context": "Paper account is unavailable.",
+                "default_paper_context": "Paper-performance context is unavailable.",
+            }
+        performance = self.paper_account.performance_summary()
+        reviews = self.paper_account.latest_position_reviews()
+        equity = float(status.get("equity") or 0)
+        ticker_context = {}
+        for position in status.get("positions", []):
+            ticker = position.get("ticker")
+            if not ticker:
+                continue
+            portfolio_context = self._portfolio_context(position, equity)
+            paper_context = self._paper_context(
+                ticker,
+                performance,
+                reviews.get(ticker),
+            )
+            ticker_context[ticker] = {
+                "portfolio_context": portfolio_context,
+                "paper_context": paper_context,
+            }
+        return {
+            "tickers": ticker_context,
+            "default_portfolio_context": "No open simulated position is currently tracked.",
+            "default_paper_context": self._paper_context(None, performance, None),
+        }
+
+    def _latest_prices(self):
+        snapshot = self.dashboard_service._latest_snapshot()
+        securities = snapshot.get("securities", {})
+        return {
+            ticker: data.get("price")
+            for ticker, data in securities.items()
+            if data.get("price") is not None
+        }
+
+    @staticmethod
+    def _portfolio_context(position, equity):
+        shares = float(position.get("shares") or 0)
+        value = position.get("market_value")
+        gain_loss = position.get("unrealized_gain_loss")
+        allocation = (float(value) / equity * 100) if value is not None and equity else None
+        pieces = [f"Simulated position: {shares:g} shares"]
+        if value is not None:
+            pieces.append(f"${float(value):,.2f} market value")
+        if allocation is not None:
+            pieces.append(f"{allocation:.1f}% of paper equity")
+        if gain_loss is not None:
+            pieces.append(f"{float(gain_loss):+,.2f} unrealized P/L")
+        return "; ".join(pieces) + "."
+
+    @staticmethod
+    def _paper_context(ticker, performance, review):
+        if not performance.get("available"):
+            return "Paper-performance history is not available yet."
+        latest = performance.get("latest", {})
+        total_return = latest.get("total_return_pct")
+        snapshots = performance.get("snapshots", 0)
+        pieces = [
+            (
+                f"Paper account return {float(total_return):+.2f}%"
+                if total_return is not None
+                else "Paper account return unavailable"
+            ),
+            f"{snapshots} snapshot{'' if snapshots == 1 else 's'}",
+        ]
+        excess = performance.get("excess_return_pct", {})
+        if excess:
+            benchmark_bits = [
+                f"{benchmark} excess {float(value):+.2f}%"
+                for benchmark, value in sorted(excess.items())
+            ]
+            pieces.append(", ".join(benchmark_bits))
+        if ticker and review:
+            verdict = str(review.get("verdict") or "review").replace("_", " ")
+            review_return = review.get("return_pct")
+            review_text = f"latest {ticker} thesis review: {verdict}"
+            if review_return is not None:
+                review_text += f" at {float(review_return):+.2f}%"
+            flags = review.get("flags") or []
+            if flags:
+                review_text += f" ({'; '.join(flags[:2])})"
+            pieces.append(review_text)
+        return "; ".join(pieces) + "."
 
     def _attention_score(self, task):
         result = task.get("result", {})

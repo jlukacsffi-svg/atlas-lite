@@ -363,3 +363,28 @@ Current boundaries:
   causality.
 - Evidence anchors do not approve, reject, simulate, or execute transactions.
 - Real trading and brokerage access remain disabled.
+
+## June 23, 2026 - Action Exposure And Paper Context
+
+New capabilities:
+
+- Add simulated portfolio exposure context to each daily owner action item.
+- Add paper-performance context to each daily owner action item, including
+  account return, benchmark excess return, snapshot count, and ticker thesis
+  review context when available.
+- Display portfolio and paper context directly under the evidence anchor in
+  the secure Controls page.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00023-dxs` is serving 100% traffic.
+- Dashboard image `20260623-action-context` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 289 tests.
+
+Current boundaries:
+
+- Portfolio context refers to Atlas-tracked simulated exposure unless a future
+  real portfolio import is explicitly configured.
+- Paper-performance context is simulation-only and does not authorize trades.
+- Real trading and brokerage access remain disabled.

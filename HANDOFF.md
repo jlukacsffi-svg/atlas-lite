@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 90%.
+Estimated overall Atlas program completion: 91%.
 
 ## Useful Files
 
@@ -415,6 +415,13 @@ Estimated overall Atlas program completion: 90%.
   Daily action cards now include an `evidence_anchor` line so each suggested
   owner disposition is tied to a compact research-evidence reference or
   conclusion fallback. Daily and weekly schedules remained enabled. All 289
+  tests pass.
+- Action exposure and paper context are deployed on dashboard revision
+  `atlas-dashboard-stg-00023-dxs` and image `20260623-action-context`.
+  Daily action cards now include simulated `portfolio_context` and
+  `paper_context` lines, tying owner review to open paper exposure, current
+  simulated account performance, benchmark-relative context, and latest thesis
+  review where available. Daily and weekly schedules remained enabled. All 289
   tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under

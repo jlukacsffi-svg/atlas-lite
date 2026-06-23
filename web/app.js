@@ -142,6 +142,8 @@ function renderOwnerControls(controls) {
         <b class="row-title">${escapeHtml(item.subject || "Review")}</b>
         <p>${escapeHtml(item.summary || "Review this item.")}</p>
         ${item.evidence_anchor ? `<small class="row-meta">Evidence anchor: ${escapeHtml(item.evidence_anchor)}</small>` : ""}
+        ${item.portfolio_context ? `<small class="row-meta">Portfolio context: ${escapeHtml(item.portfolio_context)}</small>` : ""}
+        ${item.paper_context ? `<small class="row-meta">Paper context: ${escapeHtml(item.paper_context)}</small>` : ""}
         <small class="row-meta">Suggested disposition: ${escapeHtml(item.suggested_disposition || "Review")}</small>
       </div>
     </article>

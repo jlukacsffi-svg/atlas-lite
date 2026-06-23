@@ -21,6 +21,7 @@ class StubDashboardService:
             "generated_at": "2026-06-12T08:00:00",
             "securities": {
                 "NVDA": {"status": "available", "price": 125.0},
+                "RISK": {"status": "available", "price": 125.0},
             },
         }
 
@@ -69,6 +70,43 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertFalse(model["capabilities"]["brokerage_connection"])
 
     def test_model_ranks_recurring_thesis_risks_first(self):
+        proposal = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "RISK",
+            100,
+            100,
+            "Paper exposure for a recurring risk review.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            proposal["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(
+            proposal["proposal_id"],
+            "approve",
+        )
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "RISK",
+            100,
+            100,
+            "Paper exposure for a recurring risk review.",
+            proposal_id=proposal["proposal_id"],
+        )
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={"RISK": 125},
+            benchmark_prices={"SPY": 500, "QQQ": 400},
+        )
+        self.dashboard.paper_account.record_position_review(
+            "RISK",
+            "review",
+            125,
+            25,
+            62,
+            ["recurring thesis risk"],
+            "Paper exposure needs owner review.",
+        )
         low_task, _ = self.dashboard.research_queue.add_task(
             role="CIO",
             subject="LOW",
@@ -127,6 +165,18 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertIn(
             "RISK thesis history",
             model["daily_action_list"][0]["evidence_anchor"],
+        )
+        self.assertIn(
+            "Simulated position: 100 shares",
+            model["daily_action_list"][0]["portfolio_context"],
+        )
+        self.assertIn(
+            "Paper account return",
+            model["daily_action_list"][0]["paper_context"],
+        )
+        self.assertIn(
+            "latest RISK thesis review",
+            model["daily_action_list"][0]["paper_context"],
         )
 
     def test_research_decision_is_saved_and_persisted(self):
