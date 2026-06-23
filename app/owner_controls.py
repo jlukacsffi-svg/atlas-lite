@@ -84,6 +84,7 @@ class OwnerControlService:
             disposition = self._suggested_disposition(review)
             reasons = review.get("attention_reasons") or []
             reason_text = ", ".join(reasons[:3]) if reasons else "owner review"
+            evidence_anchor = self._evidence_anchor(result)
             actions.append(
                 {
                     "subject": subject,
@@ -94,6 +95,7 @@ class OwnerControlService:
                         f"{subject}: {disposition}. "
                         f"{reason_text}."
                     ),
+                    "evidence_anchor": evidence_anchor,
                     "thesis_drift": result.get("thesis_drift"),
                     "thesis_alignment": result.get("thesis_alignment"),
                     "recommendation": result.get("recommendation"),
@@ -117,6 +119,27 @@ class OwnerControlService:
         if recommendation == "risk_review":
             return "Review risk before approving"
         return "Review when higher-priority items are handled"
+
+    def _evidence_anchor(self, result):
+        for item in result.get("evidence", []) or []:
+            if isinstance(item, str):
+                text = item.strip()
+                if text:
+                    return text[:180]
+                continue
+            title = str(item.get("title") or "").strip()
+            detail = str(item.get("detail") or "").strip()
+            source = str(item.get("source") or "").strip()
+            if title and detail:
+                return f"{title}: {detail}"[:180]
+            if title and source:
+                return f"{title} ({source})"[:180]
+            if title:
+                return title[:180]
+            if detail:
+                return detail[:180]
+        conclusion = str(result.get("conclusion") or "").strip()
+        return conclusion[:180] if conclusion else ""
 
     def _attention_score(self, task):
         result = task.get("result", {})

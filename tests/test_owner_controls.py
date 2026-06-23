@@ -97,6 +97,13 @@ class OwnerControlServiceTests(unittest.TestCase):
             catalyst_type="score_risk",
             thesis_alignment="risk_to_thesis",
             thesis_drift="recurring_risk",
+            evidence=[
+                {
+                    "title": "RISK thesis history",
+                    "source": "Atlas research task memory",
+                    "detail": "2 prior reviews | 1 prior risk-to-thesis",
+                }
+            ],
         )
 
         model = self.service.model()
@@ -117,6 +124,10 @@ class OwnerControlServiceTests(unittest.TestCase):
             model["daily_action_list"][0]["suggested_disposition"],
         )
         self.assertIn("recurring thesis risk", model["daily_action_list"][0]["summary"])
+        self.assertIn(
+            "RISK thesis history",
+            model["daily_action_list"][0]["evidence_anchor"],
+        )
 
     def test_research_decision_is_saved_and_persisted(self):
         persisted = []

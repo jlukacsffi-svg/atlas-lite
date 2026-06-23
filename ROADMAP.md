@@ -310,11 +310,11 @@ Current Web Phase 3 result:
   thesis-drift tracking, and owner-review ranking are now active. Atlas can
   compare a new review against prior ticker-specific owner-review history,
   label risks as new or recurring, sort the owner decision center by attention
-  score, and produce a concise daily owner action list. The next priority is
-  adding a safer explanation layer that ties each suggested disposition to
-  recent evidence, portfolio exposure, and paper-performance context.
+  score, and produce a concise daily owner action list with evidence anchors
+  for each suggested disposition. The next priority is adding portfolio
+  exposure and paper-performance context to the same explanation layer.
 
-Estimated overall Atlas program completion: 89%.
+Estimated overall Atlas program completion: 90%.
 
 ## Current Recommended Sequence
 

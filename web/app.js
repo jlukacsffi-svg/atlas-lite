@@ -141,6 +141,7 @@ function renderOwnerControls(controls) {
         <span class="tag">${escapeHtml(item.attention_label || "Review")} ${Number(item.attention_score || 0).toFixed(0)}</span>
         <b class="row-title">${escapeHtml(item.subject || "Review")}</b>
         <p>${escapeHtml(item.summary || "Review this item.")}</p>
+        ${item.evidence_anchor ? `<small class="row-meta">Evidence anchor: ${escapeHtml(item.evidence_anchor)}</small>` : ""}
         <small class="row-meta">Suggested disposition: ${escapeHtml(item.suggested_disposition || "Review")}</small>
       </div>
     </article>

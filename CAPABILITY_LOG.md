@@ -339,3 +339,27 @@ Current boundaries:
 - Suggested dispositions guide owner review only.
 - The action list does not approve, reject, simulate, or execute transactions.
 - Real trading and brokerage access remain disabled.
+
+## June 23, 2026 - Action Evidence Anchors
+
+New capabilities:
+
+- Add a concise evidence anchor to each daily owner action item.
+- Prefer structured research evidence when available, with a conclusion-based
+  fallback when the research item has no explicit evidence list.
+- Display the evidence anchor directly under the suggested disposition in the
+  secure Controls page.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00022-kdx` is serving 100% traffic.
+- Dashboard image `20260623-action-evidence` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 289 tests.
+
+Current boundaries:
+
+- Evidence anchors are compact references for owner review, not proof of
+  causality.
+- Evidence anchors do not approve, reject, simulate, or execute transactions.
+- Real trading and brokerage access remain disabled.
