@@ -456,6 +456,13 @@ Estimated overall Atlas program completion: 93%.
   each idea as working, lagging, mixed, or not enough time, and keeps all
   activity simulation-only. Daily and weekly schedules remained enabled. All
   293 tests pass.
+- Paper proposal why-now rationale is deployed on dashboard revision
+  `atlas-dashboard-stg-00031-bb7` and image `20260624-why-now-v3`. New
+  Atlas-generated paper proposals now carry structured rationale bullets, and
+  the dashboard displays a Why now box explaining score threshold, strongest
+  score inputs, category, sector, daily move, and simulated sizing before any
+  owner decision. Daily and weekly schedules remained enabled. All 293 tests
+  pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

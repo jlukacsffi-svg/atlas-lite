@@ -86,6 +86,7 @@ class PaperTradingAccount:
         thesis,
         confidence="medium",
         source="manual",
+        rationale=None,
     ):
         """Append a paper recommendation without changing account holdings."""
         self.load()
@@ -100,6 +101,7 @@ class PaperTradingAccount:
             "timestamp": self.clock().isoformat(timespec="seconds"),
             "source": source,
             "confidence": confidence,
+            "rationale": self._normalize_rationale(rationale),
             **order,
         }
         self._append_event(event)
@@ -115,6 +117,7 @@ class PaperTradingAccount:
         recommendation_id=None,
         research_task_id=None,
         source="manual",
+        rationale=None,
     ):
         """Append a reviewable paper-trade proposal without executing it."""
         self.load()
@@ -133,6 +136,7 @@ class PaperTradingAccount:
             "source": source,
             "recommendation_id": recommendation_id,
             "research_task_id": research_task_id,
+            "rationale": self._normalize_rationale(rationale),
             **order,
         }
         self._append_event(event)
@@ -862,6 +866,18 @@ class PaperTradingAccount:
             "notional": round(shares * price, 2),
             "thesis": thesis,
         }
+
+    @staticmethod
+    def _normalize_rationale(rationale):
+        if rationale is None:
+            return []
+        if isinstance(rationale, str):
+            rationale = [rationale]
+        return [
+            str(item).strip()
+            for item in rationale
+            if str(item).strip()
+        ][:6]
 
     def _validate_order(self, account, order, now=None):
         errors = []

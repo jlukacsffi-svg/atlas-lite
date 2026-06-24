@@ -324,8 +324,11 @@ Current Web Phase 3 result:
   fill guidance. The paper-performance feedback loop is now active: executed
   simulated buy proposals are compared against SPY and QQQ over the available
   tracking window and labeled as working, lagging, mixed, or not enough time.
-  The next priority is improving recommendation quality by showing why Atlas
-  believes a simulated buy is attractive now.
+  New Atlas-generated paper proposals now include a structured Why now
+  rationale explaining score threshold, strongest score inputs, category,
+  sector, daily move, and simulated sizing before owner approval. The next
+  priority is adding clearer simulated exit and trim recommendations when a
+  thesis weakens or paper performance lags.
 
 Estimated overall Atlas program completion: 93%.
 

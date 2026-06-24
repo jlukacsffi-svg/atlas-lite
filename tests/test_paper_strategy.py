@@ -59,6 +59,9 @@ class PaperStrategyTests(unittest.TestCase):
         self.assertEqual(created[0]["shares"], 50)
         self.assertEqual(len(recommendations), 3)
         self.assertTrue(all(item.get("recommendation_id") for item in created))
+        self.assertIn("Atlas score 95.0", created[0]["rationale"][0])
+        self.assertTrue(any("Why" not in item for item in created[0]["rationale"]))
+        self.assertIn("buy threshold", recommendations[0]["rationale"][0])
 
     def test_deduplicates_pending_proposals(self):
         with tempfile.TemporaryDirectory() as temp_dir:

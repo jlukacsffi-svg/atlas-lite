@@ -220,6 +220,7 @@ function renderOwnerControls(controls) {
           <b class="row-title">${escapeHtml(item.side).toUpperCase()} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}</b>
           <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} · Risk ${escapeHtml(review.verdict || "pending")}</small>
           <p>${escapeHtml(item.thesis || "No thesis supplied.")}</p>
+          ${renderRationale(item.rationale, item)}
           <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical position in Atlas paper tracking.</small>
         </div>
         <div class="decision-actions">
@@ -263,10 +264,11 @@ function renderRecommendations(proposals, watchlist) {
       <div>
         <b class="row-title">${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)} recommended for paper purchase</b>
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+        ${renderRationale(item.rationale, item)}
         <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to add this to the paper portfolio." : "Next step: approve or reject this paper proposal in Controls."}</small>
       </div>
     </article>
-  `).join("") || `<div class="empty">No current paper purchase recommendations.</div>`;
+  `).join("") || `<div class="empty">No current paper purchase recommendations. Future Atlas-generated proposals will include a Why now rationale before any owner decision.</div>`;
   ["recommended-buys", "overview-recommended-buys"].forEach(id => {
     const target = document.getElementById(id);
     if (target) target.innerHTML = buyHtml;
@@ -290,6 +292,21 @@ function renderRecommendations(proposals, watchlist) {
   const previewTarget = document.getElementById("overview-current-list");
   if (fullTarget) fullTarget.innerHTML = fullRows;
   if (previewTarget) previewTarget.innerHTML = previewRows;
+}
+
+function renderRationale(rationale, item = {}) {
+  const rows = (rationale || []).filter(Boolean);
+  if (!rows.length && item.side === "buy") {
+    rows.push(
+      "This proposal was created before structured Why now rationale was stored. New Atlas-generated proposals will include score, category, sector, move, and sizing rationale."
+    );
+  }
+  if (!rows.length) return "";
+  return `
+    <div class="why-now">
+      <span>Why now</span>
+      <ul>${rows.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </div>`;
 }
 
 function renderMarketPills(rows) {

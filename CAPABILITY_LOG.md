@@ -527,3 +527,28 @@ Current boundaries:
 - Feedback does not approve, reject, simulate, or execute any transaction.
 - No brokerage order is sent and no real money is spent.
 - Real trading and brokerage access remain disabled.
+
+## June 24, 2026 - Paper Proposal Why-Now Rationale
+
+New capabilities:
+
+- Store structured rationale bullets on new Atlas-generated paper proposals.
+- Explain why a simulated buy is being proposed now, including Atlas score
+  threshold, strongest score inputs, category, sector, current price move, and
+  target simulated sizing.
+- Display a `Why now` box on recommendation and control cards so owner review
+  can see the reason before approving, rejecting, or simulating a fill.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00031-bb7` is serving 100% traffic.
+- Dashboard image `20260624-why-now-v3` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 293 tests.
+
+Current boundaries:
+
+- Why-now rationale explains paper proposals only.
+- Rationale does not approve, reject, simulate, or execute any transaction.
+- No brokerage order is sent and no real money is spent.
+- Real trading and brokerage access remain disabled.

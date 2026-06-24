@@ -142,8 +142,12 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("renderWorkspace", script)
         self.assertIn("setActivePage", script)
         self.assertIn("renderRecommendations", script)
+        self.assertIn("renderRationale", script)
         self.assertIn("renderPaperFeedback", script)
         self.assertIn("recommended for paper purchase", script)
+        self.assertIn("Why now", script)
+        self.assertIn("Why now rationale", script)
+        self.assertIn("created before structured Why now rationale", script)
         self.assertIn("Simulate fill to record the hypothetical position", script)
         self.assertIn("current-watchlist", html)
         self.assertIn("40% complete", html)
@@ -199,6 +203,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn(".watchlist-item", styles)
         self.assertIn(".simulate-button", styles)
         self.assertIn(".feedback-row", styles)
+        self.assertIn(".why-now", styles)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:

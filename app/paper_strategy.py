@@ -97,6 +97,7 @@ class PaperStrategy:
                 continue
 
             thesis = self._buy_thesis(row)
+            rationale = self._buy_rationale(row)
             recommendation = account.record_recommendation(
                 side="buy",
                 ticker=ticker,
@@ -105,6 +106,7 @@ class PaperStrategy:
                 thesis=thesis,
                 confidence="high" if row["score"] >= 92 else "medium",
                 source="paper_strategy_v1",
+                rationale=rationale,
             )
             created.append(
                 account.create_proposal(
@@ -115,6 +117,7 @@ class PaperStrategy:
                     thesis=thesis,
                     recommendation_id=recommendation["recommendation_id"],
                     source="paper_strategy_v1",
+                    rationale=rationale,
                 )
             )
             created_buys += 1
@@ -140,6 +143,7 @@ class PaperStrategy:
                     "ticker": ticker,
                     "price": float(data["price"]),
                     "score": score,
+                    "scores": dict(scores),
                     "category": data.get("category", "Watchlist"),
                     "sector": data.get("sector", "Unclassified"),
                     "percent_change": float(data.get("percent_change") or 0),
@@ -157,8 +161,46 @@ class PaperStrategy:
 
     def _buy_thesis(self, row):
         return (
-            f"Atlas paper entry rule: {row['ticker']} has score {row['score']:.1f}, "
-            f"category {row['category']}, sector {row['sector']}, and a "
-            f"{row['percent_change']:+.2f}% current move. Target size is "
-            f"{self.target_position_pct:.1f}% of starting simulated cash."
+            f"Atlas paper entry rule: {row['ticker']} qualifies because its "
+            f"{row['score']:.1f} Atlas score is above the "
+            f"{self.minimum_buy_score:.1f} buy threshold, it is categorized as "
+            f"{row['category']}, it is in {row['sector']}, and today's "
+            f"{row['percent_change']:+.2f}% move does not breach the downside "
+            f"filter. Target size is {self.target_position_pct:.1f}% of "
+            f"starting simulated cash."
         )
+
+    def _buy_rationale(self, row):
+        scores = row.get("scores") or {}
+        strongest = sorted(
+            (
+                (name, float(value))
+                for name, value in scores.items()
+                if value is not None
+            ),
+            key=lambda item: item[1],
+            reverse=True,
+        )[:2]
+        rationale = [
+            (
+                f"Atlas score {row['score']:.1f} is above the "
+                f"{self.minimum_buy_score:.1f} paper-buy threshold."
+            ),
+            f"Current category is {row['category']}; sector is {row['sector']}.",
+            (
+                f"Latest move is {row['percent_change']:+.2f}%, above the "
+                f"{self.minimum_daily_move_pct:+.2f}% downside filter."
+            ),
+            (
+                f"Suggested size is limited to {self.target_position_pct:.1f}% "
+                "of starting simulated cash."
+            ),
+        ]
+        if strongest:
+            rationale.insert(
+                1,
+                "Strongest score inputs: "
+                + ", ".join(f"{name} {value:.0f}" for name, value in strongest)
+                + ".",
+            )
+        return rationale

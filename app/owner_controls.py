@@ -46,6 +46,7 @@ class OwnerControlService:
                     "shares": item["shares"],
                     "reference_price": item["price"],
                     "thesis": item["thesis"],
+                    "rationale": item.get("rationale", []),
                     "risk_review": item.get("risk_review"),
                 }
                 for item in proposals
