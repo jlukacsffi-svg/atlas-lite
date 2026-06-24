@@ -237,6 +237,44 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(summary["excess_return_pct"]["SPY"], 0.0)
         self.assertEqual(summary["excess_return_pct"]["QQQ"], -1.0)
 
+    def test_proposal_feedback_compares_simulated_buy_with_benchmarks(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            times = iter(
+                [
+                    datetime(2026, 6, 1, 9, 30, 0),
+                    datetime(2026, 6, 1, 9, 31, 0),
+                    datetime(2026, 6, 1, 9, 32, 0),
+                    datetime(2026, 6, 1, 9, 33, 0),
+                    datetime(2026, 6, 1, 9, 34, 0),
+                    datetime(2026, 6, 1, 16, 0, 0),
+                    datetime(2026, 6, 2, 16, 0, 0),
+                ]
+            )
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                policy={"maximum_position_pct": 50.0},
+                clock=lambda: next(times),
+            )
+            account.initialize(100000)
+            self.execute_approved(account, "buy", "NVDA", 100, 100, "Paper thesis.")
+            account.record_performance_snapshot(
+                prices={"NVDA": 100},
+                benchmark_prices={"SPY": 500, "QQQ": 400},
+            )
+            account.record_performance_snapshot(
+                prices={"NVDA": 112},
+                benchmark_prices={"SPY": 505, "QQQ": 408},
+            )
+
+            feedback = account.proposal_feedback()
+
+        self.assertEqual(feedback[0]["ticker"], "NVDA")
+        self.assertEqual(feedback[0]["verdict"], "working")
+        self.assertEqual(feedback[0]["security_return_pct"], 12.0)
+        self.assertEqual(feedback[0]["benchmark_returns_pct"]["SPY"], 1.0)
+        self.assertEqual(feedback[0]["benchmark_returns_pct"]["QQQ"], 2.0)
+
     def test_performance_snapshot_requires_all_position_prices(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)

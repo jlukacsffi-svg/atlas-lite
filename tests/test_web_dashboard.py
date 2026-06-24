@@ -75,6 +75,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertEqual(data["score_leaders"][0]["score"], 90)
         self.assertEqual(data["watchlist"][0]["ticker"], "AAA")
         self.assertTrue(data["paper"]["configured"])
+        self.assertEqual(data["paper"]["feedback"], [])
         self.assertEqual(data["research"]["open"], 1)
         self.assertEqual(data["corporate_actions"], [])
         self.assertFalse(data["access"]["public_registration"])
@@ -129,6 +130,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Currently in the Atlas list", html)
         self.assertIn("What Simulate fill does", html)
         self.assertIn("No brokerage order is sent", html)
+        self.assertIn("Recommendation performance", html)
+        self.assertIn("paper-feedback", html)
         self.assertIn("Access &amp; security foundation", html)
         self.assertIn('id="recovery-status"', html)
         self.assertIn('id="privacy-export-status"', html)
@@ -139,6 +142,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("renderWorkspace", script)
         self.assertIn("setActivePage", script)
         self.assertIn("renderRecommendations", script)
+        self.assertIn("renderPaperFeedback", script)
         self.assertIn("recommended for paper purchase", script)
         self.assertIn("Simulate fill to record the hypothetical position", script)
         self.assertIn("current-watchlist", html)
@@ -194,6 +198,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn(".recommendation-row", styles)
         self.assertIn(".watchlist-item", styles)
         self.assertIn(".simulate-button", styles)
+        self.assertIn(".feedback-row", styles)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:

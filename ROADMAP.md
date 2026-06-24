@@ -321,8 +321,11 @@ Current Web Phase 3 result:
   on the Controls page. The dashboard now has page-style navigation and a
   dedicated Recommendations page that separates current paper purchase
   recommendations from the broader Atlas-tracked list, with clearer Simulate
-  fill guidance. The next priority is adding a paper-performance feedback loop
-  that compares approved simulated ideas against later returns.
+  fill guidance. The paper-performance feedback loop is now active: executed
+  simulated buy proposals are compared against SPY and QQQ over the available
+  tracking window and labeled as working, lagging, mixed, or not enough time.
+  The next priority is improving recommendation quality by showing why Atlas
+  believes a simulated buy is attractive now.
 
 Estimated overall Atlas program completion: 93%.
 

@@ -244,6 +244,7 @@ class DashboardDataService:
                 }
                 for position in status["positions"]
             ],
+            "feedback": self.paper_account.proposal_feedback(),
             "proposals": {
                 "pending": sum(1 for item in proposals if item["status"] == "pending"),
                 "rejected": sum(1 for item in proposals if item["status"] == "rejected"),

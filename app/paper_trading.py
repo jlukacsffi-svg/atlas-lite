@@ -476,6 +476,141 @@ class PaperTradingAccount:
             },
         }
 
+    def proposal_feedback(self):
+        """Evaluate executed simulated buy proposals against later returns."""
+        snapshots = self.performance_history()
+        if not snapshots:
+            return []
+
+        latest = snapshots[-1]
+        latest_positions = {
+            position.get("ticker"): position
+            for position in latest.get("positions", [])
+        }
+        trades = [
+            event
+            for event in self.ledger()
+            if event.get("event") == "paper_trade"
+            and event.get("side") == "buy"
+            and event.get("proposal_id")
+        ]
+        proposals = {
+            proposal["proposal_id"]: proposal
+            for proposal in self.proposals()
+        }
+        rows = []
+        for trade in trades:
+            ticker = trade["ticker"]
+            proposal = proposals.get(trade["proposal_id"], {})
+            start = self._first_snapshot_after(snapshots, trade["timestamp"])
+            latest_position = latest_positions.get(ticker)
+            if not start or not latest_position:
+                rows.append(
+                    self._feedback_row(
+                        trade,
+                        proposal,
+                        "not_enough_time",
+                        "No comparable performance snapshot is available yet.",
+                    )
+                )
+                continue
+
+            security_return = self._pct_return(
+                trade.get("price"),
+                latest_position.get("price"),
+            )
+            benchmark_returns = {}
+            for benchmark in ("SPY", "QQQ"):
+                benchmark_returns[benchmark] = self._pct_return(
+                    start.get("benchmark_prices", {}).get(benchmark),
+                    latest.get("benchmark_prices", {}).get(benchmark),
+                )
+            usable_benchmarks = {
+                ticker: value
+                for ticker, value in benchmark_returns.items()
+                if value is not None
+            }
+            if (
+                security_return is None
+                or start.get("timestamp") == latest.get("timestamp")
+                or not usable_benchmarks
+            ):
+                verdict = "not_enough_time"
+                summary = "Needs more daily snapshots before Atlas can judge this idea."
+            else:
+                best_benchmark = max(usable_benchmarks.values())
+                worst_benchmark = min(usable_benchmarks.values())
+                if security_return >= best_benchmark:
+                    verdict = "working"
+                    summary = "The simulated idea is ahead of both core benchmarks."
+                elif security_return < worst_benchmark:
+                    verdict = "lagging"
+                    summary = "The simulated idea is behind both core benchmarks."
+                else:
+                    verdict = "mixed"
+                    summary = "The simulated idea is between the two core benchmarks."
+            rows.append(
+                self._feedback_row(
+                    trade,
+                    proposal,
+                    verdict,
+                    summary,
+                    security_return=security_return,
+                    benchmark_returns=benchmark_returns,
+                    snapshots=self._snapshots_since(snapshots, trade["timestamp"]),
+                    latest_price=latest_position.get("price"),
+                )
+            )
+        return sorted(rows, key=lambda item: item["filled_at"], reverse=True)
+
+    @staticmethod
+    def _pct_return(start, end):
+        if start in (None, 0) or end is None:
+            return None
+        return round((float(end) / float(start) - 1) * 100, 4)
+
+    @staticmethod
+    def _first_snapshot_after(snapshots, timestamp):
+        for snapshot in snapshots:
+            if str(snapshot.get("timestamp", "")) >= str(timestamp):
+                return snapshot
+        return None
+
+    @staticmethod
+    def _snapshots_since(snapshots, timestamp):
+        return sum(
+            1
+            for snapshot in snapshots
+            if str(snapshot.get("timestamp", "")) >= str(timestamp)
+        )
+
+    @staticmethod
+    def _feedback_row(
+        trade,
+        proposal,
+        verdict,
+        summary,
+        security_return=None,
+        benchmark_returns=None,
+        snapshots=0,
+        latest_price=None,
+    ):
+        return {
+            "proposal_id": trade.get("proposal_id"),
+            "ticker": trade.get("ticker"),
+            "side": trade.get("side"),
+            "shares": trade.get("shares"),
+            "filled_at": trade.get("timestamp"),
+            "fill_price": trade.get("price"),
+            "latest_price": latest_price,
+            "security_return_pct": security_return,
+            "benchmark_returns_pct": benchmark_returns or {},
+            "snapshots": snapshots,
+            "verdict": verdict,
+            "summary": summary,
+            "thesis": proposal.get("thesis") or trade.get("thesis"),
+        }
+
     def trade_statistics(self):
         events = self.ledger()
         trades = [event for event in events if event.get("event") == "paper_trade"]

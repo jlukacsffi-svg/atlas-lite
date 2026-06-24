@@ -68,6 +68,7 @@ function renderDashboard(data) {
   renderSectors(data.sectors || []);
   renderCorporateActions(data.corporate_actions || []);
   renderPositions(paper.positions || []);
+  renderPaperFeedback(paper.feedback || []);
   renderRecommendations(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderTasks(data.research?.tasks || []);
   renderOwnerControls(data.owner_controls || null);
@@ -412,6 +413,27 @@ function renderPositions(rows) {
         </span>
       </div>`;
   }).join("") || `<div class="empty">No open simulated positions.</div>`;
+}
+
+function renderPaperFeedback(rows) {
+  document.getElementById("paper-feedback").innerHTML = rows.map(item => {
+    const verdict = String(item.verdict || "not_enough_time");
+    const benchmarkText = ["SPY", "QQQ"].map(ticker => {
+      const value = item.benchmark_returns_pct?.[ticker];
+      return `${ticker} ${signed(value)}`;
+    }).join(" · ");
+    return `
+      <article class="feedback-row ${escapeHtml(verdict)}">
+        <div>
+          <span class="tag verdict-tag">${escapeHtml(verdict).replaceAll("_", " ")}</span>
+          <b class="row-title">${escapeHtml(item.ticker)} simulated buy</b>
+          <small class="row-meta">Fill ${money.format(Number(item.fill_price) || 0)}${item.latest_price === null || item.latest_price === undefined ? "" : ` · latest ${money.format(Number(item.latest_price) || 0)}`}</small>
+          <p>${escapeHtml(item.summary || "Atlas is waiting for enough evidence to judge this idea.")}</p>
+          <small class="row-meta">Return ${signed(item.security_return_pct)} · ${benchmarkText} · ${Number(item.snapshots || 0).toFixed(0)} snapshots</small>
+          <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+        </div>
+      </article>`;
+  }).join("") || `<div class="empty">No executed paper recommendations have enough tracking data yet.</div>`;
 }
 
 function renderTasks(rows) {

@@ -497,3 +497,33 @@ Current boundaries:
 - Simulate fill still updates simulated paper tracking only.
 - No brokerage order is sent and no real money is spent.
 - Real trading and brokerage access remain disabled.
+
+## June 24, 2026 - Paper Recommendation Feedback Loop
+
+New capabilities:
+
+- Compare each executed simulated buy proposal against later Atlas paper
+  snapshots.
+- Calculate the simulated security return from fill price to latest tracked
+  price.
+- Compare each simulated idea against SPY and QQQ returns over the same
+  available tracking window.
+- Label simulated recommendations as `working`, `lagging`, `mixed`, or
+  `not_enough_time`.
+- Display the result in a new Recommendation Performance panel on the Paper
+  Portfolio page, including thesis, fill price, latest price, benchmark
+  comparison, and snapshot count.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00028-248` is serving 100% traffic.
+- Dashboard image `20260624-paper-feedback` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 293 tests.
+
+Current boundaries:
+
+- Feedback evaluates simulated paper outcomes only.
+- Feedback does not approve, reject, simulate, or execute any transaction.
+- No brokerage order is sent and no real money is spent.
+- Real trading and brokerage access remain disabled.

@@ -449,6 +449,13 @@ Estimated overall Atlas program completion: 93%.
   Recommendations page, clear separation between paper purchase recommendations
   and the current Atlas list, and a plain-language Simulate fill workflow.
   Daily and weekly schedules remained enabled. All 292 tests pass.
+- Paper recommendation feedback is deployed on dashboard revision
+  `atlas-dashboard-stg-00028-248` and image `20260624-paper-feedback`.
+  The Paper Portfolio page now includes a Recommendation Performance panel
+  that compares executed simulated buy proposals against SPY and QQQ, labels
+  each idea as working, lagging, mixed, or not enough time, and keeps all
+  activity simulation-only. Daily and weekly schedules remained enabled. All
+  293 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
