@@ -122,6 +122,67 @@ main {
 h1, h2, p { margin-top: 0; }
 h1 { margin-bottom: 0; font-size: 28px; line-height: 1.15; }
 h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
+.title-with-help {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.info-popover {
+  position: relative;
+  display: inline-block;
+  flex: 0 0 auto;
+}
+.info-popover summary {
+  width: 21px;
+  height: 21px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  color: var(--muted);
+  background: var(--surface-subtle);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+  list-style: none;
+}
+.info-popover summary::-webkit-details-marker { display: none; }
+.info-popover summary:hover,
+.info-popover summary:focus-visible {
+  color: var(--green);
+  border-color: #9ccbb9;
+  outline: none;
+}
+.info-popover p {
+  position: absolute;
+  z-index: 5;
+  top: 28px;
+  left: 0;
+  width: min(280px, 72vw);
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--surface);
+  box-shadow: 0 14px 30px rgba(20, 31, 38, .14);
+  font-size: 11px;
+  line-height: 1.45;
+}
+.panel-heading > .tag + .info-popover p,
+.panel-heading .info-popover p { left: auto; right: auto; }
+.inline-help {
+  margin-left: 5px;
+  vertical-align: middle;
+}
+.inline-help summary {
+  width: 17px;
+  height: 17px;
+  font-size: 9px;
+}
+.inline-help p {
+  top: 22px;
+}
 .eyebrow {
   margin-bottom: 6px;
   color: var(--muted);

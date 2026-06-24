@@ -32,7 +32,13 @@
       <header class="topbar">
         <div>
           <p class="eyebrow">Owner workspace</p>
-          <h1>Executive dashboard</h1>
+          <div class="title-with-help">
+            <h1>Executive dashboard</h1>
+            <details class="info-popover">
+              <summary aria-label="About the executive dashboard">?</summary>
+              <p>This owner-only dashboard summarizes Atlas research, market coverage, simulated paper performance, research tasks, and decision controls. It is for research and simulation only.</p>
+            </details>
+          </div>
           <div id="workspace-identity" class="workspace-identity" hidden>
             <span id="workspace-name">--</span>
             <span id="workspace-role">--</span>
@@ -47,22 +53,22 @@
 
       <section id="overview" class="kpi-grid" aria-label="Market overview">
         <article class="kpi">
-          <span>Simulated equity</span>
+          <span>Simulated equity <details class="info-popover inline-help"><summary aria-label="About simulated equity">?</summary><p>The current value of the Atlas paper portfolio. This is simulated money only, not a brokerage account.</p></details></span>
           <strong id="equity">--</strong>
           <small id="return">Paper account</small>
         </article>
         <article class="kpi">
-          <span>Cash reserve</span>
+          <span>Cash reserve <details class="info-popover inline-help"><summary aria-label="About cash reserve">?</summary><p>Unused simulated cash remaining in the paper account. Atlas uses this to check whether paper proposals would leave enough reserve.</p></details></span>
           <strong id="cash">--</strong>
           <small id="cash-share">Available capital</small>
         </article>
         <article class="kpi">
-          <span>Coverage</span>
+          <span>Coverage <details class="info-popover inline-help"><summary aria-label="About coverage">?</summary><p>The number of securities with usable market data compared with the full Atlas universe for the latest run.</p></details></span>
           <strong id="coverage">--</strong>
           <small id="breadth">Market breadth</small>
         </article>
         <article class="kpi">
-          <span>Research queue</span>
+          <span>Research queue <details class="info-popover inline-help"><summary aria-label="About research queue">?</summary><p>Open Atlas research assignments that still need analysis, monitoring, or owner review.</p></details></span>
           <strong id="research-count">--</strong>
           <small id="research-detail">Open assignments</small>
         </article>
@@ -73,7 +79,13 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Paper portfolio</p>
-              <h2>Performance versus benchmarks</h2>
+              <div class="title-with-help">
+                <h2>Performance versus benchmarks</h2>
+                <details class="info-popover">
+                  <summary aria-label="About performance benchmarks">?</summary>
+                  <p>Atlas is the simulated paper portfolio. SPY is an ETF commonly used as a broad S&amp;P 500 market benchmark. QQQ is an ETF commonly used as a Nasdaq-100 growth/technology benchmark.</p>
+                </details>
+              </div>
             </div>
             <div id="market-pills" class="market-pills"></div>
           </div>
@@ -91,7 +103,13 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Market breadth</p>
-              <h2>Advancing versus declining</h2>
+              <div class="title-with-help">
+                <h2>Advancing versus declining</h2>
+                <details class="info-popover">
+                  <summary aria-label="About market breadth">?</summary>
+                  <p>Shows how many tracked securities are up versus down in the latest market snapshot. Broad participation can matter more than one large mover.</p>
+                </details>
+              </div>
             </div>
           </div>
           <div class="donut-wrap">
@@ -109,7 +127,13 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Research model</p>
-              <h2>Highest Atlas scores</h2>
+              <div class="title-with-help">
+                <h2>Highest Atlas scores</h2>
+                <details class="info-popover">
+                  <summary aria-label="About Atlas scores">?</summary>
+                  <p>Atlas scores rank securities from 0 to 100 using growth, quality, moat, momentum, and risk inputs. Higher scores indicate stronger research priority, not an instruction to buy.</p>
+                </details>
+              </div>
             </div>
           </div>
           <div id="score-leaders" class="rank-list"></div>
@@ -119,7 +143,13 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Daily movement</p>
-              <h2>Largest watchlist moves</h2>
+              <div class="title-with-help">
+                <h2>Largest watchlist moves</h2>
+                <details class="info-popover">
+                  <summary aria-label="About watchlist moves">?</summary>
+                  <p>Shows the largest daily percentage moves among Atlas-tracked securities. Big moves can flag news, risk, momentum, or research follow-up needs.</p>
+                </details>
+              </div>
             </div>
           </div>
           <div id="movers" class="mover-list"></div>
@@ -129,7 +159,13 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Sector tape</p>
-              <h2>Average daily movement</h2>
+              <div class="title-with-help">
+                <h2>Average daily movement</h2>
+                <details class="info-popover">
+                  <summary aria-label="About sector tape">?</summary>
+                  <p>Groups tracked securities by sector and averages their daily moves to show where strength or weakness is concentrated.</p>
+                </details>
+              </div>
             </div>
           </div>
           <div id="sectors" class="sector-bars"></div>
@@ -140,7 +176,13 @@
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Data integrity</p>
-            <h2>Corporate-action normalization</h2>
+            <div class="title-with-help">
+              <h2>Corporate-action normalization</h2>
+              <details class="info-popover">
+                <summary aria-label="About corporate-action normalization">?</summary>
+                <p>Tracks events such as stock splits and adjusts historical comparisons so Atlas does not misread split-driven price changes as market losses or gains.</p>
+              </details>
+            </div>
           </div>
           <span class="tag">Split aware</span>
         </div>
@@ -152,7 +194,13 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Current simulation</p>
-              <h2>Open positions</h2>
+              <div class="title-with-help">
+                <h2>Open positions</h2>
+                <details class="info-popover">
+                  <summary aria-label="About open positions">?</summary>
+                  <p>Open positions are securities currently held in the Atlas paper portfolio. They are simulated holdings only and do not represent real brokerage positions.</p>
+                </details>
+              </div>
             </div>
             <span class="tag">No real capital</span>
           </div>
@@ -163,7 +211,13 @@
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Organization</p>
-              <h2>Research agenda</h2>
+              <div class="title-with-help">
+                <h2>Research agenda</h2>
+                <details class="info-popover">
+                  <summary aria-label="About research agenda">?</summary>
+                  <p>Current open assignments for Atlas research roles. These tasks help organize follow-up work before items reach owner decision review.</p>
+                </details>
+              </div>
             </div>
           </div>
           <div id="tasks" class="task-list"></div>
@@ -174,7 +228,13 @@
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Owner authority</p>
-            <h2>Decision control center</h2>
+            <div class="title-with-help">
+              <h2>Decision control center</h2>
+              <details class="info-popover">
+                <summary aria-label="About decision controls">?</summary>
+                <p>Owner-only controls for approving, deferring, or rejecting research and simulation proposals. These actions do not execute real trades.</p>
+              </details>
+            </div>
           </div>
           <span id="control-boundary" class="tag">Owner cloud only</span>
         </div>
@@ -211,7 +271,13 @@
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Web Phase 3</p>
-            <h2>Access &amp; security foundation</h2>
+            <div class="title-with-help">
+              <h2>Access &amp; security foundation</h2>
+              <details class="info-popover">
+                <summary aria-label="About access and security">?</summary>
+                <p>Shows the current security posture for the owner-only cloud dashboard and the future multi-user platform. Public registration remains disabled.</p>
+              </details>
+            </div>
           </div>
           <span id="access-mode" class="tag">Invite only</span>
         </div>

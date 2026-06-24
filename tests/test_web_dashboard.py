@@ -161,6 +161,23 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Paper context:", script)
         self.assertIn("Thesis action:", script)
 
+    def test_dashboard_explains_sections_and_terms(self):
+        root = Path(__file__).resolve().parent.parent
+        html = (root / "web" / "index.html").read_text(encoding="utf-8")
+        styles = (root / "web" / "styles.css").read_text(encoding="utf-8")
+
+        self.assertIn("SPY is an ETF commonly used as a broad S&amp;P 500", html)
+        self.assertIn("QQQ is an ETF commonly used as a Nasdaq-100", html)
+        self.assertIn("growth, quality, moat, momentum, and risk", html)
+        self.assertIn("largest daily percentage moves", html)
+        self.assertIn("Open positions are securities currently held", html)
+        self.assertIn("About market breadth", html)
+        self.assertIn("About research agenda", html)
+        self.assertIn("About decision controls", html)
+        self.assertIn("About access and security", html)
+        self.assertIn(".info-popover", styles)
+        self.assertIn(".inline-help", styles)
+
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

@@ -440,3 +440,28 @@ Current boundaries:
 - Calibration only changes owner-review priority and explanation.
 - Calibration does not approve, reject, simulate, or execute transactions.
 - Real trading and brokerage access remain disabled.
+
+## June 24, 2026 - Dashboard Help And Term Clarification
+
+New capabilities:
+
+- Add clickable information controls to major dashboard sections.
+- Clarify that SPY is used as a broad S&P 500 benchmark and QQQ as a
+  Nasdaq-100 growth/technology benchmark.
+- Explain Atlas scores, largest watchlist moves, open simulated positions,
+  research agenda, market breadth, sector tape, data integrity, controls, and
+  access/security sections.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00026-qcq` is serving 100% traffic.
+- Dashboard image `20260624-dashboard-help` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 292 tests.
+
+Current boundaries:
+
+- This is a dashboard usability improvement only.
+- No research scoring, schedule, simulation, trading, or access permissions
+  changed.
+- Real trading and brokerage access remain disabled.

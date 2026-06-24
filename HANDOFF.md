@@ -436,6 +436,13 @@ Estimated overall Atlas program completion: 93%.
   recommendation outcomes, and the Controls page displays the adjustment when
   it affects a review. Daily and weekly schedules remained enabled. All 291
   tests pass.
+- Dashboard help and term clarification is deployed on dashboard revision
+  `atlas-dashboard-stg-00026-qcq` and image `20260624-dashboard-help`.
+  Major dashboard sections now have clickable information controls explaining
+  SPY, QQQ, Atlas scores, watchlist moves, open simulated positions, research
+  agenda, market breadth, sector tape, data integrity, controls, and
+  access/security. Daily and weekly schedules remained enabled. All 292 tests
+  pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
