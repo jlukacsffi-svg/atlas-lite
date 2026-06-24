@@ -217,6 +217,58 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertIn("NVDA", recent_subjects)
         self.assertIn("Owner decisions", outcomes["learning_signal"])
 
+    def test_attention_score_uses_owner_outcome_calibration(self):
+        for index in range(2):
+            prior, _ = self.dashboard.research_queue.add_task(
+                role="CRO",
+                subject="CAL",
+                prompt=f"Prior caution {index}.",
+                priority="high",
+            )
+            self.dashboard.research_queue.complete_research(
+                prior["id"],
+                conclusion="Prior review needed more evidence.",
+                recommendation="risk_review",
+                confidence="medium",
+            )
+            self.dashboard.research_queue.record_owner_decision(
+                prior["id"],
+                "defer",
+            )
+        current, _ = self.dashboard.research_queue.add_task(
+            role="CRO",
+            subject="CAL",
+            prompt="Current risk review.",
+            priority="high",
+        )
+        self.dashboard.research_queue.complete_research(
+            current["id"],
+            conclusion="Current risk requires review.",
+            recommendation="risk_review",
+            confidence="medium",
+            thesis_alignment="risk_to_thesis",
+            thesis_drift="new_risk",
+        )
+
+        model = self.service.model()
+        review = next(
+            item for item in model["research_reviews"] if item["subject"] == "CAL"
+        )
+
+        self.assertEqual(review["outcome_calibration"]["adjustment"], -8)
+        self.assertIn(
+            "owner history: prior caution for this ticker",
+            review["attention_reasons"],
+        )
+        self.assertIn(
+            "outcome_calibration",
+            next(
+                item
+                for item in model["daily_action_list"]
+                if item["subject"] == "CAL"
+            ),
+        )
+
     def test_research_decision_is_saved_and_persisted(self):
         persisted = []
         service = OwnerControlService(

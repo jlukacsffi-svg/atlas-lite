@@ -63,6 +63,11 @@ class OwnerControlService:
         reviews = []
         for task in self.research_queue._sorted_tasks(tasks):
             attention = self._attention_score(task)
+            calibration = self._outcome_calibration(task)
+            calibrated_score = max(
+                0,
+                min(100, attention["score"] + calibration["adjustment"]),
+            )
             reviews.append(
                 {
                     "id": task["id"],
@@ -71,9 +76,12 @@ class OwnerControlService:
                     "subject": task.get("subject"),
                     "result": task.get("result", {}),
                     "source": task.get("source"),
-                    "attention_score": attention["score"],
-                    "attention_label": attention["label"],
-                    "attention_reasons": attention["reasons"],
+                    "attention_score": calibrated_score,
+                    "attention_label": self._attention_label(calibrated_score),
+                    "attention_reasons": (
+                        attention["reasons"] + calibration["reasons"]
+                    )[:5],
+                    "outcome_calibration": calibration,
                 }
             )
         return sorted(
@@ -164,6 +172,61 @@ class OwnerControlService:
             return "Owner-approved research has reached simulated paper execution; continue comparing outcomes against the audit trail."
         return "Owner decisions currently favor approval, but Atlas still needs more outcome history before increasing confidence."
 
+    def _outcome_calibration(self, task):
+        """Conservatively tune attention from prior owner outcomes."""
+        result = task.get("result", {})
+        recommendation = result.get("recommendation")
+        subject = str(task.get("subject") or "").strip().upper()
+        adjustment = 0
+        reasons = []
+        if subject:
+            history = self.research_queue.thesis_history_summary(subject)
+            counts = (history or {}).get("decision_counts", {})
+            reviewed = sum(counts.values())
+            if reviewed >= 2:
+                deferred = counts.get("defer", 0)
+                rejected = counts.get("reject", 0)
+                approved = counts.get("approve", 0)
+                if deferred + rejected > approved:
+                    adjustment -= 8
+                    reasons.append("owner history: prior caution for this ticker")
+                elif approved >= 2 and result.get("recommendation") == "risk_review":
+                    adjustment += 4
+                    reasons.append("owner history: prior risk reviews approved")
+
+        recommendation_counts = self._recommendation_decision_counts(recommendation)
+        total = sum(recommendation_counts.values())
+        if total >= 3:
+            approved = recommendation_counts.get("approve", 0)
+            deferred = recommendation_counts.get("defer", 0)
+            rejected = recommendation_counts.get("reject", 0)
+            if deferred + rejected > approved:
+                adjustment -= 6
+                reasons.append("owner history: similar recommendations need caution")
+            elif approved >= 2 and approved > deferred + rejected:
+                adjustment += 3
+                reasons.append("owner history: similar recommendations often approved")
+
+        adjustment = max(-12, min(6, adjustment))
+        return {
+            "adjustment": adjustment,
+            "reasons": reasons,
+        }
+
+    def _recommendation_decision_counts(self, recommendation):
+        counts = {decision: 0 for decision in sorted(VALID_RESEARCH_DECISIONS)}
+        if not recommendation:
+            return counts
+        for task in self.research_queue.load().get("tasks", []):
+            if task.get("status") == "awaiting_owner":
+                continue
+            if task.get("result", {}).get("recommendation") != recommendation:
+                continue
+            decision = task.get("owner_decision", {}).get("decision")
+            if decision in counts:
+                counts[decision] += 1
+        return counts
+
     def _daily_action_list(self, ranked_reviews, action_context=None, limit=3):
         action_context = action_context or {}
         actions = []
@@ -194,6 +257,7 @@ class OwnerControlService:
                         "paper_context",
                         action_context.get("default_paper_context", ""),
                     ),
+                    "outcome_calibration": review.get("outcome_calibration", {}),
                     "thesis_drift": result.get("thesis_drift"),
                     "thesis_alignment": result.get("thesis_alignment"),
                     "recommendation": result.get("recommendation"),
@@ -394,19 +458,21 @@ class OwnerControlService:
         elif confidence == "low":
             score -= 5
         score = max(0, min(100, score))
-        if score >= 80:
-            label = "Urgent"
-        elif score >= 55:
-            label = "High"
-        elif score >= 30:
-            label = "Medium"
-        else:
-            label = "Low"
         return {
             "score": score,
-            "label": label,
+            "label": self._attention_label(score),
             "reasons": reasons[:4],
         }
+
+    @staticmethod
+    def _attention_label(score):
+        if score >= 80:
+            return "Urgent"
+        if score >= 55:
+            return "High"
+        if score >= 30:
+            return "Medium"
+        return "Low"
 
     def apply(self, action, payload):
         action = str(action).strip()

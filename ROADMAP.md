@@ -316,10 +316,12 @@ Current Web Phase 3 result:
   whether Atlas already has exposure and how the paper account is behaving.
   Owner outcome learning now summarizes approvals, deferrals, rejections,
   paper proposal states, approval rate, recent decisions, and a conservative
-  learning signal. The next priority is using this history to calibrate future
-  attention scoring without granting additional autonomy.
+  learning signal. Outcome-calibrated attention scoring now uses prior owner
+  decisions to conservatively adjust review urgency and explain the adjustment
+  on the Controls page. The next priority is adding a paper-performance
+  feedback loop that compares approved simulated ideas against later returns.
 
-Estimated overall Atlas program completion: 92%.
+Estimated overall Atlas program completion: 93%.
 
 ## Current Recommended Sequence
 

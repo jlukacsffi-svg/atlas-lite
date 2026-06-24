@@ -140,6 +140,13 @@ function renderOwnerControls(controls) {
   document.getElementById("daily-action-list").innerHTML = actions.map(item => `
     <article class="decision-row">
       <div>
+        ${(() => {
+          const calibration = item.outcome_calibration || {};
+          const reasons = calibration.reasons || [];
+          return Number(calibration.adjustment || 0) || reasons.length
+            ? `<small class="row-meta">Outcome calibration: ${Number(calibration.adjustment || 0) >= 0 ? "+" : ""}${Number(calibration.adjustment || 0).toFixed(0)}${reasons.length ? ` - ${reasons.map(reason => escapeHtml(reason)).join(", ")}` : ""}</small>`
+            : "";
+        })()}
         <span class="tag">${escapeHtml(item.attention_label || "Review")} ${Number(item.attention_score || 0).toFixed(0)}</span>
         <b class="row-title">${escapeHtml(item.subject || "Review")}</b>
         <p>${escapeHtml(item.summary || "Review this item.")}</p>
@@ -176,6 +183,7 @@ function renderOwnerControls(controls) {
           <small class="row-meta">${escapeHtml(result.recommendation || "Review")} · ${escapeHtml(result.confidence || "Unrated")}${result.catalyst_type ? ` · ${escapeHtml(result.catalyst_type).replaceAll("_", " ")}` : ""}</small>
           <p>${escapeHtml(result.conclusion || "No conclusion supplied.")}</p>
           ${(item.attention_reasons || []).length ? `<small class="row-meta">Attention drivers: ${item.attention_reasons.map(reason => escapeHtml(reason)).join(", ")}</small>` : ""}
+          ${item.outcome_calibration?.adjustment ? `<small class="row-meta">Outcome calibration: ${Number(item.outcome_calibration.adjustment) >= 0 ? "+" : ""}${Number(item.outcome_calibration.adjustment).toFixed(0)}</small>` : ""}
           ${result.thesis_alignment ? `<small class="row-meta">Thesis alignment: ${escapeHtml(result.thesis_alignment).replaceAll("_", " ")}</small>` : ""}
           ${result.thesis_drift ? `<small class="row-meta">Thesis drift: ${escapeHtml(result.thesis_drift).replaceAll("_", " ")}</small>` : ""}
           ${result.thesis_action ? `<small class="row-meta">Thesis action: ${escapeHtml(result.thesis_action)}</small>` : ""}

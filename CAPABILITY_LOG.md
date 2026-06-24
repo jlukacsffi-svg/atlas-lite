@@ -414,3 +414,29 @@ Current boundaries:
   model weights automatically yet.
 - Outcome summaries do not approve, simulate, or execute transactions.
 - Real trading and brokerage access remain disabled.
+
+## June 24, 2026 - Outcome-Calibrated Attention Scoring
+
+New capabilities:
+
+- Use prior owner decisions to conservatively calibrate research attention
+  scores.
+- Lower urgency when prior owner outcomes for the same ticker or
+  recommendation type show repeated caution.
+- Preserve or lightly raise urgency when prior similar risk reviews were
+  approved.
+- Display the calibration adjustment and reason in the secure Controls page
+  when owner history affects a review.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00025-8m4` is serving 100% traffic.
+- Dashboard image `20260624-outcome-calibration` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 291 tests.
+
+Current boundaries:
+
+- Calibration only changes owner-review priority and explanation.
+- Calibration does not approve, reject, simulate, or execute transactions.
+- Real trading and brokerage access remain disabled.

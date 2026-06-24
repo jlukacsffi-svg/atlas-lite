@@ -152,6 +152,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("daily_action_list", script)
         self.assertIn("owner_outcomes", script)
         self.assertIn("Outcome learning", script)
+        self.assertIn("Outcome calibration:", script)
+        self.assertIn("outcome_calibration", script)
         self.assertIn("research_approval_rate_pct", script)
         self.assertIn("Suggested disposition:", script)
         self.assertIn("Evidence anchor:", script)

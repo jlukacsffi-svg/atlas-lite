@@ -255,7 +255,7 @@ Secure web-platform direction:
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
 
-Estimated overall Atlas program completion: 92%.
+Estimated overall Atlas program completion: 93%.
 
 ## Useful Files
 
@@ -429,6 +429,13 @@ Estimated overall Atlas program completion: 92%.
   approval/defer/reject counts, approval rate, paper proposal status counts,
   recent owner decisions, and a conservative learning signal. Daily and weekly
   schedules remained enabled. All 290 tests pass.
+- Outcome-calibrated attention scoring is deployed on dashboard revision
+  `atlas-dashboard-stg-00025-8m4` and image
+  `20260624-outcome-calibration`. Owner decision history can now apply small,
+  conservative attention-score adjustments for prior ticker caution or similar
+  recommendation outcomes, and the Controls page displays the adjustment when
+  it affects a review. Daily and weekly schedules remained enabled. All 291
+  tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
