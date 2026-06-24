@@ -68,10 +68,21 @@ function renderDashboard(data) {
   renderSectors(data.sectors || []);
   renderCorporateActions(data.corporate_actions || []);
   renderPositions(paper.positions || []);
+  renderRecommendations(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderTasks(data.research?.tasks || []);
   renderOwnerControls(data.owner_controls || null);
   renderAccess(data.access || {});
   renderWorkspace(data.workspace || null);
+}
+
+function setActivePage(pageId) {
+  const target = pageId || "overview";
+  document.querySelectorAll(".dashboard-page").forEach(page => {
+    page.classList.toggle("active-page", page.dataset.page === target);
+  });
+  document.querySelectorAll(".nav-item").forEach(link => {
+    link.classList.toggle("active", link.getAttribute("href") === `#${target}`);
+  });
 }
 
 function renderWorkspace(workspace) {
@@ -135,7 +146,8 @@ function renderOwnerControls(controls) {
   document.getElementById("research-review-count").textContent =
     `${reviews.length} awaiting review`;
   document.getElementById("paper-proposal-count").textContent =
-    `${proposals.length} active proposal${proposals.length === 1 ? "" : "s"}`;
+    `${proposals.length} active purchase proposal${proposals.length === 1 ? "" : "s"}`;
+  renderRecommendations(proposals, null);
   renderOwnerOutcomes(outcomes);
   document.getElementById("daily-action-list").innerHTML = actions.map(item => `
     <article class="decision-row">
@@ -203,14 +215,15 @@ function renderOwnerControls(controls) {
     return `
       <article class="decision-row">
         <div>
-          <span class="tag">${escapeHtml(item.status)}</span>
+          <span class="tag ${item.side === "buy" ? "buy-tag" : ""}">${escapeHtml(item.status)}</span>
           <b class="row-title">${escapeHtml(item.side).toUpperCase()} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}</b>
           <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} · Risk ${escapeHtml(review.verdict || "pending")}</small>
           <p>${escapeHtml(item.thesis || "No thesis supplied.")}</p>
+          <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical position in Atlas paper tracking.</small>
         </div>
         <div class="decision-actions">
           ${approved ? `
-            <button type="button" data-owner-action="paper-fill" data-item-id="${escapeHtml(item.proposal_id)}">Simulate fill</button>
+            <button type="button" class="simulate-button" data-owner-action="paper-fill" data-item-id="${escapeHtml(item.proposal_id)}">Simulate fill</button>
           ` : `
             <button type="button" data-owner-action="paper-decision" data-item-id="${escapeHtml(item.proposal_id)}" data-decision="approve">Approve</button>
             <button type="button" class="danger" data-owner-action="paper-decision" data-item-id="${escapeHtml(item.proposal_id)}" data-decision="reject">Reject</button>
@@ -239,6 +252,43 @@ function renderOwnerOutcomes(outcomes) {
       </div>
     </article>
   `;
+}
+
+function renderRecommendations(proposals, watchlist) {
+  const buyProposals = (proposals || []).filter(item => item.side === "buy");
+  const buyHtml = buyProposals.map(item => `
+    <article class="recommendation-row ${item.status === "approved" ? "approved-rec" : ""}">
+      <span class="tag buy-tag">${escapeHtml(item.status)}</span>
+      <div>
+        <b class="row-title">${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)} recommended for paper purchase</b>
+        <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+        <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to add this to the paper portfolio." : "Next step: approve or reject this paper proposal in Controls."}</small>
+      </div>
+    </article>
+  `).join("") || `<div class="empty">No current paper purchase recommendations.</div>`;
+  ["recommended-buys", "overview-recommended-buys"].forEach(id => {
+    const target = document.getElementById(id);
+    if (target) target.innerHTML = buyHtml;
+  });
+
+  if (watchlist === null) return;
+  const fullRows = (watchlist || []).slice(0, 80).map(item => `
+    <div class="watchlist-item">
+      <b>${escapeHtml(item.ticker)}</b>
+      <span>${escapeHtml(item.category || "Tracked")}</span>
+      <small>${escapeHtml(item.sector || "Unclassified")}${item.score === null || item.score === undefined ? "" : ` - score ${Number(item.score).toFixed(1)}`}</small>
+    </div>
+  `).join("") || `<div class="empty">No tracked securities are available in the latest run.</div>`;
+  const previewRows = (watchlist || []).slice(0, 12).map(item => `
+    <div class="watchlist-item compact">
+      <b>${escapeHtml(item.ticker)}</b>
+      <span>${escapeHtml(item.category || "Tracked")}</span>
+    </div>
+  `).join("") || `<div class="empty">No tracked securities available.</div>`;
+  const fullTarget = document.getElementById("current-watchlist");
+  const previewTarget = document.getElementById("overview-current-list");
+  if (fullTarget) fullTarget.innerHTML = fullRows;
+  if (previewTarget) previewTarget.innerHTML = previewRows;
 }
 
 function renderMarketPills(rows) {
@@ -392,7 +442,7 @@ function openPaperFillDialog(proposalId, button) {
   const expected = `SIMULATE ${proposalId}`;
   pendingPaperFill = { proposalId, expected, button };
   document.getElementById("paper-fill-summary").textContent =
-    `${proposal.side.toUpperCase()} ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} at the latest available market price.`;
+    `This will add a simulated ${proposal.side.toUpperCase()} position of ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} to the Atlas paper portfolio at the latest available market price.`;
   document.getElementById("paper-fill-expected").textContent = expected;
   document.getElementById("paper-fill-confirmation").value = "";
   document.getElementById("paper-fill-submit").disabled = true;
@@ -468,6 +518,9 @@ async function loadDashboard() {
 }
 
 document.getElementById("refresh").addEventListener("click", loadDashboard);
+window.addEventListener("hashchange", () => {
+  setActivePage(window.location.hash.replace("#", "") || "overview");
+});
 document.getElementById("controls").addEventListener("click", event => {
   const button = event.target.closest("[data-owner-action]");
   if (button) applyOwnerAction(button);
@@ -496,4 +549,5 @@ document.getElementById("paper-fill-dialog").addEventListener("cancel", event =>
   closePaperFillDialog();
 });
 renderEnvironment();
+setActivePage(window.location.hash.replace("#", "") || "overview");
 loadDashboard();

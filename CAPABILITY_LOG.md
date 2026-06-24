@@ -465,3 +465,35 @@ Current boundaries:
 - No research scoring, schedule, simulation, trading, or access permissions
   changed.
 - Real trading and brokerage access remain disabled.
+
+## June 24, 2026 - Dashboard Pages And Recommendation Clarity
+
+New capabilities:
+
+- Split the secure dashboard into page-style views for Overview,
+  Recommendations, Market, Research, Paper Portfolio, Controls, and
+  Access/Security.
+- Add a dedicated Recommendations page that clearly separates Atlas paper
+  purchase recommendations from the broader list of currently tracked
+  securities.
+- Add an overview preview of recommended simulated buys and the current Atlas
+  list.
+- Explain the owner workflow for paper ideas: approve the proposal first, then
+  use Simulate fill to record the hypothetical position in the paper
+  portfolio.
+- Add color cues for recommendations, tracked securities, KPI cards, and the
+  simulation-only workflow.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00027-8hv` is serving 100% traffic.
+- Dashboard image `20260624-dashboard-pages` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 292 tests.
+
+Current boundaries:
+
+- This is a dashboard usability and clarity improvement only.
+- Simulate fill still updates simulated paper tracking only.
+- No brokerage order is sent and no real money is spent.
+- Real trading and brokerage access remain disabled.

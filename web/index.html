@@ -15,6 +15,7 @@
       </div>
       <nav aria-label="Primary navigation">
         <a class="nav-item active" href="#overview">Overview</a>
+        <a class="nav-item" href="#recommendations">Recommendations</a>
         <a class="nav-item" href="#market">Market</a>
         <a class="nav-item" href="#research">Research</a>
         <a class="nav-item" href="#paper">Paper Portfolio</a>
@@ -51,7 +52,8 @@
         </div>
       </header>
 
-      <section id="overview" class="kpi-grid" aria-label="Market overview">
+      <section id="overview" class="dashboard-page active-page" data-page="overview">
+      <div class="kpi-grid" aria-label="Market overview">
         <article class="kpi">
           <span>Simulated equity <details class="info-popover inline-help"><summary aria-label="About simulated equity">?</summary><p>The current value of the Atlas paper portfolio. This is simulated money only, not a brokerage account.</p></details></span>
           <strong id="equity">--</strong>
@@ -72,9 +74,80 @@
           <strong id="research-count">--</strong>
           <small id="research-detail">Open assignments</small>
         </article>
+      </div>
+      <section class="content-grid lower-grid">
+        <article class="panel recommendation-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Recommended simulated buys</p>
+              <h2>Purchase recommendations</h2>
+            </div>
+            <a class="section-link" href="#recommendations">Open page</a>
+          </div>
+          <div id="overview-recommended-buys" class="recommendation-list"></div>
+        </article>
+        <article class="panel current-list-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Current Atlas list</p>
+              <h2>Tracked securities</h2>
+            </div>
+            <a class="section-link" href="#recommendations">View all</a>
+          </div>
+          <div id="overview-current-list" class="watchlist-grid"></div>
+        </article>
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Owner workflow</p>
+              <h2>How simulation works</h2>
+            </div>
+          </div>
+          <div class="explain-box">
+            <b>Approve</b> accepts the research idea for simulation review. <b>Simulate fill</b> records the approved idea inside the paper portfolio at the latest available price. It never sends a brokerage order.
+          </div>
+        </article>
+      </section>
       </section>
 
-      <section id="market" class="content-grid">
+      <section id="recommendations" class="dashboard-page" data-page="recommendations">
+        <section class="content-grid">
+          <article class="panel recommendation-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Actionable simulation ideas</p>
+                <div class="title-with-help">
+                  <h2>Recommended for purchase</h2>
+                  <details class="info-popover">
+                    <summary aria-label="About purchase recommendations">?</summary>
+                    <p>These are Atlas paper-trade proposals awaiting your decision or an approved simulation fill. They are not real-money trade orders.</p>
+                  </details>
+                </div>
+              </div>
+              <span class="tag buy-tag">Simulation only</span>
+            </div>
+            <div id="recommended-buys" class="recommendation-list"></div>
+          </article>
+          <article class="panel current-list-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Research universe</p>
+                <div class="title-with-help">
+                  <h2>Currently in the Atlas list</h2>
+                  <details class="info-popover">
+                    <summary aria-label="About current Atlas list">?</summary>
+                    <p>This is the current set of securities Atlas is tracking in the latest run. Being on this list is not the same as being recommended for purchase.</p>
+                  </details>
+                </div>
+              </div>
+            </div>
+            <div id="current-watchlist" class="watchlist-grid"></div>
+          </article>
+        </section>
+      </section>
+
+      <section id="market" class="dashboard-page" data-page="market">
+      <section class="content-grid">
         <article class="panel performance-panel">
           <div class="panel-heading">
             <div>
@@ -121,7 +194,9 @@
           </div>
         </article>
       </section>
+      </section>
 
+      <section id="research" class="dashboard-page" data-page="research">
       <section class="content-grid lower-grid">
         <article class="panel">
           <div class="panel-heading">
@@ -171,7 +246,6 @@
           <div id="sectors" class="sector-bars"></div>
         </article>
       </section>
-
       <section class="panel integrity-panel">
         <div class="panel-heading">
           <div>
@@ -189,7 +263,27 @@
         <div id="corporate-actions" class="action-list"></div>
       </section>
 
-      <section id="paper" class="content-grid">
+      <section class="content-grid">
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Organization</p>
+              <div class="title-with-help">
+                <h2>Research agenda</h2>
+                <details class="info-popover">
+                  <summary aria-label="About research agenda">?</summary>
+                  <p>Current open assignments for Atlas research roles. These tasks help organize follow-up work before items reach owner decision review.</p>
+                </details>
+              </div>
+            </div>
+          </div>
+          <div id="tasks" class="task-list"></div>
+        </article>
+      </section>
+      </section>
+
+      <section id="paper" class="dashboard-page" data-page="paper">
+      <section class="content-grid">
         <article class="panel">
           <div class="panel-heading">
             <div>
@@ -206,25 +300,34 @@
           </div>
           <div id="positions" class="positions"></div>
         </article>
-
-        <article id="research" class="panel">
+        <article class="panel simulation-help-panel">
           <div class="panel-heading">
             <div>
-              <p class="eyebrow">Organization</p>
+              <p class="eyebrow">Simulation workflow</p>
               <div class="title-with-help">
-                <h2>Research agenda</h2>
+                <h2>What Simulate fill does</h2>
                 <details class="info-popover">
-                  <summary aria-label="About research agenda">?</summary>
-                  <p>Current open assignments for Atlas research roles. These tasks help organize follow-up work before items reach owner decision review.</p>
+                  <summary aria-label="About simulate fill">?</summary>
+                  <p>After you approve a paper proposal, Simulate fill records that hypothetical purchase in the paper portfolio. It uses the latest available market price and updates simulated holdings only.</p>
                 </details>
               </div>
             </div>
           </div>
-          <div id="tasks" class="task-list"></div>
+          <div class="workflow-steps">
+            <span><b>1</b> Atlas proposes</span>
+            <span><b>2</b> You approve</span>
+            <span><b>3</b> Simulate fill records paper holding</span>
+            <span><b>4</b> Atlas tracks performance</span>
+          </div>
+          <div class="simulation-boundary inline-boundary">
+            No brokerage order is sent. No real money is spent. This only updates Atlas paper tracking.
+          </div>
         </article>
       </section>
+      </section>
 
-      <section id="controls" class="panel control-panel">
+      <section id="controls" class="dashboard-page" data-page="controls">
+      <section class="panel control-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Owner authority</p>
@@ -253,8 +356,11 @@
           </div>
           <div>
             <div class="control-heading">
-              <span class="access-label">Paper trade proposals</span>
+              <span class="access-label">Paper purchase proposals</span>
               <strong id="paper-proposal-count">0 proposals</strong>
+            </div>
+            <div class="control-note">
+              Approve means you accept the idea for paper simulation. Simulate fill records the hypothetical purchase in Atlas only.
             </div>
             <div id="paper-proposals" class="decision-list"></div>
           </div>
@@ -266,8 +372,10 @@
           <span><b>Brokerage access</b> Disabled</span>
         </div>
       </section>
+      </section>
 
-      <section id="access" class="panel access-panel">
+      <section id="access" class="dashboard-page" data-page="access">
+      <section class="panel access-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Web Phase 3</p>
@@ -339,6 +447,7 @@
             <div class="progress-track"><span id="phase-progress-bar" style="width:40%"></span></div>
           </div>
         </div>
+      </section>
       </section>
     </main>
   </div>

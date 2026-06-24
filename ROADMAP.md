@@ -318,8 +318,11 @@ Current Web Phase 3 result:
   paper proposal states, approval rate, recent decisions, and a conservative
   learning signal. Outcome-calibrated attention scoring now uses prior owner
   decisions to conservatively adjust review urgency and explain the adjustment
-  on the Controls page. The next priority is adding a paper-performance
-  feedback loop that compares approved simulated ideas against later returns.
+  on the Controls page. The dashboard now has page-style navigation and a
+  dedicated Recommendations page that separates current paper purchase
+  recommendations from the broader Atlas-tracked list, with clearer Simulate
+  fill guidance. The next priority is adding a paper-performance feedback loop
+  that compares approved simulated ideas against later returns.
 
 Estimated overall Atlas program completion: 93%.
 

@@ -50,6 +50,7 @@ class DashboardDataService:
             "overview": self._overview(securities, available),
             "movers": self._movers(available),
             "score_leaders": self._score_leaders(available),
+            "watchlist": self._watchlist(available),
             "sectors": self._sectors(available),
             "corporate_actions": self._corporate_actions(available),
             "paper": self._paper(available),
@@ -146,6 +147,27 @@ class DashboardDataService:
             and data.get("sector") != "Benchmark ETF"
         ]
         return sorted(rows, key=lambda item: item["score"], reverse=True)[:8]
+
+    def _watchlist(self, available):
+        rows = [
+            {
+                "ticker": ticker,
+                "company_name": data.get("company_name", ticker),
+                "sector": data.get("sector", "Unclassified"),
+                "category": data.get("category", "Watchlist"),
+                "score": data.get("total_score"),
+                "percent_change": data.get("percent_change"),
+            }
+            for ticker, data in available.items()
+        ]
+        return sorted(
+            rows,
+            key=lambda item: (
+                str(item.get("category") or ""),
+                str(item.get("sector") or ""),
+                str(item.get("ticker") or ""),
+            ),
+        )
 
     def _sectors(self, available):
         grouped = defaultdict(list)

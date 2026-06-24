@@ -443,6 +443,12 @@ Estimated overall Atlas program completion: 93%.
   agenda, market breadth, sector tape, data integrity, controls, and
   access/security. Daily and weekly schedules remained enabled. All 292 tests
   pass.
+- Dashboard pages and recommendation clarity are deployed on dashboard revision
+  `atlas-dashboard-stg-00027-8hv` and image `20260624-dashboard-pages`.
+  The secure dashboard now has page-style navigation, a dedicated
+  Recommendations page, clear separation between paper purchase recommendations
+  and the current Atlas list, and a plain-language Simulate fill workflow.
+  Daily and weekly schedules remained enabled. All 292 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
