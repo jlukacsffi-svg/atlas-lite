@@ -35,6 +35,7 @@ class OwnerControlService:
                 ranked_reviews,
                 action_context,
             ),
+            "owner_outcomes": self._owner_outcomes(),
             "research_reviews": ranked_reviews,
             "paper_proposals": [
                 {
@@ -79,6 +80,89 @@ class OwnerControlService:
             reviews,
             key=lambda item: (-item["attention_score"], item.get("subject") or ""),
         )
+
+    def _owner_outcomes(self, limit=5):
+        tasks = [
+            task
+            for task in self.research_queue.load().get("tasks", [])
+            if task.get("owner_decision")
+        ]
+        decision_counts = {decision: 0 for decision in sorted(VALID_RESEARCH_DECISIONS)}
+        recommendation_counts = {}
+        recent = []
+        for task in sorted(
+            tasks,
+            key=lambda item: item.get("owner_decision", {}).get("decided_at") or "",
+            reverse=True,
+        ):
+            owner_decision = task.get("owner_decision", {})
+            decision = owner_decision.get("decision")
+            if decision in decision_counts:
+                decision_counts[decision] += 1
+            recommendation = task.get("result", {}).get("recommendation")
+            if recommendation:
+                recommendation_counts[recommendation] = (
+                    recommendation_counts.get(recommendation, 0) + 1
+                )
+            if len(recent) < limit:
+                recent.append(
+                    {
+                        "subject": task.get("subject"),
+                        "decision": decision,
+                        "recommendation": recommendation,
+                        "decided_at": owner_decision.get("decided_at"),
+                    }
+                )
+        total = sum(decision_counts.values())
+        approved = decision_counts.get("approve", 0)
+        approval_rate = (approved / total * 100) if total else None
+        paper_statuses = self._paper_outcomes()
+        return {
+            "research_decisions": total,
+            "research_decision_counts": decision_counts,
+            "research_approval_rate_pct": (
+                round(approval_rate, 1) if approval_rate is not None else None
+            ),
+            "recommendation_counts": recommendation_counts,
+            "recent_research_decisions": recent,
+            "paper_proposal_counts": paper_statuses,
+            "learning_signal": self._learning_signal(
+                decision_counts,
+                recommendation_counts,
+                paper_statuses,
+            ),
+        }
+
+    def _paper_outcomes(self):
+        counts = {
+            "pending": 0,
+            "approved": 0,
+            "rejected": 0,
+            "executed": 0,
+        }
+        if not self.paper_account.account_file.exists():
+            return counts
+        for proposal in self.paper_account.proposals():
+            status = proposal.get("status")
+            if status in counts:
+                counts[status] += 1
+        return counts
+
+    @staticmethod
+    def _learning_signal(decision_counts, recommendation_counts, paper_statuses):
+        total = sum(decision_counts.values())
+        if not total:
+            return "No owner outcome history yet. Atlas will learn from future approvals, deferrals, and rejections."
+        deferred = decision_counts.get("defer", 0)
+        rejected = decision_counts.get("reject", 0)
+        approved = decision_counts.get("approve", 0)
+        if deferred > approved and deferred >= rejected:
+            return "Owner decisions currently favor deferring for more evidence."
+        if rejected > approved:
+            return "Owner decisions currently challenge more recommendations than they approve."
+        if paper_statuses.get("executed", 0):
+            return "Owner-approved research has reached simulated paper execution; continue comparing outcomes against the audit trail."
+        return "Owner decisions currently favor approval, but Atlas still needs more outcome history before increasing confidence."
 
     def _daily_action_list(self, ranked_reviews, action_context=None, limit=3):
         action_context = action_context or {}

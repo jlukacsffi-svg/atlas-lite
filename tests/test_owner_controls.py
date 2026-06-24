@@ -68,6 +68,7 @@ class OwnerControlServiceTests(unittest.TestCase):
         )
         self.assertFalse(model["capabilities"]["real_trading"])
         self.assertFalse(model["capabilities"]["brokerage_connection"])
+        self.assertIn("owner_outcomes", model)
 
     def test_model_ranks_recurring_thesis_risks_first(self):
         proposal = self.dashboard.paper_account.create_proposal(
@@ -178,6 +179,43 @@ class OwnerControlServiceTests(unittest.TestCase):
             "latest RISK thesis review",
             model["daily_action_list"][0]["paper_context"],
         )
+
+    def test_model_summarizes_owner_outcome_history(self):
+        second, _ = self.dashboard.research_queue.add_task(
+            role="CRO",
+            subject="AMD",
+            prompt="Review downside risk.",
+            priority="high",
+        )
+        self.dashboard.research_queue.complete_research(
+            second["id"],
+            conclusion="Risk needs more evidence.",
+            recommendation="risk_review",
+            confidence="medium",
+        )
+        self.service.apply(
+            "research-decision",
+            {"task_id": self.task_id, "decision": "approve"},
+        )
+        self.service.apply(
+            "research-decision",
+            {"task_id": second["id"], "decision": "defer"},
+        )
+
+        model = self.service.model()
+        outcomes = model["owner_outcomes"]
+
+        self.assertEqual(outcomes["research_decisions"], 2)
+        self.assertEqual(outcomes["research_decision_counts"]["approve"], 1)
+        self.assertEqual(outcomes["research_decision_counts"]["defer"], 1)
+        self.assertEqual(outcomes["research_approval_rate_pct"], 50.0)
+        self.assertIn("risk_review", outcomes["recommendation_counts"])
+        recent_subjects = {
+            item["subject"] for item in outcomes["recent_research_decisions"]
+        }
+        self.assertIn("AMD", recent_subjects)
+        self.assertIn("NVDA", recent_subjects)
+        self.assertIn("Owner decisions", outcomes["learning_signal"])
 
     def test_research_decision_is_saved_and_persisted(self):
         persisted = []

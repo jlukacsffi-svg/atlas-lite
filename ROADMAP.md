@@ -314,10 +314,12 @@ Current Web Phase 3 result:
   for each suggested disposition. The action list now also includes simulated
   portfolio exposure and paper-performance context so owner review can see
   whether Atlas already has exposure and how the paper account is behaving.
-  The next priority is tracking owner action outcomes so Atlas can learn which
-  recommendations were approved, deferred, or rejected over time.
+  Owner outcome learning now summarizes approvals, deferrals, rejections,
+  paper proposal states, approval rate, recent decisions, and a conservative
+  learning signal. The next priority is using this history to calibrate future
+  attention scoring without granting additional autonomy.
 
-Estimated overall Atlas program completion: 91%.
+Estimated overall Atlas program completion: 92%.
 
 ## Current Recommended Sequence
 

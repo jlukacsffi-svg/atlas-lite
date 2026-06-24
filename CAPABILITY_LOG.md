@@ -388,3 +388,29 @@ Current boundaries:
   real portfolio import is explicitly configured.
 - Paper-performance context is simulation-only and does not authorize trades.
 - Real trading and brokerage access remain disabled.
+
+## June 23, 2026 - Owner Outcome Learning
+
+New capabilities:
+
+- Summarize owner research decisions across approve, defer, and reject
+  outcomes.
+- Calculate the owner research approval rate from the existing audit trail.
+- Summarize paper proposal outcomes across pending, approved, rejected, and
+  simulated states.
+- Display an Outcome Learning card in the secure Controls page with a concise
+  learning signal and recent owner decisions.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00024-dqp` is serving 100% traffic.
+- Dashboard image `20260623-outcome-learning` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 290 tests.
+
+Current boundaries:
+
+- Outcome learning summarizes historical owner decisions; it does not change
+  model weights automatically yet.
+- Outcome summaries do not approve, simulate, or execute transactions.
+- Real trading and brokerage access remain disabled.

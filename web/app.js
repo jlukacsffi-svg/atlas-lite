@@ -131,10 +131,12 @@ function renderOwnerControls(controls) {
   const reviews = controls.research_reviews || [];
   const proposals = controls.paper_proposals || [];
   const actions = controls.daily_action_list || [];
+  const outcomes = controls.owner_outcomes || {};
   document.getElementById("research-review-count").textContent =
     `${reviews.length} awaiting review`;
   document.getElementById("paper-proposal-count").textContent =
     `${proposals.length} active proposal${proposals.length === 1 ? "" : "s"}`;
+  renderOwnerOutcomes(outcomes);
   document.getElementById("daily-action-list").innerHTML = actions.map(item => `
     <article class="decision-row">
       <div>
@@ -208,6 +210,27 @@ function renderOwnerControls(controls) {
         </div>
       </article>`;
   }).join("") || `<div class="empty">No paper proposals require action.</div>`;
+}
+
+function renderOwnerOutcomes(outcomes) {
+  const counts = outcomes.research_decision_counts || {};
+  const paper = outcomes.paper_proposal_counts || {};
+  const approvalRate = outcomes.research_approval_rate_pct;
+  const recent = (outcomes.recent_research_decisions || []).slice(0, 3)
+    .map(item => `${escapeHtml(item.subject || "Review")}: ${escapeHtml(item.decision || "decision")}`)
+    .join(" · ");
+  document.getElementById("owner-outcomes").innerHTML = `
+    <article class="decision-row">
+      <div>
+        <span class="tag">Outcome learning</span>
+        <b class="row-title">${Number(outcomes.research_decisions || 0).toFixed(0)} research decisions recorded</b>
+        <p>${escapeHtml(outcomes.learning_signal || "Atlas will summarize owner outcomes as decisions accumulate.")}</p>
+        <small class="row-meta">Research: ${Number(counts.approve || 0)} approved · ${Number(counts.defer || 0)} deferred · ${Number(counts.reject || 0)} rejected${approvalRate === null || approvalRate === undefined ? "" : ` · ${Number(approvalRate).toFixed(1)}% approval rate`}</small>
+        <small class="row-meta">Paper proposals: ${Number(paper.pending || 0)} pending · ${Number(paper.approved || 0)} approved · ${Number(paper.rejected || 0)} rejected · ${Number(paper.executed || 0)} simulated</small>
+        ${recent ? `<small class="row-meta">Recent decisions: ${recent}</small>` : ""}
+      </div>
+    </article>
+  `;
 }
 
 function renderMarketPills(rows) {
