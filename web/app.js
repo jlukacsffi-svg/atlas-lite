@@ -29,6 +29,50 @@ function renderEnvironment() {
   document.getElementById("sign-out").hidden = !cloud;
 }
 
+function initializeHelpPopovers() {
+  document.querySelectorAll(".info-popover").forEach(popover => {
+    const trigger = popover.querySelector("summary");
+    popover.addEventListener("toggle", () => {
+      if (!popover.open) return;
+      document.querySelectorAll(".info-popover[open]").forEach(other => {
+        if (other !== popover) other.open = false;
+      });
+    });
+    if (trigger) {
+      trigger.addEventListener("mouseleave", () => {
+        popover.open = false;
+      });
+    }
+    popover.addEventListener("mouseleave", () => {
+      popover.open = false;
+    });
+    popover.addEventListener("focusout", event => {
+      if (!popover.contains(event.relatedTarget)) {
+        popover.open = false;
+      }
+    });
+  });
+  document.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
+    document.querySelectorAll(".info-popover[open]").forEach(popover => {
+      popover.open = false;
+    });
+  });
+  document.addEventListener("mousemove", event => {
+    document.querySelectorAll(".info-popover[open]").forEach(popover => {
+      const trigger = popover.querySelector("summary");
+      if (!trigger) return;
+      const rect = trigger.getBoundingClientRect();
+      const onTrigger =
+        event.clientX >= rect.left &&
+        event.clientX <= rect.right &&
+        event.clientY >= rect.top &&
+        event.clientY <= rect.bottom;
+      if (!onTrigger) popover.open = false;
+    });
+  });
+}
+
 function signed(value, suffix = "%") {
   if (value === null || value === undefined) return "--";
   return `${value >= 0 ? "+" : ""}${Number(value).toFixed(2)}${suffix}`;
@@ -588,5 +632,6 @@ document.getElementById("paper-fill-dialog").addEventListener("cancel", event =>
   closePaperFillDialog();
 });
 renderEnvironment();
+initializeHelpPopovers();
 setActivePage(window.location.hash.replace("#", "") || "overview");
 loadDashboard();

@@ -173,6 +173,9 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   font-size: 11px;
   line-height: 1.45;
 }
+.info-popover[open] summary:not(:hover):not(:focus-visible) + p {
+  display: none;
+}
 .panel-heading > .tag + .info-popover p,
 .panel-heading .info-popover p { left: auto; right: auto; }
 .inline-help {
