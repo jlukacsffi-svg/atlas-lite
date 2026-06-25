@@ -502,9 +502,10 @@ function renderRationale(rationale, item = {}) {
     );
   }
   if (!rows.length) return "";
+  const sellHeading = proposalActionLabel(item) === "trim" ? "Why trim" : "Why exit";
   return `
     <div class="why-now">
-      <span>${item.side === "sell" ? "Why now / why reduce" : "Why now"}</span>
+      <span>${item.side === "sell" ? sellHeading : "Why now"}</span>
       <ul>${rows.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     </div>`;
 }
@@ -688,6 +689,7 @@ function renderPaperActivity(rows) {
   document.getElementById("paper-activity").innerHTML = rows.map(item => {
     const action = String(item.action_label || item.side || "activity");
     const rationale = item.rationale || [];
+    const whyHeading = action === "trim" ? "Why trim" : action === "exit" ? "Why exit" : "Why buy";
     return `
       <article class="activity-row ${escapeHtml(item.side || "buy")}">
         <div>
@@ -697,7 +699,7 @@ function renderPaperActivity(rows) {
           <p>${escapeHtml(item.summary || "Atlas recorded a simulated trade.")}</p>
           ${item.side === "sell" ? `<small class="row-meta ${changeClass(item.realized_gain_loss)}">Realized result ${money.format(Number(item.realized_gain_loss) || 0)}</small>` : ""}
           <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
-          ${rationale.length ? `<div class="why-now compact"><span>Why</span><ul>${rationale.slice(0, 3).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
+          ${rationale.length ? `<div class="why-now compact"><span>${whyHeading}</span><ul>${rationale.slice(0, 3).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
         </div>
       </article>`;
   }).join("") || `<div class="empty">No simulated buys or sells have been recorded yet.</div>`;

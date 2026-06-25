@@ -60,46 +60,22 @@ class PaperPositionMonitor:
             score_text = f"{score:.1f}" if score is not None else "N/A"
             lag = benchmark_lag.get(ticker)
             sell_shares = position["shares"]
-
-            if category == "Avoid" or (score is not None and score <= self.exit_score):
-                verdict = "exit"
-                flags.append(
-                    f"Exit rule triggered: category {category}, Atlas score "
-                    f"{score_text}."
-                )
-            elif score is None:
-                verdict = "review"
-                flags.append("Atlas score is unavailable.")
-            elif score <= self.review_score:
-                verdict = "review"
-                flags.append(f"Atlas score {score:.1f} is below review threshold.")
-            elif return_pct <= self.drawdown_review_pct:
-                verdict = "review"
-                flags.append(
-                    f"Position return {return_pct:+.2f}% is below "
-                    f"{self.drawdown_review_pct:.2f}% review threshold."
-                )
-            elif lag and lag["lag_pct"] <= self.benchmark_lag_trim_pct:
-                verdict = "exit"
-                sell_shares = self._trim_shares(position["shares"])
-                flags.append(self._lag_flag(lag, "Trim rule triggered"))
-            elif lag and lag["lag_pct"] <= self.benchmark_lag_review_pct:
-                verdict = "review"
-                flags.append(self._lag_flag(lag, "Benchmark review triggered"))
-            else:
-                verdict = "maintain"
-
-            thesis = (
-                f"Daily paper thesis review for {ticker}: category {category}, "
-                f"Atlas score {score_text}, "
-                f"position return {return_pct:+.2f}%."
+            verdict, flags, sell_shares = self._review_decision(
+                category=category,
+                score=score,
+                score_text=score_text,
+                return_pct=return_pct,
+                lag=lag,
+                current_shares=position["shares"],
             )
-            if lag:
-                thesis += (
-                    f" Benchmark lag: {lag['security_return_pct']:+.2f}% "
-                    f"versus weaker benchmark {lag['weakest_benchmark']} at "
-                    f"{lag['weakest_benchmark_return_pct']:+.2f}%."
-                )
+            thesis = self._review_thesis(
+                ticker=ticker,
+                verdict=verdict,
+                category=category,
+                score_text=score_text,
+                return_pct=return_pct,
+                lag=lag,
+            )
             review = account.record_position_review(
                 ticker=ticker,
                 verdict=verdict,
@@ -125,6 +101,80 @@ class PaperPositionMonitor:
                 )
 
         return {"reviews": reviews, "exit_proposals": exit_proposals}
+
+    def _review_decision(
+        self,
+        *,
+        category,
+        score,
+        score_text,
+        return_pct,
+        lag,
+        current_shares,
+    ):
+        flags = []
+        verdict = "maintain"
+        sell_shares = current_shares
+
+        hard_exit = category == "Avoid" or (
+            score is not None and score <= self.exit_score
+        )
+        if hard_exit:
+            verdict = "exit"
+            reasons = []
+            if category == "Avoid":
+                reasons.append(f"category is {category}")
+            if score is not None and score <= self.exit_score:
+                reasons.append(
+                    f"Atlas score {score_text} is at or below the {self.exit_score:.1f} exit threshold"
+                )
+            flags.append("Exit rule triggered: " + "; ".join(reasons) + ".")
+
+        if score is None:
+            verdict = "review" if verdict == "maintain" else verdict
+            flags.append("Atlas score is unavailable, so the thesis needs review.")
+        elif score <= self.review_score and not hard_exit:
+            verdict = "review" if verdict == "maintain" else verdict
+            flags.append(
+                f"Atlas score {score:.1f} is below the {self.review_score:.1f} review threshold."
+            )
+
+        if return_pct <= self.drawdown_review_pct:
+            verdict = "review" if verdict == "maintain" else verdict
+            flags.append(
+                f"Position return {return_pct:+.2f}% is below the {self.drawdown_review_pct:.2f}% review threshold."
+            )
+
+        if lag and lag["lag_pct"] <= self.benchmark_lag_trim_pct and not hard_exit:
+            verdict = "exit"
+            sell_shares = self._trim_shares(current_shares)
+            flags.append(self._lag_flag(lag, "Trim rule triggered"))
+        elif lag and lag["lag_pct"] <= self.benchmark_lag_review_pct:
+            verdict = "review" if verdict == "maintain" else verdict
+            flags.append(self._lag_flag(lag, "Benchmark review triggered"))
+
+        return verdict, flags, sell_shares
+
+    @staticmethod
+    def _review_thesis(ticker, verdict, category, score_text, return_pct, lag):
+        action = {
+            "maintain": "maintain",
+            "review": "review",
+            "exit": "reduce or exit",
+        }.get(verdict, "review")
+        thesis = (
+            f"Daily paper thesis review for {ticker}: Atlas currently wants to "
+            f"{action} this simulated holding. Category {category}, Atlas score "
+            f"{score_text}, position return {return_pct:+.2f}%."
+        )
+        if lag:
+            thesis += (
+                f" Benchmark lag is {abs(lag['lag_pct']):.2f} percentage points "
+                f"behind {lag['weakest_benchmark']} across {lag['snapshots']} "
+                f"snapshots ({lag['security_return_pct']:+.2f}% versus "
+                f"{lag['weakest_benchmark_return_pct']:+.2f}%)."
+            )
+        return thesis
 
     def _benchmark_lag(self, feedback_rows):
         lagging = {}

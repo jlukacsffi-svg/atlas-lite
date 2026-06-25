@@ -77,11 +77,17 @@ class PaperPositionMonitorTests(unittest.TestCase):
             )
 
         self.assertEqual(result["reviews"][0]["verdict"], "exit")
+        self.assertIn("exit threshold", result["reviews"][0]["flags"][0])
+        self.assertIn("reduce or exit", result["reviews"][0]["thesis"])
         self.assertEqual(result["exit_proposals"][0]["side"], "sell")
         self.assertEqual(result["exit_proposals"][0]["shares"], 10)
         self.assertEqual(
             result["exit_proposals"][0]["source"],
             "paper_monitor_v1",
+        )
+        self.assertIn(
+            "Atlas score 55.0 is at or below the 60.0 exit threshold",
+            result["exit_proposals"][0]["rationale"][0],
         )
 
     def test_drawdown_creates_review_without_exit(self):
@@ -94,6 +100,7 @@ class PaperPositionMonitorTests(unittest.TestCase):
             )
 
         self.assertEqual(result["reviews"][0]["verdict"], "review")
+        self.assertIn("review threshold", result["reviews"][0]["flags"][0])
         self.assertEqual(result["exit_proposals"], [])
 
     def test_position_is_reviewed_only_once_per_day(self):
@@ -199,8 +206,26 @@ class PaperPositionMonitorTests(unittest.TestCase):
 
         self.assertEqual(result["reviews"][0]["verdict"], "exit")
         self.assertIn("Trim rule triggered", result["reviews"][0]["flags"][0])
+        self.assertIn("Benchmark lag is 11.00 percentage points", result["reviews"][0]["thesis"])
         self.assertEqual(result["exit_proposals"][0]["side"], "sell")
         self.assertEqual(result["exit_proposals"][0]["shares"], 5)
+
+    def test_review_can_include_multiple_reasons(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account_with_position(temp_dir)
+
+            result = PaperPositionMonitor().review(
+                account,
+                {"NVDA": security(score=68, price=85)},
+            )
+
+        self.assertEqual(result["reviews"][0]["verdict"], "review")
+        self.assertEqual(len(result["reviews"][0]["flags"]), 2)
+        self.assertIn("Atlas score 68.0 is below the 70.0 review threshold.", result["reviews"][0]["flags"])
+        self.assertIn(
+            "Position return -15.00% is below the -10.00% review threshold.",
+            result["reviews"][0]["flags"],
+        )
 
 
 if __name__ == "__main__":

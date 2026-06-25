@@ -755,3 +755,33 @@ Current boundaries:
   auto-execute paper trades on its own.
 - The new activity feed describes simulated portfolio actions only.
 - Real-money auto-trading remains disabled.
+
+## June 25, 2026 - Sell-Side Intelligence Clarification
+
+New capabilities:
+
+- Make paper trim and exit reviews explain the actual trigger that caused the
+  sell-side proposal instead of relying on a generic weakness message.
+- Let daily thesis monitoring accumulate multiple review reasons at once, so a
+  name can surface both score weakness and drawdown pressure in the same owner
+  review.
+- Rewrite sell-side thesis text so Atlas states whether it currently wants to
+  review, reduce, or exit a simulated holding, including benchmark-lag context
+  when it applies.
+- Update the Paper page rationale labels so completed and pending sell-side
+  actions read as `Why trim` or `Why exit` instead of a generic reduce label.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00044-xsg` is serving 100% traffic.
+- Dashboard image `20260625-sell-intelligence` is deployed.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 303 tests.
+
+Current boundaries:
+
+- Atlas still proposes and explains paper trims and exits; it does not
+  auto-execute them.
+- The new sell-side intelligence applies to simulated holdings only.
+- No brokerage order is sent and no real money is spent.

@@ -554,17 +554,17 @@ Estimated overall Atlas program completion: 93%.
 
 Latest staging update:
 
-- Recommendations page now includes a queue summary panel, clearer stage labels
-  for buy and sell-side ideas, and stronger color separation for the tracked
-  universe cards.
-- Active Cloud Run revision is `atlas-dashboard-stg-00042-gdg`.
-- Cache-busted web asset image tag is `20260625-recommendation-clarity`.
-- Full test suite passes with 301 tests before deploy.
+- Sell-side paper proposals now explain the trigger behind each trim or exit
+  review, including score weakness, drawdown pressure, and benchmark lag when
+  those signals apply.
+- Active Cloud Run revision is `atlas-dashboard-stg-00044-xsg`.
+- Cache-busted web asset image tag is `20260625-sell-intelligence`.
+- Full test suite passes with 303 tests before deploy.
 
 Current in-flight stage:
 
-- Paper page now includes an executed activity feed for simulated buys and
-  sells plus an operating-mode section that explains current recommendation mode
-  versus a future paper-only auto-manage mode.
-- Cache-busted web asset image tag is `20260625-paper-activity`.
-- Full test suite passes with 302 tests before deploy.
+- The next software step is to improve post-trade learning for simulated sells
+  so Atlas can explain whether trims and exits helped relative to continued
+  holding and benchmark behavior.
+- Current dashboard behavior still requires explicit owner approval and
+  Simulate fill confirmation before any paper trim or exit is recorded.
