@@ -446,6 +446,38 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .task-row { grid-template-columns: 60px 1fr; }
 .position-row { grid-template-columns: 1fr auto; }
 .rank-row:last-child, .mover-row:last-child, .task-row:last-child, .position-row:last-child { border-bottom: 0; }
+.thesis-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.thesis-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.thesis-badge.healthy {
+  color: var(--green);
+  background: var(--green-soft);
+}
+.thesis-badge.watch {
+  color: #7a4f00;
+  background: var(--gold-soft);
+}
+.thesis-badge.trim {
+  color: var(--red);
+  background: #ffe4c7;
+}
+.thesis-badge.exit {
+  color: var(--red);
+  background: var(--red-soft);
+}
 .feedback-row {
   padding: 13px 0;
   border-bottom: 1px solid #edf0f2;

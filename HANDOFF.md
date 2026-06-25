@@ -486,6 +486,13 @@ Estimated overall Atlas program completion: 93%.
   popovers now stay readable while hovered or focused and close naturally when
   the cursor or focus leaves them. Daily and weekly schedules remained enabled.
   All 299 tests pass.
+- Position thesis status layer is deployed on dashboard revision
+  `atlas-dashboard-stg-00040-2xc` and image `20260625-thesis-status`.
+  Open simulated paper holdings now show a plain-language thesis badge
+  (`healthy`, `watch`, `trim`, or `exit`) plus a short evidence summary on the
+  Paper Portfolio page. Status is derived from the latest thesis review and any
+  active simulated sell proposal. Daily and weekly schedules remained enabled.
+  All 300 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

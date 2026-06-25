@@ -220,6 +220,12 @@ class DashboardDataService:
         performance = self.paper_account.performance_summary()
         latest_reviews = self.paper_account.latest_position_reviews()
         proposals = self.paper_account.proposals()
+        active_sell_proposals = {
+            proposal["ticker"]: proposal
+            for proposal in proposals
+            if proposal["side"] == "sell"
+            and proposal["status"] in {"pending", "approved"}
+        }
         return {
             "configured": True,
             "name": status["name"],
@@ -241,6 +247,11 @@ class DashboardDataService:
                     "market_value": position["market_value"],
                     "unrealized_gain_loss": position["unrealized_gain_loss"],
                     "review": latest_reviews.get(position["ticker"]),
+                    "thesis_status": self._position_thesis_status(
+                        position,
+                        latest_reviews.get(position["ticker"]),
+                        active_sell_proposals.get(position["ticker"]),
+                    ),
                 }
                 for position in status["positions"]
             ],
@@ -251,6 +262,57 @@ class DashboardDataService:
                 "rejected": sum(1 for item in proposals if item["status"] == "rejected"),
                 "executed": sum(1 for item in proposals if item["status"] == "executed"),
             },
+        }
+
+    @staticmethod
+    def _position_thesis_status(position, review, active_sell):
+        shares = float(position.get("shares") or 0.0)
+        if active_sell:
+            sell_shares = float(active_sell.get("shares") or 0.0)
+            if shares and sell_shares < shares:
+                return {
+                    "label": "trim",
+                    "summary": (
+                        f"Atlas has an active simulated trim proposal for "
+                        f"{sell_shares:g} of {shares:g} shares."
+                    ),
+                }
+            return {
+                "label": "exit",
+                "summary": "Atlas has an active simulated exit proposal for this holding.",
+            }
+        if not review:
+            return {
+                "label": "healthy",
+                "summary": "Awaiting the next daily thesis review.",
+            }
+
+        verdict = str(review.get("verdict") or "maintain").lower()
+        flags = review.get("flags") or []
+        score = review.get("atlas_score")
+        score_text = f" Atlas score {score:.1f}." if score is not None else ""
+        if verdict == "exit":
+            return {
+                "label": "exit",
+                "summary": (
+                    (flags[0] if flags else "Atlas marked this holding for simulated exit.")
+                    + score_text
+                ).strip(),
+            }
+        if verdict == "review":
+            return {
+                "label": "watch",
+                "summary": (
+                    (flags[0] if flags else "Atlas wants a closer thesis review on this holding.")
+                    + score_text
+                ).strip(),
+            }
+        return {
+            "label": "healthy",
+            "summary": (
+                (flags[0] if flags else "Latest thesis review remains constructive.")
+                + score_text
+            ).strip(),
         }
 
     def _research(self):

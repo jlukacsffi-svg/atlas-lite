@@ -118,6 +118,41 @@ class WebDashboardTests(unittest.TestCase):
         self.assertEqual(rows[0]["ratio"], "10:1")
         self.assertTrue(rows[0]["normalized"])
 
+    def test_dashboard_position_thesis_status_states(self):
+        healthy = DashboardDataService._position_thesis_status(
+            {"shares": 10},
+            {"verdict": "maintain", "flags": [], "atlas_score": 88.0},
+            None,
+        )
+        watch = DashboardDataService._position_thesis_status(
+            {"shares": 10},
+            {
+                "verdict": "review",
+                "flags": ["Benchmark review triggered: lagging."],
+                "atlas_score": 68.0,
+            },
+            None,
+        )
+        trim = DashboardDataService._position_thesis_status(
+            {"shares": 10},
+            {"verdict": "maintain", "flags": [], "atlas_score": 88.0},
+            {"side": "sell", "shares": 5, "status": "approved"},
+        )
+        exit_state = DashboardDataService._position_thesis_status(
+            {"shares": 10},
+            {"verdict": "exit", "flags": ["Exit rule triggered."], "atlas_score": 55.0},
+            {"side": "sell", "shares": 10, "status": "pending"},
+        )
+
+        self.assertEqual(healthy["label"], "healthy")
+        self.assertIn("Atlas score 88.0", healthy["summary"])
+        self.assertEqual(watch["label"], "watch")
+        self.assertIn("Benchmark review triggered", watch["summary"])
+        self.assertEqual(trim["label"], "trim")
+        self.assertIn("5 of 10 shares", trim["summary"])
+        self.assertEqual(exit_state["label"], "exit")
+        self.assertIn("active simulated exit proposal", exit_state["summary"])
+
     def test_browser_labels_local_and_cloud_environments(self):
         root = Path(__file__).resolve().parent.parent
         html = (root / "web" / "index.html").read_text(encoding="utf-8")
@@ -125,8 +160,8 @@ class WebDashboardTests(unittest.TestCase):
         styles = (root / "web" / "styles.css").read_text(encoding="utf-8")
         self.assertIn('id="workspace-status"', html)
         self.assertIn('id="sign-out"', html)
-        self.assertIn('/styles.css?v=20260625-proposal-clarity', html)
-        self.assertIn('/app.js?v=20260625-proposal-clarity', html)
+        self.assertIn('/styles.css?v=20260625-thesis-status', html)
+        self.assertIn('/app.js?v=20260625-thesis-status', html)
         self.assertIn("Secure owner cloud", script)
         self.assertIn("Local read-only workspace", script)
         self.assertIn("window.location.hostname", script)
@@ -160,6 +195,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("renderRecommendations", script)
         self.assertIn("renderRationale", script)
         self.assertIn("renderPaperFeedback", script)
+        self.assertIn("thesis_status", script)
         self.assertIn("proposalActionLabel", script)
         self.assertIn("proposalImpact", script)
         self.assertIn("proposalControlTitle", script)
@@ -230,6 +266,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn(".simulate-button", styles)
         self.assertIn(".feedback-row", styles)
         self.assertIn(".why-now", styles)
+        self.assertIn(".thesis-badge", styles)
+        self.assertIn(".thesis-summary", styles)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:

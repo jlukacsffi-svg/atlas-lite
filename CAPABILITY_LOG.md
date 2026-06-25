@@ -641,3 +641,31 @@ Current boundaries:
   the paper portfolio changes.
 - No brokerage order is sent and no real money is spent.
 - Real trading and brokerage access remain disabled.
+
+## June 25, 2026 - Position Thesis Status Layer
+
+New capabilities:
+
+- Derive a plain-language thesis status for every open simulated paper holding:
+  `healthy`, `watch`, `trim`, or `exit`.
+- Use the latest thesis review and any active simulated sell proposal to decide
+  the current status.
+- Show a concise evidence line on each Paper Portfolio position card so the
+  dashboard explains why Atlas thinks a holding is healthy, needs attention,
+  should be trimmed, or should be exited.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00040-2xc` is serving 100% traffic.
+- Dashboard image `20260625-thesis-status` is deployed.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 300 tests.
+
+Current boundaries:
+
+- Thesis-status labels describe simulated paper holdings only.
+- They do not execute any action by themselves and do not authorize real trades.
+- Owner approval and explicit Simulate fill confirmation remain required before
+  the paper portfolio changes.
+- No brokerage order is sent and no real money is spent.

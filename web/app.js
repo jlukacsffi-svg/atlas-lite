@@ -536,11 +536,13 @@ function renderCorporateActions(rows) {
 function renderPositions(rows) {
   document.getElementById("positions").innerHTML = rows.map(item => {
     const review = item.review || {};
+    const thesis = item.thesis_status || { label: "healthy", summary: "Awaiting the next daily thesis review." };
     return `
       <div class="position-row">
         <span>
           <b class="row-title">${item.ticker} · ${Number(item.shares).toFixed(0)} shares</b>
           <small class="row-meta">Average ${money.format(item.average_cost)} · ${review.verdict || "unreviewed"} thesis</small>
+          <small class="row-meta thesis-summary"><span class="thesis-badge ${escapeHtml(thesis.label)}">${escapeHtml(thesis.label)}</span>${escapeHtml(thesis.summary || "")}</small>
         </span>
         <span>
           <b class="row-title">${money.format(item.market_value || 0)}</b>
