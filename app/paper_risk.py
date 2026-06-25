@@ -31,18 +31,25 @@ class PaperRiskReviewer:
 
         for proposal in pending:
             data = market_data.get(proposal["ticker"], {})
+            side = str(proposal.get("side") or "").lower()
             flags = []
             high_risk = False
             pct = data.get("percent_change")
             if pct is None:
                 flags.append("Missing current price-move data.")
-                high_risk = True
+                high_risk = side != "sell"
             elif float(pct) <= self.sharp_downside_pct:
-                flags.append(
-                    f"Sharp downside move: {float(pct):+.2f}% is below "
-                    f"{self.sharp_downside_pct:.2f}% review threshold."
-                )
-                high_risk = True
+                if side == "sell":
+                    flags.append(
+                        f"Sharp downside move supports reducing simulated exposure: "
+                        f"{float(pct):+.2f}%."
+                    )
+                else:
+                    flags.append(
+                        f"Sharp downside move: {float(pct):+.2f}% is below "
+                        f"{self.sharp_downside_pct:.2f}% review threshold."
+                    )
+                    high_risk = True
             elif abs(float(pct)) >= self.elevated_move_pct:
                 flags.append(f"Elevated daily volatility: {float(pct):+.2f}%.")
 
@@ -50,11 +57,16 @@ class PaperRiskReviewer:
             if scores:
                 score = self.scoring_engine.score(scores)
                 if score < 70:
-                    flags.append(f"Atlas score is only {score:.1f}.")
-                    high_risk = True
+                    if side == "sell":
+                        flags.append(
+                            f"Atlas score is only {score:.1f}; this supports the exit review."
+                        )
+                    else:
+                        flags.append(f"Atlas score is only {score:.1f}.")
+                        high_risk = True
             else:
                 flags.append("Atlas component scores are unavailable.")
-                high_risk = True
+                high_risk = side != "sell"
 
             if high_risk:
                 review = account.record_proposal_risk_review(

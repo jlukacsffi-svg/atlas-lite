@@ -362,6 +362,61 @@ class OwnerControlServiceTests(unittest.TestCase):
             "executed",
         )
 
+    def test_paper_fill_can_record_approved_simulated_exit(self):
+        buy = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            buy["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(buy["proposal_id"], "approve")
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+            proposal_id=buy["proposal_id"],
+        )
+        sell = self.dashboard.paper_account.create_proposal(
+            "sell",
+            "RISK",
+            10,
+            125,
+            "Paper exit review.",
+        )
+        proposal_id = sell["proposal_id"]
+        self.dashboard.paper_account.record_proposal_risk_review(
+            proposal_id,
+            "caution",
+            ["Exit review."],
+        )
+        self.dashboard.paper_account.decide_proposal(proposal_id, "approve")
+
+        result = self.service.apply(
+            "paper-fill",
+            {
+                "proposal_id": proposal_id,
+                "confirmation": f"SIMULATE {proposal_id}",
+            },
+        )
+        state = self.dashboard.paper_account.load()
+
+        self.assertTrue(result["simulation_only"])
+        self.assertEqual(result["side"], "sell")
+        self.assertEqual(result["price"], 125.0)
+        self.assertNotIn("RISK", state["positions"])
+        self.assertEqual(
+            self.dashboard.paper_account.proposal_status(proposal_id),
+            "executed",
+        )
+
     def test_persistence_failure_restores_local_artifacts(self):
         original = self.dashboard.research_queue.task_file.read_bytes()
 

@@ -463,6 +463,13 @@ Estimated overall Atlas program completion: 93%.
   score inputs, category, sector, daily move, and simulated sizing before any
   owner decision. Daily and weekly schedules remained enabled. All 293 tests
   pass.
+- Simulated exit/trim recommendations are deployed on dashboard revision
+  `atlas-dashboard-stg-00037-tcb` and image `20260624-exit-trim`. The
+  dashboard now separates paper purchase ideas from paper exit/trim ideas,
+  updates the owner-control and Simulate fill language for sells, and allows
+  weak-score sell proposals to pass CRO review as exit support instead of being
+  blocked as entry risk. Daily and weekly schedules remained enabled. All 295
+  tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

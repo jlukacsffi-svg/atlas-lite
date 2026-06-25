@@ -552,3 +552,32 @@ Current boundaries:
 - Rationale does not approve, reject, simulate, or execute any transaction.
 - No brokerage order is sent and no real money is spent.
 - Real trading and brokerage access remain disabled.
+
+## June 24, 2026 - Simulated Exit / Trim Recommendations
+
+New capabilities:
+
+- Surface paper sell proposals separately as `Exit / trim recommendations` on
+  the Overview and Recommendations pages.
+- Keep paper buy proposals and paper sell proposals visually distinct with
+  separate dashboard sections, tags, and color treatment.
+- Update owner controls to count active buy ideas separately from exit/trim
+  ideas.
+- Update the Simulate fill confirmation dialog so sell proposals are described
+  as simulated exits or trims rather than purchases.
+- Adjust CRO paper-risk review so a weak Atlas score can support a simulated
+  sell proposal instead of automatically blocking the exit review.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00037-tcb` is serving 100% traffic.
+- Dashboard image `20260624-exit-trim` is deployed.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 295 tests.
+
+Current boundaries:
+
+- Exit/trim recommendations update the simulated paper portfolio only after
+  owner approval and explicit Simulate fill confirmation.
+- No brokerage order is sent and no real money is spent.
+- Real trading and brokerage access remain disabled.

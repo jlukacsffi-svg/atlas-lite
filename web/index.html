@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260624-help-popovers">
+  <link rel="stylesheet" href="/styles.css?v=20260624-exit-trim">
 </head>
 <body>
   <div class="app-shell">
@@ -86,6 +86,16 @@
           </div>
           <div id="overview-recommended-buys" class="recommendation-list"></div>
         </article>
+        <article class="panel exit-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Position risk review</p>
+              <h2>Exit / trim recommendations</h2>
+            </div>
+            <a class="section-link" href="#recommendations">Open page</a>
+          </div>
+          <div id="overview-recommended-exits" class="recommendation-list"></div>
+        </article>
         <article class="panel current-list-panel">
           <div class="panel-heading">
             <div>
@@ -127,6 +137,22 @@
               <span class="tag buy-tag">Simulation only</span>
             </div>
             <div id="recommended-buys" class="recommendation-list"></div>
+          </article>
+          <article class="panel exit-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Position risk review</p>
+                <div class="title-with-help">
+                  <h2>Recommended for exit / trim</h2>
+                  <details class="info-popover">
+                    <summary aria-label="About exit and trim recommendations">?</summary>
+                    <p>These are Atlas paper-trade sell proposals created when an open simulated position weakens. They reduce or close simulated holdings only and are not real-money sell orders.</p>
+                  </details>
+                </div>
+              </div>
+              <span class="tag exit-tag">Simulation only</span>
+            </div>
+            <div id="recommended-exits" class="recommendation-list"></div>
           </article>
           <article class="panel current-list-panel">
             <div class="panel-heading">
@@ -374,11 +400,11 @@
           </div>
           <div>
             <div class="control-heading">
-              <span class="access-label">Paper purchase proposals</span>
+              <span class="access-label">Paper trade proposals</span>
               <strong id="paper-proposal-count">0 proposals</strong>
             </div>
             <div class="control-note">
-              Approve means you accept the idea for paper simulation. Simulate fill records the hypothetical purchase in Atlas only.
+              Approve means you accept the idea for paper simulation. Simulate fill records the hypothetical buy, trim, or exit in Atlas only.
             </div>
             <div id="paper-proposals" class="decision-list"></div>
           </div>
@@ -493,6 +519,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260624-help-popovers"></script>
+  <script src="/app.js?v=20260624-exit-trim"></script>
 </body>
 </html>

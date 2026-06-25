@@ -186,12 +186,14 @@ function renderOwnerControls(controls) {
 
   const reviews = controls.research_reviews || [];
   const proposals = controls.paper_proposals || [];
+  const buyCount = proposals.filter(item => item.side === "buy").length;
+  const sellCount = proposals.filter(item => item.side === "sell").length;
   const actions = controls.daily_action_list || [];
   const outcomes = controls.owner_outcomes || {};
   document.getElementById("research-review-count").textContent =
     `${reviews.length} awaiting review`;
   document.getElementById("paper-proposal-count").textContent =
-    `${proposals.length} active purchase proposal${proposals.length === 1 ? "" : "s"}`;
+    `${buyCount} buy / ${sellCount} exit-trim`;
   renderRecommendations(proposals, null);
   renderOwnerOutcomes(outcomes);
   document.getElementById("daily-action-list").innerHTML = actions.map(item => `
@@ -260,12 +262,12 @@ function renderOwnerControls(controls) {
     return `
       <article class="decision-row">
         <div>
-          <span class="tag ${item.side === "buy" ? "buy-tag" : ""}">${escapeHtml(item.status)}</span>
+          <span class="tag ${item.side === "buy" ? "buy-tag" : "exit-tag"}">${escapeHtml(item.status)}</span>
           <b class="row-title">${escapeHtml(item.side).toUpperCase()} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}</b>
           <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} · Risk ${escapeHtml(review.verdict || "pending")}</small>
           <p>${escapeHtml(item.thesis || "No thesis supplied.")}</p>
           ${renderRationale(item.rationale, item)}
-          <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical position in Atlas paper tracking.</small>
+          <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical ${item.side === "sell" ? "exit or trim" : "position"} in Atlas paper tracking.</small>
         </div>
         <div class="decision-actions">
           ${approved ? `
@@ -302,6 +304,7 @@ function renderOwnerOutcomes(outcomes) {
 
 function renderRecommendations(proposals, watchlist) {
   const buyProposals = (proposals || []).filter(item => item.side === "buy");
+  const sellProposals = (proposals || []).filter(item => item.side === "sell");
   const buyHtml = buyProposals.map(item => `
     <article class="recommendation-row ${item.status === "approved" ? "approved-rec" : ""}">
       <span class="tag buy-tag">${escapeHtml(item.status)}</span>
@@ -316,6 +319,21 @@ function renderRecommendations(proposals, watchlist) {
   ["recommended-buys", "overview-recommended-buys"].forEach(id => {
     const target = document.getElementById(id);
     if (target) target.innerHTML = buyHtml;
+  });
+  const sellHtml = sellProposals.map(item => `
+    <article class="recommendation-row exit-rec ${item.status === "approved" ? "approved-rec" : ""}">
+      <span class="tag exit-tag">${escapeHtml(item.status)}</span>
+      <div>
+        <b class="row-title">${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)} recommended for simulated exit / trim</b>
+        <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+        ${renderRationale(item.rationale, item)}
+        <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to update the paper portfolio." : "Next step: approve or reject this paper exit proposal in Controls."}</small>
+      </div>
+    </article>
+  `).join("") || `<div class="empty">No current paper exit or trim recommendations. Atlas will surface one here if an open simulated position weakens.</div>`;
+  ["recommended-exits", "overview-recommended-exits"].forEach(id => {
+    const target = document.getElementById(id);
+    if (target) target.innerHTML = sellHtml;
   });
 
   if (watchlist === null) return;
@@ -343,6 +361,10 @@ function renderRationale(rationale, item = {}) {
   if (!rows.length && item.side === "buy") {
     rows.push(
       "This proposal was created before structured Why now rationale was stored. New Atlas-generated proposals will include score, category, sector, move, and sizing rationale."
+    );
+  } else if (!rows.length && item.side === "sell") {
+    rows.push(
+      "Atlas created this simulated exit review because the open paper position triggered thesis, score, or drawdown monitoring rules."
     );
   }
   if (!rows.length) return "";
@@ -524,11 +546,16 @@ function openPaperFillDialog(proposalId, button) {
 
   const expected = `SIMULATE ${proposalId}`;
   pendingPaperFill = { proposalId, expected, button };
+  const isSell = proposal.side === "sell";
   document.getElementById("paper-fill-summary").textContent =
-    `This will add a simulated ${proposal.side.toUpperCase()} position of ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} to the Atlas paper portfolio at the latest available market price.`;
+    isSell
+      ? `This will record a simulated ${proposal.side.toUpperCase()} of ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} in the Atlas paper portfolio at the latest available market price. It may reduce or close the simulated holding.`
+      : `This will add a simulated ${proposal.side.toUpperCase()} position of ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} to the Atlas paper portfolio at the latest available market price.`;
   document.getElementById("paper-fill-expected").textContent = expected;
   document.getElementById("paper-fill-confirmation").value = "";
   document.getElementById("paper-fill-submit").disabled = true;
+  document.getElementById("paper-fill-submit").textContent =
+    isSell ? "Record simulated exit / trim" : "Record simulated purchase";
   document.getElementById("paper-fill-dialog").showModal();
   document.getElementById("paper-fill-confirmation").focus();
 }
@@ -550,7 +577,7 @@ async function submitOwnerAction(action, payload, button) {
     }
     showMessage(
       action === "paper-fill"
-        ? "Simulated purchase recorded. Portfolio tracking is active."
+        ? `Simulated ${result.result?.side === "sell" ? "exit / trim" : "purchase"} recorded. Portfolio tracking is active.`
         : "Owner action saved.",
       false
     );

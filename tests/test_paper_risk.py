@@ -82,6 +82,35 @@ class PaperRiskReviewerTests(unittest.TestCase):
 
         self.assertEqual(decision["decision"], "approve")
 
+    def test_weak_score_supports_sell_exit_instead_of_blocking_it(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            buy = account.create_proposal("buy", "AAA", 10, 100, "Entry.")
+            account.record_proposal_risk_review(buy["proposal_id"], "clear", [])
+            account.decide_proposal(buy["proposal_id"], "approve")
+            account.execute_order(
+                "buy",
+                "AAA",
+                10,
+                100,
+                "Entry.",
+                proposal_id=buy["proposal_id"],
+            )
+            sell = account.create_proposal("sell", "AAA", 10, 90, "Exit weak score.")
+
+            reviews = PaperRiskReviewer().review_pending(
+                account,
+                {"AAA": security(-9.0, score=55)},
+            )
+            decision = account.decide_proposal(sell["proposal_id"], "approve")
+
+        self.assertEqual(reviews[-1]["proposal_id"], sell["proposal_id"])
+        self.assertEqual(reviews[-1]["verdict"], "caution")
+        self.assertTrue(
+            any("supports" in flag for flag in reviews[-1]["flags"])
+        )
+        self.assertEqual(decision["decision"], "approve")
+
     def test_hold_enforcement_can_be_disabled_for_review_testing(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)

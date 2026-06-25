@@ -69,6 +69,10 @@ class PaperPositionMonitorTests(unittest.TestCase):
         self.assertEqual(result["reviews"][0]["verdict"], "exit")
         self.assertEqual(result["exit_proposals"][0]["side"], "sell")
         self.assertEqual(result["exit_proposals"][0]["shares"], 10)
+        self.assertEqual(
+            result["exit_proposals"][0]["source"],
+            "paper_monitor_v1",
+        )
 
     def test_drawdown_creates_review_without_exit(self):
         with tempfile.TemporaryDirectory() as temp_dir:

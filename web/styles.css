@@ -286,6 +286,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .performance-panel { border-top-color: var(--green); }
 .breadth-panel { border-top-color: var(--cyan); }
 .recommendation-panel { border-top-color: var(--gold); background: linear-gradient(180deg, #fffaf0 0, var(--surface) 70px); }
+.exit-panel { border-top-color: var(--red); background: linear-gradient(180deg, #fff6f7 0, var(--surface) 70px); }
 .current-list-panel { border-top-color: var(--blue); background: linear-gradient(180deg, #f4f7ff 0, var(--surface) 70px); }
 .simulation-help-panel { border-top-color: var(--cyan); }
 .feedback-panel { border-top-color: var(--green); background: linear-gradient(180deg, #f4fbf8 0, var(--surface) 70px); }
@@ -311,6 +312,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 }
 .tag { color: var(--green); background: var(--green-soft); }
 .buy-tag { color: #7a4f00; background: var(--gold-soft); }
+.exit-tag { color: var(--red); background: var(--red-soft); }
 
 .chart-wrap { width: 100%; aspect-ratio: 720 / 260; min-height: 210px; }
 #performance-chart { width: 100%; height: 100%; overflow: visible; }
@@ -376,6 +378,10 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .recommendation-row.approved-rec {
   border-color: #b8d8cc;
   background: var(--green-soft);
+}
+.recommendation-row.exit-rec {
+  border-color: #f0c4c9;
+  background: #fff7f8;
 }
 .why-now {
   margin-top: 9px;
