@@ -470,6 +470,13 @@ Estimated overall Atlas program completion: 93%.
   weak-score sell proposals to pass CRO review as exit support instead of being
   blocked as entry risk. Daily and weekly schedules remained enabled. All 295
   tests pass.
+- Benchmark-lag paper trim trigger is deployed on dashboard revision
+  `atlas-dashboard-stg-00038-rtz` and image `20260625-benchmark-lag-trim`.
+  Atlas now reviews open simulated holdings when they lag both SPY and QQQ by
+  at least 3 percentage points across multiple paper snapshots, and creates a
+  reviewable simulated half-trim sell proposal when lag reaches 8 percentage
+  points. Owner approval and explicit Simulate fill confirmation remain
+  required. Daily and weekly schedules remained enabled. All 297 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.

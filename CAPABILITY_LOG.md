@@ -581,3 +581,32 @@ Current boundaries:
   owner approval and explicit Simulate fill confirmation.
 - No brokerage order is sent and no real money is spent.
 - Real trading and brokerage access remain disabled.
+
+## June 24, 2026 - Benchmark-Lag Paper Trim Trigger
+
+New capabilities:
+
+- Compare open simulated positions against executed recommendation feedback for
+  SPY and QQQ benchmark lag.
+- Flag a simulated holding for review when it trails both core benchmarks by at
+  least 3 percentage points across multiple snapshots.
+- Create a reviewable simulated half-trim sell proposal when a holding trails
+  both core benchmarks by at least 8 percentage points.
+- Carry the benchmark-lag explanation into the position review and sell-proposal
+  rationale so owner review can see why Atlas is challenging the holding.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00038-rtz` is serving 100% traffic.
+- Dashboard image `20260625-benchmark-lag-trim` is deployed.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 297 tests.
+
+Current boundaries:
+
+- Benchmark-lag trims are simulated paper sell proposals only.
+- Owner approval and explicit Simulate fill confirmation are still required
+  before the paper portfolio changes.
+- No brokerage order is sent and no real money is spent.
+- Real trading and brokerage access remain disabled.

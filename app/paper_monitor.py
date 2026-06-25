@@ -6,10 +6,21 @@ from app.scoring import ScoringEngine
 class PaperPositionMonitor:
     """Record holding reviews and create reviewable exit proposals."""
 
-    def __init__(self, exit_score=60.0, review_score=70.0, drawdown_review_pct=-10.0):
+    def __init__(
+        self,
+        exit_score=60.0,
+        review_score=70.0,
+        drawdown_review_pct=-10.0,
+        benchmark_lag_review_pct=-3.0,
+        benchmark_lag_trim_pct=-8.0,
+        benchmark_lag_min_snapshots=2,
+    ):
         self.exit_score = float(exit_score)
         self.review_score = float(review_score)
         self.drawdown_review_pct = float(drawdown_review_pct)
+        self.benchmark_lag_review_pct = float(benchmark_lag_review_pct)
+        self.benchmark_lag_trim_pct = float(benchmark_lag_trim_pct)
+        self.benchmark_lag_min_snapshots = int(benchmark_lag_min_snapshots)
         self.scoring_engine = ScoringEngine()
 
     def review(self, account, market_data):
@@ -26,6 +37,7 @@ class PaperPositionMonitor:
             if proposal["side"] == "sell"
             and proposal["status"] in {"pending", "approved"}
         }
+        benchmark_lag = self._benchmark_lag(account.proposal_feedback())
         reviews = []
         exit_proposals = []
 
@@ -46,6 +58,8 @@ class PaperPositionMonitor:
             score = self._score(data)
             category = data.get("category", "Watchlist")
             score_text = f"{score:.1f}" if score is not None else "N/A"
+            lag = benchmark_lag.get(ticker)
+            sell_shares = position["shares"]
 
             if category == "Avoid" or (score is not None and score <= self.exit_score):
                 verdict = "exit"
@@ -65,6 +79,13 @@ class PaperPositionMonitor:
                     f"Position return {return_pct:+.2f}% is below "
                     f"{self.drawdown_review_pct:.2f}% review threshold."
                 )
+            elif lag and lag["lag_pct"] <= self.benchmark_lag_trim_pct:
+                verdict = "exit"
+                sell_shares = self._trim_shares(position["shares"])
+                flags.append(self._lag_flag(lag, "Trim rule triggered"))
+            elif lag and lag["lag_pct"] <= self.benchmark_lag_review_pct:
+                verdict = "review"
+                flags.append(self._lag_flag(lag, "Benchmark review triggered"))
             else:
                 verdict = "maintain"
 
@@ -73,6 +94,12 @@ class PaperPositionMonitor:
                 f"Atlas score {score_text}, "
                 f"position return {return_pct:+.2f}%."
             )
+            if lag:
+                thesis += (
+                    f" Benchmark lag: {lag['security_return_pct']:+.2f}% "
+                    f"versus weaker benchmark {lag['weakest_benchmark']} at "
+                    f"{lag['weakest_benchmark_return_pct']:+.2f}%."
+                )
             review = account.record_position_review(
                 ticker=ticker,
                 verdict=verdict,
@@ -89,14 +116,61 @@ class PaperPositionMonitor:
                     account.create_proposal(
                         side="sell",
                         ticker=ticker,
-                        shares=position["shares"],
+                        shares=sell_shares,
                         reference_price=price,
                         thesis=thesis,
                         source="paper_monitor_v1",
+                        rationale=flags,
                     )
                 )
 
         return {"reviews": reviews, "exit_proposals": exit_proposals}
+
+    def _benchmark_lag(self, feedback_rows):
+        lagging = {}
+        for row in feedback_rows:
+            if row.get("verdict") != "lagging":
+                continue
+            if int(row.get("snapshots") or 0) < self.benchmark_lag_min_snapshots:
+                continue
+            security_return = row.get("security_return_pct")
+            benchmark_returns = {
+                ticker: value
+                for ticker, value in row.get("benchmark_returns_pct", {}).items()
+                if value is not None
+            }
+            if security_return is None or not benchmark_returns:
+                continue
+            weakest_benchmark = min(
+                benchmark_returns,
+                key=lambda ticker: benchmark_returns[ticker],
+            )
+            weakest_return = benchmark_returns[weakest_benchmark]
+            lag_pct = round(float(security_return) - float(weakest_return), 4)
+            ticker = row.get("ticker")
+            current = lagging.get(ticker)
+            if ticker and (current is None or lag_pct < current["lag_pct"]):
+                lagging[ticker] = {
+                    "lag_pct": lag_pct,
+                    "snapshots": int(row.get("snapshots") or 0),
+                    "security_return_pct": float(security_return),
+                    "weakest_benchmark": weakest_benchmark,
+                    "weakest_benchmark_return_pct": float(weakest_return),
+                }
+        return lagging
+
+    @staticmethod
+    def _trim_shares(shares):
+        return max(round(float(shares) / 2, 6), 0.000001)
+
+    @staticmethod
+    def _lag_flag(lag, prefix):
+        return (
+            f"{prefix}: simulated return {lag['security_return_pct']:+.2f}% "
+            f"trails weaker benchmark {lag['weakest_benchmark']} by "
+            f"{abs(lag['lag_pct']):.2f} percentage points across "
+            f"{lag['snapshots']} snapshots."
+        )
 
     def _score(self, data):
         scores = data.get("scores")
