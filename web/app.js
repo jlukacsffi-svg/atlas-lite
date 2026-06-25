@@ -126,6 +126,7 @@ function renderDashboard(data) {
   renderMovers(data.movers || []);
   renderSectors(data.sectors || []);
   renderCorporateActions(data.corporate_actions || []);
+  renderThesisOverview(paper.thesis_overview || {});
   renderPositions(paper.positions || []);
   renderPaperFeedback(paper.feedback || []);
   renderRecommendations(data.owner_controls?.paper_proposals || [], data.watchlist || []);
@@ -531,6 +532,35 @@ function renderCorporateActions(rows) {
       </div>`;
   }).join("") || `
     <div class="empty">No recent corporate actions detected in the current research universe.</div>`;
+}
+
+function renderThesisOverview(overview) {
+  const counts = overview.counts || {};
+  const attention = overview.attention || [];
+  document.getElementById("thesis-overview").innerHTML = `
+    <div class="thesis-counts">
+      ${["healthy", "watch", "trim", "exit"].map(label => `
+        <div class="thesis-count-card">
+          <span class="thesis-badge ${label}">${label}</span>
+          <strong>${Number(counts[label] || 0).toFixed(0)}</strong>
+        </div>
+      `).join("")}
+    </div>
+    <div class="thesis-attention">
+      <span class="access-label">Needs attention first</span>
+      <div class="thesis-attention-list">
+        ${attention.length ? attention.map(item => `
+          <div class="thesis-attention-row">
+            <span class="thesis-badge ${escapeHtml(item.label)}">${escapeHtml(item.label)}</span>
+            <div>
+              <b class="row-title">${escapeHtml(item.ticker || "Holding")}</b>
+              <small class="row-meta">${escapeHtml(item.summary || "")}</small>
+            </div>
+          </div>
+        `).join("") : `<div class="empty">No open simulated positions.</div>`}
+      </div>
+    </div>
+  `;
 }
 
 function renderPositions(rows) {

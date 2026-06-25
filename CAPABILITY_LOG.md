@@ -669,3 +669,30 @@ Current boundaries:
 - Owner approval and explicit Simulate fill confirmation remain required before
   the paper portfolio changes.
 - No brokerage order is sent and no real money is spent.
+
+## June 25, 2026 - Thesis Overview Attention Layer
+
+New capabilities:
+
+- Add a Paper Portfolio overview panel that counts open simulated holdings by
+  `healthy`, `watch`, `trim`, and `exit`.
+- Rank the top holdings that need attention first, using thesis severity before
+  position size so the riskiest paper names surface immediately.
+- Keep the detailed per-position thesis badges underneath, while giving the
+  owner a faster at-a-glance read of overall paper thesis health.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00041-xbf` is serving 100% traffic.
+- Dashboard image `20260625-thesis-overview` is deployed.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 301 tests.
+
+Current boundaries:
+
+- The thesis overview summarizes simulated paper positions only.
+- It does not execute actions or grant new financial authority.
+- Owner approval and explicit Simulate fill confirmation remain required before
+  the paper portfolio changes.
+- No brokerage order is sent and no real money is spent.

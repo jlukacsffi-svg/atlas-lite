@@ -153,6 +153,41 @@ class WebDashboardTests(unittest.TestCase):
         self.assertEqual(exit_state["label"], "exit")
         self.assertIn("active simulated exit proposal", exit_state["summary"])
 
+    def test_dashboard_builds_thesis_overview_counts_and_priority(self):
+        overview = DashboardDataService._thesis_overview(
+            [
+                {
+                    "ticker": "AAA",
+                    "market_value": 1000,
+                    "thesis_status": {"label": "healthy", "summary": "Constructive."},
+                },
+                {
+                    "ticker": "BBB",
+                    "market_value": 800,
+                    "thesis_status": {"label": "watch", "summary": "Needs review."},
+                },
+                {
+                    "ticker": "CCC",
+                    "market_value": 700,
+                    "thesis_status": {"label": "trim", "summary": "Reduce."},
+                },
+                {
+                    "ticker": "DDD",
+                    "market_value": 600,
+                    "thesis_status": {"label": "exit", "summary": "Close."},
+                },
+            ]
+        )
+
+        self.assertEqual(overview["counts"]["healthy"], 1)
+        self.assertEqual(overview["counts"]["watch"], 1)
+        self.assertEqual(overview["counts"]["trim"], 1)
+        self.assertEqual(overview["counts"]["exit"], 1)
+        self.assertEqual(
+            [item["ticker"] for item in overview["attention"]],
+            ["DDD", "CCC", "BBB", "AAA"],
+        )
+
     def test_browser_labels_local_and_cloud_environments(self):
         root = Path(__file__).resolve().parent.parent
         html = (root / "web" / "index.html").read_text(encoding="utf-8")
@@ -160,8 +195,8 @@ class WebDashboardTests(unittest.TestCase):
         styles = (root / "web" / "styles.css").read_text(encoding="utf-8")
         self.assertIn('id="workspace-status"', html)
         self.assertIn('id="sign-out"', html)
-        self.assertIn('/styles.css?v=20260625-thesis-status', html)
-        self.assertIn('/app.js?v=20260625-thesis-status', html)
+        self.assertIn('/styles.css?v=20260625-thesis-overview', html)
+        self.assertIn('/app.js?v=20260625-thesis-overview', html)
         self.assertIn("Secure owner cloud", script)
         self.assertIn("Local read-only workspace", script)
         self.assertIn("window.location.hostname", script)
@@ -183,6 +218,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("No brokerage order is sent", html)
         self.assertIn("Recommendation performance", html)
         self.assertIn("paper-feedback", html)
+        self.assertIn("Portfolio thesis overview", html)
+        self.assertIn("thesis-overview", html)
         self.assertIn("Access &amp; security foundation", html)
         self.assertIn('id="recovery-status"', html)
         self.assertIn('id="privacy-export-status"', html)
@@ -195,6 +232,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("renderRecommendations", script)
         self.assertIn("renderRationale", script)
         self.assertIn("renderPaperFeedback", script)
+        self.assertIn("renderThesisOverview", script)
         self.assertIn("thesis_status", script)
         self.assertIn("proposalActionLabel", script)
         self.assertIn("proposalImpact", script)
@@ -268,6 +306,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn(".why-now", styles)
         self.assertIn(".thesis-badge", styles)
         self.assertIn(".thesis-summary", styles)
+        self.assertIn(".thesis-overview", styles)
+        self.assertIn(".thesis-counts", styles)
 
     def test_http_server_is_read_only_and_sets_security_headers(self):
         with tempfile.TemporaryDirectory() as temp_dir:

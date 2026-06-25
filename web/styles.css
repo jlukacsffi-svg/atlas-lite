@@ -287,6 +287,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .current-list-panel { border-top-color: var(--blue); background: linear-gradient(180deg, #f4f7ff 0, var(--surface) 70px); }
 .simulation-help-panel { border-top-color: var(--cyan); }
 .feedback-panel { border-top-color: var(--green); background: linear-gradient(180deg, #f4fbf8 0, var(--surface) 70px); }
+.thesis-overview-panel { border-top-color: var(--blue); background: linear-gradient(180deg, #f5f8ff 0, var(--surface) 70px); }
 .panel-heading {
   display: flex;
   align-items: flex-start;
@@ -451,6 +452,45 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+}
+.thesis-overview {
+  display: grid;
+  gap: 18px;
+}
+.thesis-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.thesis-count-card {
+  min-height: 84px;
+  display: grid;
+  align-content: center;
+  gap: 8px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.thesis-count-card strong {
+  font-size: 26px;
+  line-height: 1;
+}
+.thesis-attention-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+.thesis-attention-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf0f2;
+}
+.thesis-attention-row:last-child {
+  border-bottom: 0;
 }
 .thesis-badge {
   display: inline-flex;
@@ -851,6 +891,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .access-summary:nth-child(3n) { border-right: 1px solid var(--line); }
   .access-summary:nth-child(2n) { border-right: 0; }
   .access-summary:nth-child(-n+8) { border-bottom: 1px solid var(--line); }
+  .thesis-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -901,6 +942,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .chart-wrap { min-height: 180px; }
   .access-grid { grid-template-columns: 1fr; }
   .authority-strip { grid-template-columns: 1fr; }
+  .thesis-counts { grid-template-columns: 1fr 1fr; }
   .access-summary,
   .access-summary:nth-child(2) {
     border-right: 0;

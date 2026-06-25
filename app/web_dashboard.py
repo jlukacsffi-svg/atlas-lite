@@ -226,6 +226,23 @@ class DashboardDataService:
             if proposal["side"] == "sell"
             and proposal["status"] in {"pending", "approved"}
         }
+        positions = [
+            {
+                "ticker": position["ticker"],
+                "shares": position["shares"],
+                "average_cost": position["average_cost"],
+                "price": position["price"],
+                "market_value": position["market_value"],
+                "unrealized_gain_loss": position["unrealized_gain_loss"],
+                "review": latest_reviews.get(position["ticker"]),
+                "thesis_status": self._position_thesis_status(
+                    position,
+                    latest_reviews.get(position["ticker"]),
+                    active_sell_proposals.get(position["ticker"]),
+                ),
+            }
+            for position in status["positions"]
+        ]
         return {
             "configured": True,
             "name": status["name"],
@@ -238,23 +255,8 @@ class DashboardDataService:
                 else None
             ),
             "excess_return_pct": performance.get("excess_return_pct", {}),
-            "positions": [
-                {
-                    "ticker": position["ticker"],
-                    "shares": position["shares"],
-                    "average_cost": position["average_cost"],
-                    "price": position["price"],
-                    "market_value": position["market_value"],
-                    "unrealized_gain_loss": position["unrealized_gain_loss"],
-                    "review": latest_reviews.get(position["ticker"]),
-                    "thesis_status": self._position_thesis_status(
-                        position,
-                        latest_reviews.get(position["ticker"]),
-                        active_sell_proposals.get(position["ticker"]),
-                    ),
-                }
-                for position in status["positions"]
-            ],
+            "positions": positions,
+            "thesis_overview": self._thesis_overview(positions),
             "feedback": self.paper_account.proposal_feedback(),
             "proposals": {
                 "pending": sum(1 for item in proposals if item["status"] == "pending"),
@@ -313,6 +315,35 @@ class DashboardDataService:
                 (flags[0] if flags else "Latest thesis review remains constructive.")
                 + score_text
             ).strip(),
+        }
+
+    @staticmethod
+    def _thesis_overview(positions):
+        counts = {label: 0 for label in ("healthy", "watch", "trim", "exit")}
+        priority = {"exit": 0, "trim": 1, "watch": 2, "healthy": 3}
+        attention = []
+        for position in positions:
+            thesis = position.get("thesis_status") or {}
+            label = thesis.get("label", "healthy")
+            counts[label] = counts.get(label, 0) + 1
+            attention.append(
+                {
+                    "ticker": position.get("ticker"),
+                    "label": label,
+                    "summary": thesis.get("summary", ""),
+                    "market_value": position.get("market_value") or 0.0,
+                }
+            )
+        attention.sort(
+            key=lambda item: (
+                priority.get(item["label"], 99),
+                -(float(item["market_value"]) if item["market_value"] is not None else 0.0),
+                item.get("ticker") or "",
+            )
+        )
+        return {
+            "counts": counts,
+            "attention": attention[:4],
         }
 
     def _research(self):

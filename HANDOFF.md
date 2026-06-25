@@ -493,6 +493,12 @@ Estimated overall Atlas program completion: 93%.
   Paper Portfolio page. Status is derived from the latest thesis review and any
   active simulated sell proposal. Daily and weekly schedules remained enabled.
   All 300 tests pass.
+- Thesis overview attention layer is deployed on dashboard revision
+  `atlas-dashboard-stg-00041-xbf` and image `20260625-thesis-overview`.
+  The Paper Portfolio page now summarizes how many holdings are `healthy`,
+  `watch`, `trim`, or `exit`, and ranks the top names needing attention first
+  above the detailed position list. Daily and weekly schedules remained
+  enabled. All 301 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
