@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260625-recommendation-clarity">
+  <link rel="stylesheet" href="/styles.css?v=20260625-paper-activity">
 </head>
 <body>
   <div class="app-shell">
@@ -376,6 +376,22 @@
         </article>
       </section>
       <section class="content-grid">
+        <article class="panel activity-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Executed paper activity</p>
+              <div class="title-with-help">
+                <h2>What Atlas bought and sold</h2>
+                <details class="info-popover">
+                  <summary aria-label="About paper activity">?</summary>
+                  <p>Shows completed simulated buys and sells already recorded in the Atlas paper portfolio, along with the thesis and rationale that drove each action.</p>
+                </details>
+              </div>
+            </div>
+            <span class="tag">Execution audit</span>
+          </div>
+          <div id="paper-activity" class="activity-list"></div>
+        </article>
         <article class="panel simulation-help-panel">
           <div class="panel-heading">
             <div>
@@ -398,6 +414,24 @@
           <div class="simulation-boundary inline-boundary">
             No brokerage order is sent. No real money is spent. This only updates Atlas paper tracking.
           </div>
+        </article>
+      </section>
+      <section class="content-grid">
+        <article class="panel mode-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Portfolio operating mode</p>
+              <div class="title-with-help">
+                <h2>How Atlas is managing the portfolio</h2>
+                <details class="info-popover">
+                  <summary aria-label="About portfolio operating mode">?</summary>
+                  <p>Atlas can be framed either as a recommendation engine or, in a future paper-only phase, as an auto-managing simulated portfolio system. Real trading remains disabled.</p>
+                </details>
+              </div>
+            </div>
+            <span class="tag">Paper-only roadmap</span>
+          </div>
+          <div id="paper-operating-mode" class="mode-grid"></div>
         </article>
       </section>
       </section>
@@ -551,6 +585,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260625-recommendation-clarity"></script>
+  <script src="/app.js?v=20260625-paper-activity"></script>
 </body>
 </html>

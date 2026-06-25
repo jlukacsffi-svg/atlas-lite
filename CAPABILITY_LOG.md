@@ -728,3 +728,30 @@ Current boundaries:
 - Approved paper ideas still require an explicit Simulate fill before they
   appear in the paper portfolio.
 - No brokerage order is sent and no real money is spent.
+
+## June 25, 2026 - Paper Activity And Operating Modes
+
+New capabilities:
+
+- Add a Paper Portfolio activity feed that explains what Atlas bought and sold
+  in simulation, with thesis text and up to three rationale bullets for each
+  completed paper trade.
+- Distinguish executed paper sells from trims and full exits using simulated
+  holding context captured at execution time.
+- Add a portfolio operating-mode section that makes the current
+  recommendation-only workflow explicit while showing a future paper-only
+  auto-manage mode as part of the roadmap.
+
+Validated result:
+
+- Dashboard image `20260625-paper-activity` is deployed.
+- The Paper page now exposes both an executed paper activity audit and a
+  portfolio operating-mode section.
+- The full automated test suite passes with 302 tests.
+
+Current boundaries:
+
+- Atlas is still operating in recommendation mode today; it does not
+  auto-execute paper trades on its own.
+- The new activity feed describes simulated portfolio actions only.
+- Real-money auto-trading remains disabled.

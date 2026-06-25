@@ -332,6 +332,7 @@ class PaperTradingAccount:
             ticker,
             {"shares": 0.0, "average_cost": 0.0},
         )
+        position_shares_before = float(position.get("shares") or 0.0)
         realized = 0.0
 
         if order["side"] == "buy":
@@ -353,6 +354,9 @@ class PaperTradingAccount:
             else:
                 position["shares"] = remaining_shares
                 account["positions"][ticker] = position
+        position_shares_after = float(
+            account.get("positions", {}).get(ticker, {}).get("shares") or 0.0
+        )
 
         account["updated_at"] = now
         self._save_account(account)
@@ -365,6 +369,8 @@ class PaperTradingAccount:
             "proposal_id": proposal_id,
             **order,
             "realized_gain_loss": round(realized, 2),
+            "position_shares_before": round(position_shares_before, 4),
+            "position_shares_after": round(position_shares_after, 4),
             "cash_after": round(account["cash"], 2),
             "policy": dict(account.get("policy", self.policy)),
         }
@@ -567,6 +573,45 @@ class PaperTradingAccount:
             )
         return sorted(rows, key=lambda item: item["filled_at"], reverse=True)
 
+    def trade_activity(self, limit=8):
+        """Return recent simulated buy and sell activity with execution context."""
+        proposals = {
+            proposal["proposal_id"]: proposal
+            for proposal in self.proposals()
+        }
+        recommendations = {
+            recommendation["recommendation_id"]: recommendation
+            for recommendation in self.recommendations()
+        }
+        trades = [
+            event
+            for event in self.ledger()
+            if event.get("event") == "paper_trade"
+        ]
+        rows = []
+        for trade in list(reversed(trades))[:limit]:
+            proposal = proposals.get(trade.get("proposal_id"), {})
+            recommendation = recommendations.get(trade.get("recommendation_id"), {})
+            rationale = proposal.get("rationale") or recommendation.get("rationale") or []
+            title, summary = self._trade_activity_text(trade, proposal)
+            rows.append(
+                {
+                    "trade_id": trade.get("trade_id"),
+                    "timestamp": trade.get("timestamp"),
+                    "ticker": trade.get("ticker"),
+                    "side": trade.get("side"),
+                    "action_label": self._trade_action_label(trade, proposal),
+                    "shares": trade.get("shares"),
+                    "fill_price": trade.get("price"),
+                    "realized_gain_loss": trade.get("realized_gain_loss"),
+                    "title": title,
+                    "summary": summary,
+                    "thesis": proposal.get("thesis") or trade.get("thesis"),
+                    "rationale": rationale,
+                }
+            )
+        return rows
+
     @staticmethod
     def _pct_return(start, end):
         if start in (None, 0) or end is None:
@@ -614,6 +659,56 @@ class PaperTradingAccount:
             "summary": summary,
             "thesis": proposal.get("thesis") or trade.get("thesis"),
         }
+
+    @staticmethod
+    def _trade_action_label(trade, proposal):
+        side = str(trade.get("side") or "").lower()
+        if side == "buy":
+            return "purchase"
+        action = str(proposal.get("action_label") or "").strip().lower()
+        if action in {"trim", "exit"}:
+            return action
+        before = float(trade.get("position_shares_before") or 0.0)
+        after = float(trade.get("position_shares_after") or 0.0)
+        if before and after > 0:
+            return "trim"
+        if before:
+            return "exit"
+        return "sell"
+
+    @classmethod
+    def _trade_activity_text(cls, trade, proposal):
+        ticker = trade.get("ticker") or "Holding"
+        shares = float(trade.get("shares") or 0.0)
+        action = cls._trade_action_label(trade, proposal)
+        thesis = proposal.get("thesis") or trade.get("thesis") or "No thesis supplied."
+        if action == "purchase":
+            return (
+                f"Atlas purchased {ticker}",
+                (
+                    f"Atlas added {shares:g} shares to the simulated portfolio because "
+                    f"{thesis}"
+                ),
+            )
+        if action == "trim":
+            return (
+                f"Atlas trimmed {ticker}",
+                (
+                    f"Atlas reduced the simulated holding by {shares:g} shares because "
+                    f"{thesis}"
+                ),
+            )
+        if action == "exit":
+            return (
+                f"Atlas sold {ticker}",
+                (
+                    f"Atlas closed the simulated position because {thesis}"
+                ),
+            )
+        return (
+            f"Atlas sold {ticker}",
+            f"Atlas recorded a simulated sale because {thesis}",
+        )
 
     def trade_statistics(self):
         events = self.ledger()

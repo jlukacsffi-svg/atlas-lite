@@ -289,6 +289,8 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .simulation-help-panel { border-top-color: var(--cyan); }
 .feedback-panel { border-top-color: var(--green); background: linear-gradient(180deg, #f4fbf8 0, var(--surface) 70px); }
 .thesis-overview-panel { border-top-color: var(--blue); background: linear-gradient(180deg, #f5f8ff 0, var(--surface) 70px); }
+.activity-panel { border-top-color: var(--gold); background: linear-gradient(180deg, #fffaf0 0, var(--surface) 70px); }
+.mode-panel { border-top-color: var(--cyan); background: linear-gradient(180deg, #f2fbfd 0, var(--surface) 70px); }
 .panel-heading {
   display: flex;
   align-items: flex-start;
@@ -363,7 +365,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .swatch.positive { background: var(--green); }
 .swatch.negative { background: var(--red); }
 
-.rank-list, .mover-list, .task-list, .positions, .action-list, .feedback-list { display: grid; gap: 2px; }
+.rank-list, .mover-list, .task-list, .positions, .action-list, .feedback-list, .activity-list { display: grid; gap: 2px; }
 .recommendation-list { display: grid; gap: 8px; }
 .recommendation-summary {
   display: grid;
@@ -611,6 +613,80 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   color: var(--muted);
   font-size: 11px;
   line-height: 1.5;
+}
+.activity-row {
+  padding: 13px 0;
+  border-bottom: 1px solid #edf0f2;
+}
+.activity-row:last-child { border-bottom: 0; }
+.activity-row p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.activity-row.sell .tag {
+  color: var(--red);
+  background: var(--red-soft);
+}
+.why-now.compact {
+  margin-top: 10px;
+  padding: 9px 10px;
+}
+.why-now.compact span {
+  margin-bottom: 4px;
+}
+.mode-grid {
+  display: grid;
+  gap: 18px;
+}
+.mode-current {
+  padding: 14px;
+  border: 1px solid #b9d8e1;
+  border-left: 4px solid var(--cyan);
+  border-radius: 6px;
+  background: var(--cyan-soft);
+}
+.mode-current strong {
+  display: block;
+  margin: 8px 0 6px;
+  font-size: 18px;
+}
+.mode-current p {
+  margin: 0 0 8px;
+  color: #234953;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.mode-current small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.mode-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+.mode-option {
+  min-height: 132px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.mode-option p {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.mode-option.active {
+  border-color: #bdd0ff;
+  background: #f4f8ff;
+}
+.mode-option.planned {
+  border-color: #b9d8e1;
+  background: #f7fcfd;
 }
 .feedback-row.working .verdict-tag { color: var(--green); background: var(--green-soft); }
 .feedback-row.lagging .verdict-tag { color: var(--red); background: var(--red-soft); }
@@ -976,6 +1052,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .access-summary:nth-child(-n+8) { border-bottom: 1px solid var(--line); }
   .thesis-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .recommendation-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mode-options { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 760px) {

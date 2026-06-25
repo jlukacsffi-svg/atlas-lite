@@ -275,6 +275,67 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(feedback[0]["benchmark_returns_pct"]["SPY"], 1.0)
         self.assertEqual(feedback[0]["benchmark_returns_pct"]["QQQ"], 2.0)
 
+    def test_trade_activity_describes_buys_and_sells_with_context(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+            buy = account.create_proposal(
+                "buy",
+                "NVDA",
+                10,
+                100,
+                "NVDA remains a high-conviction paper entry.",
+                rationale=["Atlas score is above the buy threshold."],
+            )
+            account.record_proposal_risk_review(
+                buy["proposal_id"],
+                "clear",
+                [],
+            )
+            account.decide_proposal(buy["proposal_id"], "approve")
+            account.execute_order(
+                "buy",
+                "NVDA",
+                10,
+                100,
+                "NVDA remains a high-conviction paper entry.",
+                proposal_id=buy["proposal_id"],
+            )
+            sell = account.create_proposal(
+                "sell",
+                "NVDA",
+                10,
+                110,
+                "Atlas wants to close the paper position after thesis deterioration.",
+                rationale=["Thesis drift triggered an exit review."],
+            )
+            account.record_proposal_risk_review(
+                sell["proposal_id"],
+                "clear",
+                [],
+            )
+            account.decide_proposal(sell["proposal_id"], "approve")
+            account.execute_order(
+                "sell",
+                "NVDA",
+                10,
+                110,
+                "Atlas wants to close the paper position after thesis deterioration.",
+                proposal_id=sell["proposal_id"],
+            )
+
+            activity = account.trade_activity()
+
+        self.assertEqual(activity[0]["action_label"], "exit")
+        self.assertEqual(activity[0]["title"], "Atlas sold NVDA")
+        self.assertIn("closed the simulated position", activity[0]["summary"])
+        self.assertEqual(activity[1]["action_label"], "purchase")
+        self.assertEqual(activity[1]["title"], "Atlas purchased NVDA")
+        self.assertEqual(
+            activity[1]["rationale"][0],
+            "Atlas score is above the buy threshold.",
+        )
+
     def test_performance_snapshot_requires_all_position_prices(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)

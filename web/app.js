@@ -128,6 +128,8 @@ function renderDashboard(data) {
   renderCorporateActions(data.corporate_actions || []);
   renderThesisOverview(paper.thesis_overview || {});
   renderPositions(paper.positions || []);
+  renderPaperActivity(paper.activity || []);
+  renderPaperOperatingMode(paper.operating_mode || {});
   renderPaperFeedback(paper.feedback || []);
   renderRecommendationSummary(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderRecommendations(data.owner_controls?.paper_proposals || [], data.watchlist || []);
@@ -680,6 +682,47 @@ function renderPaperFeedback(rows) {
         </div>
       </article>`;
   }).join("") || `<div class="empty">No executed paper recommendations have enough tracking data yet.</div>`;
+}
+
+function renderPaperActivity(rows) {
+  document.getElementById("paper-activity").innerHTML = rows.map(item => {
+    const action = String(item.action_label || item.side || "activity");
+    const rationale = item.rationale || [];
+    return `
+      <article class="activity-row ${escapeHtml(item.side || "buy")}">
+        <div>
+          <span class="tag ${item.side === "sell" ? "exit-tag" : "buy-tag"}">${escapeHtml(action).replaceAll("_", " ")}</span>
+          <b class="row-title">${escapeHtml(item.title || "Atlas activity")}</b>
+          <small class="row-meta">${new Date(item.timestamp).toLocaleString()} · ${Number(item.shares || 0).toFixed(2)} shares · ${money.format(Number(item.fill_price) || 0)}</small>
+          <p>${escapeHtml(item.summary || "Atlas recorded a simulated trade.")}</p>
+          ${item.side === "sell" ? `<small class="row-meta ${changeClass(item.realized_gain_loss)}">Realized result ${money.format(Number(item.realized_gain_loss) || 0)}</small>` : ""}
+          <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+          ${rationale.length ? `<div class="why-now compact"><span>Why</span><ul>${rationale.slice(0, 3).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
+        </div>
+      </article>`;
+  }).join("") || `<div class="empty">No simulated buys or sells have been recorded yet.</div>`;
+}
+
+function renderPaperOperatingMode(mode) {
+  const current = mode.current || {};
+  const modes = mode.modes || [];
+  document.getElementById("paper-operating-mode").innerHTML = `
+    <div class="mode-current">
+      <span class="access-label">Current mode</span>
+      <strong>${escapeHtml(current.label || "Recommendation mode")}</strong>
+      <p>${escapeHtml(current.description || "Atlas is currently operating as a recommendation engine.")}</p>
+      <small>${escapeHtml(mode.boundary || "Real-money trading remains disabled.")}</small>
+    </div>
+    <div class="mode-options">
+      ${modes.map(item => `
+        <div class="mode-option ${escapeHtml(item.status || "planned")}">
+          <span class="tag ${item.status === "active" ? "ready-tag" : ""}">${escapeHtml(item.status || "planned")}</span>
+          <b class="row-title">${escapeHtml(item.label || "Mode")}</b>
+          <p>${escapeHtml(item.description || "")}</p>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderTasks(rows) {

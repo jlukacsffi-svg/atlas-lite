@@ -257,13 +257,52 @@ class DashboardDataService:
             "excess_return_pct": performance.get("excess_return_pct", {}),
             "positions": positions,
             "thesis_overview": self._thesis_overview(positions),
+            "operating_mode": self._paper_operating_mode(),
+            "activity": self.paper_account.trade_activity(),
             "feedback": self.paper_account.proposal_feedback(),
             "proposals": {
                 "pending": sum(1 for item in proposals if item["status"] == "pending"),
                 "approved": sum(1 for item in proposals if item["status"] == "approved"),
                 "rejected": sum(1 for item in proposals if item["status"] == "rejected"),
-                "executed": sum(1 for item in proposals if item["status"] == "executed"),
+            "executed": sum(1 for item in proposals if item["status"] == "executed"),
             },
+        }
+
+    @staticmethod
+    def _paper_operating_mode():
+        return {
+            "current": {
+                "id": "recommendation_only",
+                "label": "Recommendation mode",
+                "description": (
+                    "Atlas currently researches, proposes, and explains paper trades, "
+                    "but it does not auto-execute them."
+                ),
+            },
+            "modes": [
+                {
+                    "id": "recommendation_only",
+                    "label": "Recommendation mode",
+                    "status": "active",
+                    "description": (
+                        "Atlas surfaces buys, trims, and exits for owner review before "
+                        "anything is recorded."
+                    ),
+                },
+                {
+                    "id": "paper_auto_manage",
+                    "label": "Auto-manage paper portfolio",
+                    "status": "planned",
+                    "description": (
+                        "Future Atlas mode: automatically maintain a simulated portfolio "
+                        "using approved paper rules and a full audit trail."
+                    ),
+                },
+            ],
+            "boundary": (
+                "Real-money auto-trading remains disabled. Future automation, if added, "
+                "must stay paper-only until explicitly expanded."
+            ),
         }
 
     @staticmethod
