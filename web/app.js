@@ -129,11 +129,84 @@ function renderDashboard(data) {
   renderThesisOverview(paper.thesis_overview || {});
   renderPositions(paper.positions || []);
   renderPaperFeedback(paper.feedback || []);
+  renderRecommendationSummary(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderRecommendations(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderTasks(data.research?.tasks || []);
   renderOwnerControls(data.owner_controls || null);
   renderAccess(data.access || {});
   renderWorkspace(data.workspace || null);
+}
+
+function recommendationStageLabel(item) {
+  if (item.side === "sell") {
+    return proposalActionLabel(item) === "trim" ? "Trim candidate" : "Exit candidate";
+  }
+  return item.status === "approved" ? "Ready to simulate" : "Buy candidate";
+}
+
+function recommendationStageClass(item) {
+  if (item.side === "sell") return "exit";
+  return item.status === "approved" ? "ready" : "buy";
+}
+
+function recommendationRank(item) {
+  if (item.side === "buy" && item.status === "approved") return 0;
+  if (item.side === "buy") return 1;
+  if (item.side === "sell" && proposalActionLabel(item) === "trim") return 2;
+  return 3;
+}
+
+function renderRecommendationSummary(proposals, watchlist) {
+  const rows = proposals || [];
+  const summary = {
+    buyPending: rows.filter(item => item.side === "buy" && item.status === "pending").length,
+    buyReady: rows.filter(item => item.side === "buy" && item.status === "approved").length,
+    reduce: rows.filter(item => item.side === "sell").length,
+    tracked: (watchlist || []).length,
+  };
+  const highlights = rows
+    .slice()
+    .sort((left, right) => recommendationRank(left) - recommendationRank(right))
+    .slice(0, 3);
+
+  document.getElementById("recommendation-summary").innerHTML = `
+    <div class="recommendation-summary-grid">
+      <div class="recommendation-summary-card">
+        <span class="summary-label">Buy candidates</span>
+        <strong>${summary.buyPending}</strong>
+        <small>Need owner approval</small>
+      </div>
+      <div class="recommendation-summary-card ready">
+        <span class="summary-label">Ready to simulate</span>
+        <strong>${summary.buyReady}</strong>
+        <small>Approved, waiting for Simulate fill</small>
+      </div>
+      <div class="recommendation-summary-card exit">
+        <span class="summary-label">Reduce / exit</span>
+        <strong>${summary.reduce}</strong>
+        <small>Paper risk reviews in force</small>
+      </div>
+      <div class="recommendation-summary-card tracked">
+        <span class="summary-label">Tracked list</span>
+        <strong>${summary.tracked}</strong>
+        <small>Universe names under coverage</small>
+      </div>
+    </div>
+    <div class="recommendation-summary-focus">
+      <span class="access-label">Atlas focus right now</span>
+      <div class="recommendation-focus-list">
+        ${highlights.length ? highlights.map(item => `
+          <div class="recommendation-focus-row">
+            <span class="thesis-badge ${recommendationStageClass(item)}">${escapeHtml(recommendationStageLabel(item))}</span>
+            <div>
+              <b class="row-title">${escapeHtml(item.ticker || "Proposal")}</b>
+              <small class="row-meta">${escapeHtml((item.rationale || [item.thesis || "Awaiting rationale."])[0] || "Awaiting rationale.")}</small>
+            </div>
+          </div>
+        `).join("") : `<div class="empty">No active Atlas paper recommendations right now.</div>`}
+      </div>
+    </div>
+  `;
 }
 
 function setActivePage(pageId) {
@@ -355,14 +428,19 @@ function proposalControlTitle(item) {
 }
 
 function renderRecommendations(proposals, watchlist) {
-  const buyProposals = (proposals || []).filter(item => item.side === "buy");
-  const sellProposals = (proposals || []).filter(item => item.side === "sell");
+  const buyProposals = (proposals || [])
+    .filter(item => item.side === "buy")
+    .sort((left, right) => recommendationRank(left) - recommendationRank(right));
+  const sellProposals = (proposals || [])
+    .filter(item => item.side === "sell")
+    .sort((left, right) => recommendationRank(left) - recommendationRank(right));
   const buyHtml = buyProposals.map(item => `
     <article class="recommendation-row ${item.status === "approved" ? "approved-rec" : ""}">
-      <span class="tag buy-tag">${escapeHtml(item.status)}</span>
+      <span class="tag ${item.status === "approved" ? "ready-tag" : "buy-tag"}">${escapeHtml(recommendationStageLabel(item))}</span>
       <div>
         <b class="row-title">${proposalHeadline(item)}</b>
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+        <small class="row-meta">${item.status === "approved" ? "Status: approved by owner and ready for Simulate fill." : "Status: Atlas recommends this idea, but it still needs owner approval."}</small>
         ${renderRationale(item.rationale, item)}
         <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to add this to the paper portfolio." : "Next step: approve or reject this paper proposal in Controls."}</small>
       </div>
@@ -374,10 +452,11 @@ function renderRecommendations(proposals, watchlist) {
   });
   const sellHtml = sellProposals.map(item => `
     <article class="recommendation-row exit-rec ${item.status === "approved" ? "approved-rec" : ""}">
-      <span class="tag exit-tag">${escapeHtml(item.status)}</span>
+      <span class="tag exit-tag">${escapeHtml(recommendationStageLabel(item))}</span>
       <div>
         <b class="row-title">${proposalHeadline(item)}</b>
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+        <small class="row-meta">Status: Atlas wants to ${escapeHtml(proposalActionLabel(item))} simulated exposure in this holding.</small>
         ${proposalImpact(item)}
         ${renderRationale(item.rationale, item)}
         <small class="row-meta">${item.status === "approved" ? `Next step: use Simulate fill to record this simulated ${proposalActionLabel(item)}.` : `Next step: approve or reject this simulated ${proposalActionLabel(item)} proposal in Controls.`}</small>
@@ -391,7 +470,7 @@ function renderRecommendations(proposals, watchlist) {
 
   if (watchlist === null) return;
   const fullRows = (watchlist || []).slice(0, 80).map(item => `
-    <div class="watchlist-item">
+    <div class="watchlist-item ${item.category === "Core" ? "core" : item.category === "Watchlist" ? "watchlist" : "tracked"}">
       <b>${escapeHtml(item.ticker)}</b>
       <span>${escapeHtml(item.category || "Tracked")}</span>
       <small>${escapeHtml(item.sector || "Unclassified")}${item.score === null || item.score === undefined ? "" : ` - score ${Number(item.score).toFixed(1)}`}</small>

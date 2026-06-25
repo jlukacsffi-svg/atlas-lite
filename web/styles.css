@@ -283,6 +283,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .performance-panel { border-top-color: var(--green); }
 .breadth-panel { border-top-color: var(--cyan); }
 .recommendation-panel { border-top-color: var(--gold); background: linear-gradient(180deg, #fffaf0 0, var(--surface) 70px); }
+.recommendation-summary-panel { border-top-color: var(--cyan); background: linear-gradient(180deg, #f2fbfd 0, var(--surface) 80px); }
 .exit-panel { border-top-color: var(--red); background: linear-gradient(180deg, #fff6f7 0, var(--surface) 70px); }
 .current-list-panel { border-top-color: var(--blue); background: linear-gradient(180deg, #f4f7ff 0, var(--surface) 70px); }
 .simulation-help-panel { border-top-color: var(--cyan); }
@@ -310,6 +311,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 }
 .tag { color: var(--green); background: var(--green-soft); }
 .buy-tag { color: #7a4f00; background: var(--gold-soft); }
+.ready-tag { color: var(--blue); background: var(--blue-soft); }
 .exit-tag { color: var(--red); background: var(--red-soft); }
 
 .chart-wrap { width: 100%; aspect-ratio: 720 / 260; min-height: 210px; }
@@ -363,6 +365,67 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 
 .rank-list, .mover-list, .task-list, .positions, .action-list, .feedback-list { display: grid; gap: 2px; }
 .recommendation-list { display: grid; gap: 8px; }
+.recommendation-summary {
+  display: grid;
+  gap: 18px;
+}
+.recommendation-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.recommendation-summary-card {
+  min-height: 88px;
+  display: grid;
+  align-content: center;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid #ead4a9;
+  border-radius: 8px;
+  background: #fffbf2;
+}
+.recommendation-summary-card.ready {
+  border-color: #bdd0ff;
+  background: #f4f8ff;
+}
+.recommendation-summary-card.exit {
+  border-color: #f0c4c9;
+  background: #fff7f8;
+}
+.recommendation-summary-card.tracked {
+  border-color: #c6d5ea;
+  background: #f8fbff;
+}
+.summary-label {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.recommendation-summary-card strong {
+  font-size: 26px;
+  line-height: 1;
+}
+.recommendation-summary-card small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.recommendation-focus-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+.recommendation-focus-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf0f2;
+}
+.recommendation-focus-row:last-child {
+  border-bottom: 0;
+}
 .recommendation-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -416,6 +479,18 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   border: 1px solid var(--line);
   border-radius: 6px;
   background: var(--surface);
+}
+.watchlist-item.core {
+  border-color: #b8d8cc;
+  background: #f4fbf8;
+}
+.watchlist-item.watchlist {
+  border-color: #dfc483;
+  background: #fffaf0;
+}
+.watchlist-item.tracked {
+  border-color: #c6d5ea;
+  background: #f8fbff;
 }
 .watchlist-item.compact { min-height: 48px; }
 .watchlist-item b,
@@ -517,6 +592,14 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .thesis-badge.exit {
   color: var(--red);
   background: var(--red-soft);
+}
+.thesis-badge.buy {
+  color: #7a4f00;
+  background: var(--gold-soft);
+}
+.thesis-badge.ready {
+  color: var(--blue);
+  background: var(--blue-soft);
 }
 .feedback-row {
   padding: 13px 0;
@@ -892,6 +975,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .access-summary:nth-child(2n) { border-right: 0; }
   .access-summary:nth-child(-n+8) { border-bottom: 1px solid var(--line); }
   .thesis-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .recommendation-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -943,6 +1027,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .access-grid { grid-template-columns: 1fr; }
   .authority-strip { grid-template-columns: 1fr; }
   .thesis-counts { grid-template-columns: 1fr 1fr; }
+  .recommendation-summary-grid { grid-template-columns: 1fr; }
   .access-summary,
   .access-summary:nth-child(2) {
     border-right: 0;

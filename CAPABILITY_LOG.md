@@ -696,3 +696,35 @@ Current boundaries:
 - Owner approval and explicit Simulate fill confirmation remain required before
   the paper portfolio changes.
 - No brokerage order is sent and no real money is spent.
+
+## June 25, 2026 - Recommendation Queue Clarity
+
+New capabilities:
+
+- Add a Recommendations-page queue summary that separates buy candidates,
+  approved ideas that are ready for simulated fill, reduce or exit reviews,
+  and the broader tracked universe.
+- Surface an "Atlas focus right now" strip so the owner can immediately see the
+  highest-priority recommendation states and the first rationale line for each.
+- Make recommendation cards more explicit about their current stage, including
+  "Buy candidate", "Ready to simulate", "Trim candidate", and "Exit candidate".
+- Add stronger visual separation for Core, Watchlist, and tracked universe names
+  so the current Atlas list is easier to scan beside active recommendations.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00042-gdg` is serving 100% traffic.
+- Dashboard image `20260625-recommendation-clarity` is deployed.
+- The Recommendations page now exposes the recommendation queue summary and the
+  revised recommendation-stage labels.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 301 tests.
+
+Current boundaries:
+
+- The queue clarifies paper-only recommendations; it does not change the
+  underlying research model or authorize real trades.
+- Approved paper ideas still require an explicit Simulate fill before they
+  appear in the paper portfolio.
+- No brokerage order is sent and no real money is spent.

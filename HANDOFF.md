@@ -551,3 +551,12 @@ Estimated overall Atlas program completion: 93%.
 - `scripts/run_atlas_weekly.ps1`: weekly summary scheduled runner.
 - `scripts/setup_windows_scheduled_task.ps1`: Windows Scheduled Task setup.
 - `scripts/setup_windows_weekly_summary_task.ps1`: Windows Weekly Summary Scheduled Task setup.
+
+Latest staging update:
+
+- Recommendations page now includes a queue summary panel, clearer stage labels
+  for buy and sell-side ideas, and stronger color separation for the tracked
+  universe cards.
+- Active Cloud Run revision is `atlas-dashboard-stg-00042-gdg`.
+- Cache-busted web asset image tag is `20260625-recommendation-clarity`.
+- Full test suite passes with 301 tests before deploy.

@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260625-thesis-overview">
+  <link rel="stylesheet" href="/styles.css?v=20260625-recommendation-clarity">
 </head>
 <body>
   <div class="app-shell">
@@ -122,6 +122,22 @@
 
       <section id="recommendations" class="dashboard-page" data-page="recommendations">
         <section class="content-grid">
+          <article class="panel recommendation-summary-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Decision framing</p>
+                <div class="title-with-help">
+                  <h2>Recommendation queue</h2>
+                  <details class="info-popover">
+                    <summary aria-label="About recommendation queue">?</summary>
+                    <p>This section separates Atlas ideas into what is still under review, what is already approved and ready for simulated fill, and what is being tracked without an active purchase recommendation.</p>
+                  </details>
+                </div>
+              </div>
+              <span class="tag">Owner workflow</span>
+            </div>
+            <div id="recommendation-summary" class="recommendation-summary"></div>
+          </article>
           <article class="panel recommendation-panel">
             <div class="panel-heading">
               <div>
@@ -535,6 +551,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260625-thesis-overview"></script>
+  <script src="/app.js?v=20260625-recommendation-clarity"></script>
 </body>
 </html>
