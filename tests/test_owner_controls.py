@@ -66,9 +66,50 @@ class OwnerControlServiceTests(unittest.TestCase):
             model["paper_proposals"][0]["proposal_id"],
             proposal["proposal_id"],
         )
+        self.assertEqual(model["paper_proposals"][0]["action_label"], "purchase")
         self.assertFalse(model["capabilities"]["real_trading"])
         self.assertFalse(model["capabilities"]["brokerage_connection"])
         self.assertIn("owner_outcomes", model)
+
+    def test_model_labels_partial_sell_as_trim(self):
+        buy = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            buy["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(buy["proposal_id"], "approve")
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+            proposal_id=buy["proposal_id"],
+        )
+        sell = self.dashboard.paper_account.create_proposal(
+            "sell",
+            "RISK",
+            5,
+            125,
+            "Trim review.",
+        )
+
+        model = self.service.model()
+        proposal = next(
+            item
+            for item in model["paper_proposals"]
+            if item["proposal_id"] == sell["proposal_id"]
+        )
+
+        self.assertEqual(proposal["action_label"], "trim")
+        self.assertEqual(proposal["position_shares"], 10.0)
 
     def test_model_ranks_recurring_thesis_risks_first(self):
         proposal = self.dashboard.paper_account.create_proposal(
@@ -410,12 +451,64 @@ class OwnerControlServiceTests(unittest.TestCase):
 
         self.assertTrue(result["simulation_only"])
         self.assertEqual(result["side"], "sell")
+        self.assertEqual(result["action_label"], "exit")
         self.assertEqual(result["price"], 125.0)
         self.assertNotIn("RISK", state["positions"])
         self.assertEqual(
             self.dashboard.paper_account.proposal_status(proposal_id),
             "executed",
         )
+
+    def test_paper_fill_can_record_approved_simulated_trim(self):
+        buy = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            buy["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(buy["proposal_id"], "approve")
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+            proposal_id=buy["proposal_id"],
+        )
+        sell = self.dashboard.paper_account.create_proposal(
+            "sell",
+            "RISK",
+            5,
+            125,
+            "Paper trim review.",
+        )
+        proposal_id = sell["proposal_id"]
+        self.dashboard.paper_account.record_proposal_risk_review(
+            proposal_id,
+            "caution",
+            ["Trim review."],
+        )
+        self.dashboard.paper_account.decide_proposal(proposal_id, "approve")
+
+        result = self.service.apply(
+            "paper-fill",
+            {
+                "proposal_id": proposal_id,
+                "confirmation": f"SIMULATE {proposal_id}",
+            },
+        )
+        state = self.dashboard.paper_account.load()
+
+        self.assertTrue(result["simulation_only"])
+        self.assertEqual(result["side"], "sell")
+        self.assertEqual(result["action_label"], "trim")
+        self.assertEqual(state["positions"]["RISK"]["shares"], 5.0)
 
     def test_persistence_failure_restores_local_artifacts(self):
         original = self.dashboard.research_queue.task_file.read_bytes()

@@ -32,23 +32,46 @@ function renderEnvironment() {
 function initializeHelpPopovers() {
   document.querySelectorAll(".info-popover").forEach(popover => {
     const trigger = popover.querySelector("summary");
-    popover.addEventListener("toggle", () => {
-      if (!popover.open) return;
+    let closeTimer = null;
+    const clearCloseTimer = () => {
+      if (closeTimer) {
+        window.clearTimeout(closeTimer);
+        closeTimer = null;
+      }
+    };
+    const openPopover = () => {
+      clearCloseTimer();
       document.querySelectorAll(".info-popover[open]").forEach(other => {
         if (other !== popover) other.open = false;
       });
-    });
-    if (trigger) {
-      trigger.addEventListener("mouseleave", () => {
+      popover.open = true;
+    };
+    const scheduleClose = () => {
+      clearCloseTimer();
+      closeTimer = window.setTimeout(() => {
         popover.open = false;
+      }, 120);
+    };
+    if (trigger) {
+      trigger.addEventListener("click", event => {
+        event.preventDefault();
+        if (popover.open) {
+          popover.open = false;
+          clearCloseTimer();
+          return;
+        }
+        openPopover();
       });
+      trigger.addEventListener("mouseenter", openPopover);
+      trigger.addEventListener("mouseleave", scheduleClose);
+      trigger.addEventListener("focus", openPopover);
+      trigger.addEventListener("blur", scheduleClose);
     }
-    popover.addEventListener("mouseleave", () => {
-      popover.open = false;
-    });
+    popover.addEventListener("mouseenter", clearCloseTimer);
+    popover.addEventListener("mouseleave", scheduleClose);
     popover.addEventListener("focusout", event => {
       if (!popover.contains(event.relatedTarget)) {
-        popover.open = false;
+        scheduleClose();
       }
     });
   });
@@ -58,17 +81,9 @@ function initializeHelpPopovers() {
       popover.open = false;
     });
   });
-  document.addEventListener("mousemove", event => {
+  document.addEventListener("pointerdown", event => {
     document.querySelectorAll(".info-popover[open]").forEach(popover => {
-      const trigger = popover.querySelector("summary");
-      if (!trigger) return;
-      const rect = trigger.getBoundingClientRect();
-      const onTrigger =
-        event.clientX >= rect.left &&
-        event.clientX <= rect.right &&
-        event.clientY >= rect.top &&
-        event.clientY <= rect.bottom;
-      if (!onTrigger) popover.open = false;
+      if (!popover.contains(event.target)) popover.open = false;
     });
   });
 }
@@ -263,11 +278,12 @@ function renderOwnerControls(controls) {
       <article class="decision-row">
         <div>
           <span class="tag ${item.side === "buy" ? "buy-tag" : "exit-tag"}">${escapeHtml(item.status)}</span>
-          <b class="row-title">${escapeHtml(item.side).toUpperCase()} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}</b>
+          <b class="row-title">${proposalControlTitle(item)}</b>
           <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} · Risk ${escapeHtml(review.verdict || "pending")}</small>
           <p>${escapeHtml(item.thesis || "No thesis supplied.")}</p>
+          ${proposalImpact(item)}
           ${renderRationale(item.rationale, item)}
-          <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical ${item.side === "sell" ? "exit or trim" : "position"} in Atlas paper tracking.</small>
+          <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical ${proposalActionLabel(item)} in Atlas paper tracking.</small>
         </div>
         <div class="decision-actions">
           ${approved ? `
@@ -302,6 +318,41 @@ function renderOwnerOutcomes(outcomes) {
   `;
 }
 
+function proposalActionLabel(item) {
+  return item.action_label || (item.side === "sell" ? "exit or trim" : "purchase");
+}
+
+function proposalHeadline(item) {
+  if (item.side === "sell") {
+    return `${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)} recommended for simulated ${escapeHtml(proposalActionLabel(item))}`;
+  }
+  return `${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)} recommended for paper purchase`;
+}
+
+function proposalImpact(item) {
+  if (item.side !== "sell") return "";
+  const held = Number(item.position_shares || 0);
+  const shares = Number(item.shares || 0);
+  const remaining = Math.max(held - shares, 0);
+  if (!held) {
+    return `<small class="row-meta">Current simulated holding is unavailable, so Atlas is treating this as a sell review.</small>`;
+  }
+  if (proposalActionLabel(item) === "trim") {
+    return `<small class="row-meta">Would reduce the simulated holding from ${held.toFixed(2)} shares to ${remaining.toFixed(2)} shares.</small>`;
+  }
+  if (proposalActionLabel(item) === "exit") {
+    return `<small class="row-meta">Would close the full simulated holding of ${held.toFixed(2)} shares.</small>`;
+  }
+  return `<small class="row-meta">Current simulated holding: ${held.toFixed(2)} shares.</small>`;
+}
+
+function proposalControlTitle(item) {
+  if (item.side === "sell") {
+    return `${escapeHtml(proposalActionLabel(item).toUpperCase())} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}`;
+  }
+  return `${escapeHtml(item.side).toUpperCase()} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}`;
+}
+
 function renderRecommendations(proposals, watchlist) {
   const buyProposals = (proposals || []).filter(item => item.side === "buy");
   const sellProposals = (proposals || []).filter(item => item.side === "sell");
@@ -309,7 +360,7 @@ function renderRecommendations(proposals, watchlist) {
     <article class="recommendation-row ${item.status === "approved" ? "approved-rec" : ""}">
       <span class="tag buy-tag">${escapeHtml(item.status)}</span>
       <div>
-        <b class="row-title">${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)} recommended for paper purchase</b>
+        <b class="row-title">${proposalHeadline(item)}</b>
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
         ${renderRationale(item.rationale, item)}
         <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to add this to the paper portfolio." : "Next step: approve or reject this paper proposal in Controls."}</small>
@@ -324,10 +375,11 @@ function renderRecommendations(proposals, watchlist) {
     <article class="recommendation-row exit-rec ${item.status === "approved" ? "approved-rec" : ""}">
       <span class="tag exit-tag">${escapeHtml(item.status)}</span>
       <div>
-        <b class="row-title">${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)} recommended for simulated exit / trim</b>
+        <b class="row-title">${proposalHeadline(item)}</b>
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+        ${proposalImpact(item)}
         ${renderRationale(item.rationale, item)}
-        <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to update the paper portfolio." : "Next step: approve or reject this paper exit proposal in Controls."}</small>
+        <small class="row-meta">${item.status === "approved" ? `Next step: use Simulate fill to record this simulated ${proposalActionLabel(item)}.` : `Next step: approve or reject this simulated ${proposalActionLabel(item)} proposal in Controls.`}</small>
       </div>
     </article>
   `).join("") || `<div class="empty">No current paper exit or trim recommendations. Atlas will surface one here if an open simulated position weakens.</div>`;
@@ -370,7 +422,7 @@ function renderRationale(rationale, item = {}) {
   if (!rows.length) return "";
   return `
     <div class="why-now">
-      <span>Why now</span>
+      <span>${item.side === "sell" ? "Why now / why reduce" : "Why now"}</span>
       <ul>${rows.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     </div>`;
 }
@@ -547,15 +599,16 @@ function openPaperFillDialog(proposalId, button) {
   const expected = `SIMULATE ${proposalId}`;
   pendingPaperFill = { proposalId, expected, button };
   const isSell = proposal.side === "sell";
+  const action = proposalActionLabel(proposal);
   document.getElementById("paper-fill-summary").textContent =
     isSell
-      ? `This will record a simulated ${proposal.side.toUpperCase()} of ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} in the Atlas paper portfolio at the latest available market price. It may reduce or close the simulated holding.`
+      ? `This will record a simulated ${action.toUpperCase()} of ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} in the Atlas paper portfolio at the latest available market price.`
       : `This will add a simulated ${proposal.side.toUpperCase()} position of ${Number(proposal.shares).toFixed(2)} ${proposal.ticker} to the Atlas paper portfolio at the latest available market price.`;
   document.getElementById("paper-fill-expected").textContent = expected;
   document.getElementById("paper-fill-confirmation").value = "";
   document.getElementById("paper-fill-submit").disabled = true;
   document.getElementById("paper-fill-submit").textContent =
-    isSell ? "Record simulated exit / trim" : "Record simulated purchase";
+    isSell ? `Record simulated ${action}` : "Record simulated purchase";
   document.getElementById("paper-fill-dialog").showModal();
   document.getElementById("paper-fill-confirmation").focus();
 }
@@ -577,7 +630,7 @@ async function submitOwnerAction(action, payload, button) {
     }
     showMessage(
       action === "paper-fill"
-        ? `Simulated ${result.result?.side === "sell" ? "exit / trim" : "purchase"} recorded. Portfolio tracking is active.`
+        ? `Simulated ${result.result?.action_label || (result.result?.side === "sell" ? "sell" : "purchase")} recorded. Portfolio tracking is active.`
         : "Owner action saved.",
       false
     );

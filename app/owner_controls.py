@@ -23,6 +23,7 @@ class OwnerControlService:
         awaiting = self.research_queue.list_tasks(status="awaiting_owner")
         ranked_reviews = self._rank_research_reviews(awaiting)
         action_context = self._action_context()
+        position_shares = self._position_shares()
         proposals = [
             proposal
             for proposal in self.paper_account.proposals()
@@ -48,6 +49,11 @@ class OwnerControlService:
                     "thesis": item["thesis"],
                     "rationale": item.get("rationale", []),
                     "risk_review": item.get("risk_review"),
+                    "position_shares": position_shares.get(item["ticker"], 0.0),
+                    "action_label": self._proposal_action_label(
+                        item,
+                        position_shares,
+                    ),
                 }
                 for item in proposals
             ],
@@ -59,6 +65,32 @@ class OwnerControlService:
                 "brokerage_connection": False,
             },
         }
+
+    def _position_shares(self):
+        if not self.paper_account.account_file.exists():
+            return {}
+        try:
+            status = self.paper_account.status(prices=self._latest_prices())
+        except ValueError:
+            return {}
+        return {
+            position.get("ticker"): float(position.get("shares") or 0)
+            for position in status.get("positions", [])
+            if position.get("ticker")
+        }
+
+    @staticmethod
+    def _proposal_action_label(proposal, position_shares):
+        if proposal.get("side") != "sell":
+            return "purchase"
+        ticker = proposal.get("ticker")
+        held = float(position_shares.get(ticker, 0.0) or 0.0)
+        shares = float(proposal.get("shares") or 0.0)
+        if held and shares < held:
+            return "trim"
+        if held:
+            return "exit"
+        return "sell"
 
     def _rank_research_reviews(self, tasks):
         reviews = []
@@ -565,6 +597,10 @@ class OwnerControlService:
         current_price = security.get("price")
         if current_price is None:
             raise ValueError("Current market price is unavailable")
+        action_label = self._proposal_action_label(
+            proposal,
+            self._position_shares(),
+        )
         event = self.paper_account.execute_order(
             proposal["side"],
             proposal["ticker"],
@@ -582,6 +618,7 @@ class OwnerControlService:
             "trade_id": event["trade_id"],
             "ticker": event["ticker"],
             "side": event["side"],
+            "action_label": action_label,
             "shares": event["shares"],
             "price": event["price"],
             "simulation_only": True,

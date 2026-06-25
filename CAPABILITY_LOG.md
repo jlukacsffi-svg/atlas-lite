@@ -610,3 +610,34 @@ Current boundaries:
   before the paper portfolio changes.
 - No brokerage order is sent and no real money is spent.
 - Real trading and brokerage access remain disabled.
+
+## June 25, 2026 - Proposal Clarity And Help Popovers
+
+New capabilities:
+
+- Distinguish simulated paper sell proposals as `trim` versus `exit` based on
+  the current simulated holding size.
+- Show owner-facing impact text that explains whether Atlas would reduce a
+  position or fully close it before any simulated fill is recorded.
+- Update proposal titles, confirmation copy, and success messages so the
+  Controls and Recommendations pages speak in plain language about purchases,
+  trims, and exits.
+- Replace brittle question-mark hover behavior with popovers that open
+  predictably, stay visible while the help card is being read, and close when
+  the cursor or focus leaves the help control.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00039-hrs` is serving 100% traffic.
+- Dashboard image `20260625-proposal-clarity` is deployed.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 299 tests.
+
+Current boundaries:
+
+- Proposal clarity changes improve simulated paper-review understanding only.
+- Owner approval and explicit Simulate fill confirmation remain required before
+  the paper portfolio changes.
+- No brokerage order is sent and no real money is spent.
+- Real trading and brokerage access remain disabled.

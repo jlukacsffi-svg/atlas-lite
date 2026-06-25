@@ -477,6 +477,15 @@ Estimated overall Atlas program completion: 93%.
   reviewable simulated half-trim sell proposal when lag reaches 8 percentage
   points. Owner approval and explicit Simulate fill confirmation remain
   required. Daily and weekly schedules remained enabled. All 297 tests pass.
+- Proposal clarity and help-popover refinement are deployed on dashboard
+  revision `atlas-dashboard-stg-00039-hrs` and image
+  `20260625-proposal-clarity`. Simulated sell proposals now distinguish trim
+  versus exit based on current simulated holdings, explain the holding impact
+  before approval or simulated fill, and use clearer purchase/trim/exit copy
+  across Recommendations, Controls, and the confirmation dialog. Help
+  popovers now stay readable while hovered or focused and close naturally when
+  the cursor or focus leaves them. Daily and weekly schedules remained enabled.
+  All 299 tests pass.
 - Run the tenant preview with `py -3.12 tenant_dashboard.py`, then open
   `http://127.0.0.1:8766`. Its local SQLite state remains ignored under
   `tenant_data/`.
