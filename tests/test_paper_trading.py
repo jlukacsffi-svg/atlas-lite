@@ -267,13 +267,167 @@ class PaperTradingAccountTests(unittest.TestCase):
                 benchmark_prices={"SPY": 505, "QQQ": 408},
             )
 
-            feedback = account.proposal_feedback()
+            feedback = account.proposal_feedback(latest_prices={"NVDA": 112})
 
         self.assertEqual(feedback[0]["ticker"], "NVDA")
         self.assertEqual(feedback[0]["verdict"], "working")
+        self.assertEqual(feedback[0]["action_label"], "purchase")
         self.assertEqual(feedback[0]["security_return_pct"], 12.0)
         self.assertEqual(feedback[0]["benchmark_returns_pct"]["SPY"], 1.0)
         self.assertEqual(feedback[0]["benchmark_returns_pct"]["QQQ"], 2.0)
+
+    def test_proposal_feedback_can_score_simulated_exit_as_working(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            times = iter(
+                [
+                    datetime(2026, 6, 1, 9, 30, 0),
+                    datetime(2026, 6, 1, 9, 31, 0),
+                    datetime(2026, 6, 1, 9, 32, 0),
+                    datetime(2026, 6, 1, 9, 33, 0),
+                    datetime(2026, 6, 1, 9, 34, 0),
+                    datetime(2026, 6, 1, 16, 0, 0),
+                    datetime(2026, 6, 2, 9, 30, 0),
+                    datetime(2026, 6, 2, 9, 31, 0),
+                    datetime(2026, 6, 2, 9, 32, 0),
+                    datetime(2026, 6, 2, 9, 33, 0),
+                    datetime(2026, 6, 2, 16, 0, 0),
+                    datetime(2026, 6, 3, 16, 0, 0),
+                ]
+            )
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                policy={"maximum_position_pct": 50.0},
+                clock=lambda: next(times),
+            )
+            account.initialize(100000)
+            self.execute_approved(account, "buy", "NVDA", 100, 100, "Paper thesis.")
+            account.record_performance_snapshot(
+                prices={"NVDA": 100},
+                benchmark_prices={"SPY": 500, "QQQ": 400},
+            )
+            self.execute_approved(account, "sell", "NVDA", 100, 90, "Exit thesis.")
+            account.record_performance_snapshot(
+                prices={},
+                benchmark_prices={"SPY": 498, "QQQ": 397},
+            )
+            account.record_performance_snapshot(
+                prices={},
+                benchmark_prices={"SPY": 497, "QQQ": 396},
+            )
+
+            feedback = account.proposal_feedback(latest_prices={"NVDA": 80})
+
+        self.assertEqual(feedback[0]["side"], "sell")
+        self.assertEqual(feedback[0]["action_label"], "exit")
+        self.assertEqual(feedback[0]["verdict"], "working")
+        self.assertEqual(feedback[0]["security_return_pct"], -11.1111)
+        self.assertIn("sell is helping so far", feedback[0]["summary"])
+
+    def test_proposal_feedback_can_score_simulated_trim_as_lagging(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            times = iter(
+                [
+                    datetime(2026, 6, 1, 9, 30, 0),
+                    datetime(2026, 6, 1, 9, 31, 0),
+                    datetime(2026, 6, 1, 9, 32, 0),
+                    datetime(2026, 6, 1, 9, 33, 0),
+                    datetime(2026, 6, 1, 9, 34, 0),
+                    datetime(2026, 6, 1, 16, 0, 0),
+                    datetime(2026, 6, 2, 9, 30, 0),
+                    datetime(2026, 6, 2, 9, 31, 0),
+                    datetime(2026, 6, 2, 9, 32, 0),
+                    datetime(2026, 6, 2, 9, 33, 0),
+                    datetime(2026, 6, 2, 16, 0, 0),
+                    datetime(2026, 6, 3, 16, 0, 0),
+                ]
+            )
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                policy={"maximum_position_pct": 50.0},
+                clock=lambda: next(times),
+            )
+            account.initialize(100000)
+            self.execute_approved(account, "buy", "NVDA", 100, 100, "Paper thesis.")
+            account.record_performance_snapshot(
+                prices={"NVDA": 100},
+                benchmark_prices={"SPY": 500, "QQQ": 400},
+            )
+            self.execute_approved(account, "sell", "NVDA", 50, 100, "Trim thesis.")
+            account.record_performance_snapshot(
+                prices={"NVDA": 110},
+                benchmark_prices={"SPY": 503, "QQQ": 404},
+            )
+            account.record_performance_snapshot(
+                prices={"NVDA": 112},
+                benchmark_prices={"SPY": 504, "QQQ": 405},
+            )
+
+            feedback = account.proposal_feedback(latest_prices={"NVDA": 115})
+
+        sell_feedback = next(item for item in feedback if item["side"] == "sell")
+        self.assertEqual(sell_feedback["action_label"], "trim")
+        self.assertEqual(sell_feedback["verdict"], "lagging")
+        self.assertEqual(sell_feedback["security_return_pct"], 15.0)
+        self.assertIn("looks early", sell_feedback["summary"])
+
+    def test_proposal_feedback_summary_counts_buy_and_sell_learning(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            times = iter(
+                [
+                    datetime(2026, 6, 1, 9, 30, 0),
+                    datetime(2026, 6, 1, 9, 31, 0),
+                    datetime(2026, 6, 1, 9, 32, 0),
+                    datetime(2026, 6, 1, 9, 33, 0),
+                    datetime(2026, 6, 1, 9, 34, 0),
+                    datetime(2026, 6, 1, 16, 0, 0),
+                    datetime(2026, 6, 2, 16, 0, 0),
+                    datetime(2026, 6, 3, 9, 30, 0),
+                    datetime(2026, 6, 3, 9, 31, 0),
+                    datetime(2026, 6, 3, 9, 32, 0),
+                    datetime(2026, 6, 3, 9, 33, 0),
+                    datetime(2026, 6, 3, 16, 0, 0),
+                    datetime(2026, 6, 4, 16, 0, 0),
+                ]
+            )
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                policy={"maximum_position_pct": 50.0},
+                clock=lambda: next(times),
+            )
+            account.initialize(100000)
+            self.execute_approved(account, "buy", "NVDA", 100, 100, "Paper thesis.")
+            account.record_performance_snapshot(
+                prices={"NVDA": 100},
+                benchmark_prices={"SPY": 500, "QQQ": 400},
+            )
+            account.record_performance_snapshot(
+                prices={"NVDA": 112},
+                benchmark_prices={"SPY": 505, "QQQ": 408},
+            )
+            self.execute_approved(account, "sell", "NVDA", 50, 112, "Trim thesis.")
+            account.record_performance_snapshot(
+                prices={"NVDA": 112},
+                benchmark_prices={"SPY": 506, "QQQ": 409},
+            )
+            account.record_performance_snapshot(
+                prices={"NVDA": 90},
+                benchmark_prices={"SPY": 507, "QQQ": 410},
+            )
+
+            summary = account.proposal_feedback_summary(latest_prices={"NVDA": 90})
+
+        self.assertEqual(summary["total"], 2)
+        self.assertEqual(summary["judged"], 2)
+        self.assertEqual(summary["verdict_counts"]["working"], 1)
+        self.assertEqual(summary["verdict_counts"]["lagging"], 1)
+        self.assertEqual(summary["judged_side_counts"]["buy"], 1)
+        self.assertEqual(summary["judged_side_counts"]["sell"], 1)
+        self.assertEqual(summary["working_side_counts"]["sell"], 1)
+        self.assertEqual(summary["lagging_side_counts"]["buy"], 1)
+        self.assertIn("Judged outcomes", summary["takeaways"][0])
 
     def test_trade_activity_describes_buys_and_sells_with_context(self):
         with tempfile.TemporaryDirectory() as temp_dir:

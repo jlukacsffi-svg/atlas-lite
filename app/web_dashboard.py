@@ -259,7 +259,10 @@ class DashboardDataService:
             "thesis_overview": self._thesis_overview(positions),
             "operating_mode": self._paper_operating_mode(),
             "activity": self.paper_account.trade_activity(),
-            "feedback": self.paper_account.proposal_feedback(),
+            "feedback_summary": self.paper_account.proposal_feedback_summary(
+                latest_prices=prices
+            ),
+            "feedback": self.paper_account.proposal_feedback(latest_prices=prices),
             "proposals": {
                 "pending": sum(1 for item in proposals if item["status"] == "pending"),
                 "approved": sum(1 for item in proposals if item["status"] == "approved"),

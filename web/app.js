@@ -130,6 +130,7 @@ function renderDashboard(data) {
   renderPositions(paper.positions || []);
   renderPaperActivity(paper.activity || []);
   renderPaperOperatingMode(paper.operating_mode || {});
+  renderPaperFeedbackSummary(paper.feedback_summary || {});
   renderPaperFeedback(paper.feedback || []);
   renderRecommendationSummary(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderRecommendations(data.owner_controls?.paper_proposals || [], data.watchlist || []);
@@ -667,6 +668,10 @@ function renderPositions(rows) {
 function renderPaperFeedback(rows) {
   document.getElementById("paper-feedback").innerHTML = rows.map(item => {
     const verdict = String(item.verdict || "not_enough_time");
+    const action = String(item.action_label || (item.side === "sell" ? "sell" : "purchase"));
+    const sideContext = item.side === "sell"
+      ? `Post-sell move ${signed(item.security_return_pct)}`
+      : `Return ${signed(item.security_return_pct)}`;
     const benchmarkText = ["SPY", "QQQ"].map(ticker => {
       const value = item.benchmark_returns_pct?.[ticker];
       return `${ticker} ${signed(value)}`;
@@ -675,14 +680,71 @@ function renderPaperFeedback(rows) {
       <article class="feedback-row ${escapeHtml(verdict)}">
         <div>
           <span class="tag verdict-tag">${escapeHtml(verdict).replaceAll("_", " ")}</span>
-          <b class="row-title">${escapeHtml(item.ticker)} simulated buy</b>
+          <b class="row-title">${item.side === "sell" ? `${escapeHtml(item.ticker)} simulated ${escapeHtml(String(item.action_label || "sell"))}` : `${escapeHtml(item.ticker)} simulated buy`}</b>
           <small class="row-meta">Fill ${money.format(Number(item.fill_price) || 0)}${item.latest_price === null || item.latest_price === undefined ? "" : ` · latest ${money.format(Number(item.latest_price) || 0)}`}</small>
           <p>${escapeHtml(item.summary || "Atlas is waiting for enough evidence to judge this idea.")}</p>
-          <small class="row-meta">Return ${signed(item.security_return_pct)} · ${benchmarkText} · ${Number(item.snapshots || 0).toFixed(0)} snapshots</small>
+          <small class="row-meta">${sideContext} · ${benchmarkText} · ${Number(item.snapshots || 0).toFixed(0)} snapshots</small>
           <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
         </div>
       </article>`;
   }).join("") || `<div class="empty">No executed paper recommendations have enough tracking data yet.</div>`;
+}
+
+function renderPaperFeedbackSummary(summary) {
+  const verdicts = summary.verdict_counts || {};
+  const judged = Number(summary.judged || 0);
+  const total = Number(summary.total || 0);
+  const buyJudged = Number(summary.judged_side_counts?.buy || 0);
+  const sellJudged = Number(summary.judged_side_counts?.sell || 0);
+  const buyWorking = Number(summary.working_side_counts?.buy || 0);
+  const sellWorking = Number(summary.working_side_counts?.sell || 0);
+  const buyRate = buyJudged ? `${((buyWorking / buyJudged) * 100).toFixed(0)}%` : "--";
+  const sellRate = sellJudged ? `${((sellWorking / sellJudged) * 100).toFixed(0)}%` : "--";
+  const takeaways = Array.isArray(summary.takeaways) ? summary.takeaways : [];
+  document.getElementById("paper-feedback-summary").innerHTML = `
+    <div class="feedback-summary-grid">
+      <div class="feedback-summary-card spotlight">
+        <span class="summary-label">Atlas learning readout</span>
+        <strong>${escapeHtml(summary.headline || "Atlas is collecting paper-trade evidence.")}</strong>
+        <small>${judged} judged of ${total} executed simulated trade${total === 1 ? "" : "s"}</small>
+      </div>
+      <div class="feedback-summary-card working">
+        <span class="summary-label">Working</span>
+        <strong>${Number(verdicts.working || 0)}</strong>
+        <small>Ideas ahead of the current learning bar</small>
+      </div>
+      <div class="feedback-summary-card mixed">
+        <span class="summary-label">Mixed</span>
+        <strong>${Number(verdicts.mixed || 0)}</strong>
+        <small>Partly confirmed, still nuanced</small>
+      </div>
+      <div class="feedback-summary-card lagging">
+        <span class="summary-label">Lagging</span>
+        <strong>${Number(verdicts.lagging || 0)}</strong>
+        <small>Ideas trailing the current bar</small>
+      </div>
+    </div>
+    <div class="feedback-takeaways">
+      <div class="feedback-takeaway-card">
+        <span class="access-label">Buy calibration</span>
+        <strong>${buyRate}</strong>
+        <small>${buyWorking} of ${buyJudged} judged simulated buys are working</small>
+      </div>
+      <div class="feedback-takeaway-card">
+        <span class="access-label">Sell calibration</span>
+        <strong>${sellRate}</strong>
+        <small>${sellWorking} of ${sellJudged} judged trims/exits are helping</small>
+      </div>
+    </div>
+    <div class="feedback-takeaway-list">
+      ${(takeaways.length ? takeaways : ["Atlas needs more post-trade data before the learning summary becomes meaningful."]).map(item => `
+        <div class="feedback-takeaway-row">
+          <span class="thesis-badge ready">Learning</span>
+          <small>${escapeHtml(item)}</small>
+        </div>
+      `).join("")}
+    </div>
+  `;
 }
 
 function renderPaperActivity(rows) {

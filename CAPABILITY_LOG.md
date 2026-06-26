@@ -785,3 +785,63 @@ Current boundaries:
   auto-execute them.
 - The new sell-side intelligence applies to simulated holdings only.
 - No brokerage order is sent and no real money is spent.
+
+## June 25, 2026 - Sell Decision Learning
+
+New capabilities:
+
+- Extend the paper feedback loop so Atlas now evaluates executed simulated
+  trims and exits, not just simulated buys.
+- Compare each completed simulated sell against the later market move in that
+  same security, creating a counterfactual view of whether Atlas helped by
+  exiting early or reduced exposure too soon.
+- Keep benchmark context alongside the post-sell move so the owner can judge
+  whether a sell decision helped, lagged, or produced a mixed result relative
+  to SPY and QQQ.
+- Update the Paper page language so the learning panel now clearly covers
+  simulated buys, trims, and exits.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00045-b2l` is serving 100% traffic.
+- Dashboard image `20260625-sell-learning` is deployed.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 305 tests.
+
+Current boundaries:
+
+- Atlas still evaluates simulated sells after the fact; it does not use this
+  learning to auto-execute paper trades.
+- The learning panel remains simulation-only and does not evaluate real-money
+  brokerage outcomes.
+- No brokerage order is sent and no real money is spent.
+
+## June 25, 2026 - Paper Learning Summary
+
+New capabilities:
+
+- Turn the Paper Portfolio learning section into an at-a-glance summary instead
+  of requiring the owner to scan every post-trade feedback row manually.
+- Show a headline readout of whether recent simulated paper decisions are
+  leaning constructive, balanced, or slipping.
+- Break learning into clear working, mixed, and lagging counts plus separate
+  buy and sell calibration cards.
+- Keep plain-language takeaways that explain how many judged simulated buys are
+  working and how many judged trims or exits are helping.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00046-7lg` is serving 100% traffic.
+- Dashboard image `20260625-learning-summary` is deployed.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 306 tests.
+
+Current boundaries:
+
+- Atlas now summarizes paper learning more clearly, but it still does not
+  auto-execute paper trades.
+- The new calibration summary remains simulation-only and does not evaluate
+  real-money brokerage outcomes.
+- No brokerage order is sent and no real money is spent.

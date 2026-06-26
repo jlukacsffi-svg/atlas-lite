@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-06-12
+Last updated: 2026-06-25
 
 ## Current Roadmap Position
 
@@ -554,17 +554,18 @@ Estimated overall Atlas program completion: 93%.
 
 Latest staging update:
 
-- Sell-side paper proposals now explain the trigger behind each trim or exit
-  review, including score weakness, drawdown pressure, and benchmark lag when
-  those signals apply.
-- Active Cloud Run revision is `atlas-dashboard-stg-00044-xsg`.
-- Cache-busted web asset image tag is `20260625-sell-intelligence`.
-- Full test suite passes with 303 tests before deploy.
+- The Paper Portfolio learning section now exposes an owner-facing summary of
+  recent simulated buy and sell outcomes before the detailed feedback list.
+- Atlas now shows a headline learning readout, working / mixed / lagging
+  counts, and separate buy-versus-sell calibration cards.
+- Active Cloud Run revision is `atlas-dashboard-stg-00046-7lg`.
+- Cache-busted web asset image tag is `20260625-learning-summary`.
+- Full test suite passes with 306 tests before deploy.
 
 Current in-flight stage:
 
-- The next software step is to improve post-trade learning for simulated sells
-  so Atlas can explain whether trims and exits helped relative to continued
-  holding and benchmark behavior.
+- The next software step is to use this paper-learning calibration in the
+  owner-facing recommendation workflow, so Atlas can say when current buy or
+  sell ideas are aligned with what has been working recently in simulation.
 - Current dashboard behavior still requires explicit owner approval and
-  Simulate fill confirmation before any paper trim or exit is recorded.
+  Simulate fill confirmation before any paper buy, trim, or exit is recorded.

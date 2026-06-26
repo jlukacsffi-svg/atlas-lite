@@ -486,22 +486,18 @@ class PaperTradingAccount:
             },
         }
 
-    def proposal_feedback(self):
-        """Evaluate executed simulated buy proposals against later returns."""
+    def proposal_feedback(self, latest_prices=None):
+        """Evaluate executed simulated proposals against later outcomes."""
         snapshots = self.performance_history()
         if not snapshots:
             return []
 
         latest = snapshots[-1]
-        latest_positions = {
-            position.get("ticker"): position
-            for position in latest.get("positions", [])
-        }
+        latest_prices = latest_prices or {}
         trades = [
             event
             for event in self.ledger()
             if event.get("event") == "paper_trade"
-            and event.get("side") == "buy"
             and event.get("proposal_id")
         ]
         proposals = {
@@ -513,8 +509,8 @@ class PaperTradingAccount:
             ticker = trade["ticker"]
             proposal = proposals.get(trade["proposal_id"], {})
             start = self._first_snapshot_after(snapshots, trade["timestamp"])
-            latest_position = latest_positions.get(ticker)
-            if not start or not latest_position:
+            latest_price = latest_prices.get(ticker)
+            if not start or latest_price is None:
                 rows.append(
                     self._feedback_row(
                         trade,
@@ -527,7 +523,7 @@ class PaperTradingAccount:
 
             security_return = self._pct_return(
                 trade.get("price"),
-                latest_position.get("price"),
+                latest_price,
             )
             benchmark_returns = {}
             for benchmark in ("SPY", "QQQ"):
@@ -548,17 +544,11 @@ class PaperTradingAccount:
                 verdict = "not_enough_time"
                 summary = "Needs more daily snapshots before Atlas can judge this idea."
             else:
-                best_benchmark = max(usable_benchmarks.values())
-                worst_benchmark = min(usable_benchmarks.values())
-                if security_return >= best_benchmark:
-                    verdict = "working"
-                    summary = "The simulated idea is ahead of both core benchmarks."
-                elif security_return < worst_benchmark:
-                    verdict = "lagging"
-                    summary = "The simulated idea is behind both core benchmarks."
-                else:
-                    verdict = "mixed"
-                    summary = "The simulated idea is between the two core benchmarks."
+                verdict, summary = self._proposal_feedback_verdict(
+                    trade=trade,
+                    security_return=security_return,
+                    benchmark_returns=usable_benchmarks,
+                )
             rows.append(
                 self._feedback_row(
                     trade,
@@ -568,10 +558,118 @@ class PaperTradingAccount:
                     security_return=security_return,
                     benchmark_returns=benchmark_returns,
                     snapshots=self._snapshots_since(snapshots, trade["timestamp"]),
-                    latest_price=latest_position.get("price"),
+                    latest_price=latest_price,
                 )
             )
         return sorted(rows, key=lambda item: item["filled_at"], reverse=True)
+
+    def proposal_feedback_summary(self, latest_prices=None):
+        """Summarize post-trade learning across simulated buys and sells."""
+        rows = self.proposal_feedback(latest_prices=latest_prices)
+        verdict_counts = {
+            "working": 0,
+            "mixed": 0,
+            "lagging": 0,
+            "not_enough_time": 0,
+        }
+        side_counts = {"buy": 0, "sell": 0}
+        judged_side_counts = {"buy": 0, "sell": 0}
+        working_side_counts = {"buy": 0, "sell": 0}
+        lagging_side_counts = {"buy": 0, "sell": 0}
+
+        for row in rows:
+            side = str(row.get("side") or "buy").lower()
+            if side not in side_counts:
+                side = "buy"
+            verdict = str(row.get("verdict") or "not_enough_time")
+            verdict_counts[verdict] = verdict_counts.get(verdict, 0) + 1
+            side_counts[side] += 1
+            if verdict != "not_enough_time":
+                judged_side_counts[side] += 1
+                if verdict == "working":
+                    working_side_counts[side] += 1
+                elif verdict == "lagging":
+                    lagging_side_counts[side] += 1
+
+        total = len(rows)
+        judged = total - verdict_counts["not_enough_time"]
+        if total == 0:
+            headline = "No executed simulated trades are available for learning yet."
+        elif judged == 0:
+            headline = "Atlas is still collecting enough post-trade evidence to judge recent ideas."
+        elif verdict_counts["working"] > verdict_counts["lagging"]:
+            headline = "Recent simulated paper decisions are leaning constructive so far."
+        elif verdict_counts["lagging"] > verdict_counts["working"]:
+            headline = "Recent simulated paper decisions are showing more slippage than confirmation so far."
+        else:
+            headline = "Recent simulated paper decisions are balanced so far between confirmation and slippage."
+
+        takeaways = [
+            (
+                f"Judged outcomes: {verdict_counts['working']} working, "
+                f"{verdict_counts['mixed']} mixed, and {verdict_counts['lagging']} lagging."
+            )
+        ]
+        if judged_side_counts["buy"]:
+            takeaways.append(
+                f"Entries ahead of both SPY and QQQ: {working_side_counts['buy']} of "
+                f"{judged_side_counts['buy']} judged buys."
+            )
+        if judged_side_counts["sell"]:
+            takeaways.append(
+                f"Sells helping after trim or exit: {working_side_counts['sell']} of "
+                f"{judged_side_counts['sell']} judged sell decisions."
+            )
+        if verdict_counts["not_enough_time"]:
+            takeaways.append(
+                f"Still gathering evidence on {verdict_counts['not_enough_time']} recent simulated trade"
+                f"{'' if verdict_counts['not_enough_time'] == 1 else 's'}."
+            )
+
+        return {
+            "total": total,
+            "judged": judged,
+            "headline": headline,
+            "verdict_counts": verdict_counts,
+            "side_counts": side_counts,
+            "judged_side_counts": judged_side_counts,
+            "working_side_counts": working_side_counts,
+            "lagging_side_counts": lagging_side_counts,
+            "takeaways": takeaways[:4],
+        }
+
+    @staticmethod
+    def _proposal_feedback_verdict(trade, security_return, benchmark_returns):
+        side = str(trade.get("side") or "").lower()
+        best_benchmark = max(benchmark_returns.values())
+        worst_benchmark = min(benchmark_returns.values())
+        if side == "buy":
+            if security_return >= best_benchmark:
+                return "working", "The simulated buy is ahead of both core benchmarks."
+            if security_return < worst_benchmark:
+                return "lagging", "The simulated buy is behind both core benchmarks."
+            return "mixed", "The simulated buy is between the two core benchmarks."
+
+        avoided_return = -float(security_return)
+        if security_return <= worst_benchmark:
+            return (
+                "working",
+                "Atlas's simulated sell is helping so far because the security fell after the exit or trim.",
+            )
+        if security_return > best_benchmark:
+            return (
+                "lagging",
+                "Atlas's simulated sell looks early so far because the security outperformed after the exit or trim.",
+            )
+        if avoided_return > 0:
+            return (
+                "mixed",
+                "Atlas avoided some post-sell weakness, but the result is mixed against the core benchmarks.",
+            )
+        return (
+            "mixed",
+            "Atlas gave up some upside after the sell, but the result is mixed against the core benchmarks.",
+        )
 
     def trade_activity(self, limit=8):
         """Return recent simulated buy and sell activity with execution context."""
@@ -648,6 +746,7 @@ class PaperTradingAccount:
             "proposal_id": trade.get("proposal_id"),
             "ticker": trade.get("ticker"),
             "side": trade.get("side"),
+            "action_label": PaperTradingAccount._trade_action_label(trade, proposal),
             "shares": trade.get("shares"),
             "filled_at": trade.get("timestamp"),
             "fill_price": trade.get("price"),

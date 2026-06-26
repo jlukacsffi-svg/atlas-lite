@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260625-sell-intelligence">
+  <link rel="stylesheet" href="/styles.css?v=20260625-learning-summary">
 </head>
 <body>
   <div class="app-shell">
@@ -366,12 +366,13 @@
                 <h2>Recommendation performance</h2>
                 <details class="info-popover">
                   <summary aria-label="About recommendation performance">?</summary>
-                  <p>Compares each simulated buy that came from an approved Atlas proposal against SPY and QQQ after the simulated fill. This helps Atlas learn whether ideas are working, lagging, mixed, or still too new to judge.</p>
+                  <p>Compares executed simulated buys, trims, and exits against later market behavior and SPY/QQQ benchmarks. This helps Atlas learn whether entries and sell decisions are working, lagging, mixed, or still too new to judge.</p>
                 </details>
               </div>
             </div>
             <span class="tag">Learning mode</span>
           </div>
+          <div id="paper-feedback-summary" class="feedback-summary"></div>
           <div id="paper-feedback" class="feedback-list"></div>
         </article>
       </section>
@@ -585,6 +586,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260625-sell-intelligence"></script>
+  <script src="/app.js?v=20260625-learning-summary"></script>
 </body>
 </html>

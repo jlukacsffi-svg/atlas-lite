@@ -37,7 +37,15 @@ class PaperPositionMonitor:
             if proposal["side"] == "sell"
             and proposal["status"] in {"pending", "approved"}
         }
-        benchmark_lag = self._benchmark_lag(account.proposal_feedback())
+        benchmark_lag = self._benchmark_lag(
+            account.proposal_feedback(
+                latest_prices={
+                    ticker: data.get("price")
+                    for ticker, data in market_data.items()
+                    if data.get("price") is not None
+                }
+            )
+        )
         reviews = []
         exit_proposals = []
 
