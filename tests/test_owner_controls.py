@@ -109,6 +109,28 @@ class OwnerControlServiceTests(unittest.TestCase):
             120,
             "Paper entry.",
         )
+        prior, _ = self.dashboard.research_queue.add_task(
+            role="CRO",
+            subject="NVDA",
+            prompt="Review downside catalyst.",
+            priority="high",
+        )
+        self.dashboard.research_queue.complete_research(
+            prior["id"],
+            conclusion="Fresh risk review.",
+            recommendation="risk_review",
+            confidence="medium",
+            catalyst_type="score_risk",
+            thesis_alignment="risk_to_thesis",
+            thesis_drift="new_risk",
+            evidence=[
+                {
+                    "title": "NVDA thesis history",
+                    "source": "Atlas research task memory",
+                    "detail": "Prior risk review",
+                }
+            ],
+        )
 
         model = self.service.model()
         item = next(
@@ -126,8 +148,10 @@ class OwnerControlServiceTests(unittest.TestCase):
             combined,
         )
         objections = " ".join(item["objections"])
+        self.assertIn("risk-to-thesis review", objections)
+        self.assertIn("Latest stored Atlas review tagged NVDA as risk to thesis", objections)
+        self.assertIn("Recent disconfirming evidence: NVDA thesis history.", objections)
         self.assertIn("highest-conviction tier", objections)
-        self.assertIn("categorized as Watchlist", objections)
 
     def test_model_backfills_structured_rationale_for_legacy_sell_proposals(self):
         buy = self.dashboard.paper_account.create_proposal(
@@ -163,6 +187,28 @@ class OwnerControlServiceTests(unittest.TestCase):
             "caution",
             ["recurring thesis risk", "position above preferred size"],
         )
+        prior, _ = self.dashboard.research_queue.add_task(
+            role="CRO",
+            subject="RISK",
+            prompt="Review recurring risk.",
+            priority="high",
+        )
+        self.dashboard.research_queue.complete_research(
+            prior["id"],
+            conclusion="Recurring risk review.",
+            recommendation="risk_review",
+            confidence="medium",
+            catalyst_type="score_risk",
+            thesis_alignment="risk_to_thesis",
+            thesis_drift="recurring_risk",
+            evidence=[
+                {
+                    "title": "RISK thesis history",
+                    "source": "Atlas research task memory",
+                    "detail": "Recurring risk",
+                }
+            ],
+        )
 
         model = self.service.model()
         item = next(
@@ -176,8 +222,9 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertIn("Risk review flags:", combined)
         self.assertIn("Paper learning context:", combined)
         objections = " ".join(item["objections"])
+        self.assertIn("Latest stored Atlas review tagged RISK as risk to thesis", objections)
+        self.assertIn("Recent disconfirming evidence: RISK thesis history.", objections)
         self.assertIn("A trim would still leave 5", objections)
-        self.assertIn("Exit case depends on risk flags:", objections)
 
     def test_model_labels_partial_sell_as_trim(self):
         buy = self.dashboard.paper_account.create_proposal(

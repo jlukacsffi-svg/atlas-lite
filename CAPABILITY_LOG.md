@@ -952,3 +952,30 @@ Current boundaries:
 - Atlas now frames both the pro case and the caution case, but the result is
   still a simulation-only research recommendation.
 - No brokerage order is sent and no real capital is moved.
+
+## 2026-06-27 - Recommendation objections now cite Atlas research memory
+
+New capabilities:
+
+- Add memory-aware recommendation objections so `Why not` and `What could go
+  wrong` can cite Atlas's own prior risk-to-thesis reviews for the same
+  security instead of relying only on generic conviction warnings.
+- Surface recent disconfirming evidence titles from the latest completed Atlas
+  research task when that ticker already has stored thesis-risk context.
+- Make the latest research-context selection deterministic by preferring the
+  most recently appended completed ticker review, which avoids same-second
+  timestamp ties in both tests and live data.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00053-kr9` is serving 100% traffic.
+- Dashboard image `20260627-memory-objections` is deployed.
+- `/readyz` returns `{\"status\":\"ready\"}`.
+- The full automated test suite passes with 310 tests.
+
+Current boundaries:
+
+- Atlas can now explain the counter-case with better internal evidence, but it
+  is still a recommendation and paper-trading system rather than a live
+  brokerage executor.
+- No brokerage order is sent and no real capital is moved.

@@ -386,14 +386,21 @@ class OwnerControlService:
         paper_calibration,
     ):
         side = str(proposal.get("side") or "").lower()
+        research_context = self._latest_research_context(proposal.get("ticker"))
         if side == "sell":
             return self._sell_objections(
                 proposal,
                 security,
                 position_shares,
                 paper_calibration,
+                research_context,
             )
-        return self._buy_objections(proposal, security, paper_calibration)
+        return self._buy_objections(
+            proposal,
+            security,
+            paper_calibration,
+            research_context,
+        )
 
     def _legacy_buy_rationale(self, proposal, security, paper_calibration):
         ticker = str(proposal.get("ticker") or "This security")
@@ -434,7 +441,13 @@ class OwnerControlService:
             rows.append(calibration_reason)
         return rows[:4]
 
-    def _buy_objections(self, proposal, security, paper_calibration):
+    def _buy_objections(
+        self,
+        proposal,
+        security,
+        paper_calibration,
+        research_context=None,
+    ):
         ticker = str(proposal.get("ticker") or "This security")
         rows = []
         review = proposal.get("risk_review") or {}
@@ -442,6 +455,13 @@ class OwnerControlService:
         move = security.get("percent_change")
         category = security.get("category") or "Watchlist"
         score = security.get("total_score")
+        memory_rows = self._research_memory_objections(
+            ticker,
+            research_context,
+            include_history_count=False,
+        )
+        history_row = self._research_history_count_objection(ticker)
+        rows.extend(memory_rows)
 
         if flags:
             rows.append("Risk review flags: " + ", ".join(flags[:2]) + ".")
@@ -456,7 +476,7 @@ class OwnerControlService:
             rows.append(
                 f"Atlas score {float(score):.1f} is investable, but not yet in Atlas's highest-conviction tier."
             )
-        if category != "Core":
+        if category != "Core" and not memory_rows:
             rows.append(
                 f"{ticker} is still categorized as {category}, which means Atlas has not promoted it to a core-conviction name."
             )
@@ -464,7 +484,9 @@ class OwnerControlService:
         calibration = self._calibration_caution_text(paper_calibration)
         if calibration:
             rows.append(calibration)
-        return rows[:3]
+        if history_row and len(rows) < 4:
+            rows.append(history_row)
+        return rows[:4]
 
     def _legacy_sell_rationale(
         self,
@@ -520,6 +542,7 @@ class OwnerControlService:
         security,
         position_shares,
         paper_calibration,
+        research_context=None,
     ):
         ticker = str(proposal.get("ticker") or "This position")
         action_label = self._proposal_action_label(proposal, position_shares)
@@ -528,7 +551,12 @@ class OwnerControlService:
         move = security.get("percent_change")
         review = proposal.get("risk_review") or {}
         flags = [str(flag).strip() for flag in review.get("flags") or [] if str(flag).strip()]
-        rows = []
+        rows = self._research_memory_objections(
+            ticker,
+            research_context,
+            include_history_count=False,
+        )
+        history_row = self._research_history_count_objection(ticker)
 
         if move is not None and float(move) > 0:
             rows.append(
@@ -547,7 +575,70 @@ class OwnerControlService:
         calibration = self._calibration_caution_text(paper_calibration)
         if calibration:
             rows.append(calibration)
-        return rows[:3]
+        if history_row and len(rows) < 4:
+            rows.append(history_row)
+        return rows[:4]
+
+    def _latest_research_context(self, ticker):
+        ticker = str(ticker or "").strip().upper()
+        if not ticker:
+            return None
+        latest = None
+        for task in reversed(self.research_queue.load().get("tasks", [])):
+            if str(task.get("subject") or "").strip().upper() != ticker:
+                continue
+            if not task.get("result"):
+                continue
+            latest = task
+            break
+        if not latest:
+            return None
+        result = latest.get("result", {})
+        evidence_titles = []
+        for item in result.get("evidence", []) or []:
+            if isinstance(item, str):
+                text = item.strip()
+                if text:
+                    evidence_titles.append(text[:90])
+            else:
+                title = str(item.get("title") or item.get("detail") or "").strip()
+                if title:
+                    evidence_titles.append(title[:90])
+        return {
+            "catalyst_type": result.get("catalyst_type"),
+            "thesis_alignment": result.get("thesis_alignment"),
+            "thesis_drift": result.get("thesis_drift"),
+            "evidence_titles": evidence_titles[:2],
+        }
+
+    def _research_memory_objections(self, ticker, research_context, include_history_count=True):
+        rows = []
+        if research_context:
+            if research_context.get("thesis_alignment") == "risk_to_thesis":
+                catalyst = str(research_context.get("catalyst_type") or "recent review").replace("_", " ")
+                rows.append(
+                    f"Latest stored Atlas review tagged {ticker} as risk to thesis via {catalyst} after a prior risk-to-thesis review."
+                )
+            evidence_titles = research_context.get("evidence_titles") or []
+            if evidence_titles:
+                rows.append(
+                    "Recent disconfirming evidence: " + ", ".join(evidence_titles[:2]) + "."
+                )
+        if include_history_count:
+            history_row = self._research_history_count_objection(ticker)
+            if history_row:
+                rows.append(history_row)
+        return rows
+
+    def _research_history_count_objection(self, ticker):
+        history = self.research_queue.thesis_history_summary(ticker)
+        if history and history.get("risk_to_thesis_count"):
+            count = int(history["risk_to_thesis_count"])
+            return (
+                f"Atlas research memory shows {count} prior risk-to-thesis review"
+                f"{'s' if count != 1 else ''} for {ticker}."
+            )
+        return ""
 
     def _proposal_sizing_context(self, proposal):
         if not self.paper_account.account_file.exists():

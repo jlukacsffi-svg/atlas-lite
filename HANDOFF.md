@@ -610,3 +610,16 @@ Latest staging update:
 - Cloud Run revision `atlas-dashboard-stg-00052-nlm` is serving 100% traffic.
 - Cache-busted web asset image tag is `20260627-why-not`.
 - Full test suite passes with 310 tests before deploy.
+
+Latest staging update:
+
+- Recommendation caution text now pulls from Atlas research memory instead of
+  relying only on generic score/category warnings. Live cards can cite prior
+  risk-to-thesis reviews and recent disconfirming evidence titles when Atlas
+  already has that context on file.
+- Legacy recommendations benefit too, because the objection builder now
+  backfills memory-aware counterpoints for older paper proposals instead of
+  making them look freshly generated but shallow.
+- Cloud Run revision `atlas-dashboard-stg-00053-kr9` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260627-memory-objections`.
+- Full test suite passes with 310 tests before deploy.
