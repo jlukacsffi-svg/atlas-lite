@@ -21,8 +21,36 @@ class StubDashboardService:
         return {
             "generated_at": "2026-06-12T08:00:00",
             "securities": {
-                "NVDA": {"status": "available", "price": 125.0},
-                "RISK": {"status": "available", "price": 125.0},
+                "NVDA": {
+                    "status": "available",
+                    "price": 125.0,
+                    "percent_change": 4.25,
+                    "category": "Watchlist",
+                    "sector": "AI & Semiconductors",
+                    "total_score": 88.0,
+                    "scores": {
+                        "growth": 92.0,
+                        "quality": 84.0,
+                        "moat": 90.0,
+                        "momentum": 86.0,
+                        "risk": 78.0,
+                    },
+                },
+                "RISK": {
+                    "status": "available",
+                    "price": 125.0,
+                    "percent_change": -3.5,
+                    "category": "Watchlist",
+                    "sector": "Cybersecurity",
+                    "total_score": 62.0,
+                    "scores": {
+                        "growth": 60.0,
+                        "quality": 58.0,
+                        "moat": 64.0,
+                        "momentum": 55.0,
+                        "risk": 72.0,
+                    },
+                },
             },
         }
 
@@ -71,6 +99,79 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertFalse(model["capabilities"]["real_trading"])
         self.assertFalse(model["capabilities"]["brokerage_connection"])
         self.assertIn("owner_outcomes", model)
+        self.assertTrue(model["paper_proposals"][0]["rationale"])
+
+    def test_model_backfills_structured_rationale_for_legacy_buy_proposals(self):
+        proposal = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+        )
+
+        model = self.service.model()
+        item = next(
+            proposal_item
+            for proposal_item in model["paper_proposals"]
+            if proposal_item["proposal_id"] == proposal["proposal_id"]
+        )
+        combined = " ".join(item["rationale"])
+
+        self.assertIn("Atlas score 88.0 keeps NVDA", combined)
+        self.assertIn("Strongest score inputs", combined)
+        self.assertIn("starting simulated cash", combined)
+        self.assertNotIn(
+            "created before structured Why now rationale",
+            combined,
+        )
+
+    def test_model_backfills_structured_rationale_for_legacy_sell_proposals(self):
+        buy = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            buy["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(buy["proposal_id"], "approve")
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+            proposal_id=buy["proposal_id"],
+        )
+        sell = self.dashboard.paper_account.create_proposal(
+            "sell",
+            "RISK",
+            5,
+            125,
+            "Trim review.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            sell["proposal_id"],
+            "caution",
+            ["recurring thesis risk", "position above preferred size"],
+        )
+
+        model = self.service.model()
+        item = next(
+            proposal_item
+            for proposal_item in model["paper_proposals"]
+            if proposal_item["proposal_id"] == sell["proposal_id"]
+        )
+        combined = " ".join(item["rationale"])
+
+        self.assertIn("proposing a trim of 5", combined)
+        self.assertIn("Risk review flags:", combined)
+        self.assertIn("Paper learning context:", combined)
 
     def test_model_labels_partial_sell_as_trim(self):
         buy = self.dashboard.paper_account.create_proposal(

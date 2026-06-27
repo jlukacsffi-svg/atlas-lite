@@ -582,3 +582,19 @@ Latest staging update:
 - Cloud Run revision `atlas-dashboard-stg-00049-74x` is serving 100% traffic.
 - Cache-busted web asset image tag is `20260627-recommendation-ranking`.
 - Full test suite passes with 308 tests before deploy.
+
+Latest staging update:
+
+- Legacy recommendation cards no longer need to fall back to the dead-end
+  `Awaiting rationale` path when Atlas already has a useful thesis or can
+  synthesize rationale from current score, sector, move, sizing, and paper
+  learning context.
+- Owner-control proposal payloads now backfill structured rationale for older
+  buy and sell proposals so historical paper ideas remain readable instead of
+  looking unfinished.
+- The web client now prefers structured rationale first, then proposal thesis,
+  before ever showing a generic placeholder. This gives the live dashboard a
+  much better floor even for older proposal records.
+- Cloud Run revision `atlas-dashboard-stg-00051-2cc` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260627-rationale-live`.
+- Full test suite passes with 310 tests before deploy.

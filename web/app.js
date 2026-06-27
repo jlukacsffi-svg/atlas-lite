@@ -227,7 +227,7 @@ function renderRecommendationSummary(proposals, watchlist) {
             <span class="thesis-badge ${recommendationStageClass(item)}">${escapeHtml(recommendationStageLabel(item))}</span>
             <div>
               <b class="row-title">${escapeHtml(item.ticker || "Proposal")}</b>
-              <small class="row-meta">${escapeHtml((item.rationale || [item.thesis || "Awaiting rationale."])[0] || "Awaiting rationale.")}</small>
+              <small class="row-meta">${escapeHtml(primaryRationaleText(item))}</small>
               ${item.paper_calibration?.judged ? `<small class="row-meta">Paper learning ${recommendationCalibrationAdjustment(item) >= 0 ? "+" : ""}${recommendationCalibrationAdjustment(item).toFixed(0)} from ${recommendationJudgedCount(item)} judged outcome${recommendationJudgedCount(item) === 1 ? "" : "s"}</small>` : ""}
             </div>
           </div>
@@ -535,7 +535,7 @@ function renderRecommendations(proposals, watchlist) {
 }
 
 function renderRationale(rationale, item = {}) {
-  const rows = (rationale || []).filter(Boolean);
+  const rows = effectiveRationaleRows(rationale, item);
   if (!rows.length && item.side === "buy") {
     rows.push(
       "This proposal was created before structured Why now rationale was stored. New Atlas-generated proposals will include score, category, sector, move, and sizing rationale."
@@ -552,6 +552,21 @@ function renderRationale(rationale, item = {}) {
       <span>${item.side === "sell" ? sellHeading : "Why now"}</span>
       <ul>${rows.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     </div>`;
+}
+
+function effectiveRationaleRows(rationale, item = {}) {
+  const rows = (rationale || []).filter(Boolean);
+  if (rows.length) return rows;
+  const thesis = String(item.thesis || "").trim();
+  if (!thesis) return [];
+  const fallback = [thesis];
+  const calibrationSummary = String(item.paper_calibration?.summary || "").trim();
+  if (calibrationSummary) fallback.push(calibrationSummary);
+  return fallback;
+}
+
+function primaryRationaleText(item = {}) {
+  return effectiveRationaleRows(item.rationale, item)[0] || "Awaiting rationale.";
 }
 
 function renderMarketPills(rows) {

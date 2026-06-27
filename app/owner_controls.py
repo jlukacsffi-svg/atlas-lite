@@ -23,6 +23,8 @@ class OwnerControlService:
         awaiting = self.research_queue.list_tasks(status="awaiting_owner")
         ranked_reviews = self._rank_research_reviews(awaiting)
         action_context = self._action_context()
+        snapshot = self.dashboard_service._latest_snapshot()
+        securities = snapshot.get("securities", {})
         latest_prices = self._latest_prices()
         position_shares = self._position_shares_with_prices(latest_prices)
         paper_feedback = (
@@ -53,7 +55,16 @@ class OwnerControlService:
                     "shares": item["shares"],
                     "reference_price": item["price"],
                     "thesis": item["thesis"],
-                    "rationale": item.get("rationale", []),
+                    "rationale": self._proposal_rationale(
+                        item,
+                        securities.get(item["ticker"], {}),
+                        position_shares,
+                        self._paper_proposal_calibration(
+                            item,
+                            paper_feedback,
+                            position_shares,
+                        ),
+                    ),
                     "risk_review": item.get("risk_review"),
                     "position_shares": position_shares.get(item["ticker"], 0.0),
                     "action_label": self._proposal_action_label(
@@ -337,6 +348,154 @@ class OwnerControlService:
             "reasons": reasons[:3],
             "summary": summary,
         }
+
+    def _proposal_rationale(
+        self,
+        proposal,
+        security,
+        position_shares,
+        paper_calibration,
+    ):
+        rows = [item for item in proposal.get("rationale", []) if str(item).strip()]
+        if rows:
+            return rows
+        if str(proposal.get("side") or "").lower() == "sell":
+            return self._legacy_sell_rationale(
+                proposal,
+                security,
+                position_shares,
+                paper_calibration,
+            )
+        return self._legacy_buy_rationale(proposal, security, paper_calibration)
+
+    def _legacy_buy_rationale(self, proposal, security, paper_calibration):
+        ticker = str(proposal.get("ticker") or "This security")
+        price = security.get("price")
+        score = security.get("total_score")
+        category = security.get("category") or "Watchlist"
+        sector = security.get("sector") or "Unclassified"
+        move = security.get("percent_change")
+        rows = []
+        if score is not None:
+            rows.append(
+                f"Atlas score {float(score):.1f} keeps {ticker} in the {category} category within {sector}."
+            )
+        else:
+            rows.append(
+                f"{ticker} remains tracked in the {category} category within {sector}."
+            )
+        strongest = self._strongest_score_inputs(security.get("scores"))
+        if strongest:
+            rows.append(
+                "Strongest score inputs: "
+                + ", ".join(f"{name} {value:.0f}" for name, value in strongest)
+                + "."
+            )
+        if price is not None and move is not None:
+            rows.append(
+                f"Latest market read is ${float(price):,.2f} with a {float(move):+.2f}% move, so Atlas still sees a valid paper entry setup."
+            )
+        elif move is not None:
+            rows.append(
+                f"Latest market move is {float(move):+.2f}%, which keeps the paper setup active."
+            )
+        sizing = self._proposal_sizing_context(proposal)
+        if sizing:
+            rows.append(sizing)
+        calibration_reason = self._calibration_reason_text(paper_calibration)
+        if calibration_reason:
+            rows.append(calibration_reason)
+        return rows[:4]
+
+    def _legacy_sell_rationale(
+        self,
+        proposal,
+        security,
+        position_shares,
+        paper_calibration,
+    ):
+        ticker = str(proposal.get("ticker") or "This position")
+        action_label = self._proposal_action_label(proposal, position_shares)
+        held = float(position_shares.get(ticker, 0.0) or 0.0)
+        shares = float(proposal.get("shares") or 0.0)
+        category = security.get("category") or "Watchlist"
+        score = security.get("total_score")
+        move = security.get("percent_change")
+        review = proposal.get("risk_review") or {}
+        flags = [str(flag).strip() for flag in review.get("flags") or [] if str(flag).strip()]
+        rows = []
+        if action_label == "trim" and held:
+            rows.append(
+                f"Atlas is proposing a trim of {shares:g} out of {held:g} simulated {ticker} shares to reduce paper exposure without closing the position."
+            )
+        elif action_label == "exit" and held:
+            rows.append(
+                f"Atlas is proposing an exit of the full simulated {ticker} position after the latest risk review."
+            )
+        else:
+            rows.append(
+                f"Atlas is reviewing {ticker} for a simulated {action_label} based on current risk-monitoring signals."
+            )
+        if score is not None and move is not None:
+            rows.append(
+                f"Current read: Atlas score {float(score):.1f}, category {category}, and latest move {float(move):+.2f}%."
+            )
+        elif score is not None:
+            rows.append(f"Current read: Atlas score {float(score):.1f} and category {category}.")
+        elif move is not None:
+            rows.append(f"Current read: category {category} with a {float(move):+.2f}% latest move.")
+        if flags:
+            rows.append("Risk review flags: " + ", ".join(flags[:3]) + ".")
+        elif review.get("verdict"):
+            rows.append(
+                f"Risk review verdict is {str(review.get('verdict')).replace('_', ' ')}."
+            )
+        calibration_reason = self._calibration_reason_text(paper_calibration)
+        if calibration_reason:
+            rows.append(calibration_reason)
+        return rows[:4]
+
+    def _proposal_sizing_context(self, proposal):
+        if not self.paper_account.account_file.exists():
+            return ""
+        try:
+            account = self.paper_account.load()
+        except ValueError:
+            return ""
+        starting_cash = float(account.get("starting_cash") or 0.0)
+        shares = float(proposal.get("shares") or 0.0)
+        price = float(proposal.get("price") or 0.0)
+        notional = shares * price
+        if not starting_cash or not notional:
+            return ""
+        allocation = notional / starting_cash * 100
+        return (
+            f"Suggested size is {shares:g} shares, or about ${notional:,.2f} ({allocation:.1f}% of starting simulated cash)."
+        )
+
+    @staticmethod
+    def _strongest_score_inputs(scores):
+        if not isinstance(scores, dict):
+            return []
+        return sorted(
+            (
+                (str(name), float(value))
+                for name, value in scores.items()
+                if value is not None
+            ),
+            key=lambda item: item[1],
+            reverse=True,
+        )[:2]
+
+    @staticmethod
+    def _calibration_reason_text(paper_calibration):
+        reasons = paper_calibration.get("reasons") or []
+        if reasons:
+            reason = str(reasons[0]).strip()
+            if reason:
+                return "Paper learning context: " + reason[:1].upper() + reason[1:] + "."
+        summary = str(paper_calibration.get("summary") or "").strip()
+        return f"Paper learning context: {summary}" if summary else ""
 
     @staticmethod
     def _paper_side_label(side, action_label):

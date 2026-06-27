@@ -901,3 +901,29 @@ Current boundaries:
   exit can be simulated.
 - Recommendation ranking is now learning-aware, but it still remains
   simulation-only and does not send any real-money brokerage order.
+
+## 2026-06-27 - Recommendation explanations now survive legacy proposals
+
+New capabilities:
+
+- Backfill structured rationale for older paper proposals using current score,
+  category, sector, move, sizing, risk-review, and paper-learning context.
+- Prefer real explanatory text in the web client before ever falling back to a
+  generic placeholder, so the live Recommendations page stays readable even for
+  legacy proposal records.
+- Reuse proposal thesis as a safe user-facing fallback when structured
+  rationale is missing, which removes the weakest `Awaiting rationale` owner
+  experience from the live dashboard.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00051-2cc` is serving 100% traffic.
+- Dashboard image `20260627-rationale-live` is deployed.
+- `/readyz` returns `{\"status\":\"ready\"}`.
+- The full automated test suite passes with 310 tests.
+
+Current boundaries:
+
+- Atlas explanations are now more usable for older paper ideas, but they still
+  remain recommendation and simulation guidance only.
+- No brokerage order is sent and no real capital is moved.
