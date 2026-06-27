@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from pathlib import Path
 import tempfile
 import unittest
@@ -110,6 +111,188 @@ class OwnerControlServiceTests(unittest.TestCase):
 
         self.assertEqual(proposal["action_label"], "trim")
         self.assertEqual(proposal["position_shares"], 10.0)
+
+    def test_model_adds_supportive_paper_calibration_to_buy_proposals(self):
+        times = iter(
+            [
+                datetime(2026, 6, 12, 9, 0, 0),
+                datetime(2026, 6, 12, 9, 1, 0),
+                datetime(2026, 6, 12, 9, 2, 0),
+                datetime(2026, 6, 12, 9, 3, 0),
+                datetime(2026, 6, 12, 16, 0, 0),
+                datetime(2026, 6, 13, 16, 0, 0),
+                datetime(2026, 6, 14, 16, 0, 0),
+                datetime(2026, 6, 15, 9, 0, 0),
+                datetime(2026, 6, 15, 9, 1, 0),
+            ]
+        )
+        self.dashboard.paper_account = PaperTradingAccount(
+            account_file=self.root / "paper" / "calibration_buy_account.json",
+            ledger_file=self.root / "paper" / "calibration_buy_ledger.jsonl",
+            clock=lambda: next(times),
+        )
+        self.dashboard.paper_account.initialize(100000)
+        self.service = OwnerControlService(self.dashboard)
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={},
+            benchmark_prices={"SPY": 500, "QQQ": 400},
+        )
+        prior = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            10,
+            100,
+            "Prior paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            prior["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(prior["proposal_id"], "approve")
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "NVDA",
+            10,
+            100,
+            "Prior paper entry.",
+            proposal_id=prior["proposal_id"],
+        )
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={"NVDA": 130},
+            benchmark_prices={"SPY": 505, "QQQ": 404},
+        )
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={"NVDA": 132},
+            benchmark_prices={"SPY": 506, "QQQ": 405},
+        )
+        current = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            5,
+            125,
+            "Current paper entry.",
+        )
+
+        model = self.service.model()
+        proposal = next(
+            item
+            for item in model["paper_proposals"]
+            if item["proposal_id"] == current["proposal_id"]
+        )
+
+        self.assertGreater(proposal["paper_calibration"]["adjustment"], 0)
+        self.assertEqual(proposal["paper_calibration"]["label"], "supportive")
+        self.assertIn(
+            "latest judged NVDA buy ideas outcome was working",
+            proposal["paper_calibration"]["reasons"],
+        )
+
+    def test_model_adds_caution_paper_calibration_to_sell_proposals(self):
+        times = iter(
+            [
+                datetime(2026, 6, 12, 9, 0, 0),
+                datetime(2026, 6, 12, 9, 1, 0),
+                datetime(2026, 6, 12, 9, 2, 0),
+                datetime(2026, 6, 12, 9, 3, 0),
+                datetime(2026, 6, 12, 16, 0, 0),
+                datetime(2026, 6, 13, 9, 0, 0),
+                datetime(2026, 6, 13, 9, 1, 0),
+                datetime(2026, 6, 13, 9, 2, 0),
+                datetime(2026, 6, 13, 16, 0, 0),
+                datetime(2026, 6, 14, 16, 0, 0),
+                datetime(2026, 6, 15, 16, 0, 0),
+                datetime(2026, 6, 16, 9, 0, 0),
+                datetime(2026, 6, 16, 9, 1, 0),
+                datetime(2026, 6, 16, 9, 2, 0),
+            ]
+        )
+        self.dashboard.paper_account = PaperTradingAccount(
+            account_file=self.root / "paper" / "calibration_sell_account.json",
+            ledger_file=self.root / "paper" / "calibration_sell_ledger.jsonl",
+            clock=lambda: next(times),
+        )
+        self.dashboard.paper_account.initialize(100000)
+        self.service = OwnerControlService(self.dashboard)
+        buy = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            buy["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(buy["proposal_id"], "approve")
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "RISK",
+            10,
+            100,
+            "Paper entry.",
+            proposal_id=buy["proposal_id"],
+        )
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={"RISK": 100},
+            benchmark_prices={"SPY": 500, "QQQ": 400},
+        )
+        prior_sell = self.dashboard.paper_account.create_proposal(
+            "sell",
+            "RISK",
+            5,
+            100,
+            "Prior trim review.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            prior_sell["proposal_id"],
+            "caution",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(prior_sell["proposal_id"], "approve")
+        self.dashboard.paper_account.execute_order(
+            "sell",
+            "RISK",
+            5,
+            100,
+            "Prior trim review.",
+            proposal_id=prior_sell["proposal_id"],
+        )
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={"RISK": 120},
+            benchmark_prices={"SPY": 503, "QQQ": 404},
+        )
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={"RISK": 123},
+            benchmark_prices={"SPY": 504, "QQQ": 405},
+        )
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={"RISK": 126},
+            benchmark_prices={"SPY": 505, "QQQ": 406},
+        )
+        current_sell = self.dashboard.paper_account.create_proposal(
+            "sell",
+            "RISK",
+            2,
+            125,
+            "Current trim review.",
+        )
+
+        model = self.service.model()
+        proposal = next(
+            item
+            for item in model["paper_proposals"]
+            if item["proposal_id"] == current_sell["proposal_id"]
+        )
+
+        self.assertLess(proposal["paper_calibration"]["adjustment"], 0)
+        self.assertEqual(proposal["paper_calibration"]["label"], "caution")
+        self.assertIn(
+            "lagging",
+            " ".join(proposal["paper_calibration"]["reasons"]),
+        )
 
     def test_model_ranks_recurring_thesis_risks_first(self):
         proposal = self.dashboard.paper_account.create_proposal(

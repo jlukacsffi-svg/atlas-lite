@@ -845,3 +845,33 @@ Current boundaries:
 - The new calibration summary remains simulation-only and does not evaluate
   real-money brokerage outcomes.
 - No brokerage order is sent and no real money is spent.
+
+## June 27, 2026 - Recommendation Calibration From Paper Learning
+
+New capabilities:
+
+- Use recent simulated paper outcomes to calibrate active paper proposals
+  instead of showing every new buy or sell idea without recent learning
+  context.
+- Add a plain-language `Paper learning` line to active recommendation cards and
+  owner-control proposal cards so the owner can see whether similar simulated
+  ideas have been supportive, cautionary, or still too early to judge.
+- Distinguish buy-side calibration from sell-side calibration and retain
+  ticker-specific context when Atlas has judged prior simulated outcomes in the
+  same name.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00047-cgr` is serving 100% traffic.
+- Dashboard image `20260627-paper-calibration` is deployed.
+- `/readyz` returns `{"status":"ready"}`.
+- Daily and weekly schedules remain enabled.
+- The full automated test suite passes with 308 tests.
+
+Current boundaries:
+
+- Atlas now calibrates recommendation framing from simulated outcomes, but it
+  still does not auto-execute paper trades.
+- The new recommendation calibration remains simulation-only and does not
+  evaluate real-money brokerage outcomes.
+- No brokerage order is sent and no real money is spent.

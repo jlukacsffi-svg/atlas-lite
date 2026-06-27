@@ -359,6 +359,7 @@ function renderOwnerControls(controls) {
           <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} · Risk ${escapeHtml(review.verdict || "pending")}</small>
           <p>${escapeHtml(item.thesis || "No thesis supplied.")}</p>
           ${proposalImpact(item)}
+          ${renderPaperCalibration(item.paper_calibration)}
           ${renderRationale(item.rationale, item)}
           <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical ${proposalActionLabel(item)} in Atlas paper tracking.</small>
         </div>
@@ -423,6 +424,21 @@ function proposalImpact(item) {
   return `<small class="row-meta">Current simulated holding: ${held.toFixed(2)} shares.</small>`;
 }
 
+function renderPaperCalibration(calibration) {
+  const judged = Number(calibration?.judged || 0);
+  const tickerJudged = Number(calibration?.ticker_judged || 0);
+  const adjustment = Number(calibration?.adjustment || 0);
+  const reasons = Array.isArray(calibration?.reasons) ? calibration.reasons : [];
+  const label = String(calibration?.label || "neutral");
+  if (!judged && !reasons.length && !adjustment) {
+    return `<small class="row-meta">Paper learning: not enough judged simulated outcomes yet.</small>`;
+  }
+  const tone = label === "supportive" ? "supportive" : label === "caution" ? "caution" : "neutral";
+  const reasonText = reasons.length ? ` - ${reasons.map(reason => escapeHtml(reason)).join(", ")}` : "";
+  const tickerText = tickerJudged ? ` - ${tickerJudged} judged ticker-specific outcome${tickerJudged === 1 ? "" : "s"}` : "";
+  return `<small class="row-meta paper-calibration ${tone}">Paper learning: ${adjustment >= 0 ? "+" : ""}${adjustment.toFixed(0)}${reasonText}${tickerText}</small>`;
+}
+
 function proposalControlTitle(item) {
   if (item.side === "sell") {
     return `${escapeHtml(proposalActionLabel(item).toUpperCase())} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}`;
@@ -444,6 +460,7 @@ function renderRecommendations(proposals, watchlist) {
         <b class="row-title">${proposalHeadline(item)}</b>
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
         <small class="row-meta">${item.status === "approved" ? "Status: approved by owner and ready for Simulate fill." : "Status: Atlas recommends this idea, but it still needs owner approval."}</small>
+        ${renderPaperCalibration(item.paper_calibration)}
         ${renderRationale(item.rationale, item)}
         <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to add this to the paper portfolio." : "Next step: approve or reject this paper proposal in Controls."}</small>
       </div>
@@ -461,6 +478,7 @@ function renderRecommendations(proposals, watchlist) {
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
         <small class="row-meta">Status: Atlas wants to ${escapeHtml(proposalActionLabel(item))} simulated exposure in this holding.</small>
         ${proposalImpact(item)}
+        ${renderPaperCalibration(item.paper_calibration)}
         ${renderRationale(item.rationale, item)}
         <small class="row-meta">${item.status === "approved" ? `Next step: use Simulate fill to record this simulated ${proposalActionLabel(item)}.` : `Next step: approve or reject this simulated ${proposalActionLabel(item)} proposal in Controls.`}</small>
       </div>

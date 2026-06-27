@@ -793,6 +793,9 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 }
 .row-title { display: block; font-size: 13px; font-weight: 700; }
 .row-meta { display: block; margin-top: 3px; color: var(--muted); font-size: 10px; }
+.row-meta.paper-calibration.supportive { color: var(--green); }
+.row-meta.paper-calibration.caution { color: var(--red); }
+.row-meta.paper-calibration.neutral { color: #31586a; }
 .score { font-size: 14px; font-weight: 800; text-align: right; }
 .change { min-width: 62px; text-align: right; font-size: 12px; font-weight: 800; }
 

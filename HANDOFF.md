@@ -554,18 +554,18 @@ Estimated overall Atlas program completion: 93%.
 
 Latest staging update:
 
-- The Paper Portfolio learning section now exposes an owner-facing summary of
-  recent simulated buy and sell outcomes before the detailed feedback list.
-- Atlas now shows a headline learning readout, working / mixed / lagging
-  counts, and separate buy-versus-sell calibration cards.
-- Active Cloud Run revision is `atlas-dashboard-stg-00046-7lg`.
-- Cache-busted web asset image tag is `20260625-learning-summary`.
-- Full test suite passes with 306 tests before deploy.
+- Atlas now applies paper-learning calibration directly to active paper
+  recommendations and owner-control proposal cards.
+- Recommendation cards now state whether recent simulated outcomes have been
+  supportive, cautionary, or still too sparse to guide confidence.
+- Active Cloud Run revision is `atlas-dashboard-stg-00047-cgr`.
+- Cache-busted web asset image tag is `20260627-paper-calibration`.
+- Full test suite passes with 308 tests before deploy.
 
 Current in-flight stage:
 
-- The next software step is to use this paper-learning calibration in the
-  owner-facing recommendation workflow, so Atlas can say when current buy or
-  sell ideas are aligned with what has been working recently in simulation.
+- The next software step is to incorporate this calibration into ranking and
+  prioritization, so the highest-signal recommendations rise first instead of
+  only showing the learning note inside each card.
 - Current dashboard behavior still requires explicit owner approval and
   Simulate fill confirmation before any paper buy, trim, or exit is recorded.

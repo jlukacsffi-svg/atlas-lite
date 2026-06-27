@@ -23,7 +23,13 @@ class OwnerControlService:
         awaiting = self.research_queue.list_tasks(status="awaiting_owner")
         ranked_reviews = self._rank_research_reviews(awaiting)
         action_context = self._action_context()
-        position_shares = self._position_shares()
+        latest_prices = self._latest_prices()
+        position_shares = self._position_shares_with_prices(latest_prices)
+        paper_feedback = (
+            self.paper_account.proposal_feedback(latest_prices=latest_prices)
+            if self.paper_account.account_file.exists()
+            else []
+        )
         proposals = [
             proposal
             for proposal in self.paper_account.proposals()
@@ -54,6 +60,11 @@ class OwnerControlService:
                         item,
                         position_shares,
                     ),
+                    "paper_calibration": self._paper_proposal_calibration(
+                        item,
+                        paper_feedback,
+                        position_shares,
+                    ),
                 }
                 for item in proposals
             ],
@@ -67,10 +78,13 @@ class OwnerControlService:
         }
 
     def _position_shares(self):
+        return self._position_shares_with_prices(self._latest_prices())
+
+    def _position_shares_with_prices(self, prices):
         if not self.paper_account.account_file.exists():
             return {}
         try:
-            status = self.paper_account.status(prices=self._latest_prices())
+            status = self.paper_account.status(prices=prices)
         except ValueError:
             return {}
         return {
@@ -245,6 +259,90 @@ class OwnerControlService:
             "adjustment": adjustment,
             "reasons": reasons,
         }
+
+    def _paper_proposal_calibration(self, proposal, feedback_rows, position_shares):
+        side = str(proposal.get("side") or "buy").lower()
+        if side not in {"buy", "sell"}:
+            side = "buy"
+        ticker = str(proposal.get("ticker") or "").strip().upper()
+        action_label = self._proposal_action_label(proposal, position_shares)
+        judged_rows = [
+            row
+            for row in feedback_rows
+            if row.get("side") == side and row.get("verdict") != "not_enough_time"
+        ]
+        ticker_rows = [
+            row
+            for row in judged_rows
+            if str(row.get("ticker") or "").strip().upper() == ticker
+            and (
+                side != "sell"
+                or str(row.get("action_label") or "").strip().lower() == action_label
+            )
+        ]
+        working = sum(1 for row in judged_rows if row.get("verdict") == "working")
+        lagging = sum(1 for row in judged_rows if row.get("verdict") == "lagging")
+        adjustment = 0
+        reasons = []
+        label = "neutral"
+
+        if len(judged_rows) >= 2:
+            if working > lagging:
+                adjustment += 4
+                label = "supportive"
+                reasons.append(
+                    f"recent simulated {self._paper_side_label(side, action_label)} are working more often than lagging"
+                )
+            elif lagging > working:
+                adjustment -= 6
+                label = "caution"
+                reasons.append(
+                    f"recent simulated {self._paper_side_label(side, action_label)} are lagging more often than working"
+                )
+
+        if ticker_rows:
+            latest = sorted(
+                ticker_rows,
+                key=lambda row: row.get("filled_at") or "",
+                reverse=True,
+            )[0]
+            if latest.get("verdict") == "working":
+                adjustment += 3
+                if adjustment >= 0:
+                    label = "supportive"
+                reasons.append(
+                    f"latest judged {ticker} {self._paper_side_label(side, action_label)} outcome was working"
+                )
+            elif latest.get("verdict") == "lagging":
+                adjustment -= 4
+                label = "caution"
+                reasons.append(
+                    f"latest judged {ticker} {self._paper_side_label(side, action_label)} outcome was lagging"
+                )
+
+        if not judged_rows:
+            summary = "Atlas does not have enough judged simulated outcomes yet for this proposal type."
+        elif adjustment > 0:
+            summary = "Recent paper-learning history is supportive of this proposal type."
+        elif adjustment < 0:
+            summary = "Recent paper-learning history suggests extra caution for this proposal type."
+        else:
+            summary = "Recent paper-learning history is mixed for this proposal type."
+
+        return {
+            "adjustment": max(-10, min(7, adjustment)),
+            "label": label,
+            "judged": len(judged_rows),
+            "ticker_judged": len(ticker_rows),
+            "reasons": reasons[:3],
+            "summary": summary,
+        }
+
+    @staticmethod
+    def _paper_side_label(side, action_label):
+        if side == "sell":
+            return action_label if action_label in {"trim", "exit"} else "sell decisions"
+        return "buy ideas"
 
     def _recommendation_decision_counts(self, recommendation):
         counts = {decision: 0 for decision in sorted(VALID_RESEARCH_DECISIONS)}
