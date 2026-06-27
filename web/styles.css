@@ -470,6 +470,30 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   font-size: 11px;
   line-height: 1.4;
 }
+.why-not {
+  margin-top: 9px;
+  padding: 10px;
+  border: 1px solid #f0c4c9;
+  border-radius: 6px;
+  background: #fff8f9;
+}
+.why-not span {
+  display: block;
+  margin-bottom: 6px;
+  color: #8a2f3a;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.why-not ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.4;
+}
 .watchlist-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));

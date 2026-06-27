@@ -927,3 +927,28 @@ Current boundaries:
 - Atlas explanations are now more usable for older paper ideas, but they still
   remain recommendation and simulation guidance only.
 - No brokerage order is sent and no real capital is moved.
+
+## 2026-06-27 - Recommendations now present the counter-case too
+
+New capabilities:
+
+- Add a structured `Why not` section for simulated buy recommendations so Atlas
+  can surface the strongest reasons to hesitate, not just the reasons to act.
+- Add a structured `What could go wrong` section for trim and exit proposals so
+  simulated sell decisions also show the downside of acting too early or too
+  aggressively.
+- Use risk-review flags, conviction level, recent move quality, category, and
+  paper-learning scarcity/caution to build these objections automatically.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00052-nlm` is serving 100% traffic.
+- Dashboard image `20260627-why-not` is deployed.
+- `/readyz` returns `{\"status\":\"ready\"}`.
+- The full automated test suite passes with 310 tests.
+
+Current boundaries:
+
+- Atlas now frames both the pro case and the caution case, but the result is
+  still a simulation-only research recommendation.
+- No brokerage order is sent and no real capital is moved.

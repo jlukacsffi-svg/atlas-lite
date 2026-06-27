@@ -65,6 +65,16 @@ class OwnerControlService:
                             position_shares,
                         ),
                     ),
+                    "objections": self._proposal_objections(
+                        item,
+                        securities.get(item["ticker"], {}),
+                        position_shares,
+                        self._paper_proposal_calibration(
+                            item,
+                            paper_feedback,
+                            position_shares,
+                        ),
+                    ),
                     "risk_review": item.get("risk_review"),
                     "position_shares": position_shares.get(item["ticker"], 0.0),
                     "action_label": self._proposal_action_label(
@@ -368,6 +378,23 @@ class OwnerControlService:
             )
         return self._legacy_buy_rationale(proposal, security, paper_calibration)
 
+    def _proposal_objections(
+        self,
+        proposal,
+        security,
+        position_shares,
+        paper_calibration,
+    ):
+        side = str(proposal.get("side") or "").lower()
+        if side == "sell":
+            return self._sell_objections(
+                proposal,
+                security,
+                position_shares,
+                paper_calibration,
+            )
+        return self._buy_objections(proposal, security, paper_calibration)
+
     def _legacy_buy_rationale(self, proposal, security, paper_calibration):
         ticker = str(proposal.get("ticker") or "This security")
         price = security.get("price")
@@ -406,6 +433,38 @@ class OwnerControlService:
         if calibration_reason:
             rows.append(calibration_reason)
         return rows[:4]
+
+    def _buy_objections(self, proposal, security, paper_calibration):
+        ticker = str(proposal.get("ticker") or "This security")
+        rows = []
+        review = proposal.get("risk_review") or {}
+        flags = [str(flag).strip() for flag in review.get("flags") or [] if str(flag).strip()]
+        move = security.get("percent_change")
+        category = security.get("category") or "Watchlist"
+        score = security.get("total_score")
+
+        if flags:
+            rows.append("Risk review flags: " + ", ".join(flags[:2]) + ".")
+        elif review.get("verdict") == "caution":
+            rows.append("Risk review is cautionary, so this idea still needs extra skepticism.")
+
+        if move is not None and float(move) <= 0:
+            rows.append(
+                f"Latest move is {float(move):+.2f}%, so momentum confirmation is not yet strong."
+            )
+        if score is not None and float(score) < 90:
+            rows.append(
+                f"Atlas score {float(score):.1f} is investable, but not yet in Atlas's highest-conviction tier."
+            )
+        if category != "Core":
+            rows.append(
+                f"{ticker} is still categorized as {category}, which means Atlas has not promoted it to a core-conviction name."
+            )
+
+        calibration = self._calibration_caution_text(paper_calibration)
+        if calibration:
+            rows.append(calibration)
+        return rows[:3]
 
     def _legacy_sell_rationale(
         self,
@@ -455,6 +514,41 @@ class OwnerControlService:
             rows.append(calibration_reason)
         return rows[:4]
 
+    def _sell_objections(
+        self,
+        proposal,
+        security,
+        position_shares,
+        paper_calibration,
+    ):
+        ticker = str(proposal.get("ticker") or "This position")
+        action_label = self._proposal_action_label(proposal, position_shares)
+        held = float(position_shares.get(ticker, 0.0) or 0.0)
+        shares = float(proposal.get("shares") or 0.0)
+        move = security.get("percent_change")
+        review = proposal.get("risk_review") or {}
+        flags = [str(flag).strip() for flag in review.get("flags") or [] if str(flag).strip()]
+        rows = []
+
+        if move is not None and float(move) > 0:
+            rows.append(
+                f"Latest move is {float(move):+.2f}%, so trimming or exiting now could surrender further upside if the thesis stabilizes."
+            )
+        if action_label == "trim" and held and shares < held:
+            rows.append(
+                f"A trim would still leave {max(held - shares, 0):g} simulated shares exposed if the thesis keeps weakening."
+            )
+        elif action_label == "exit" and held:
+            rows.append(
+                "A full exit removes exposure completely, so Atlas needs to be right about the thesis deterioration."
+            )
+        if flags:
+            rows.append("Exit case depends on risk flags: " + ", ".join(flags[:2]) + ".")
+        calibration = self._calibration_caution_text(paper_calibration)
+        if calibration:
+            rows.append(calibration)
+        return rows[:3]
+
     def _proposal_sizing_context(self, proposal):
         if not self.paper_account.account_file.exists():
             return ""
@@ -496,6 +590,19 @@ class OwnerControlService:
                 return "Paper learning context: " + reason[:1].upper() + reason[1:] + "."
         summary = str(paper_calibration.get("summary") or "").strip()
         return f"Paper learning context: {summary}" if summary else ""
+
+    @staticmethod
+    def _calibration_caution_text(paper_calibration):
+        judged = int(paper_calibration.get("judged") or 0)
+        adjustment = float(paper_calibration.get("adjustment") or 0)
+        summary = str(paper_calibration.get("summary") or "").strip()
+        if adjustment < 0 and summary:
+            return f"Paper-learning caution: {summary}"
+        if judged == 0:
+            return "Paper-learning caution: Atlas still lacks enough judged simulated outcomes for this setup."
+        if judged < 3:
+            return f"Paper-learning caution: only {judged} judged simulated outcome{'s' if judged != 1 else ''} support this setup so far."
+        return ""
 
     @staticmethod
     def _paper_side_label(side, action_label):

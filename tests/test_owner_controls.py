@@ -125,6 +125,9 @@ class OwnerControlServiceTests(unittest.TestCase):
             "created before structured Why now rationale",
             combined,
         )
+        objections = " ".join(item["objections"])
+        self.assertIn("highest-conviction tier", objections)
+        self.assertIn("categorized as Watchlist", objections)
 
     def test_model_backfills_structured_rationale_for_legacy_sell_proposals(self):
         buy = self.dashboard.paper_account.create_proposal(
@@ -172,6 +175,9 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertIn("proposing a trim of 5", combined)
         self.assertIn("Risk review flags:", combined)
         self.assertIn("Paper learning context:", combined)
+        objections = " ".join(item["objections"])
+        self.assertIn("A trim would still leave 5", objections)
+        self.assertIn("Exit case depends on risk flags:", objections)
 
     def test_model_labels_partial_sell_as_trim(self):
         buy = self.dashboard.paper_account.create_proposal(

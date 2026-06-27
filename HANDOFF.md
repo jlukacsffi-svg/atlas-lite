@@ -598,3 +598,15 @@ Latest staging update:
 - Cloud Run revision `atlas-dashboard-stg-00051-2cc` is serving 100% traffic.
 - Cache-busted web asset image tag is `20260627-rationale-live`.
 - Full test suite passes with 310 tests before deploy.
+
+Latest staging update:
+
+- Recommendation cards now carry both the affirmative case and the caution
+  case. Atlas can explain `Why now` and also `Why not` or `What could go
+  wrong` using score, category, move, risk-review, and paper-learning context.
+- Older paper proposals now read more like disciplined research notes instead
+  of one-sided prompts, which makes the live dashboard feel much closer to a
+  usable investment workbench.
+- Cloud Run revision `atlas-dashboard-stg-00052-nlm` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260627-why-not`.
+- Full test suite passes with 310 tests before deploy.

@@ -386,6 +386,7 @@ function renderOwnerControls(controls) {
           ${proposalImpact(item)}
           ${renderPaperCalibration(item.paper_calibration)}
           ${renderRationale(item.rationale, item)}
+          ${renderObjections(item.objections, item)}
           <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical ${proposalActionLabel(item)} in Atlas paper tracking.</small>
         </div>
         <div class="decision-actions">
@@ -487,6 +488,7 @@ function renderRecommendations(proposals, watchlist) {
         <small class="row-meta">${item.status === "approved" ? "Status: approved by owner and ready for Simulate fill." : "Status: Atlas recommends this idea, but it still needs owner approval."}</small>
         ${renderPaperCalibration(item.paper_calibration)}
         ${renderRationale(item.rationale, item)}
+        ${renderObjections(item.objections, item)}
         <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to add this to the paper portfolio." : "Next step: approve or reject this paper proposal in Controls."}</small>
       </div>
     </article>
@@ -505,6 +507,7 @@ function renderRecommendations(proposals, watchlist) {
         ${proposalImpact(item)}
         ${renderPaperCalibration(item.paper_calibration)}
         ${renderRationale(item.rationale, item)}
+        ${renderObjections(item.objections, item)}
         <small class="row-meta">${item.status === "approved" ? `Next step: use Simulate fill to record this simulated ${proposalActionLabel(item)}.` : `Next step: approve or reject this simulated ${proposalActionLabel(item)} proposal in Controls.`}</small>
       </div>
     </article>
@@ -550,6 +553,17 @@ function renderRationale(rationale, item = {}) {
   return `
     <div class="why-now">
       <span>${item.side === "sell" ? sellHeading : "Why now"}</span>
+      <ul>${rows.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+    </div>`;
+}
+
+function renderObjections(objections, item = {}) {
+  const rows = (objections || []).filter(Boolean);
+  if (!rows.length) return "";
+  const heading = item.side === "sell" ? "What could go wrong" : "Why not";
+  return `
+    <div class="why-not">
+      <span>${heading}</span>
       <ul>${rows.map(item => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
     </div>`;
 }
