@@ -483,8 +483,12 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(activity[0]["action_label"], "exit")
         self.assertEqual(activity[0]["title"], "Atlas sold NVDA")
         self.assertIn("closed the simulated position", activity[0]["summary"])
+        self.assertEqual(activity[0]["proposal_id"], sell["proposal_id"])
+        self.assertEqual(activity[0]["risk_review"]["verdict"], "clear")
         self.assertEqual(activity[1]["action_label"], "purchase")
         self.assertEqual(activity[1]["title"], "Atlas purchased NVDA")
+        self.assertEqual(activity[1]["proposal_id"], buy["proposal_id"])
+        self.assertEqual(activity[1]["risk_review"]["verdict"], "clear")
         self.assertEqual(
             activity[1]["rationale"][0],
             "Atlas score is above the buy threshold.",

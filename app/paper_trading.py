@@ -695,6 +695,7 @@ class PaperTradingAccount:
             rows.append(
                 {
                     "trade_id": trade.get("trade_id"),
+                    "proposal_id": trade.get("proposal_id"),
                     "timestamp": trade.get("timestamp"),
                     "ticker": trade.get("ticker"),
                     "side": trade.get("side"),
@@ -706,6 +707,7 @@ class PaperTradingAccount:
                     "summary": summary,
                     "thesis": proposal.get("thesis") or trade.get("thesis"),
                     "rationale": rationale,
+                    "risk_review": proposal.get("risk_review"),
                 }
             )
         return rows

@@ -979,3 +979,30 @@ Current boundaries:
   is still a recommendation and paper-trading system rather than a live
   brokerage executor.
 - No brokerage order is sent and no real capital is moved.
+
+## 2026-06-27 - Paper Portfolio now shows thesis memory and execution context
+
+New capabilities:
+
+- Add Atlas research-memory summaries to open paper positions so the portfolio
+  view can show how much stored thesis history exists for each holding and
+  whether the latest review leaned supportive or risk to thesis.
+- Enrich executed paper activity with an `Atlas context` block that surfaces
+  execution-time risk-review flags, latest stored thesis alignment, and recent
+  evidence titles from Atlas research memory.
+- Preserve the paper ledger as the source of record while enriching the
+  browser-facing dashboard model with current research context at render time.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00054-xw8` is serving 100% traffic.
+- Dashboard image `20260627-activity-context` is deployed.
+- `/readyz` returns `{\"status\":\"ready\"}`.
+- The full automated test suite passes with 311 tests.
+
+Current boundaries:
+
+- Atlas now explains open simulated holdings and executed paper trades with
+  more thesis history, but it still remains a paper portfolio and
+  recommendation system.
+- No brokerage order is sent and no real capital is moved.

@@ -725,6 +725,10 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   margin-top: 10px;
   padding: 9px 10px;
 }
+.why-now.compact.memory {
+  border-color: #c8d7f8;
+  background: #f6f8fe;
+}
 .why-now.compact span {
   margin-bottom: 4px;
 }

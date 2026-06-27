@@ -99,6 +99,104 @@ class WebDashboardTests(unittest.TestCase):
             data["access"]["production_review"],
         )
 
+    def test_dashboard_enriches_positions_and_activity_with_research_memory(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            archive = root / "archive"
+            archive.mkdir()
+            (archive / "snapshot_20260606_120000.json").write_text(
+                json.dumps(
+                    {
+                        "generated_at": "2026-06-06T12:00:00",
+                        "market_summary": {},
+                        "securities": {
+                            "NVDA": {
+                                "status": "available",
+                                "company_name": "NVIDIA Corporation",
+                                "sector": "AI & Semiconductors",
+                                "category": "Core",
+                                "price": 110,
+                                "percent_change": 2.5,
+                                "total_score": 91,
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+            paper = PaperTradingAccount(
+                account_file=root / "paper" / "account.json",
+                ledger_file=root / "paper" / "ledger.jsonl",
+            )
+            paper.initialize(100000)
+            buy = paper.create_proposal(
+                "buy",
+                "NVDA",
+                10,
+                100,
+                "NVDA remains a high-conviction paper entry.",
+                rationale=["Atlas score is above the buy threshold."],
+            )
+            paper.record_proposal_risk_review(
+                buy["proposal_id"],
+                "caution",
+                ["valuation is stretched"],
+            )
+            paper.decide_proposal(buy["proposal_id"], "approve")
+            paper.execute_order(
+                "buy",
+                "NVDA",
+                10,
+                100,
+                "NVDA remains a high-conviction paper entry.",
+                proposal_id=buy["proposal_id"],
+            )
+            tasks = ResearchTaskQueue(root / "tasks" / "tasks.json")
+            task, _ = tasks.add_task(
+                role="CRO",
+                subject="NVDA",
+                prompt="Review downside catalyst.",
+                priority="high",
+            )
+            tasks.complete_research(
+                task["id"],
+                conclusion="Fresh risk review.",
+                recommendation="risk_review",
+                confidence="medium",
+                catalyst_type="score_risk",
+                thesis_alignment="risk_to_thesis",
+                thesis_drift="new_risk",
+                evidence=[
+                    {
+                        "title": "NVDA thesis history",
+                        "source": "Atlas research task memory",
+                        "detail": "Prior risk review",
+                    }
+                ],
+            )
+            service = DashboardDataService(
+                archive_dir=archive,
+                paper_account=paper,
+                research_queue=tasks,
+            )
+
+            data = service.build()
+
+        position = data["paper"]["positions"][0]
+        self.assertIn("stored review", position["research_memory"]["summary"])
+        self.assertIn("risk to thesis", position["research_memory"]["detail"])
+        activity = data["paper"]["activity"][0]
+        combined = " ".join(activity["decision_context"])
+        self.assertIn(
+            "Latest stored Atlas review still marked NVDA as risk to thesis",
+            combined,
+        )
+        self.assertIn(
+            "Evidence on file at execution: NVDA thesis history.",
+            combined,
+        )
+        self.assertIn("Execution risk review: valuation is stretched.", combined)
+
     def test_static_routes_are_explicit_and_read_only(self):
         self.assertEqual(set(STATIC_FILES), {"/", "/index.html", "/styles.css", "/app.js"})
 
@@ -203,8 +301,8 @@ class WebDashboardTests(unittest.TestCase):
         paper_trading = (root / "app" / "paper_trading.py").read_text(encoding="utf-8")
         self.assertIn('id="workspace-status"', html)
         self.assertIn('id="sign-out"', html)
-        self.assertIn('/styles.css?v=20260627-why-not', html)
-        self.assertIn('/app.js?v=20260627-why-not', html)
+        self.assertIn('/styles.css?v=20260627-activity-context', html)
+        self.assertIn('/app.js?v=20260627-activity-context', html)
         self.assertIn("Secure owner cloud", script)
         self.assertIn("Local read-only workspace", script)
         self.assertIn("window.location.hostname", script)
@@ -258,6 +356,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn('simulated ${escapeHtml(String(item.action_label || "sell"))}', script)
         self.assertIn("Post-sell move", script)
         self.assertIn("renderPaperActivity", script)
+        self.assertIn("Research memory:", script)
+        self.assertIn("Atlas context", script)
         self.assertIn("renderPaperOperatingMode", script)
         self.assertIn("renderThesisOverview", script)
         self.assertIn("thesis_status", script)
@@ -275,6 +375,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Record simulated ${action}", script)
         self.assertIn("exit-tag", styles)
         self.assertIn("exit-panel", styles)
+        self.assertIn(".why-now.compact.memory", styles)
         self.assertIn("Why now", script)
         self.assertIn("Why not", script)
         self.assertIn("What could go wrong", script)

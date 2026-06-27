@@ -623,3 +623,17 @@ Latest staging update:
 - Cloud Run revision `atlas-dashboard-stg-00053-kr9` is serving 100% traffic.
 - Cache-busted web asset image tag is `20260627-memory-objections`.
 - Full test suite passes with 310 tests before deploy.
+
+Latest staging update:
+
+- Open simulated positions now show a compact Atlas research-memory readout so
+  the Paper Portfolio page exposes how much thesis history Atlas already has on
+  each holding, plus whether the latest stored review leaned supportive or risk
+  to thesis.
+- Executed paper buys and sells now include an `Atlas context` block that can
+  cite execution-time risk-review flags, stored thesis alignment, and recent
+  evidence titles. The activity feed now reads more like an investment journal
+  than a bare trade ledger.
+- Cloud Run revision `atlas-dashboard-stg-00054-xw8` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260627-activity-context`.
+- Full test suite passes with 311 tests before deploy.

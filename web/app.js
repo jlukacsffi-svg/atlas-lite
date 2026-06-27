@@ -722,12 +722,15 @@ function renderPositions(rows) {
   document.getElementById("positions").innerHTML = rows.map(item => {
     const review = item.review || {};
     const thesis = item.thesis_status || { label: "healthy", summary: "Awaiting the next daily thesis review." };
+    const memory = item.research_memory || null;
     return `
       <div class="position-row">
         <span>
           <b class="row-title">${item.ticker} · ${Number(item.shares).toFixed(0)} shares</b>
           <small class="row-meta">Average ${money.format(item.average_cost)} · ${review.verdict || "unreviewed"} thesis</small>
           <small class="row-meta thesis-summary"><span class="thesis-badge ${escapeHtml(thesis.label)}">${escapeHtml(thesis.label)}</span>${escapeHtml(thesis.summary || "")}</small>
+          ${memory?.summary ? `<small class="row-meta">Research memory: ${escapeHtml(memory.summary)}</small>` : ""}
+          ${memory?.detail ? `<small class="row-meta">${escapeHtml(memory.detail)}</small>` : ""}
         </span>
         <span>
           <b class="row-title">${money.format(item.market_value || 0)}</b>
@@ -823,6 +826,7 @@ function renderPaperActivity(rows) {
   document.getElementById("paper-activity").innerHTML = rows.map(item => {
     const action = String(item.action_label || item.side || "activity");
     const rationale = item.rationale || [];
+    const decisionContext = item.decision_context || [];
     const whyHeading = action === "trim" ? "Why trim" : action === "exit" ? "Why exit" : "Why buy";
     return `
       <article class="activity-row ${escapeHtml(item.side || "buy")}">
@@ -834,6 +838,7 @@ function renderPaperActivity(rows) {
           ${item.side === "sell" ? `<small class="row-meta ${changeClass(item.realized_gain_loss)}">Realized result ${money.format(Number(item.realized_gain_loss) || 0)}</small>` : ""}
           <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
           ${rationale.length ? `<div class="why-now compact"><span>${whyHeading}</span><ul>${rationale.slice(0, 3).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
+          ${decisionContext.length ? `<div class="why-now compact memory"><span>Atlas context</span><ul>${decisionContext.slice(0, 4).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
         </div>
       </article>`;
   }).join("") || `<div class="empty">No simulated buys or sells have been recorded yet.</div>`;

@@ -240,6 +240,9 @@ class DashboardDataService:
                     latest_reviews.get(position["ticker"]),
                     active_sell_proposals.get(position["ticker"]),
                 ),
+                "research_memory": self._research_memory_summary(
+                    position["ticker"],
+                ),
             }
             for position in status["positions"]
         ]
@@ -258,7 +261,7 @@ class DashboardDataService:
             "positions": positions,
             "thesis_overview": self._thesis_overview(positions),
             "operating_mode": self._paper_operating_mode(),
-            "activity": self.paper_account.trade_activity(),
+            "activity": self._paper_activity_with_context(),
             "feedback_summary": self.paper_account.proposal_feedback_summary(
                 latest_prices=prices
             ),
@@ -306,6 +309,143 @@ class DashboardDataService:
                 "Real-money auto-trading remains disabled. Future automation, if added, "
                 "must stay paper-only until explicitly expanded."
             ),
+        }
+
+    def _paper_activity_with_context(self):
+        rows = []
+        for item in self.paper_account.trade_activity():
+            rows.append(
+                {
+                    **item,
+                    "decision_context": self._activity_decision_context(item),
+                }
+            )
+        return rows
+
+    def _activity_decision_context(self, item):
+        ticker = item.get("ticker")
+        side = str(item.get("side") or "").lower()
+        action = str(item.get("action_label") or side or "trade")
+        context = []
+        review = item.get("risk_review") or {}
+        flags = [
+            str(flag).strip()
+            for flag in review.get("flags") or []
+            if str(flag).strip()
+        ]
+        if flags:
+            context.append(
+                "Execution risk review: " + "; ".join(flags[:2]) + "."
+            )
+        history = self.research_queue.thesis_history_summary(ticker)
+        latest = self._latest_research_context(ticker)
+        if latest:
+            alignment = latest.get("thesis_alignment")
+            catalyst = str(latest.get("catalyst_type") or "recent review").replace(
+                "_", " "
+            )
+            if alignment == "risk_to_thesis":
+                if side == "sell":
+                    context.append(
+                        f"Latest stored Atlas review marked {ticker} as risk to thesis via {catalyst}, which supports the simulated {action}."
+                    )
+                else:
+                    context.append(
+                        f"Latest stored Atlas review still marked {ticker} as risk to thesis via {catalyst}, so this simulated buy was taken with known downside context."
+                    )
+            elif alignment == "supports_driver":
+                if side == "buy":
+                    context.append(
+                        f"Latest stored Atlas review supported the {ticker} thesis via {catalyst}, which aligned with the simulated buy."
+                    )
+                else:
+                    context.append(
+                        f"Latest stored Atlas review was supportive via {catalyst}, so the simulated {action} likely came from portfolio discipline rather than outright thesis damage."
+                    )
+            evidence_titles = latest.get("evidence_titles") or []
+            if evidence_titles:
+                context.append(
+                    "Evidence on file at execution: "
+                    + ", ".join(evidence_titles[:2])
+                    + "."
+                )
+        if history and history.get("review_count"):
+            context.append(
+                self._research_memory_sentence(
+                    ticker,
+                    history,
+                )
+            )
+        return context[:4]
+
+    def _research_memory_summary(self, ticker):
+        history = self.research_queue.thesis_history_summary(ticker)
+        if not history:
+            return None
+        summary = self._research_memory_sentence(ticker, history)
+        latest = self._latest_research_context(ticker)
+        detail = ""
+        if latest and latest.get("thesis_alignment") == "risk_to_thesis":
+            catalyst = str(latest.get("catalyst_type") or "recent review").replace(
+                "_", " "
+            )
+            detail = f"Latest stored review leaned risk to thesis via {catalyst}."
+        elif latest and latest.get("thesis_alignment") == "supports_driver":
+            catalyst = str(latest.get("catalyst_type") or "recent review").replace(
+                "_", " "
+            )
+            detail = f"Latest stored review supported the thesis via {catalyst}."
+        return {
+            "summary": summary,
+            "detail": detail,
+        }
+
+    @staticmethod
+    def _research_memory_sentence(ticker, history):
+        review_count = int(history.get("review_count") or 0)
+        risk_count = int(history.get("risk_to_thesis_count") or 0)
+        support_count = int(history.get("supports_driver_count") or 0)
+        parts = [f"{review_count} stored review{'s' if review_count != 1 else ''}"]
+        if risk_count:
+            parts.append(
+                f"{risk_count} risk-to-thesis signal{'s' if risk_count != 1 else ''}"
+            )
+        if support_count:
+            parts.append(
+                f"{support_count} supportive signal{'s' if support_count != 1 else ''}"
+            )
+        return f"Atlas memory for {ticker}: " + "; ".join(parts) + "."
+
+    def _latest_research_context(self, ticker):
+        ticker = str(ticker or "").strip().upper()
+        if not ticker:
+            return None
+        latest = None
+        for task in reversed(self.research_queue.load().get("tasks", [])):
+            if str(task.get("subject") or "").strip().upper() != ticker:
+                continue
+            if not task.get("result"):
+                continue
+            latest = task
+            break
+        if not latest:
+            return None
+        result = latest.get("result", {})
+        evidence_titles = []
+        for item in result.get("evidence", []) or []:
+            if isinstance(item, str):
+                text = item.strip()
+                if text:
+                    evidence_titles.append(text[:90])
+            else:
+                title = str(item.get("title") or item.get("detail") or "").strip()
+                if title:
+                    evidence_titles.append(title[:90])
+        return {
+            "catalyst_type": result.get("catalyst_type"),
+            "thesis_alignment": result.get("thesis_alignment"),
+            "thesis_drift": result.get("thesis_drift"),
+            "evidence_titles": evidence_titles[:2],
         }
 
     @staticmethod
