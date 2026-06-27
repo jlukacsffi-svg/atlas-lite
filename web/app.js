@@ -159,6 +159,30 @@ function recommendationRank(item) {
   return 3;
 }
 
+function recommendationCalibrationAdjustment(item) {
+  return Number(item?.paper_calibration?.adjustment || 0);
+}
+
+function recommendationJudgedCount(item) {
+  return Number(item?.paper_calibration?.judged || 0);
+}
+
+function compareRecommendations(left, right) {
+  const stageGap = recommendationRank(left) - recommendationRank(right);
+  if (stageGap !== 0) return stageGap;
+
+  const calibrationGap =
+    recommendationCalibrationAdjustment(right) - recommendationCalibrationAdjustment(left);
+  if (calibrationGap !== 0) return calibrationGap;
+
+  const judgedGap = recommendationJudgedCount(right) - recommendationJudgedCount(left);
+  if (judgedGap !== 0) return judgedGap;
+
+  const tickerLeft = String(left?.ticker || "");
+  const tickerRight = String(right?.ticker || "");
+  return tickerLeft.localeCompare(tickerRight);
+}
+
 function renderRecommendationSummary(proposals, watchlist) {
   const rows = proposals || [];
   const summary = {
@@ -169,7 +193,7 @@ function renderRecommendationSummary(proposals, watchlist) {
   };
   const highlights = rows
     .slice()
-    .sort((left, right) => recommendationRank(left) - recommendationRank(right))
+    .sort(compareRecommendations)
     .slice(0, 3);
 
   document.getElementById("recommendation-summary").innerHTML = `
@@ -204,6 +228,7 @@ function renderRecommendationSummary(proposals, watchlist) {
             <div>
               <b class="row-title">${escapeHtml(item.ticker || "Proposal")}</b>
               <small class="row-meta">${escapeHtml((item.rationale || [item.thesis || "Awaiting rationale."])[0] || "Awaiting rationale.")}</small>
+              ${item.paper_calibration?.judged ? `<small class="row-meta">Paper learning ${recommendationCalibrationAdjustment(item) >= 0 ? "+" : ""}${recommendationCalibrationAdjustment(item).toFixed(0)} from ${recommendationJudgedCount(item)} judged outcome${recommendationJudgedCount(item) === 1 ? "" : "s"}</small>` : ""}
             </div>
           </div>
         `).join("") : `<div class="empty">No active Atlas paper recommendations right now.</div>`}
@@ -449,10 +474,10 @@ function proposalControlTitle(item) {
 function renderRecommendations(proposals, watchlist) {
   const buyProposals = (proposals || [])
     .filter(item => item.side === "buy")
-    .sort((left, right) => recommendationRank(left) - recommendationRank(right));
+    .sort(compareRecommendations);
   const sellProposals = (proposals || [])
     .filter(item => item.side === "sell")
-    .sort((left, right) => recommendationRank(left) - recommendationRank(right));
+    .sort(compareRecommendations);
   const buyHtml = buyProposals.map(item => `
     <article class="recommendation-row ${item.status === "approved" ? "approved-rec" : ""}">
       <span class="tag ${item.status === "approved" ? "ready-tag" : "buy-tag"}">${escapeHtml(recommendationStageLabel(item))}</span>

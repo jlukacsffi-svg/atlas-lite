@@ -875,3 +875,29 @@ Current boundaries:
 - The new recommendation calibration remains simulation-only and does not
   evaluate real-money brokerage outcomes.
 - No brokerage order is sent and no real money is spent.
+
+## 2026-06-27 - Paper learning now prioritizes recommendations
+
+New capabilities:
+
+- Use paper-learning calibration to sort recommendation queues within each
+  existing workflow stage instead of only showing a learning note inside each
+  card.
+- Keep approved buys ahead of pending buys, trims, and exits, while lifting the
+  stronger paper-backed ideas to the top within each stage.
+- Surface the same calibrated ordering in the `Atlas focus right now` summary,
+  including judged-outcome counts when Atlas has enough evidence.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00049-74x` is serving 100% traffic.
+- Dashboard image `20260627-recommendation-ranking` is deployed.
+- `/readyz` returns `{\"status\":\"ready\"}`.
+- The full automated test suite passes with 308 tests.
+
+Current boundaries:
+
+- Atlas still requires explicit owner approval before any paper buy, trim, or
+  exit can be simulated.
+- Recommendation ranking is now learning-aware, but it still remains
+  simulation-only and does not send any real-money brokerage order.

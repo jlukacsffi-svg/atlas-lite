@@ -569,3 +569,16 @@ Current in-flight stage:
   only showing the learning note inside each card.
 - Current dashboard behavior still requires explicit owner approval and
   Simulate fill confirmation before any paper buy, trim, or exit is recorded.
+
+Latest staging update:
+
+- Atlas now uses paper-learning calibration to sort active recommendation
+  queues, not just annotate them.
+- Recommendation ordering still respects workflow stage first (approved buys,
+  pending buys, trims, exits), but Atlas now pushes stronger simulated learnings
+  to the top within each stage.
+- The `Atlas focus right now` summary now surfaces the same calibrated priority
+  order and shows judged-outcome counts when Atlas has enough paper evidence.
+- Cloud Run revision `atlas-dashboard-stg-00049-74x` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260627-recommendation-ranking`.
+- Full test suite passes with 308 tests before deploy.
