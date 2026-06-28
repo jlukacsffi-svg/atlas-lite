@@ -267,6 +267,7 @@ class DashboardDataService:
             "excess_return_pct": performance.get("excess_return_pct", {}),
             "positions": positions,
             "thesis_overview": self._thesis_overview(positions),
+            "position_ladder": self._position_ladder(positions),
             "operating_mode": self._paper_operating_mode(),
             "activity": self._paper_activity_with_context(),
             "feedback_summary": self.paper_account.proposal_feedback_summary(
@@ -637,6 +638,43 @@ class DashboardDataService:
             "counts": counts,
             "attention": attention[:4],
         }
+
+    @staticmethod
+    def _position_ladder(positions):
+        buckets = [
+            ("healthy", "Hold steady", "Constructive thesis and no active reduction path."),
+            ("watch", "Watch closely", "Needs closer monitoring before Atlas escalates."),
+            ("trim", "Trim candidate", "Atlas already wants to reduce exposure."),
+            ("exit", "Exit candidate", "Atlas already has an exit path or exit-level thesis concern."),
+        ]
+        ladder = []
+        for key, label, detail in buckets:
+            items = [
+                {
+                    "ticker": position.get("ticker"),
+                    "summary": (position.get("thesis_status") or {}).get("summary", ""),
+                    "market_value": position.get("market_value"),
+                    "unrealized_gain_loss": position.get("unrealized_gain_loss"),
+                }
+                for position in positions
+                if (position.get("thesis_status") or {}).get("label") == key
+            ]
+            items.sort(
+                key=lambda item: (
+                    -(float(item.get("market_value") or 0.0)),
+                    str(item.get("ticker") or ""),
+                )
+            )
+            ladder.append(
+                {
+                    "id": key,
+                    "label": label,
+                    "detail": detail,
+                    "count": len(items),
+                    "items": items[:6],
+                }
+            )
+        return ladder
 
     def _research(self):
         summary = self.research_queue.summary()

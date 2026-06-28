@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-06-25
+Last updated: 2026-06-27
 
 ## Current Roadmap Position
 
@@ -650,3 +650,21 @@ Latest staging update:
 - Cloud Run revision `atlas-dashboard-stg-00055-49r` is serving 100% traffic.
 - Cache-busted web asset image tag is `20260627-position-journal`.
 - Full test suite passes with 311 tests before deploy.
+
+Latest staging update:
+
+- The Paper Portfolio page now includes a `Portfolio action ladder` that groups
+  simulated holdings into `Hold steady`, `Watch closely`, `Trim candidate`, and
+  `Exit candidate`.
+- Atlas builds the ladder directly from the latest thesis-state labels so the
+  owner can see the portfolio's next-action posture at a glance instead of
+  inferring it one row at a time.
+- Each ladder column includes a short description, position count, and the
+  highest-priority names in that bucket with compact gain/loss context.
+- Full test suite passes with 312 tests before deploy.
+
+Current in-flight stage:
+
+- Deploy the new action-ladder view to Cloud Run staging, verify readiness, and
+  confirm the live Paper Portfolio page is showing the grouped next-action
+  layout.

@@ -338,6 +338,48 @@ class WebDashboardTests(unittest.TestCase):
             ["DDD", "CCC", "BBB", "AAA"],
         )
 
+    def test_dashboard_builds_position_ladder_groups(self):
+        ladder = DashboardDataService._position_ladder(
+            [
+                {
+                    "ticker": "AAA",
+                    "market_value": 1000,
+                    "unrealized_gain_loss": 50,
+                    "thesis_status": {"label": "healthy", "summary": "Constructive."},
+                },
+                {
+                    "ticker": "BBB",
+                    "market_value": 800,
+                    "unrealized_gain_loss": -25,
+                    "thesis_status": {"label": "watch", "summary": "Needs review."},
+                },
+                {
+                    "ticker": "CCC",
+                    "market_value": 700,
+                    "unrealized_gain_loss": -50,
+                    "thesis_status": {"label": "trim", "summary": "Reduce."},
+                },
+                {
+                    "ticker": "DDD",
+                    "market_value": 600,
+                    "unrealized_gain_loss": -90,
+                    "thesis_status": {"label": "exit", "summary": "Close."},
+                },
+            ]
+        )
+
+        self.assertEqual([item["label"] for item in ladder], [
+            "Hold steady",
+            "Watch closely",
+            "Trim candidate",
+            "Exit candidate",
+        ])
+        self.assertEqual(ladder[0]["count"], 1)
+        self.assertEqual(ladder[0]["items"][0]["ticker"], "AAA")
+        self.assertEqual(ladder[1]["items"][0]["ticker"], "BBB")
+        self.assertEqual(ladder[2]["items"][0]["ticker"], "CCC")
+        self.assertEqual(ladder[3]["items"][0]["ticker"], "DDD")
+
     def test_browser_labels_local_and_cloud_environments(self):
         root = Path(__file__).resolve().parent.parent
         html = (root / "web" / "index.html").read_text(encoding="utf-8")
@@ -347,8 +389,8 @@ class WebDashboardTests(unittest.TestCase):
         paper_trading = (root / "app" / "paper_trading.py").read_text(encoding="utf-8")
         self.assertIn('id="workspace-status"', html)
         self.assertIn('id="sign-out"', html)
-        self.assertIn('/styles.css?v=20260627-position-journal', html)
-        self.assertIn('/app.js?v=20260627-position-journal', html)
+        self.assertIn('/styles.css?v=20260628-position-ladder', html)
+        self.assertIn('/app.js?v=20260628-position-ladder', html)
         self.assertIn("Secure owner cloud", script)
         self.assertIn("Local read-only workspace", script)
         self.assertIn("window.location.hostname", script)
@@ -378,6 +420,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("paper-operating-mode", html)
         self.assertIn("Portfolio thesis overview", html)
         self.assertIn("thesis-overview", html)
+        self.assertIn("What Atlas wants to do next", html)
+        self.assertIn("position-ladder", html)
         self.assertIn("Access &amp; security foundation", html)
         self.assertIn('id="recovery-status"', html)
         self.assertIn('id="privacy-export-status"', html)
@@ -407,6 +451,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Atlas context", script)
         self.assertIn("renderPaperOperatingMode", script)
         self.assertIn("renderThesisOverview", script)
+        self.assertIn("renderPositionLadder", script)
+        self.assertIn("Hold steady", script)
         self.assertIn("thesis_status", script)
         self.assertIn("proposalActionLabel", script)
         self.assertIn("proposalImpact", script)
@@ -424,6 +470,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("exit-panel", styles)
         self.assertIn(".why-now.compact.memory", styles)
         self.assertIn(".position-journal", styles)
+        self.assertIn(".position-ladder", styles)
+        self.assertIn(".ladder-card", styles)
         self.assertIn("Why now", script)
         self.assertIn("Why not", script)
         self.assertIn("What could go wrong", script)

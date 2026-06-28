@@ -127,6 +127,7 @@ function renderDashboard(data) {
   renderSectors(data.sectors || []);
   renderCorporateActions(data.corporate_actions || []);
   renderThesisOverview(paper.thesis_overview || {});
+  renderPositionLadder(paper.position_ladder || []);
   renderPositions(paper.positions || []);
   renderPaperActivity(paper.activity || []);
   renderPaperOperatingMode(paper.operating_mode || {});
@@ -716,6 +717,29 @@ function renderThesisOverview(overview) {
       </div>
     </div>
   `;
+}
+
+function renderPositionLadder(rows) {
+  document.getElementById("position-ladder").innerHTML = rows.map(item => `
+    <div class="ladder-card ${escapeHtml(item.id || "healthy")}">
+      <div class="ladder-card-head">
+        <span class="thesis-badge ${escapeHtml(item.id || "healthy")}">${escapeHtml(item.label || "Hold steady")}</span>
+        <strong>${Number(item.count || 0).toFixed(0)}</strong>
+      </div>
+      <p>${escapeHtml(item.detail || "")}</p>
+      <div class="ladder-list">
+        ${(item.items || []).length ? item.items.map(position => `
+          <div class="ladder-row">
+            <div>
+              <b class="row-title">${escapeHtml(position.ticker || "Holding")}</b>
+              <small class="row-meta">${escapeHtml(position.summary || "")}</small>
+            </div>
+            <small class="row-meta ${changeClass(position.unrealized_gain_loss)}">${money.format(Number(position.unrealized_gain_loss) || 0)}</small>
+          </div>
+        `).join("") : `<div class="empty compact">No positions in this group.</div>`}
+      </div>
+    </div>
+  `).join("");
 }
 
 function renderPositions(rows) {

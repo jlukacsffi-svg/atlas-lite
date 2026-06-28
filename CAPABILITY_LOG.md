@@ -1033,3 +1033,28 @@ Current boundaries:
   this is still simulated portfolio management rather than autonomous live
   trading.
 - No brokerage order is sent and no real capital is moved.
+
+## 2026-06-27 - Paper Portfolio now groups positions by next action
+
+New capabilities:
+
+- Add a `Portfolio action ladder` to the Paper Portfolio page so Atlas can
+  group open simulated positions into `Hold steady`, `Watch closely`, `Trim
+  candidate`, and `Exit candidate`.
+- Build the grouping from the live thesis-state labels already attached to each
+  position, which keeps the new summary consistent with the underlying position
+  rows and research memory.
+- Show the highest-priority names in each bucket with compact thesis summaries
+  and unrealized gain or loss so the owner can quickly see what Atlas believes
+  needs patience versus intervention.
+
+Validated result:
+
+- The focused dashboard test suite passes with 10 tests.
+- The full automated test suite passes with 312 tests.
+
+Current boundaries:
+
+- The action ladder improves visibility into what Atlas wants to do next, but
+  it still does not autonomously execute any trade.
+- Real trading and brokerage access remain disabled.

@@ -583,6 +583,71 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   display: grid;
   gap: 18px;
 }
+.position-ladder {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.ladder-card {
+  min-height: 180px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.ladder-card.healthy {
+  border-color: #b8dfd0;
+  background: linear-gradient(180deg, #effaf5 0, #ffffff 100%);
+}
+.ladder-card.watch {
+  border-color: #f2dfb1;
+  background: linear-gradient(180deg, #fff9ec 0, #ffffff 100%);
+}
+.ladder-card.trim {
+  border-color: #f3d8b5;
+  background: linear-gradient(180deg, #fff6ea 0, #ffffff 100%);
+}
+.ladder-card.exit {
+  border-color: #f2c9c9;
+  background: linear-gradient(180deg, #fff4f4 0, #ffffff 100%);
+}
+.ladder-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.ladder-card-head strong {
+  font-size: 22px;
+  line-height: 1;
+}
+.ladder-card p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.ladder-list {
+  display: grid;
+  gap: 8px;
+}
+.ladder-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding-top: 8px;
+  border-top: 1px solid #edf0f2;
+}
+.ladder-row:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.empty.compact {
+  padding: 8px 0 0;
+  font-size: 11px;
+}
 .thesis-counts {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
