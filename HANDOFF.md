@@ -637,3 +637,16 @@ Latest staging update:
 - Cloud Run revision `atlas-dashboard-stg-00054-xw8` is serving 100% traffic.
 - Cache-busted web asset image tag is `20260627-activity-context`.
 - Full test suite passes with 311 tests before deploy.
+
+Latest staging update:
+
+- Open positions now include a `What changed since entry` journal block. Atlas
+  summarizes current basis versus latest price, relative performance since the
+  latest buy fill against SPY/QQQ when enough snapshots exist, the latest
+  thesis review, and the current escalation cue toward hold, trim, or exit.
+- This gives the Paper Portfolio page a real through-line from entry to
+  present, so holdings feel less like static rows and more like tracked
+  decisions with evolving conviction.
+- Cloud Run revision `atlas-dashboard-stg-00055-49r` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260627-position-journal`.
+- Full test suite passes with 311 tests before deploy.

@@ -218,6 +218,7 @@ class DashboardDataService:
         }
         status = self.paper_account.status(prices=prices)
         performance = self.paper_account.performance_summary()
+        history = self.paper_account.performance_history()
         latest_reviews = self.paper_account.latest_position_reviews()
         proposals = self.paper_account.proposals()
         active_sell_proposals = {
@@ -239,6 +240,12 @@ class DashboardDataService:
                     position,
                     latest_reviews.get(position["ticker"]),
                     active_sell_proposals.get(position["ticker"]),
+                ),
+                "decision_journal": self._position_decision_journal(
+                    position,
+                    latest_reviews.get(position["ticker"]),
+                    active_sell_proposals.get(position["ticker"]),
+                    history,
                 ),
                 "research_memory": self._research_memory_summary(
                     position["ticker"],
@@ -270,7 +277,7 @@ class DashboardDataService:
                 "pending": sum(1 for item in proposals if item["status"] == "pending"),
                 "approved": sum(1 for item in proposals if item["status"] == "approved"),
                 "rejected": sum(1 for item in proposals if item["status"] == "rejected"),
-            "executed": sum(1 for item in proposals if item["status"] == "executed"),
+                "executed": sum(1 for item in proposals if item["status"] == "executed"),
             },
         }
 
@@ -399,6 +406,109 @@ class DashboardDataService:
             "summary": summary,
             "detail": detail,
         }
+
+    def _position_decision_journal(self, position, review, active_sell, history):
+        ticker = position.get("ticker")
+        basis = position.get("average_cost")
+        price = position.get("price")
+        rows = []
+        if basis not in (None, 0) and price is not None:
+            change = (float(price) / float(basis) - 1) * 100
+            rows.append(
+                f"Current basis is ${float(basis):,.2f}; latest price is ${float(price):,.2f}, for a {change:+.2f}% open return."
+            )
+        benchmark_line = self._position_benchmark_line(ticker, history, price)
+        if benchmark_line:
+            rows.append(benchmark_line)
+        if review:
+            flags = review.get("flags") or []
+            verdict = str(review.get("verdict") or "maintain").replace("_", " ")
+            review_date = self._friendly_timestamp(review.get("timestamp"))
+            review_line = f"Latest thesis review ({review_date}): {verdict}."
+            if flags:
+                review_line += f" Main flag: {flags[0]}"
+            rows.append(review_line)
+        rows.append(self._position_escalation_line(position, review, active_sell))
+        return rows[:4]
+
+    def _position_benchmark_line(self, ticker, history, latest_price):
+        if latest_price is None:
+            return ""
+        entry_trade = self._latest_open_buy_trade(ticker)
+        if not entry_trade:
+            return ""
+        start = self.paper_account._first_snapshot_after(history, entry_trade.get("timestamp"))
+        latest = history[-1] if history else None
+        if not start or not latest or start.get("timestamp") == latest.get("timestamp"):
+            return ""
+        security_return = self.paper_account._pct_return(
+            entry_trade.get("fill_price"),
+            latest_price,
+        )
+        if security_return is None:
+            return ""
+        spy_return = self.paper_account._pct_return(
+            start.get("benchmark_prices", {}).get("SPY"),
+            latest.get("benchmark_prices", {}).get("SPY"),
+        )
+        qqq_return = self.paper_account._pct_return(
+            start.get("benchmark_prices", {}).get("QQQ"),
+            latest.get("benchmark_prices", {}).get("QQQ"),
+        )
+        benchmarks = []
+        if spy_return is not None:
+            benchmarks.append(f"SPY {spy_return:+.2f}%")
+        if qqq_return is not None:
+            benchmarks.append(f"QQQ {qqq_return:+.2f}%")
+        if not benchmarks:
+            return ""
+        return (
+            f"Since the latest buy fill, {ticker} is {security_return:+.2f}% versus "
+            + " and ".join(benchmarks)
+            + "."
+        )
+
+    def _latest_open_buy_trade(self, ticker):
+        ticker = str(ticker or "").strip().upper()
+        if not ticker:
+            return None
+        for trade in reversed(self.paper_account.trade_activity(limit=1000)):
+            if str(trade.get("ticker") or "").strip().upper() != ticker:
+                continue
+            if str(trade.get("side") or "").lower() != "buy":
+                continue
+            return trade
+        return None
+
+    @staticmethod
+    def _friendly_timestamp(value):
+        text = str(value or "").strip()
+        if not text:
+            return "recently"
+        return text.replace("T", " ")
+
+    @staticmethod
+    def _position_escalation_line(position, review, active_sell):
+        ticker = position.get("ticker") or "This holding"
+        if active_sell:
+            shares = float(position.get("shares") or 0.0)
+            sell_shares = float(active_sell.get("shares") or 0.0)
+            if shares and sell_shares < shares:
+                return (
+                    f"Escalation state: Atlas already wants to trim {sell_shares:g} of {shares:g} simulated shares."
+                )
+            return "Escalation state: Atlas already has an exit path active for this holding."
+        if review:
+            verdict = str(review.get("verdict") or "").lower()
+            if verdict == "exit":
+                return f"Escalation cue: {ticker} has already crossed Atlas's exit threshold on the latest review."
+            if verdict == "review":
+                return (
+                    f"Escalation cue: move from hold toward trim or exit if the next thesis review repeats weakness or adds new risk flags."
+                )
+        return (
+            f"Escalation cue: stay in hold mode unless a future thesis review downgrades the position or Atlas opens a trim/exit proposal."
+        )
 
     @staticmethod
     def _research_memory_sentence(ticker, history):

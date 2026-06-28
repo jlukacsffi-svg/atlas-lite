@@ -723,6 +723,7 @@ function renderPositions(rows) {
     const review = item.review || {};
     const thesis = item.thesis_status || { label: "healthy", summary: "Awaiting the next daily thesis review." };
     const memory = item.research_memory || null;
+    const journal = item.decision_journal || [];
     return `
       <div class="position-row">
         <span>
@@ -731,6 +732,7 @@ function renderPositions(rows) {
           <small class="row-meta thesis-summary"><span class="thesis-badge ${escapeHtml(thesis.label)}">${escapeHtml(thesis.label)}</span>${escapeHtml(thesis.summary || "")}</small>
           ${memory?.summary ? `<small class="row-meta">Research memory: ${escapeHtml(memory.summary)}</small>` : ""}
           ${memory?.detail ? `<small class="row-meta">${escapeHtml(memory.detail)}</small>` : ""}
+          ${journal.length ? `<div class="position-journal"><span>What changed since entry</span><ul>${journal.slice(0, 4).map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>` : ""}
         </span>
         <span>
           <b class="row-title">${money.format(item.market_value || 0)}</b>

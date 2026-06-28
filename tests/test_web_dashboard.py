@@ -2,6 +2,7 @@ import json
 import tempfile
 import threading
 import unittest
+from datetime import datetime
 from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
@@ -57,6 +58,16 @@ class WebDashboardTests(unittest.TestCase):
             paper = PaperTradingAccount(
                 account_file=root / "paper" / "account.json",
                 ledger_file=root / "paper" / "ledger.jsonl",
+                clock=iter(
+                    [
+                        datetime(2026, 6, 27, 9, 30, 0),
+                        datetime(2026, 6, 27, 9, 31, 0),
+                        datetime(2026, 6, 27, 9, 32, 0),
+                        datetime(2026, 6, 27, 16, 0, 0),
+                        datetime(2026, 6, 28, 16, 0, 0),
+                        datetime(2026, 6, 29, 9, 30, 0),
+                    ]
+                ).__next__,
             )
             paper.initialize(100000)
             proposal = paper.create_proposal("buy", "AAA", 1, 100, "Paper entry.")
@@ -127,6 +138,18 @@ class WebDashboardTests(unittest.TestCase):
             paper = PaperTradingAccount(
                 account_file=root / "paper" / "account.json",
                 ledger_file=root / "paper" / "ledger.jsonl",
+                clock=iter(
+                    [
+                        datetime(2026, 6, 27, 9, 30, 0),
+                        datetime(2026, 6, 27, 9, 31, 0),
+                        datetime(2026, 6, 27, 9, 32, 0),
+                        datetime(2026, 6, 27, 16, 0, 0),
+                        datetime(2026, 6, 28, 16, 0, 0),
+                        datetime(2026, 6, 29, 9, 30, 0),
+                        datetime(2026, 6, 30, 9, 30, 0),
+                        datetime(2026, 7, 1, 9, 30, 0),
+                    ]
+                ).__next__,
             )
             paper.initialize(100000)
             buy = paper.create_proposal(
@@ -150,6 +173,23 @@ class WebDashboardTests(unittest.TestCase):
                 100,
                 "NVDA remains a high-conviction paper entry.",
                 proposal_id=buy["proposal_id"],
+            )
+            paper.record_performance_snapshot(
+                prices={"NVDA": 100},
+                benchmark_prices={"SPY": 500, "QQQ": 400},
+            )
+            paper.record_performance_snapshot(
+                prices={"NVDA": 110},
+                benchmark_prices={"SPY": 505, "QQQ": 404},
+            )
+            paper.record_position_review(
+                "NVDA",
+                "review",
+                current_price=110,
+                return_pct=10.0,
+                atlas_score=91.0,
+                flags=["relative momentum cooled"],
+                thesis="Monitor the position more closely.",
             )
             tasks = ResearchTaskQueue(root / "tasks" / "tasks.json")
             task, _ = tasks.add_task(
@@ -185,6 +225,12 @@ class WebDashboardTests(unittest.TestCase):
         position = data["paper"]["positions"][0]
         self.assertIn("stored review", position["research_memory"]["summary"])
         self.assertIn("risk to thesis", position["research_memory"]["detail"])
+        journal = " ".join(position["decision_journal"])
+        self.assertIn("Current basis is $100.00", journal)
+        self.assertIn("Since the latest buy fill, NVDA is +10.00% versus SPY +1.00% and QQQ +1.00%.", journal)
+        self.assertIn("Latest thesis review (", journal)
+        self.assertIn("relative momentum cooled", journal)
+        self.assertIn("move from hold toward trim or exit", journal)
         activity = data["paper"]["activity"][0]
         combined = " ".join(activity["decision_context"])
         self.assertIn(
@@ -301,8 +347,8 @@ class WebDashboardTests(unittest.TestCase):
         paper_trading = (root / "app" / "paper_trading.py").read_text(encoding="utf-8")
         self.assertIn('id="workspace-status"', html)
         self.assertIn('id="sign-out"', html)
-        self.assertIn('/styles.css?v=20260627-activity-context', html)
-        self.assertIn('/app.js?v=20260627-activity-context', html)
+        self.assertIn('/styles.css?v=20260627-position-journal', html)
+        self.assertIn('/app.js?v=20260627-position-journal', html)
         self.assertIn("Secure owner cloud", script)
         self.assertIn("Local read-only workspace", script)
         self.assertIn("window.location.hostname", script)
@@ -357,6 +403,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Post-sell move", script)
         self.assertIn("renderPaperActivity", script)
         self.assertIn("Research memory:", script)
+        self.assertIn("What changed since entry", script)
         self.assertIn("Atlas context", script)
         self.assertIn("renderPaperOperatingMode", script)
         self.assertIn("renderThesisOverview", script)
@@ -376,6 +423,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("exit-tag", styles)
         self.assertIn("exit-panel", styles)
         self.assertIn(".why-now.compact.memory", styles)
+        self.assertIn(".position-journal", styles)
         self.assertIn("Why now", script)
         self.assertIn("Why not", script)
         self.assertIn("What could go wrong", script)

@@ -554,6 +554,31 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   gap: 8px;
   flex-wrap: wrap;
 }
+.position-journal {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px solid #d7e3ea;
+  border-radius: 8px;
+  background: #fbfdff;
+}
+.position-journal span {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--blue);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.position-journal ul {
+  margin: 0;
+  padding-left: 16px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.position-journal li + li {
+  margin-top: 4px;
+}
 .thesis-overview {
   display: grid;
   gap: 18px;

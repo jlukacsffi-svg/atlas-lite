@@ -1006,3 +1006,30 @@ Current boundaries:
   more thesis history, but it still remains a paper portfolio and
   recommendation system.
 - No brokerage order is sent and no real capital is moved.
+
+## 2026-06-27 - Open positions now show a decision journal
+
+New capabilities:
+
+- Add a `What changed since entry` journal for each open paper position so
+  Atlas can summarize basis versus latest price, benchmark-relative movement
+  since the latest buy fill, the latest thesis review, and the current
+  escalation cue.
+- Reuse existing paper-performance snapshots and thesis-review events to build
+  this narrative layer without introducing a separate journal datastore.
+- Keep the portfolio UI compact while making it much clearer why a holding is
+  still a hold, drifting toward review, or already on an escalation path.
+
+Validated result:
+
+- Dashboard revision `atlas-dashboard-stg-00055-49r` is serving 100% traffic.
+- Dashboard image `20260627-position-journal` is deployed.
+- `/readyz` returns `{\"status\":\"ready\"}`.
+- The full automated test suite passes with 311 tests.
+
+Current boundaries:
+
+- Atlas now tells a better hold-to-exit story for open paper positions, but
+  this is still simulated portfolio management rather than autonomous live
+  trading.
+- No brokerage order is sent and no real capital is moved.
