@@ -1350,7 +1350,7 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(summary["status"], "building")
         self.assertEqual(summary["status_label"], "Evidence building")
         self.assertEqual(summary["judged_trades"], 2)
-        self.assertEqual(summary["realized_exits"], 1)
+        self.assertEqual(summary["realized_exits"], 0)
         pipeline = summary["evidence_pipeline"]
         self.assertEqual(pipeline["source"], "Active paper ledger")
         self.assertEqual(pipeline["snapshot_count"], 5)
@@ -1358,7 +1358,10 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(pipeline["judged_decisions"], 2)
         self.assertEqual(pipeline["awaiting_judgment"], 0)
         self.assertEqual(pipeline["judgment_coverage_pct"], 100.0)
-        self.assertEqual(pipeline["realized_exits"], 1)
+        self.assertEqual(pipeline["realized_exits"], 0)
+        self.assertEqual(pipeline["completed_positions"], 0)
+        self.assertEqual(pipeline["partial_trims"], 1)
+        self.assertEqual(pipeline["sell_executions"], 1)
         self.assertEqual(pipeline["latest_snapshot_at"], "2026-06-07T16:00:00")
         readiness = summary["capital_readiness"]
         self.assertFalse(readiness["ready_for_owner_review"])
@@ -1664,6 +1667,33 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertIn("## Recent Execution Context", report)
         self.assertIn("| Time | Ticker | Action | Driver | News Event | Thesis |", report)
         self.assertIn("This report evaluates a simulation", report)
+
+    def test_trade_statistics_separates_partial_trims_from_completed_positions(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+            self.execute_approved(account, "buy", "NVDA", 10, 100, "Paper thesis.")
+            self.execute_approved(account, "sell", "NVDA", 4, 90, "Partial trim.")
+
+            trim_stats = account.trade_statistics()
+
+            self.execute_approved(account, "sell", "NVDA", 6, 110, "Full exit.")
+            exit_stats = account.trade_statistics()
+
+        self.assertEqual(trim_stats["sell_executions"], 1)
+        self.assertEqual(trim_stats["partial_trims"], 1)
+        self.assertEqual(trim_stats["completed_positions"], 0)
+        self.assertIsNone(trim_stats["win_rate_pct"])
+        self.assertEqual(exit_stats["sell_executions"], 2)
+        self.assertEqual(exit_stats["partial_trims"], 1)
+        self.assertEqual(exit_stats["completed_positions"], 1)
+        self.assertEqual(exit_stats["wins"], 1)
+        self.assertEqual(exit_stats["losses"], 0)
+        self.assertEqual(exit_stats["win_rate_pct"], 100)
+        self.assertEqual(
+            exit_stats["completed_outcomes"][0]["realized_gain_loss"],
+            20.0,
+        )
 
     def test_performance_report_includes_news_event_context(self):
         with tempfile.TemporaryDirectory() as temp_dir:

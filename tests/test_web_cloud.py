@@ -568,6 +568,10 @@ class CloudWebApplicationTests(unittest.TestCase):
             "realized_exits",
             response["json"]["checks"]["stage5_scoreboard"],
         )
+        self.assertIn(
+            "partial_trims",
+            response["json"]["checks"]["stage5_scoreboard"],
+        )
         self.assertTrue(response["json"]["checks"]["persistence_learning"]["ok"])
         self.assertTrue(response["json"]["checks"]["benchmark_labels"]["ok"])
         self.assertTrue(response["json"]["checks"]["benchmark_scorecard"]["ok"])

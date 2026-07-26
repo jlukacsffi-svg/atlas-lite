@@ -61,19 +61,19 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
-- Paper Portfolio now exposes the active evidence pipeline: latest snapshot,
-  executed decisions, judged coverage, waiting decisions, and realized exits.
-- Protected verification now reports the authoritative cloud counts, avoiding
-  confusion with stale local development data.
-- The live owner ledger contains 133 snapshots, 44 executed decisions, 42
-  judged outcomes, and 33 realized exits. Judgment coverage is 95.5%.
-- Current live evidence maturity is 68.4%, with 3 of 9 conservative gates
+- Atlas now separates 30 partial trims from 3 fully completed paper positions
+  instead of labeling all 33 sell executions as realized exits.
+- Realized win rate is calculated from completed position cycles, including
+  cumulative gain or loss across earlier trims.
+- The three completed positions, NVDA, MRVL, and LRCX, all closed with
+  simulated realized losses.
+- Current live evidence maturity is 58.4%, with 2 of 9 conservative gates
   passing.
-- Cloud Run revision `atlas-dashboard-stg-00142-mr4` is live on image
-  `20260726-evidence-pipeline`; the full 402-test suite, all 25 readiness
+- Cloud Run revision `atlas-dashboard-stg-00143-dtv` is live on image
+  `20260726-completed-outcomes`; the full 403-test suite, all 25 readiness
   checks, and all 12 protected dashboard checks pass.
-- Google reauthentication is currently required for the next signed-in visual
-  walkthrough.
+- Chrome integration is installed and Atlas is open there for owner sign-in
+  and the next visual walkthrough.
 - Stage 5 remains simulated paper-only. Real trading and brokerage access
   remain disabled.
 
@@ -117,11 +117,11 @@ Stage 3 portfolio-intelligence foundations completed:
 
 Recommended next roadmap task:
 
-Audit Stage 5 realized outcomes. The live ledger now proves that evidence is
-accumulating, but its realized win rate is 0.0% across 33 exits. Determine
-whether this reflects accounting semantics, repeated partial trims, or weak
-exit behavior; then improve the explanation and only adjust simulated strategy
-rules when the evidence supports a change.
+Diagnose repeated loss-driven trims. The accounting semantics are now correct:
+30 partial trims and 3 completed losing positions. Identify which exit signals
+caused repeated small sales, test whether cooldown or minimum-trim rules would
+improve simulated behavior, and change strategy only when replayed evidence
+supports the adjustment.
 
 Stage 4 planning artifact:
 

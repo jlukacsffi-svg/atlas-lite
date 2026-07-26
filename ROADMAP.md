@@ -379,10 +379,12 @@ the overall company program.
   foundational proof gaps and actions.
 - Completed: Paper Portfolio now shows the active evidence pipeline and the
   protected cloud verifier reports authoritative snapshot, judgment, and exit
-  counts. The live ledger has 133 snapshots, 42 judged decisions, and 33
-  realized exits.
-- Next: audit the 0.0% realized win rate, distinguish accounting semantics
-  from strategy behavior, and make completed outcome quality easier to
-  understand before changing simulated trade rules.
+  counts. The live ledger has 133 snapshots and 42 judged decisions.
+- Completed: completed-position accounting now separates 30 partial trims from
+  3 fully closed positions and bases realized win rate on complete position
+  cycles. Stage 5 evidence maturity is 58.4%, with 2 of 9 gates passing.
+- Next: diagnose repeated loss-driven trims and test conservative cooldown or
+  minimum-trim rules against recorded evidence before changing the simulated
+  strategy.
 - Parallel owner task: complete cross-device owner login and non-owner account
   denial before multi-user work begins.

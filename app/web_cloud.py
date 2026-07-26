@@ -488,7 +488,7 @@ class AtlasCloudApplication:
                         "Stage 5 validation summary is available with "
                         f"{int(evidence_pipeline.get('snapshot_count') or 0)} snapshots, "
                         f"{int(evidence_pipeline.get('judged_decisions') or 0)} judged decisions, "
-                        f"and {int(evidence_pipeline.get('realized_exits') or 0)} realized exits."
+                        f"and {int(evidence_pipeline.get('completed_positions') or 0)} completed positions."
                     ),
                     "evidence_maturity_pct": evidence_maturity_pct,
                     "snapshot_count": int(
@@ -499,6 +499,9 @@ class AtlasCloudApplication:
                     ),
                     "realized_exits": int(
                         evidence_pipeline.get("realized_exits") or 0
+                    ),
+                    "partial_trims": int(
+                        evidence_pipeline.get("partial_trims") or 0
                     ),
                 },
                 "persistence_learning": {

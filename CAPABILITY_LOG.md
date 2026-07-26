@@ -3,6 +3,44 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Completed paper outcomes are now counted correctly
+
+New capabilities:
+
+- Distinguish partial simulated trims from fully completed position cycles.
+- Aggregate realized gain or loss across every trim in a position cycle before
+  judging whether the completed position won or lost.
+- Base the realized win-rate gate on completed positions rather than individual
+  sell executions.
+- Show completed positions and partial trims separately in the Paper Portfolio
+  evidence pipeline.
+- Report the corrected completed-position count through protected cloud
+  verification.
+
+Validated result:
+
+- The owner ledger contains 33 sell executions: 30 partial trims and 3 fully
+  completed positions.
+- The three completed positions are NVDA, MRVL, and LRCX; all three completed
+  with a simulated realized loss.
+- Stage 5 evidence maturity is correctly recalculated to 58.4%, with 2 of 9
+  conservative gates passing.
+- The full local suite passes with 403 tests.
+- Cloud Run revision `atlas-dashboard-stg-00143-dtv` is live on image
+  `20260726-completed-outcomes`.
+- The deployed image digest is
+  `sha256:eff23a2a91eba036561d567b09b2656ef04371e31da82831d2280b213c4b259d`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+
+Current boundaries:
+
+- The completed-position sample is only three and has a 0.0% simulated win
+  rate, so it is far too weak for any real-capital discussion.
+- Atlas must diagnose repeated loss-driven trims and improve simulated exit
+  discipline without forcing trades.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Paper evidence now has a visible data pipeline
 
 New capabilities:
@@ -20,11 +58,11 @@ New capabilities:
 Validated result:
 
 - The live owner ledger contains 133 benchmark-aware snapshots, 44 executed
-  paper decisions, 42 judged outcomes, and 33 realized exits.
+  paper decisions, 42 judged outcomes, and 33 sell executions.
 - Judgment coverage is 95.5%; two recent decisions await later comparison
   data.
-- Current Stage 5 evidence maturity is 68.4%, with 3 of 9 conservative gates
-  passing.
+- This release initially treated those sell executions as exits. The
+  completed-outcome audit above corrected that interpretation.
 - The full local suite passes with 402 tests.
 - Cloud Run revision `atlas-dashboard-stg-00142-mr4` is live on image
   `20260726-evidence-pipeline`.
@@ -36,8 +74,8 @@ Validated result:
 Current boundaries:
 
 - These are simulated paper outcomes, not real portfolio performance.
-- Realized win rate is currently 0.0% despite 33 recorded exits and requires
-  focused outcome diagnosis before strategy rules are changed.
+- Realized win rate is 0.0% on the subsequently corrected sample of three
+  completed positions and requires focused outcome diagnosis.
 - Google reauthentication is required for the next signed-in visual review.
 - Real trading and brokerage access remain disabled.
 

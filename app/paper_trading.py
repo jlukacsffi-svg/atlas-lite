@@ -914,12 +914,12 @@ class PaperTradingAccount:
             },
             {
                 "id": "realized_exits",
-                "label": "Realized exits",
+                "label": "Completed positions",
                 "passed": realized_exits >= 30,
                 "current": str(realized_exits),
-                "target": "30+ exits",
+                "target": "30+ completed",
                 "progress_pct": evidence_progress(realized_exits, 30),
-                "next_step": "Continue testing thesis-driven trims and exits without forcing unnecessary turnover.",
+                "next_step": "Complete more full paper position cycles without forcing unnecessary turnover.",
             },
             {
                 "id": "benchmark_outperformance",
@@ -1079,6 +1079,9 @@ class PaperTradingAccount:
             "awaiting_judgment": awaiting_judgment,
             "judgment_coverage_pct": judgment_coverage_pct,
             "realized_exits": realized_exits,
+            "completed_positions": realized_exits,
+            "partial_trims": int(trade_stats.get("partial_trims") or 0),
+            "sell_executions": int(trade_stats.get("sell_executions") or 0),
             "headline": (
                 f"{judged} of {feedback_total} executed paper decisions have "
                 "enough later market data for judgment."
@@ -3511,19 +3514,93 @@ class PaperTradingAccount:
             f"Atlas recorded a simulated sale because {thesis}",
         )
 
+    @staticmethod
+    def _completed_position_outcomes(trades):
+        """Aggregate realized gain/loss across each fully closed position cycle."""
+        active = {}
+        outcomes = []
+        for event in trades:
+            ticker = str(event.get("ticker") or "").strip().upper()
+            if not ticker:
+                continue
+            side = str(event.get("side") or "").strip().lower()
+            before = float(event.get("position_shares_before") or 0.0)
+            after = float(event.get("position_shares_after") or 0.0)
+            if side == "buy":
+                if ticker not in active or before <= 0.0000001:
+                    active[ticker] = {
+                        "ticker": ticker,
+                        "opened_at": event.get("timestamp"),
+                        "realized_gain_loss": 0.0,
+                        "sell_executions": 0,
+                    }
+                continue
+            if side != "sell":
+                continue
+            cycle = active.setdefault(
+                ticker,
+                {
+                    "ticker": ticker,
+                    "opened_at": None,
+                    "realized_gain_loss": 0.0,
+                    "sell_executions": 0,
+                },
+            )
+            cycle["realized_gain_loss"] += float(
+                event.get("realized_gain_loss") or 0.0
+            )
+            cycle["sell_executions"] += 1
+            if after <= 0.0000001:
+                outcomes.append(
+                    {
+                        **cycle,
+                        "closed_at": event.get("timestamp"),
+                        "realized_gain_loss": round(
+                            cycle["realized_gain_loss"],
+                            2,
+                        ),
+                    }
+                )
+                active.pop(ticker, None)
+        return outcomes
+
     def trade_statistics(self):
         events = self.ledger()
         trades = [event for event in events if event.get("event") == "paper_trade"]
         recommendations = [
             event for event in events if event.get("event") == "paper_recommendation"
         ]
-        exits = [
+        sell_executions = [
             event
             for event in trades
             if event.get("side") == "sell"
         ]
-        wins = [event for event in exits if event.get("realized_gain_loss", 0) > 0]
-        losses = [event for event in exits if event.get("realized_gain_loss", 0) < 0]
+        partial_trims = [
+            event
+            for event in sell_executions
+            if float(event.get("position_shares_after") or 0.0) > 0.0000001
+        ]
+        completed_outcomes = self._completed_position_outcomes(trades)
+        wins = [
+            outcome
+            for outcome in completed_outcomes
+            if outcome.get("realized_gain_loss", 0) > 0
+        ]
+        losses = [
+            outcome
+            for outcome in completed_outcomes
+            if outcome.get("realized_gain_loss", 0) < 0
+        ]
+        profitable_sales = [
+            event
+            for event in sell_executions
+            if event.get("realized_gain_loss", 0) > 0
+        ]
+        losing_sales = [
+            event
+            for event in sell_executions
+            if event.get("realized_gain_loss", 0) < 0
+        ]
         linked = [event for event in trades if event.get("recommendation_id")]
         proposal_linked = [event for event in trades if event.get("proposal_id")]
         total_buy_notional = sum(
@@ -3561,9 +3638,15 @@ class PaperTradingAccount:
             "proposal_linked_trades": len(proposal_linked),
             "proposals": len(proposals),
             "proposal_statuses": proposal_statuses,
-            "realized_exits": len(exits),
+            "sell_executions": len(sell_executions),
+            "partial_trims": len(partial_trims),
+            "realized_exits": len(completed_outcomes),
+            "completed_positions": len(completed_outcomes),
+            "completed_outcomes": completed_outcomes,
             "wins": len(wins),
             "losses": len(losses),
+            "profitable_sales": len(profitable_sales),
+            "losing_sales": len(losing_sales),
             "total_buy_notional": round(total_buy_notional, 2),
             "total_sell_notional": round(total_sell_notional, 2),
             "gross_turnover_notional": round(total_buy_notional + total_sell_notional, 2),
@@ -3582,7 +3665,11 @@ class PaperTradingAccount:
                 if judged_sells
                 else None
             ),
-            "win_rate_pct": len(wins) / len(exits) * 100 if exits else None,
+            "win_rate_pct": (
+                len(wins) / len(completed_outcomes) * 100
+                if completed_outcomes
+                else None
+            ),
         }
 
     def render_performance_report(self):

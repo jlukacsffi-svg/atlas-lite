@@ -1763,9 +1763,9 @@ function renderPaperWorkspaceSummary(paper) {
           <small>${Number(evidencePipeline.judged_decisions || 0)} judged &middot; ${Number(evidencePipeline.awaiting_judgment || 0)} waiting</small>
         </div>
         <div>
-          <span>Realized exits</span>
-          <strong>${Number(evidencePipeline.realized_exits || 0)}</strong>
-          <small>Completed simulated outcomes</small>
+          <span>Completed positions</span>
+          <strong>${Number(evidencePipeline.completed_positions || evidencePipeline.realized_exits || 0)}</strong>
+          <small>${Number(evidencePipeline.partial_trims || 0)} partial trims reported separately</small>
         </div>
       </div>
       <small class="paper-evidence-note">${escapeHtml(evidencePipeline.next_action || "Keep the scheduled paper cycle running.")}</small>
