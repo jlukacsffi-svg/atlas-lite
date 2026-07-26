@@ -561,6 +561,11 @@ function jumpToPageTarget(pageId, targetId) {
 }
 
 function jumpToControlsTarget(targetId) {
+  const target = document.getElementById(String(targetId || ""));
+  const disclosure = target?.matches(".control-disclosure")
+    ? target
+    : target?.closest(".control-disclosure");
+  if (disclosure) disclosure.open = true;
   jumpToPageTarget("controls", targetId);
 }
 
@@ -647,6 +652,86 @@ function renderAccess(access) {
   document.getElementById("phase-progress-bar").style.width = `${completion}%`;
 }
 
+function renderControlWorkspace({
+  researchAutoManageEnabled,
+  autoManageEnabled,
+  reviews,
+  proposals,
+  portfolioQueue,
+  healthyHoldings,
+  strategyPolicy,
+}) {
+  const target = document.getElementById("control-workspace-summary");
+  const values = strategyPolicy.values || {};
+  const manualProposals = proposals.filter(
+    item => item.status !== "executed" && !item.auto_manage_enabled
+  );
+  const ownerAttention = reviews.length + manualProposals.length;
+  const buyThreshold = Number(values.strategy_minimum_buy_score ?? 88);
+  const exitThreshold = Number(values.strategy_maximum_exit_score ?? 60);
+  const targetSize = Number(values.strategy_target_position_pct ?? 5);
+  const buySlots = Number(values.strategy_maximum_new_proposals ?? 3);
+  const paperMode = autoManageEnabled ? "Automatic paper management" : "Recommendations only";
+  const researchMode = researchAutoManageEnabled ? "Automatic research review" : "Owner research review";
+
+  target.innerHTML = `
+    <div class="control-summary-grid">
+      <div class="control-summary-card">
+        <span class="access-label">Operating mode</span>
+        <strong>${escapeHtml(paperMode)}</strong>
+        <small>${autoManageEnabled ? "Atlas may record simulated fills after its risk gate." : "Paper proposals wait for owner approval and simulation."}</small>
+      </div>
+      <div class="control-summary-card">
+        <span class="access-label">Owner attention</span>
+        <strong>${ownerAttention}</strong>
+        <small>${ownerAttention ? "Research or paper decisions are available for review." : "No manual decisions are waiting."}</small>
+      </div>
+      <div class="control-summary-card">
+        <span class="access-label">Portfolio watch</span>
+        <strong>${portfolioQueue.length}</strong>
+        <small>Simulated holdings or proposals Atlas wants monitored.</small>
+      </div>
+      <div class="control-summary-card boundary-safe">
+        <span class="access-label">Real-money authority</span>
+        <strong>Disabled</strong>
+        <small>No brokerage connection and no real trade execution.</small>
+      </div>
+    </div>
+    <div class="control-brief-grid">
+      <section>
+        <span class="access-label">What Atlas can do now</span>
+        <div class="control-brief-row">
+          <span class="status-indicator active"></span>
+          <div><b>${escapeHtml(researchMode)}</b><small>${reviews.length} current review item${reviews.length === 1 ? "" : "s"}.</small></div>
+        </div>
+        <div class="control-brief-row">
+          <span class="status-indicator ${autoManageEnabled ? "active" : "watch"}"></span>
+          <div><b>${escapeHtml(paperMode)}</b><small>Simulation only; normal paper risk checks remain active.</small></div>
+        </div>
+        <div class="control-brief-row">
+          <span class="status-indicator blocked"></span>
+          <div><b>Real trading blocked</b><small>Owner approval here cannot create a real-money order.</small></div>
+        </div>
+      </section>
+      <section>
+        <span class="access-label">Current paper guardrails</span>
+        <div class="guardrail-grid">
+          <div><small>Buy score</small><b>${buyThreshold.toFixed(1)}+</b></div>
+          <div><small>Exit score</small><b>${exitThreshold.toFixed(1)} or below</b></div>
+          <div><small>Target size</small><b>${targetSize.toFixed(1)}%</b></div>
+          <div><small>New buy slots</small><b>${buySlots.toFixed(0)}</b></div>
+        </div>
+      </section>
+    </div>
+    <div class="control-summary-actions">
+      <button class="secondary-button" type="button" data-controls-target="control-decisions-panel">Review decisions</button>
+      <button class="secondary-button" type="button" data-controls-target="control-strategy-panel">Edit paper strategy</button>
+      <button class="secondary-button" type="button" data-controls-target="control-portfolio-panel">Inspect paper monitoring</button>
+    </div>
+    <p class="control-boundary-note"><b>Important:</b> every portfolio action on this page remains hypothetical and is recorded only in the Atlas paper account.</p>
+  `;
+}
+
 function renderOwnerControls(controls) {
   ownerControls = controls;
   const available = Boolean(controls?.enabled && controls?.csrf_token);
@@ -678,6 +763,8 @@ function renderOwnerControls(controls) {
   document.getElementById("controls-summary-label").textContent =
     `${Number(controlsSummary.counts?.open_positions || 0).toFixed(0)} open holding${Number(controlsSummary.counts?.open_positions || 0) === 1 ? "" : "s"}`;
   document.getElementById("portfolio-action-count").textContent =
+    `${portfolioQueue.length} watch item${portfolioQueue.length === 1 ? "" : "s"}`;
+  document.getElementById("portfolio-watch-count").textContent =
     `${portfolioQueue.length} ranked item${portfolioQueue.length === 1 ? "" : "s"}`;
   document.getElementById("healthy-holdings-count").textContent =
     `${Number(healthyHoldings.count || 0).toFixed(0)} hold-steady holding${Number(healthyHoldings.count || 0) === 1 ? "" : "s"}`;
@@ -686,6 +773,15 @@ function renderOwnerControls(controls) {
   renderRecommendations(proposals, null);
   renderOwnerOutcomes(outcomes);
   renderStrategyControls(strategyPolicy);
+  renderControlWorkspace({
+    researchAutoManageEnabled,
+    autoManageEnabled,
+    reviews,
+    proposals,
+    portfolioQueue,
+    healthyHoldings,
+    strategyPolicy,
+  });
   document.getElementById("controls-summary").innerHTML = `
     <article class="decision-row">
       <div>

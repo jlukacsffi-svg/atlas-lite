@@ -3,6 +3,39 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Controls is now a policy and authority workspace
+
+New capabilities:
+
+- Lead Controls with the current operating mode, manual owner-attention count,
+  paper portfolio watch count, and real-money authority status.
+- Explain what Atlas can do now across automatic research review, automatic
+  paper management, and the blocked real-trading boundary.
+- Show the active paper buy threshold, exit threshold, target position size,
+  and number of new buy slots without opening advanced settings.
+- Separate manual owner decisions from simulated portfolio watch items.
+- Keep research decisions, detailed strategy editing, paper posture, steady
+  holdings, and simulated proposals in three deliberate drill-downs.
+- Open each detailed control area directly from the policy brief.
+
+Validated result:
+
+- The full local suite passes with 402 tests.
+- Cloud Run revision `atlas-dashboard-stg-00139-kx4` is live on image
+  `20260726-controls-workspace`.
+- The deployed image digest is
+  `sha256:ba249b1346f9823da9f794dce466682fb7f50a9c31fe14e2dc86e4e0aaef8aae`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+- Signed-in live interaction checks confirm all three control drill-downs open
+  uniquely and the page produces no browser warnings or errors.
+
+Current boundaries:
+
+- Automatic management applies only to Atlas's simulated paper account.
+- Owner actions on Controls cannot create a brokerage order.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Research is now an intelligence workspace
 
 New capabilities:

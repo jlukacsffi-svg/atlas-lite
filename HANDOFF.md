@@ -61,14 +61,15 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
-- Research now opens with a prioritized intelligence workspace separating
-  current conclusions, changing evidence, and assigned follow-up.
-- Score rankings, watchlist moves, sector detail, corporate actions, and the
-  full assignment queue remain available through on-demand disclosures.
-- Persistent tasks carry their creation timestamp and a visible instruction to
-  revalidate old evidence before acting.
-- Cloud Run revision `atlas-dashboard-stg-00138-nr8` is live on image
-  `20260726-research-workspace`; the full 402-test suite, all 25 readiness
+- Controls now opens with an owner policy brief showing operating mode, manual
+  attention, paper watch items, real-money authority, and active paper
+  guardrails.
+- Owner decisions, strategy editing, and paper portfolio monitoring remain
+  available through three on-demand disclosures.
+- Automatic paper management is visibly separated from real-money authority,
+  which remains disabled.
+- Cloud Run revision `atlas-dashboard-stg-00139-kx4` is live on image
+  `20260726-controls-workspace`; the full 402-test suite, all 25 readiness
   checks, and all 12 protected dashboard checks pass.
 - Stage 5 remains simulated paper-only. Real trading and brokerage access
   remain disabled.

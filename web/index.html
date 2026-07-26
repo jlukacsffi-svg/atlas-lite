@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260726-research-workspace">
+  <link rel="stylesheet" href="/styles.css?v=20260726-controls-workspace">
 </head>
 <body>
   <div class="app-shell">
@@ -691,7 +691,7 @@
           <div>
             <p class="eyebrow">Owner authority</p>
             <div class="title-with-help">
-              <h2>Decision control center</h2>
+              <h2>Policy &amp; authority</h2>
               <details class="info-popover">
                 <summary aria-label="About decision controls">?</summary>
                 <p>Owner-only controls for approving, deferring, or rejecting research and simulation proposals. These actions do not execute real trades.</p>
@@ -703,55 +703,78 @@
         <div id="control-availability" class="control-notice">
           Owner actions are available after secure Google sign-in.
         </div>
-        <div id="control-content" class="control-columns" hidden>
-          <div>
-            <div class="control-heading">
-              <span class="access-label">Research recommendations</span>
+        <div id="control-content" class="control-workspace" hidden>
+          <article class="control-workspace-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Owner policy brief</p>
+                <h3>Atlas operating boundaries at a glance</h3>
+              </div>
+              <span class="tag">Paper only</span>
+            </div>
+            <div id="control-workspace-summary"></div>
+          </article>
+
+          <details id="control-decisions-panel" class="control-disclosure">
+            <summary>
+              <span><b>Owner decisions</b><small>Research reviews, outcomes, and items requiring a decision</small></span>
               <strong id="research-review-count">0 awaiting review</strong>
+            </summary>
+            <div class="control-detail-content">
+              <div id="owner-outcomes" class="decision-list"></div>
+              <div id="daily-action-list" class="decision-list"></div>
+              <div id="research-reviews" class="decision-list"></div>
             </div>
-            <div id="owner-outcomes" class="decision-list"></div>
-            <div id="daily-action-list" class="decision-list"></div>
-            <div id="research-reviews" class="decision-list"></div>
-          </div>
-          <div>
-            <div class="control-heading">
-              <span class="access-label">Autonomy &amp; strategy</span>
+          </details>
+
+          <details id="control-strategy-panel" class="control-disclosure">
+            <summary>
+              <span><b>Simulated strategy settings</b><small>Paper autonomy, entry thresholds, sizing, and risk preferences</small></span>
               <strong>Owner editable</strong>
+            </summary>
+            <div class="control-detail-content">
+              <div class="control-note">
+                These settings affect the simulated paper portfolio only. They cannot place a real trade or connect to a brokerage.
+              </div>
+              <div id="paper-strategy-controls" class="strategy-policy-panel"></div>
             </div>
-            <div class="control-note">
-              Change how aggressively Atlas runs the simulated paper portfolio. These settings affect paper-only behavior and never place a real trade.
-            </div>
-            <div id="paper-strategy-controls" class="strategy-policy-panel"></div>
-            <div class="control-heading">
-              <span class="access-label">Paper book posture</span>
-              <strong id="controls-summary-label">Current snapshot</strong>
-            </div>
-            <div id="controls-summary" class="decision-list"></div>
-            <div class="control-heading">
-              <span class="access-label">Portfolio action queue</span>
+          </details>
+
+          <details id="control-portfolio-panel" class="control-disclosure">
+            <summary>
+              <span><b>Paper portfolio monitoring</b><small>Current posture, watch items, steady holdings, and simulated proposals</small></span>
               <strong id="portfolio-action-count">0 items</strong>
+            </summary>
+            <div class="control-detail-content">
+              <div class="control-heading">
+                <span class="access-label">Paper book posture</span>
+                <strong id="controls-summary-label">Current snapshot</strong>
+              </div>
+              <div id="controls-summary" class="decision-list"></div>
+              <div class="control-heading">
+                <span class="access-label">Portfolio watch queue</span>
+                <strong id="portfolio-watch-count">0 items</strong>
+              </div>
+              <div class="control-note">
+                Atlas ranks simulated proposals beside open paper holdings that deserve closer review. A watch item is not a real-money order.
+              </div>
+              <div id="portfolio-action-list" class="decision-list"></div>
+              <div class="control-heading">
+                <span class="access-label">Hold-steady holdings</span>
+                <strong id="healthy-holdings-count">0 holdings</strong>
+              </div>
+              <p class="control-note">Healthy holdings stay out of the ranked queue on purpose and appear here for context.</p>
+              <div id="healthy-holdings-list" class="decision-list"></div>
+              <div class="control-heading">
+                <span class="access-label">Paper trade proposals</span>
+                <strong id="paper-proposal-count">0 proposals</strong>
+              </div>
+              <div class="control-note">
+                Approve accepts an idea for simulation. Simulate fill records a hypothetical buy, trim, or exit inside Atlas only.
+              </div>
+              <div id="paper-proposals" class="decision-list"></div>
             </div>
-            <div class="control-note">
-              Atlas ranks active paper proposals beside already-open simulated holdings that need closer review, so paper workflow and paper posture stay in one view.
-            </div>
-            <div id="portfolio-action-list" class="decision-list"></div>
-            <div class="control-heading">
-              <span class="access-label">Hold-steady holdings</span>
-              <strong id="healthy-holdings-count">0 holdings</strong>
-            </div>
-            <div class="control-note">
-              Healthy holdings stay out of the ranked queue on purpose. This section explains which open simulated names Atlas currently believes can remain steady.
-            </div>
-            <div id="healthy-holdings-list" class="decision-list"></div>
-            <div class="control-heading">
-              <span class="access-label">Paper trade proposals</span>
-              <strong id="paper-proposal-count">0 proposals</strong>
-            </div>
-            <div class="control-note">
-              Approve means you accept the idea for paper simulation. Simulate fill records the hypothetical buy, trim, or exit in Atlas only.
-            </div>
-            <div id="paper-proposals" class="decision-list"></div>
-          </div>
+          </details>
         </div>
         <div class="authority-strip">
           <span><b>Research decisions</b> Enabled</span>
@@ -903,6 +926,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260726-research-workspace"></script>
+  <script src="/app.js?v=20260726-controls-workspace"></script>
 </body>
 </html>
