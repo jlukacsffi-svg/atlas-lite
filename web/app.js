@@ -1680,6 +1680,10 @@ function renderPaperWorkspaceSummary(paper) {
   const nextMilestones = Array.isArray(readiness.next_milestones)
     ? readiness.next_milestones
     : [];
+  const evidencePipeline = validation.evidence_pipeline || {};
+  const latestEvidenceSnapshot = evidencePipeline.latest_snapshot_at
+    ? new Date(evidencePipeline.latest_snapshot_at).toLocaleString()
+    : "No snapshot recorded";
 
   document.getElementById("paper-workspace-summary").innerHTML = `
     <div class="paper-summary-grid">
@@ -1734,6 +1738,38 @@ function renderPaperWorkspaceSummary(paper) {
         ` : `<div class="empty compact">No simulated purchases or sales have been recorded yet.</div>`}
       </section>
     </div>
+    <section class="paper-evidence-pipeline">
+      <div class="paper-evidence-heading">
+        <div>
+          <span class="access-label">Evidence pipeline</span>
+          <b>${escapeHtml(evidencePipeline.headline || "Atlas is preparing its paper-decision evidence.")}</b>
+        </div>
+        <span>${escapeHtml(evidencePipeline.source || "Active paper ledger")}</span>
+      </div>
+      <div class="paper-pipeline-grid">
+        <div>
+          <span>Latest snapshot</span>
+          <strong>${escapeHtml(latestEvidenceSnapshot)}</strong>
+          <small>${Number(evidencePipeline.snapshot_count || 0)} benchmark-aware observations</small>
+        </div>
+        <div>
+          <span>Executed decisions</span>
+          <strong>${Number(evidencePipeline.executed_decisions || 0)}</strong>
+          <small>Simulated fills available for evaluation</small>
+        </div>
+        <div>
+          <span>Judged coverage</span>
+          <strong>${Number(evidencePipeline.judgment_coverage_pct || 0).toFixed(1)}%</strong>
+          <small>${Number(evidencePipeline.judged_decisions || 0)} judged &middot; ${Number(evidencePipeline.awaiting_judgment || 0)} waiting</small>
+        </div>
+        <div>
+          <span>Realized exits</span>
+          <strong>${Number(evidencePipeline.realized_exits || 0)}</strong>
+          <small>Completed simulated outcomes</small>
+        </div>
+      </div>
+      <small class="paper-evidence-note">${escapeHtml(evidencePipeline.next_action || "Keep the scheduled paper cycle running.")}</small>
+    </section>
     <section class="paper-evidence-roadmap">
       <div class="paper-evidence-heading">
         <div>

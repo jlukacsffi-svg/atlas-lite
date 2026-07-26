@@ -556,6 +556,18 @@ class CloudWebApplicationTests(unittest.TestCase):
             )
         self.assertEqual(response["status"], "200 OK")
         self.assertTrue(response["json"]["checks"]["stage5_scoreboard"]["ok"])
+        self.assertIn(
+            "snapshot_count",
+            response["json"]["checks"]["stage5_scoreboard"],
+        )
+        self.assertIn(
+            "judged_decisions",
+            response["json"]["checks"]["stage5_scoreboard"],
+        )
+        self.assertIn(
+            "realized_exits",
+            response["json"]["checks"]["stage5_scoreboard"],
+        )
         self.assertTrue(response["json"]["checks"]["persistence_learning"]["ok"])
         self.assertTrue(response["json"]["checks"]["benchmark_labels"]["ok"])
         self.assertTrue(response["json"]["checks"]["benchmark_scorecard"]["ok"])

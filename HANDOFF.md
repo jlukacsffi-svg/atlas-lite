@@ -61,17 +61,17 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
-- Paper Portfolio now shows Stage 5 evidence maturity, proof gates passing,
-  and the three foundational gaps that must mature next.
-- Every readiness criterion exposes bounded progress and a concrete next
-  action rather than only a pass/fail result.
-- Current evidence maturity is 12.0% with 1 of 9 gates passing: 21 of 250
-  observation days, 0 of 100 judged decisions, and 0 of 30 realized exits.
-- Cloud Run revision `atlas-dashboard-stg-00141-8r7` is live on image
-  `20260726-evidence-roadmap`; the full 402-test suite, all 25 readiness
+- Paper Portfolio now exposes the active evidence pipeline: latest snapshot,
+  executed decisions, judged coverage, waiting decisions, and realized exits.
+- Protected verification now reports the authoritative cloud counts, avoiding
+  confusion with stale local development data.
+- The live owner ledger contains 133 snapshots, 44 executed decisions, 42
+  judged outcomes, and 33 realized exits. Judgment coverage is 95.5%.
+- Current live evidence maturity is 68.4%, with 3 of 9 conservative gates
+  passing.
+- Cloud Run revision `atlas-dashboard-stg-00142-mr4` is live on image
+  `20260726-evidence-pipeline`; the full 402-test suite, all 25 readiness
   checks, and all 12 protected dashboard checks pass.
-- Evidence maturity is explicitly labeled as neither a time estimate nor
-  authorization for real trading.
 - Google reauthentication is currently required for the next signed-in visual
   walkthrough.
 - Stage 5 remains simulated paper-only. Real trading and brokerage access
@@ -117,11 +117,11 @@ Stage 3 portfolio-intelligence foundations completed:
 
 Recommended next roadmap task:
 
-Strengthen the Stage 5 evidence cadence. Diagnose why the account has
-observation history but no judged decisions or realized exits, confirm that
-scheduled snapshots are accumulating reliably, and make the dashboard explain
-when each open simulated decision becomes eligible for outcome judgment.
-Continue to keep all financial autonomy limited to the simulated paper account.
+Audit Stage 5 realized outcomes. The live ledger now proves that evidence is
+accumulating, but its realized win rate is 0.0% across 33 exits. Determine
+whether this reflects accounting semantics, repeated partial trims, or weak
+exit behavior; then improve the explanation and only adjust simulated strategy
+rules when the evidence supports a change.
 
 Stage 4 planning artifact:
 

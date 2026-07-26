@@ -1063,6 +1063,36 @@ class PaperTradingAccount:
             "next_milestones": next_milestones,
             "criteria": readiness_criteria,
         }
+        feedback_total = int(feedback.get("total") or 0)
+        awaiting_judgment = max(feedback_total - judged, 0)
+        judgment_coverage_pct = (
+            round((judged / feedback_total) * 100.0, 1)
+            if feedback_total
+            else 0.0
+        )
+        evidence_pipeline = {
+            "source": "Active paper ledger",
+            "latest_snapshot_at": latest.get("timestamp"),
+            "snapshot_count": snapshots,
+            "executed_decisions": feedback_total,
+            "judged_decisions": judged,
+            "awaiting_judgment": awaiting_judgment,
+            "judgment_coverage_pct": judgment_coverage_pct,
+            "realized_exits": realized_exits,
+            "headline": (
+                f"{judged} of {feedback_total} executed paper decisions have "
+                "enough later market data for judgment."
+                if feedback_total
+                else "Atlas has not executed a paper decision to judge yet."
+            ),
+            "next_action": (
+                f"Allow {awaiting_judgment} recent simulated decision"
+                f"{'' if awaiting_judgment == 1 else 's'} to receive another "
+                "scheduled benchmark-aware snapshot."
+                if awaiting_judgment
+                else "Keep the daily paper cycle running so future decisions receive later comparison snapshots."
+            ),
+        }
         return {
             "available": True,
             "status": status,
@@ -1076,6 +1106,7 @@ class PaperTradingAccount:
             "scorecards": scorecards,
             "takeaways": takeaways[:8],
             "capital_readiness": capital_readiness,
+            "evidence_pipeline": evidence_pipeline,
         }
 
     def proposal_feedback(self, latest_prices=None):

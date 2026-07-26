@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 74%.
+Estimated overall Atlas program completion: 75%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -377,7 +377,12 @@ the overall company program.
 - Completed: Paper Portfolio now quantifies Stage 5 evidence maturity, shows
   progress toward all nine conservative gates, and leads with the next three
   foundational proof gaps and actions.
-- Next: strengthen the Stage 5 evidence cadence, explain when simulated
-  decisions become judgeable, and begin accumulating realized exit evidence.
+- Completed: Paper Portfolio now shows the active evidence pipeline and the
+  protected cloud verifier reports authoritative snapshot, judgment, and exit
+  counts. The live ledger has 133 snapshots, 42 judged decisions, and 33
+  realized exits.
+- Next: audit the 0.0% realized win rate, distinguish accounting semantics
+  from strategy behavior, and make completed outcome quality easier to
+  understand before changing simulated trade rules.
 - Parallel owner task: complete cross-device owner login and non-owner account
   denial before multi-user work begins.

@@ -3,6 +3,44 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Paper evidence now has a visible data pipeline
+
+New capabilities:
+
+- Show the active paper ledger's latest benchmark-aware snapshot directly in
+  the Paper Portfolio workspace.
+- Separate executed simulated decisions, judged outcomes, decisions waiting
+  for later data, and realized exits.
+- Calculate judgment coverage so the owner can see whether evidence is merely
+  recorded or actually ready for evaluation.
+- Explain the next evidence-pipeline action in plain language.
+- Return the authoritative snapshot, judged-decision, exit, and maturity
+  counts through the protected cloud verification contract.
+
+Validated result:
+
+- The live owner ledger contains 133 benchmark-aware snapshots, 44 executed
+  paper decisions, 42 judged outcomes, and 33 realized exits.
+- Judgment coverage is 95.5%; two recent decisions await later comparison
+  data.
+- Current Stage 5 evidence maturity is 68.4%, with 3 of 9 conservative gates
+  passing.
+- The full local suite passes with 402 tests.
+- Cloud Run revision `atlas-dashboard-stg-00142-mr4` is live on image
+  `20260726-evidence-pipeline`.
+- The deployed image digest is
+  `sha256:b3174bb32f8a614a004ad9406004d1a4b98644aa81b113ae4117b72dd3788543`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+
+Current boundaries:
+
+- These are simulated paper outcomes, not real portfolio performance.
+- Realized win rate is currently 0.0% despite 33 recorded exits and requires
+  focused outcome diagnosis before strategy rules are changed.
+- Google reauthentication is required for the next signed-in visual review.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Stage 5 now shows an evidence roadmap
 
 New capabilities:

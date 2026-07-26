@@ -1351,6 +1351,15 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(summary["status_label"], "Evidence building")
         self.assertEqual(summary["judged_trades"], 2)
         self.assertEqual(summary["realized_exits"], 1)
+        pipeline = summary["evidence_pipeline"]
+        self.assertEqual(pipeline["source"], "Active paper ledger")
+        self.assertEqual(pipeline["snapshot_count"], 5)
+        self.assertEqual(pipeline["executed_decisions"], 2)
+        self.assertEqual(pipeline["judged_decisions"], 2)
+        self.assertEqual(pipeline["awaiting_judgment"], 0)
+        self.assertEqual(pipeline["judgment_coverage_pct"], 100.0)
+        self.assertEqual(pipeline["realized_exits"], 1)
+        self.assertEqual(pipeline["latest_snapshot_at"], "2026-06-07T16:00:00")
         readiness = summary["capital_readiness"]
         self.assertFalse(readiness["ready_for_owner_review"])
         self.assertEqual(readiness["status"], "paper_only")

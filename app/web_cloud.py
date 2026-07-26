@@ -474,13 +474,32 @@ class AtlasCloudApplication:
             == "paper_auto_manage"
         )
         pending_manual_count = int(proposal_counts.get("pending") or 0)
+        evidence_pipeline = validation.get("evidence_pipeline") or {}
+        evidence_maturity_pct = (
+            (validation.get("capital_readiness") or {}).get("progress_pct")
+        )
         return {
             "generated_at": data.get("generated_at"),
             "workspace": data.get("workspace") or {},
             "checks": {
                 "stage5_scoreboard": {
                     "ok": bool(validation),
-                    "detail": "Stage 5 validation summary is available for the overview dashboard.",
+                    "detail": (
+                        "Stage 5 validation summary is available with "
+                        f"{int(evidence_pipeline.get('snapshot_count') or 0)} snapshots, "
+                        f"{int(evidence_pipeline.get('judged_decisions') or 0)} judged decisions, "
+                        f"and {int(evidence_pipeline.get('realized_exits') or 0)} realized exits."
+                    ),
+                    "evidence_maturity_pct": evidence_maturity_pct,
+                    "snapshot_count": int(
+                        evidence_pipeline.get("snapshot_count") or 0
+                    ),
+                    "judged_decisions": int(
+                        evidence_pipeline.get("judged_decisions") or 0
+                    ),
+                    "realized_exits": int(
+                        evidence_pipeline.get("realized_exits") or 0
+                    ),
                 },
                 "persistence_learning": {
                     "ok": bool(
