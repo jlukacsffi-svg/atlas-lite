@@ -1676,6 +1676,10 @@ function renderPaperWorkspaceSummary(paper) {
     ? readiness.criteria.filter(item => item.passed).length
     : 0;
   const readinessTotal = Array.isArray(readiness.criteria) ? readiness.criteria.length : 0;
+  const readinessProgress = Math.max(0, Math.min(100, Number(readiness.progress_pct) || 0));
+  const nextMilestones = Array.isArray(readiness.next_milestones)
+    ? readiness.next_milestones
+    : [];
 
   document.getElementById("paper-workspace-summary").innerHTML = `
     <div class="paper-summary-grid">
@@ -1697,7 +1701,7 @@ function renderPaperWorkspaceSummary(paper) {
       <div class="paper-summary-card">
         <span class="summary-label">Stage 5 evidence</span>
         <strong>${readinessTotal ? `${readinessPassed}/${readinessTotal}` : "--"}</strong>
-        <small>${escapeHtml(readiness.status_label || validation.status_label || "Evidence building")}</small>
+        <small>${escapeHtml(readiness.status_label || validation.status_label || "Evidence building")}${readinessTotal ? ` · ${readinessProgress.toFixed(1)}% evidence maturity` : ""}</small>
       </div>
     </div>
     <div class="paper-priority-grid">
@@ -1730,6 +1734,34 @@ function renderPaperWorkspaceSummary(paper) {
         ` : `<div class="empty compact">No simulated purchases or sales have been recorded yet.</div>`}
       </section>
     </div>
+    <section class="paper-evidence-roadmap">
+      <div class="paper-evidence-heading">
+        <div>
+          <span class="access-label">What Stage 5 needs next</span>
+          <b>${escapeHtml(readiness.headline || "Atlas is collecting evidence before any real-capital discussion.")}</b>
+        </div>
+        <span>${readinessPassed}/${readinessTotal || 0} gates pass</span>
+      </div>
+      <div class="paper-evidence-list">
+        ${nextMilestones.map(item => {
+          const progress = Math.max(0, Math.min(100, Number(item.progress_pct) || 0));
+          return `
+            <div class="paper-evidence-row">
+              <div>
+                <b>${escapeHtml(item.label || "Evidence milestone")}</b>
+                <small>${escapeHtml(item.current || "N/A")} now · target ${escapeHtml(item.target || "")}</small>
+                <small>${escapeHtml(item.next_step || "Continue the paper evaluation.")}</small>
+              </div>
+              <div class="paper-evidence-progress">
+                <span>${progress.toFixed(1)}%</span>
+                <div class="progress-track"><i style="width:${progress}%"></i></div>
+              </div>
+            </div>
+          `;
+        }).join("") || `<div class="empty compact">Atlas will identify the next evidence milestones after paper tracking begins.</div>`}
+      </div>
+      <small class="paper-evidence-note">Evidence maturity measures progress toward conservative proof gates. It is not a time estimate and cannot enable real trading.</small>
+    </section>
     <div class="paper-summary-actions">
       <button class="secondary-button" type="button" data-paper-section="paper-positions-panel">View holdings</button>
       <button class="secondary-button" type="button" data-paper-section="paper-activity-panel">View recent activity</button>

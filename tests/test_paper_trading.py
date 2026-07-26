@@ -1355,6 +1355,19 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertFalse(readiness["ready_for_owner_review"])
         self.assertEqual(readiness["status"], "paper_only")
         self.assertEqual(readiness["total"], 9)
+        self.assertGreater(readiness["progress_pct"], 0)
+        self.assertLess(readiness["progress_pct"], 100)
+        self.assertEqual(len(readiness["next_milestones"]), 3)
+        self.assertEqual(
+            [item["id"] for item in readiness["next_milestones"]],
+            ["observation_depth", "judged_decisions", "realized_exits"],
+        )
+        self.assertTrue(
+            all("next_step" in item for item in readiness["next_milestones"])
+        )
+        self.assertTrue(
+            all("progress_pct" in item for item in readiness["criteria"])
+        )
         self.assertEqual(
             {item["id"] for item in readiness["criteria"]},
             {

@@ -61,16 +61,17 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
-- Access now opens with a concise owner security brief showing private access,
-  verified Google identity, disabled public signup, active protections, and
-  the two remaining owner-assisted validation checks.
-- Detailed security controls and future multi-user readiness remain available
-  through on-demand disclosures.
-- The 78% Web Phase 3 figure is explicitly separated from overall Atlas program
-  completion.
-- Cloud Run revision `atlas-dashboard-stg-00140-gk9` is live on image
-  `20260726-access-workspace`; the full 402-test suite, all 25 readiness
+- Paper Portfolio now shows Stage 5 evidence maturity, proof gates passing,
+  and the three foundational gaps that must mature next.
+- Every readiness criterion exposes bounded progress and a concrete next
+  action rather than only a pass/fail result.
+- Current evidence maturity is 12.0% with 1 of 9 gates passing: 21 of 250
+  observation days, 0 of 100 judged decisions, and 0 of 30 realized exits.
+- Cloud Run revision `atlas-dashboard-stg-00141-8r7` is live on image
+  `20260726-evidence-roadmap`; the full 402-test suite, all 25 readiness
   checks, and all 12 protected dashboard checks pass.
+- Evidence maturity is explicitly labeled as neither a time estimate nor
+  authorization for real trading.
 - Google reauthentication is currently required for the next signed-in visual
   walkthrough.
 - Stage 5 remains simulated paper-only. Real trading and brokerage access
@@ -116,12 +117,11 @@ Stage 3 portfolio-intelligence foundations completed:
 
 Recommended next roadmap task:
 
-Simplify Research into a prioritized intelligence queue. Lead with Atlas's
-current conclusions, the evidence that is changing, and the follow-up work
-assigned to research roles. Preserve the detailed market, sector, corporate
-action, and task evidence behind clear drill-downs. Continue Stage 5 validation
-in parallel and keep all financial autonomy limited to the simulated paper
-account.
+Strengthen the Stage 5 evidence cadence. Diagnose why the account has
+observation history but no judged decisions or realized exits, confirm that
+scheduled snapshots are accumulating reliably, and make the dashboard explain
+when each open simulated decision becomes eligible for outcome judgment.
+Continue to keep all financial autonomy limited to the simulated paper account.
 
 Stage 4 planning artifact:
 

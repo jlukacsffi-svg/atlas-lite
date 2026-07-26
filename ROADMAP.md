@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 73%.
+Estimated overall Atlas program completion: 74%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -374,5 +374,10 @@ the overall company program.
 - Completed: Access now opens as a concise owner security workspace separating
   active protections, two remaining owner-assisted validation checks, detailed
   security controls, and future multi-user governance.
-- Next: complete the two owner-assisted identity checks, then return focus to
-  Stage 5 paper-performance evidence and decision-quality improvement.
+- Completed: Paper Portfolio now quantifies Stage 5 evidence maturity, shows
+  progress toward all nine conservative gates, and leads with the next three
+  foundational proof gaps and actions.
+- Next: strengthen the Stage 5 evidence cadence, explain when simulated
+  decisions become judgeable, and begin accumulating realized exit evidence.
+- Parallel owner task: complete cross-device owner login and non-owner account
+  denial before multi-user work begins.

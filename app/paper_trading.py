@@ -888,6 +888,11 @@ class PaperTradingAccount:
         persistence_5_rate = (
             persistence_5.get("working_rate_pct") if persistence_5 else None
         )
+        def evidence_progress(current, target):
+            if current is None or target <= 0:
+                return 0.0
+            return round(min(max(float(current) / float(target), 0.0), 1.0) * 100.0, 1)
+
         readiness_criteria = [
             {
                 "id": "observation_depth",
@@ -895,6 +900,8 @@ class PaperTradingAccount:
                 "passed": snapshots >= 250,
                 "current": str(snapshots),
                 "target": "250+ snapshots",
+                "progress_pct": evidence_progress(snapshots, 250),
+                "next_step": "Keep the scheduled paper account running to accumulate daily benchmark checkpoints.",
             },
             {
                 "id": "judged_decisions",
@@ -902,6 +909,8 @@ class PaperTradingAccount:
                 "passed": judged >= 100,
                 "current": str(judged),
                 "target": "100+ outcomes",
+                "progress_pct": evidence_progress(judged, 100),
+                "next_step": "Allow executed paper decisions enough later market data to become judged outcomes.",
             },
             {
                 "id": "realized_exits",
@@ -909,6 +918,8 @@ class PaperTradingAccount:
                 "passed": realized_exits >= 30,
                 "current": str(realized_exits),
                 "target": "30+ exits",
+                "progress_pct": evidence_progress(realized_exits, 30),
+                "next_step": "Continue testing thesis-driven trims and exits without forcing unnecessary turnover.",
             },
             {
                 "id": "benchmark_outperformance",
@@ -919,6 +930,12 @@ class PaperTradingAccount:
                     f"{len(positive_benchmarks)} of {len(benchmark_excess)} ahead"
                 ),
                 "target": "Ahead of SPY and QQQ",
+                "progress_pct": (
+                    evidence_progress(len(positive_benchmarks), len(benchmark_excess))
+                    if benchmark_excess
+                    else 0.0
+                ),
+                "next_step": "Improve sustained total return relative to both SPY and QQQ.",
             },
             {
                 "id": "decision_quality",
@@ -930,6 +947,8 @@ class PaperTradingAccount:
                     else "N/A"
                 ),
                 "target": "55%+ working",
+                "progress_pct": evidence_progress(judged_trade_working_rate_pct, 55.0),
+                "next_step": "Accumulate more judged buys and sells while preserving a majority of working decisions.",
             },
             {
                 "id": "exit_quality",
@@ -941,6 +960,8 @@ class PaperTradingAccount:
                     else "N/A"
                 ),
                 "target": "55%+ helpful",
+                "progress_pct": evidence_progress(judged_sell_help_rate_pct, 55.0),
+                "next_step": "Measure whether trims and exits avoid later weakness often enough to be helpful.",
             },
             {
                 "id": "realized_win_rate",
@@ -948,6 +969,8 @@ class PaperTradingAccount:
                 "passed": (win_rate or 0.0) >= 50.0,
                 "current": win_rate_text,
                 "target": "50%+ profitable",
+                "progress_pct": evidence_progress(win_rate, 50.0),
+                "next_step": "Build a larger sample of completed simulated positions with disciplined outcomes.",
             },
             {
                 "id": "persistence",
@@ -959,6 +982,8 @@ class PaperTradingAccount:
                     else "N/A"
                 ),
                 "target": "55%+ working",
+                "progress_pct": evidence_progress(persistence_5_rate, 55.0),
+                "next_step": "Give paper decisions five later snapshots to prove their results persist.",
             },
             {
                 "id": "turnover_discipline",
@@ -968,9 +993,47 @@ class PaperTradingAccount:
                     f"{turnover_pct:.1f}%" if turnover_pct is not None else "N/A"
                 ),
                 "target": "100% or less",
+                "progress_pct": (
+                    0.0
+                    if turnover_pct is None
+                    else 100.0
+                    if turnover_pct <= 100.0
+                    else round((100.0 / turnover_pct) * 100.0, 1)
+                ),
+                "next_step": "Keep gross paper turnover at or below starting capital over the evaluation window.",
             },
         ]
         passed_criteria = sum(1 for item in readiness_criteria if item["passed"])
+        evidence_progress_pct = round(
+            sum(item["progress_pct"] for item in readiness_criteria)
+            / len(readiness_criteria),
+            1,
+        )
+        incomplete_criteria = [
+            item for item in readiness_criteria if not item["passed"]
+        ]
+        foundation_order = {
+            "observation_depth": 0,
+            "judged_decisions": 1,
+            "realized_exits": 2,
+        }
+        foundation_milestones = sorted(
+            (
+                item
+                for item in incomplete_criteria
+                if item["id"] in foundation_order
+            ),
+            key=lambda item: foundation_order[item["id"]],
+        )
+        outcome_milestones = sorted(
+            (
+                item
+                for item in incomplete_criteria
+                if item["id"] not in foundation_order
+            ),
+            key=lambda item: (item["progress_pct"], item["label"]),
+        )
+        next_milestones = (foundation_milestones + outcome_milestones)[:3]
         capital_readiness = {
             "ready_for_owner_review": passed_criteria == len(readiness_criteria),
             "status": (
@@ -996,6 +1059,8 @@ class PaperTradingAccount:
             ),
             "passed": passed_criteria,
             "total": len(readiness_criteria),
+            "progress_pct": evidence_progress_pct,
+            "next_milestones": next_milestones,
             "criteria": readiness_criteria,
         }
         return {

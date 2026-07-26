@@ -3,6 +3,41 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Stage 5 now shows an evidence roadmap
+
+New capabilities:
+
+- Show a single Stage 5 evidence-maturity percentage alongside the number of
+  conservative proof gates currently passing.
+- Calculate bounded progress for every readiness criterion instead of showing
+  only pass or fail.
+- Lead with the three foundational evidence gaps: observation depth, judged
+  decisions, and realized exits.
+- Show each gap's current value, target, progress bar, and concrete next
+  action directly in the Paper Portfolio workspace.
+- State explicitly that evidence maturity is neither a time estimate nor
+  authorization for real trading.
+
+Validated result:
+
+- Current Stage 5 evidence maturity is 12.0%, with 1 of 9 proof gates passing.
+- The current foundation includes 21 of 250 observation days, 0 of 100 judged
+  decisions, and 0 of 30 realized exits.
+- The full local suite passes with 402 tests.
+- Cloud Run revision `atlas-dashboard-stg-00141-8r7` is live on image
+  `20260726-evidence-roadmap`.
+- The deployed image digest is
+  `sha256:50da857a0f12cce5e517537ebda819eb8c28c0a876d5efecd79a74f84021482d`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+
+Current boundaries:
+
+- Stage 5 remains a simulated evaluation; evidence progress cannot enable
+  brokerage access or real-money execution.
+- Google reauthentication is required for the next signed-in visual review.
+- Cross-device owner login and non-owner account denial remain pending.
+
 ## July 26, 2026 - Access is now an owner security workspace
 
 New capabilities:
