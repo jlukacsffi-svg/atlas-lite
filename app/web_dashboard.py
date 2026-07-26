@@ -1814,6 +1814,9 @@ class DashboardDataService:
                     "priority": task.get("priority"),
                     "subject": task.get("subject"),
                     "prompt": task.get("prompt"),
+                    "created_at": task.get("created_at"),
+                    "updated_at": task.get("updated_at"),
+                    "last_seen_at": task.get("last_seen_at"),
                 }
                 for task in self.research_queue._sorted_tasks(tasks)[:6]
             ]

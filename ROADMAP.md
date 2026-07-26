@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 70%.
+Estimated overall Atlas program completion: 71%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -363,5 +363,9 @@ the overall company program.
   exceptions, the latest simulated trade, and urgency-sorted holdings while
   keeping lifecycle, accounting, thesis, and Stage 5 evidence available on
   demand.
-- Next: simplify Research into a prioritized intelligence queue that clearly
+- Completed: Research now opens as a prioritized intelligence workspace that
   separates current conclusions, developing evidence, and assigned follow-up.
+  Detailed score, mover, sector, corporate-action, and assignment views remain
+  available on demand, and old persistent tasks require evidence revalidation.
+- Next: simplify Controls into a policy summary and exception workspace while
+  keeping advanced settings and audit detail available on demand.

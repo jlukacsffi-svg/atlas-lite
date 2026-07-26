@@ -3,6 +3,43 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Research is now an intelligence workspace
+
+New capabilities:
+
+- Lead Research with current conclusions, changing evidence, and assigned
+  follow-up instead of opening on several dense data tables.
+- Summarize open assignments, high-priority work, owner-review work, and
+  research-universe coverage.
+- Identify the current Atlas score leader, strongest and weakest sectors, and
+  largest watchlist move.
+- Surface the four most important research assignments with role, subject,
+  prompt, priority, and age.
+- Warn when a persistent assignment is old enough that its original evidence
+  must be revalidated before acting.
+- Keep full score rankings, watchlist moves, sector details, corporate actions,
+  and the complete assignment queue available through deliberate disclosures.
+- Open each detailed research area directly from the summary.
+
+Validated result:
+
+- The full local suite passes with 402 tests.
+- Cloud Run revision `atlas-dashboard-stg-00138-nr8` is live on image
+  `20260726-research-workspace`.
+- The deployed image digest is
+  `sha256:5736ada7dcf51e3128b5ef317d427d04ea1d26e8855cb450d0f0d0e2b8882e92`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+- Local rendered checks confirm summary metrics, assignment-age warnings, and
+  direct disclosure controls work with current research data.
+
+Current boundaries:
+
+- Research conclusions and assignments are evidence for owner review, not
+  instructions to place real-money orders.
+- Persistent assignments explicitly require current-evidence revalidation.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Paper Portfolio is now an owner workspace
 
 New capabilities:

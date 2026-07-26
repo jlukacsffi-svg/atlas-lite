@@ -432,6 +432,15 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   border-top-color: var(--green);
   background: linear-gradient(180deg, #f1faf6 0, var(--surface) 90px);
 }
+.research-summary-panel {
+  grid-column: 1 / -1;
+  border-top-color: var(--green);
+  background: linear-gradient(180deg, #f1faf6 0, var(--surface) 90px);
+}
+.research-agenda-panel {
+  grid-column: 1 / -1;
+  border-top-color: var(--gold);
+}
 .paper-positions-panel {
   order: 2;
 }
@@ -916,6 +925,107 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .paper-workspace-summary {
   display: grid;
   gap: 18px;
+}
+.research-workspace-summary {
+  display: grid;
+  gap: 18px;
+}
+.research-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+.research-summary-card {
+  min-height: 90px;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  padding: 14px;
+  border: 1px solid #c7d4dd;
+  border-radius: 8px;
+  background: #f8fbfd;
+}
+.research-summary-card.attention {
+  border-color: #e6cc91;
+  background: #fffaf0;
+}
+.research-summary-card strong {
+  font-size: 24px;
+  line-height: 1;
+}
+.research-summary-card small {
+  color: var(--muted);
+  font-size: 11px;
+}
+.research-conclusion-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.research-conclusion-section,
+.research-assignment-section {
+  min-width: 0;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+.research-conclusion-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf0f2;
+}
+.research-conclusion-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.research-assignment-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.research-assignment-list {
+  display: grid;
+  gap: 0;
+  margin-top: 10px;
+}
+.research-assignment-row {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 0;
+  border-bottom: 1px solid #edf0f2;
+}
+.research-assignment-row:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+.task-age {
+  margin-top: 4px;
+  color: #7a4f00;
+}
+.research-summary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.research-disclosure {
+  border-top: 1px solid #dce5eb;
+}
+.research-disclosure > summary {
+  padding: 13px 0 2px;
+  color: var(--blue);
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 800;
+}
+.research-disclosure[open] > summary {
+  margin-bottom: 14px;
 }
 .paper-summary-grid {
   display: grid;
@@ -2260,6 +2370,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .mode-options { grid-template-columns: 1fr; }
   .strategy-policy-grid { grid-template-columns: 1fr; }
   .paper-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .research-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 760px) {
@@ -2298,6 +2409,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .about-hero-brand { grid-template-columns: 72px minmax(0, 1fr); }
   .about-logo { width: 72px; height: 72px; }
   .paper-priority-grid { grid-template-columns: 1fr; }
+  .research-conclusion-grid { grid-template-columns: 1fr; }
   .universe-toolbar { grid-template-columns: 1fr 1fr; }
   .universe-toolbar-action {
     grid-column: 1 / -1;
@@ -2349,6 +2461,11 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   }
   .access-summary:last-child { border-bottom: 0; }
   .paper-summary-grid { grid-template-columns: 1fr; }
+  .research-summary-grid { grid-template-columns: 1fr; }
+  .research-summary-actions { display: grid; }
+  .research-assignment-head { align-items: flex-start; flex-direction: column; }
+  .research-assignment-row { grid-template-columns: 64px minmax(0, 1fr); }
+  .research-assignment-row > .tag { grid-column: 2; justify-self: start; }
   .paper-summary-actions { display: grid; }
   .paper-priority-row { grid-template-columns: auto minmax(0, 1fr); }
   .paper-priority-row .link-button { grid-column: 2; justify-self: start; }

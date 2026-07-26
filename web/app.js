@@ -63,6 +63,17 @@ function conciseText(value, maxLength = 180) {
   return `${text.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
 }
 
+function researchTaskAgeLabel(item) {
+  const raw = item?.created_at;
+  if (!raw) return "date unavailable";
+  const created = new Date(raw);
+  if (Number.isNaN(created.getTime())) return "date unavailable";
+  const days = Math.max(0, Math.floor((Date.now() - created.getTime()) / 86400000));
+  if (days === 0) return "today";
+  if (days === 1) return "1 day ago";
+  return `${days} days ago`;
+}
+
 function safeExternalUrl(value) {
   try {
     const url = new URL(String(value || ""));
@@ -253,6 +264,7 @@ function renderDashboard(data) {
   renderMovers(data.movers || []);
   renderSectors(data.sectors || []);
   renderCorporateActions(data.corporate_actions || []);
+  renderResearchWorkspace(data);
   renderPaperWorkspaceSummary(paper);
   renderThesisOverview(paper.thesis_overview || {});
   renderPortfolioFocus(paper.portfolio_focus || {});
@@ -561,6 +573,13 @@ function jumpToPaperSection(targetId) {
   const disclosure = target?.querySelector(".paper-disclosure");
   if (disclosure) disclosure.open = true;
   jumpToPaperTarget(targetId);
+}
+
+function jumpToResearchTarget(targetId) {
+  const target = document.getElementById(String(targetId || ""));
+  const disclosure = target?.querySelector(".research-disclosure");
+  if (disclosure) disclosure.open = true;
+  jumpToPageTarget("research", targetId);
 }
 
 function renderWorkspace(workspace) {
@@ -1315,6 +1334,112 @@ function renderPerformance(history) {
   lines.push(`<text class="chart-axis" x="${pad.left}" y="${height - 7}">${firstLabel}</text>`);
   lines.push(`<text class="chart-axis" text-anchor="end" x="${width - pad.right}" y="${height - 7}">${lastLabel}</text>`);
   svg.innerHTML = lines.join("");
+}
+
+function renderResearchWorkspace(data) {
+  const leaders = Array.isArray(data.score_leaders) ? data.score_leaders : [];
+  const movers = Array.isArray(data.movers) ? data.movers : [];
+  const sectors = Array.isArray(data.sectors) ? data.sectors : [];
+  const research = data.research || {};
+  const tasks = Array.isArray(research.tasks) ? research.tasks : [];
+  const leader = leaders[0] || null;
+  const mover = movers[0] || null;
+  const strongestSector = sectors[0] || null;
+  const weakestSector = sectors.length ? sectors[sectors.length - 1] : null;
+
+  document.getElementById("research-workspace-summary").innerHTML = `
+    <div class="research-summary-grid">
+      <div class="research-summary-card">
+        <span class="summary-label">Open assignments</span>
+        <strong>${Number(research.open || 0)}</strong>
+        <small>${Number(research.high_priority || 0)} high priority</small>
+      </div>
+      <div class="research-summary-card ${Number(research.high_priority || 0) ? "attention" : ""}">
+        <span class="summary-label">High priority</span>
+        <strong>${Number(research.high_priority || 0)}</strong>
+        <small>Research follow-up requiring faster review</small>
+      </div>
+      <div class="research-summary-card">
+        <span class="summary-label">Awaiting owner</span>
+        <strong>${Number(research.awaiting_owner || 0)}</strong>
+        <small>Completed findings waiting for a decision</small>
+      </div>
+      <div class="research-summary-card">
+        <span class="summary-label">Coverage today</span>
+        <strong>${Number(data.overview?.available || 0)}/${Number(data.overview?.tracked || 0)}</strong>
+        <small>Tracked securities with usable data</small>
+      </div>
+    </div>
+    <div class="research-conclusion-grid">
+      <section class="research-conclusion-section">
+        <span class="access-label">What Atlas currently concludes</span>
+        ${leader ? `
+          <div class="research-conclusion-row">
+            <span class="thesis-badge ready">Leader</span>
+            <div>
+              <b class="row-title">${escapeHtml(leader.ticker)} leads the current research ranking at ${Number(leader.score).toFixed(1)}</b>
+              <small class="row-meta">${escapeHtml(leader.sector || "Unclassified")} · ${escapeHtml(leader.category || "Tracked")}. A high Atlas score means stronger research priority, not an automatic purchase.</small>
+            </div>
+          </div>
+        ` : `<div class="empty compact">Atlas does not have a current score conclusion.</div>`}
+        ${strongestSector ? `
+          <div class="research-conclusion-row">
+            <span class="thesis-badge healthy">Sector</span>
+            <div>
+              <b class="row-title">${escapeHtml(strongestSector.sector)} has the strongest average daily move</b>
+              <small class="row-meta">${signed(Number(strongestSector.average_change || 0))} across ${Number(strongestSector.securities || 0)} tracked securities.</small>
+            </div>
+          </div>
+        ` : ""}
+      </section>
+      <section class="research-conclusion-section">
+        <span class="access-label">Evidence changing now</span>
+        ${mover ? `
+          <div class="research-conclusion-row">
+            <span class="thesis-badge ${Number(mover.percent_change || 0) >= 0 ? "healthy" : "exit"}">Move</span>
+            <div>
+              <b class="row-title">${escapeHtml(mover.ticker)} is the largest watchlist move at ${signed(Number(mover.percent_change || 0))}</b>
+              <small class="row-meta">${escapeHtml(mover.sector || "Unclassified")}. A large move is a research trigger, not a recommendation by itself.</small>
+            </div>
+          </div>
+        ` : `<div class="empty compact">No material watchlist movement is available.</div>`}
+        ${weakestSector && weakestSector !== strongestSector ? `
+          <div class="research-conclusion-row">
+            <span class="thesis-badge watch">Watch</span>
+            <div>
+              <b class="row-title">${escapeHtml(weakestSector.sector)} has the weakest average daily move</b>
+              <small class="row-meta">${signed(Number(weakestSector.average_change || 0))} across ${Number(weakestSector.securities || 0)} tracked securities.</small>
+            </div>
+          </div>
+        ` : ""}
+      </section>
+    </div>
+    <section class="research-assignment-section">
+      <div class="research-assignment-head">
+        <span class="access-label">Assigned follow-up</span>
+        <button class="secondary-button" type="button" data-research-target="research-agenda-panel">Open full queue</button>
+      </div>
+      <div class="research-assignment-list">
+        ${tasks.slice(0, 4).map(item => `
+          <div class="research-assignment-row">
+            <span class="role-chip">${escapeHtml(item.role || "Research")}</span>
+            <div>
+              <b class="row-title">${escapeHtml(item.subject || "Research assignment")}</b>
+              <small class="row-meta">${escapeHtml(conciseText(item.prompt || "Atlas is awaiting research follow-up.", 190))}</small>
+              <small class="row-meta task-age">Persistent assignment opened ${escapeHtml(researchTaskAgeLabel(item))}. Revalidate against current evidence before acting.</small>
+            </div>
+            <span class="tag ${String(item.priority || "").toLowerCase() === "high" ? "exit-tag" : ""}">${escapeHtml(item.priority || "normal")}</span>
+          </div>
+        `).join("") || `<div class="empty compact">No open research assignments.</div>`}
+      </div>
+    </section>
+    <div class="research-summary-actions">
+      <button class="secondary-button" type="button" data-research-target="research-scores-panel">View scores</button>
+      <button class="secondary-button" type="button" data-research-target="research-movers-panel">View movers</button>
+      <button class="secondary-button" type="button" data-research-target="research-sectors-panel">View sectors</button>
+      <button class="secondary-button" type="button" data-research-target="research-actions-panel">View corporate actions</button>
+    </div>
+  `;
 }
 
 function renderScores(rows) {
@@ -2495,7 +2620,11 @@ function renderTasks(rows) {
   document.getElementById("tasks").innerHTML = rows.map(item => `
     <div class="task-row">
       <span class="role-chip">${item.role}</span>
-      <span><b class="row-title">${item.subject}</b><small class="row-meta">${item.prompt}</small></span>
+      <span>
+        <b class="row-title">${item.subject}</b>
+        <small class="row-meta">${item.prompt}</small>
+        <small class="row-meta task-age">Opened ${escapeHtml(researchTaskAgeLabel(item))}; revalidate against the latest market evidence.</small>
+      </span>
     </div>
   `).join("") || `<div class="empty">No open research assignments.</div>`;
 }
@@ -2631,6 +2760,12 @@ document.getElementById("recommendations").addEventListener("click", event => {
   const jumpButton = event.target.closest("[data-paper-target]");
   if (jumpButton) {
     jumpToPaperTarget(jumpButton.dataset.paperTarget);
+  }
+});
+document.getElementById("research").addEventListener("click", event => {
+  const jumpButton = event.target.closest("[data-research-target]");
+  if (jumpButton) {
+    jumpToResearchTarget(jumpButton.dataset.researchTarget);
   }
 });
 document.getElementById("universe-search").addEventListener("input", renderUniverseList);

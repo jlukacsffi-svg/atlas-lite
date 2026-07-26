@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260726-paper-workspace">
+  <link rel="stylesheet" href="/styles.css?v=20260726-research-workspace">
 </head>
 <body>
   <div class="app-shell">
@@ -406,7 +406,23 @@
 
       <section id="research" class="dashboard-page" data-page="research">
       <section class="content-grid lower-grid">
-        <article class="panel">
+        <article class="panel research-summary-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Atlas intelligence brief</p>
+              <div class="title-with-help">
+                <h2>Research priorities at a glance</h2>
+                <details class="info-popover">
+                  <summary aria-label="About research priorities">?</summary>
+                  <p>Summarizes Atlas's current research leader, the evidence changing most today, sector direction, and assigned follow-up. Research priority is not an instruction to buy or sell.</p>
+                </details>
+              </div>
+            </div>
+            <span class="tag">Research only</span>
+          </div>
+          <div id="research-workspace-summary" class="research-workspace-summary"></div>
+        </article>
+        <article id="research-scores-panel" class="panel research-detail-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Research model</p>
@@ -419,10 +435,13 @@
               </div>
             </div>
           </div>
-          <div id="score-leaders" class="rank-list"></div>
+          <details class="research-disclosure">
+            <summary>Open score ranking</summary>
+            <div id="score-leaders" class="rank-list"></div>
+          </details>
         </article>
 
-        <article class="panel">
+        <article id="research-movers-panel" class="panel research-detail-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Daily movement</p>
@@ -435,10 +454,13 @@
               </div>
             </div>
           </div>
-          <div id="movers" class="mover-list"></div>
+          <details class="research-disclosure">
+            <summary>Open watchlist moves</summary>
+            <div id="movers" class="mover-list"></div>
+          </details>
         </article>
 
-        <article class="panel sector-panel">
+        <article id="research-sectors-panel" class="panel sector-panel research-detail-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Sector tape</p>
@@ -451,10 +473,13 @@
               </div>
             </div>
           </div>
-          <div id="sectors" class="sector-bars"></div>
+          <details class="research-disclosure">
+            <summary>Open sector movement detail</summary>
+            <div id="sectors" class="sector-bars"></div>
+          </details>
         </article>
       </section>
-      <section class="panel integrity-panel">
+      <section id="research-actions-panel" class="panel integrity-panel research-detail-panel">
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Data integrity</p>
@@ -468,11 +493,14 @@
           </div>
           <span class="tag">Split aware</span>
         </div>
-        <div id="corporate-actions" class="action-list"></div>
+        <details class="research-disclosure">
+          <summary>Open corporate-action detail</summary>
+          <div id="corporate-actions" class="action-list"></div>
+        </details>
       </section>
 
       <section class="content-grid">
-        <article class="panel">
+        <article id="research-agenda-panel" class="panel research-agenda-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Organization</p>
@@ -485,7 +513,10 @@
               </div>
             </div>
           </div>
-          <div id="tasks" class="task-list"></div>
+          <details class="research-disclosure">
+            <summary>Open full assignment queue</summary>
+            <div id="tasks" class="task-list"></div>
+          </details>
         </article>
       </section>
       </section>
@@ -872,6 +903,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260726-paper-workspace"></script>
+  <script src="/app.js?v=20260726-research-workspace"></script>
 </body>
 </html>

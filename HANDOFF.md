@@ -61,17 +61,15 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
-- The Paper Portfolio now opens with a concise owner workspace showing
-  simulated equity and return, open holdings and cash, action exceptions,
-  Stage 5 evidence progress, and the latest simulated trade.
-- Open holdings are sorted by urgency. Research memory, news, decision drivers,
-  activity rationale, the thesis map, action ladder, and Stage 5 scorecards
-  remain available through on-demand disclosures.
-- Full lifecycle dialogs, trade history, basis reporting, and CSV export remain
-  intact.
-- Cloud Run revision `atlas-dashboard-stg-00137-w4c` is live on image
-  `20260726-paper-workspace`; all 25 readiness checks and all 12 protected
-  dashboard checks pass.
+- Research now opens with a prioritized intelligence workspace separating
+  current conclusions, changing evidence, and assigned follow-up.
+- Score rankings, watchlist moves, sector detail, corporate actions, and the
+  full assignment queue remain available through on-demand disclosures.
+- Persistent tasks carry their creation timestamp and a visible instruction to
+  revalidate old evidence before acting.
+- Cloud Run revision `atlas-dashboard-stg-00138-nr8` is live on image
+  `20260726-research-workspace`; the full 402-test suite, all 25 readiness
+  checks, and all 12 protected dashboard checks pass.
 - Stage 5 remains simulated paper-only. Real trading and brokerage access
   remain disabled.
 
