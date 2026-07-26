@@ -61,16 +61,18 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
-- Controls now opens with an owner policy brief showing operating mode, manual
-  attention, paper watch items, real-money authority, and active paper
-  guardrails.
-- Owner decisions, strategy editing, and paper portfolio monitoring remain
-  available through three on-demand disclosures.
-- Automatic paper management is visibly separated from real-money authority,
-  which remains disabled.
-- Cloud Run revision `atlas-dashboard-stg-00139-kx4` is live on image
-  `20260726-controls-workspace`; the full 402-test suite, all 25 readiness
+- Access now opens with a concise owner security brief showing private access,
+  verified Google identity, disabled public signup, active protections, and
+  the two remaining owner-assisted validation checks.
+- Detailed security controls and future multi-user readiness remain available
+  through on-demand disclosures.
+- The 78% Web Phase 3 figure is explicitly separated from overall Atlas program
+  completion.
+- Cloud Run revision `atlas-dashboard-stg-00140-gk9` is live on image
+  `20260726-access-workspace`; the full 402-test suite, all 25 readiness
   checks, and all 12 protected dashboard checks pass.
+- Google reauthentication is currently required for the next signed-in visual
+  walkthrough.
 - Stage 5 remains simulated paper-only. Real trading and brokerage access
   remain disabled.
 

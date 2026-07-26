@@ -363,6 +363,10 @@ class TenantWebApplicationTests(unittest.TestCase):
             response["json"]["access"]["phase_completion"],
             78,
         )
+        self.assertEqual(
+            len(response["json"]["access"]["owner_validation"]),
+            2,
+        )
         self.assertIn(
             "restore drill",
             response["json"]["access"]["recovery"],

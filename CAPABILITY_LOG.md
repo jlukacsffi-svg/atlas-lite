@@ -3,6 +3,42 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Access is now an owner security workspace
+
+New capabilities:
+
+- Lead Access with current owner-only status, verified Google identity,
+  disabled public signup, and remaining owner validation count.
+- Separate protections already active from checks required before inviting
+  anyone else.
+- Show cross-device owner login and non-owner account denial as explicit
+  pending validation tasks.
+- Preserve identity, isolation, audit, threat-model, recovery, privacy,
+  deletion, and release-control detail in an on-demand disclosure.
+- Keep future multi-user readiness separate from current owner operation.
+- Label the 78% Web Phase 3 figure so it cannot be mistaken for overall Atlas
+  program completion.
+
+Validated result:
+
+- The full local suite passes with 402 tests.
+- Cloud Run revision `atlas-dashboard-stg-00140-gk9` is live on image
+  `20260726-access-workspace`.
+- The deployed image digest is
+  `sha256:d9e1cdd1050ad2cb9856950035a39e7e242c21f4f935c0eb3eb520d2bb55af8d`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+- Local rendered interaction checks confirm both Access drill-downs open,
+  cached data still shows both pending owner checks, and no browser warnings
+  or errors are produced.
+
+Current boundaries:
+
+- Google reauthentication is required before the refreshed signed-in cloud
+  page can be visually reviewed.
+- Cross-device owner login and non-owner account denial remain pending.
+- Public registration and multi-user invitations remain disabled.
+
 ## July 26, 2026 - Controls is now a policy and authority workspace
 
 New capabilities:

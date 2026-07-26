@@ -569,6 +569,15 @@ function jumpToControlsTarget(targetId) {
   jumpToPageTarget("controls", targetId);
 }
 
+function jumpToAccessTarget(targetId) {
+  const target = document.getElementById(String(targetId || ""));
+  const disclosure = target?.matches(".access-disclosure")
+    ? target
+    : target?.closest(".access-disclosure");
+  if (disclosure) disclosure.open = true;
+  jumpToPageTarget("access", targetId);
+}
+
 function jumpToPaperTarget(targetId) {
   jumpToPageTarget("paper", targetId);
 }
@@ -649,7 +658,75 @@ function renderAccess(access) {
   const completion = Math.max(0, Math.min(100, Number(access.phase_completion) || 40));
   document.getElementById("phase-progress-label").textContent =
     `${completion}% complete`;
+  document.getElementById("phase-progress-detail").textContent =
+    `${completion}% complete`;
   document.getElementById("phase-progress-bar").style.width = `${completion}%`;
+  const validation = Array.isArray(access.owner_validation) && access.owner_validation.length
+    ? access.owner_validation
+    : [
+        {
+          label: "Cross-device owner login",
+          status: "pending",
+          detail: "Confirm Joe can sign in from a second trusted device.",
+        },
+        {
+          label: "Non-owner account denial",
+          status: "pending",
+          detail: "Confirm a different Google account is denied access.",
+        },
+      ];
+  const pending = validation.filter(item => item.status !== "validated");
+  document.getElementById("access-workspace-summary").innerHTML = `
+    <div class="access-posture-grid">
+      <div class="access-posture-card">
+        <span class="access-label">Current access</span>
+        <strong>${access.mode === "owner_only" ? "Owner only" : "Restricted"}</strong>
+        <small>Only the approved owner identity can enter the private workspace.</small>
+      </div>
+      <div class="access-posture-card">
+        <span class="access-label">Google identity</span>
+        <strong>Verified</strong>
+        <small>${escapeHtml(access.identity_binding || "Google identity binding is active.")}</small>
+      </div>
+      <div class="access-posture-card">
+        <span class="access-label">Public signup</span>
+        <strong>${access.public_registration ? "Enabled" : "Disabled"}</strong>
+        <small>No public account creation or invitations are active.</small>
+      </div>
+      <div class="access-posture-card attention">
+        <span class="access-label">Owner checks remaining</span>
+        <strong>${pending.length}</strong>
+        <small>Manual sign-in boundary checks before final owner-cloud sign-off.</small>
+      </div>
+    </div>
+    <div class="access-owner-brief">
+      <section>
+        <span class="access-label">Protected now</span>
+        <div class="access-protection-list">
+          <div><span class="status-indicator active"></span><p><b>Private owner workspace</b><small>${escapeHtml(access.tenant_isolation || "Single-owner isolation is active.")}</small></p></div>
+          <div><span class="status-indicator active"></span><p><b>Decision audit retained</b><small>${escapeHtml(access.audit_log || "Research and paper decisions are retained.")}</small></p></div>
+          <div><span class="status-indicator active"></span><p><b>Recovery tested</b><small>${escapeHtml(access.recovery || "Integrity-checked recovery is available.")}</small></p></div>
+        </div>
+      </section>
+      <section>
+        <span class="access-label">Before inviting anyone else</span>
+        <div class="access-validation-list">
+          ${validation.map(item => `
+            <div class="access-validation-row">
+              <span class="status-indicator ${item.status === "validated" ? "active" : "watch"}"></span>
+              <p><b>${escapeHtml(item.label || "Owner validation")}</b><small>${escapeHtml(item.detail || "Manual validation remains.")}</small></p>
+              <span class="tag ${item.status === "validated" ? "healthy-tag" : ""}">${escapeHtml(item.status || "pending")}</span>
+            </div>
+          `).join("") || `<div class="empty">No owner-assisted validation checks are currently listed.</div>`}
+        </div>
+      </section>
+    </div>
+    <div class="access-summary-actions">
+      <button class="secondary-button" type="button" data-access-target="access-controls-panel">Inspect security controls</button>
+      <button class="secondary-button" type="button" data-access-target="access-future-panel">Review future account readiness</button>
+    </div>
+    <p class="access-boundary-note"><b>Current boundary:</b> Atlas is ready for Joe's private owner use. Multi-user invitations and public registration remain disabled.</p>
+  `;
 }
 
 function renderControlWorkspace({
@@ -2883,6 +2960,10 @@ document.getElementById("controls").addEventListener("click", event => {
   }
   const button = event.target.closest("[data-owner-action]");
   if (button) applyOwnerAction(button);
+});
+document.getElementById("access").addEventListener("click", event => {
+  const jumpButton = event.target.closest("[data-access-target]");
+  if (jumpButton) jumpToAccessTarget(jumpButton.dataset.accessTarget);
 });
 document.getElementById("controls").addEventListener("submit", async event => {
   const form = event.target.closest("#strategy-policy-form");

@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 72%.
+Estimated overall Atlas program completion: 73%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -371,6 +371,8 @@ the overall company program.
   operating mode, manual decisions, paper watch items, real-money boundaries,
   and current paper guardrails. Detailed owner decisions, strategy settings,
   and paper monitoring remain available on demand.
-- Next: simplify Access into a concise security posture and remaining
-  owner-validation checklist while keeping future multi-user governance detail
-  available on demand.
+- Completed: Access now opens as a concise owner security workspace separating
+  active protections, two remaining owner-assisted validation checks, detailed
+  security controls, and future multi-user governance.
+- Next: complete the two owner-assisted identity checks, then return focus to
+  Stage 5 paper-performance evidence and decision-quality improvement.

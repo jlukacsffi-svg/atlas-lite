@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260726-controls-workspace">
+  <link rel="stylesheet" href="/styles.css?v=20260726-access-workspace">
 </head>
 <body>
   <div class="app-shell">
@@ -789,9 +789,9 @@
       <section class="panel access-panel">
         <div class="panel-heading">
           <div>
-            <p class="eyebrow">Web Phase 3</p>
+            <p class="eyebrow">Owner security</p>
             <div class="title-with-help">
-              <h2>Access &amp; security foundation</h2>
+              <h2>Access &amp; security</h2>
               <details class="info-popover">
                 <summary aria-label="About access and security">?</summary>
                 <p>Shows the current security posture for the owner-only cloud dashboard and the future multi-user platform. Public registration remains disabled.</p>
@@ -800,63 +800,95 @@
           </div>
           <span id="access-mode" class="tag">Invite only</span>
         </div>
-        <div class="access-grid">
-          <div class="access-summary">
-            <span class="access-label">Public registration</span>
-            <strong id="registration-status">Disabled</strong>
-            <small>Owner-only profile; invitations are not active.</small>
+        <article class="access-workspace-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Security posture</p>
+              <h3>Owner workspace protection at a glance</h3>
+            </div>
+            <span class="tag">Private</span>
           </div>
-          <div class="access-summary">
-            <span class="access-label">Tenant isolation</span>
-            <strong id="tenant-isolation">--</strong>
-            <small>Private records use tenant-scoped database keys.</small>
-          </div>
-          <div class="access-summary">
-            <span class="access-label">Identity binding</span>
-            <strong id="identity-binding">--</strong>
-            <small>Email alone cannot establish an account.</small>
-          </div>
-          <div class="access-summary">
-            <span class="access-label">Administration audit</span>
-            <strong id="audit-status">--</strong>
-            <small>Role and access changes are retained.</small>
-          </div>
-          <div class="access-summary">
-            <span class="access-label">Threat model</span>
-            <strong id="threat-model-status">--</strong>
-            <small>Assets, trust boundaries, threats, and residual risks are tracked.</small>
-          </div>
-          <div class="access-summary">
-            <span class="access-label">Recovery</span>
-            <strong id="recovery-status">--</strong>
-            <small>Backups are validated before an isolated restore.</small>
-          </div>
-          <div class="access-summary">
-            <span class="access-label">Privacy export</span>
-            <strong id="privacy-export-status">--</strong>
-            <small>Owner exports are tenant-scoped and exclude invitation secrets.</small>
-          </div>
-          <div class="access-summary">
-            <span class="access-label">Account deletion</span>
-            <strong id="account-deletion-status">--</strong>
-            <small>Non-owner removal requires a request and explicit confirmation.</small>
-          </div>
-          <div class="access-summary">
-            <span class="access-label">Production review</span>
-            <strong id="production-review-status">--</strong>
-            <small>Owner operation is separated from future public release gates.</small>
-          </div>
-        </div>
-        <div class="access-footer">
-          <div>
-            <span class="access-label">Available roles</span>
-            <div id="access-roles" class="role-list"></div>
-          </div>
-          <div class="phase-progress">
-            <span class="access-label">Web Phase 3</span>
-            <strong id="phase-progress-label">40% complete</strong>
-            <div class="progress-track"><span id="phase-progress-bar" style="width:40%"></span></div>
-          </div>
+          <div id="access-workspace-summary"></div>
+        </article>
+
+        <div class="access-disclosures">
+          <details id="access-controls-panel" class="access-disclosure">
+            <summary>
+              <span><b>Security control detail</b><small>Identity, isolation, audit, recovery, privacy, and release controls</small></span>
+              <strong>9 controls</strong>
+            </summary>
+            <div class="access-disclosure-content">
+              <div class="access-grid">
+                <div class="access-summary">
+                  <span class="access-label">Public registration</span>
+                  <strong id="registration-status">Disabled</strong>
+                  <small>Owner-only profile; invitations are not active.</small>
+                </div>
+                <div class="access-summary">
+                  <span class="access-label">Tenant isolation</span>
+                  <strong id="tenant-isolation">--</strong>
+                  <small>Private records use tenant-scoped database keys.</small>
+                </div>
+                <div class="access-summary">
+                  <span class="access-label">Identity binding</span>
+                  <strong id="identity-binding">--</strong>
+                  <small>Email alone cannot establish an account.</small>
+                </div>
+                <div class="access-summary">
+                  <span class="access-label">Administration audit</span>
+                  <strong id="audit-status">--</strong>
+                  <small>Role and access changes are retained.</small>
+                </div>
+                <div class="access-summary">
+                  <span class="access-label">Threat model</span>
+                  <strong id="threat-model-status">--</strong>
+                  <small>Assets, trust boundaries, threats, and residual risks are tracked.</small>
+                </div>
+                <div class="access-summary">
+                  <span class="access-label">Recovery</span>
+                  <strong id="recovery-status">--</strong>
+                  <small>Backups are validated before an isolated restore.</small>
+                </div>
+                <div class="access-summary">
+                  <span class="access-label">Privacy export</span>
+                  <strong id="privacy-export-status">--</strong>
+                  <small>Owner exports are tenant-scoped and exclude invitation secrets.</small>
+                </div>
+                <div class="access-summary">
+                  <span class="access-label">Account deletion</span>
+                  <strong id="account-deletion-status">--</strong>
+                  <small>Non-owner removal requires a request and explicit confirmation.</small>
+                </div>
+                <div class="access-summary">
+                  <span class="access-label">Production review</span>
+                  <strong id="production-review-status">--</strong>
+                  <small>Owner operation is separated from future public release gates.</small>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <details id="access-future-panel" class="access-disclosure">
+            <summary>
+              <span><b>Future multi-user readiness</b><small>Governance foundation for accounts that are not yet enabled</small></span>
+              <strong id="phase-progress-label">40% complete</strong>
+            </summary>
+            <div class="access-disclosure-content">
+              <div class="access-footer">
+                <div>
+                  <span class="access-label">Available roles today</span>
+                  <div id="access-roles" class="role-list"></div>
+                  <p class="access-future-note">Only the Owner role is active. Public signup and member invitations remain disabled until external reviews and owner validation are complete.</p>
+                </div>
+                <div class="phase-progress">
+                  <span class="access-label">Web Phase 3 only</span>
+                  <strong id="phase-progress-detail">40% complete</strong>
+                  <div class="progress-track"><span id="phase-progress-bar" style="width:40%"></span></div>
+                  <small>This percentage is not overall Atlas program completion.</small>
+                </div>
+              </div>
+            </div>
+          </details>
         </div>
       </section>
       </section>
@@ -926,6 +958,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260726-controls-workspace"></script>
+  <script src="/app.js?v=20260726-access-workspace"></script>
 </body>
 </html>

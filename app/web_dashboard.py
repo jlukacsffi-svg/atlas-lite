@@ -190,6 +190,24 @@ class DashboardDataService:
             ),
             "phase_completion": 78,
             "next_step": "Operate and validate the owner workspace",
+            "owner_validation": [
+                {
+                    "id": "cross_device_owner_login",
+                    "label": "Cross-device owner login",
+                    "status": "pending",
+                    "detail": (
+                        "Confirm Joe can sign in from a second trusted device."
+                    ),
+                },
+                {
+                    "id": "non_owner_denial",
+                    "label": "Non-owner account denial",
+                    "status": "pending",
+                    "detail": (
+                        "Confirm a different Google account is denied access."
+                    ),
+                },
+            ],
         }
 
     def _latest_snapshot(self):
