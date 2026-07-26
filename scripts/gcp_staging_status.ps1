@@ -103,6 +103,7 @@ $dailyExecution = Get-GcloudValue @(
     '--job=atlas-daily-stg',
     "--project=$ProjectId",
     "--region=$Region",
+    '--sort-by=~metadata.creationTimestamp',
     '--limit=1',
     '--format=value(metadata.name,status.completionTime,status.succeededCount,status.failedCount)'
 )
@@ -111,6 +112,7 @@ $weeklyExecution = Get-GcloudValue @(
     '--job=atlas-weekly-stg',
     "--project=$ProjectId",
     "--region=$Region",
+    '--sort-by=~metadata.creationTimestamp',
     '--limit=1',
     '--format=value(metadata.name,status.completionTime,status.succeededCount,status.failedCount)'
 )

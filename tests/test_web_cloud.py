@@ -26,6 +26,9 @@ class StubDataService:
     def _latest_snapshot(self):
         return {"generated_at": "2026-06-07T08:00:00"} if self.ready else {}
 
+    def build_summary(self):
+        return {"generated_at": "2026-06-07T08:00:00", "overview": {}}
+
     def build(self):
         return {"generated_at": "2026-06-07T08:00:00", "overview": {}}
 
@@ -291,6 +294,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 owner_email="owner@example.com",
                 iap_audience="/projects/123/locations/us/services/atlas",
                 storage_bucket="atlas-private",
+                verification_token="verify-token",
             ),
             data_service=StubDataService(),
             token_verifier=verifier,
@@ -315,6 +319,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 session_secret="session-secret-value-that-is-long-enough",
                 storage_bucket="atlas-private",
                 owner_controls_enabled=owner_controls,
+                verification_token="verify-token",
             ),
             data_service=StubDataService(),
             oauth_client=oauth_client or StubOAuthClient(),
@@ -403,6 +408,22 @@ class CloudWebApplicationTests(unittest.TestCase):
             response["headers"]["Content-Security-Policy"],
         )
 
+    def test_cloud_dashboard_summary_accepts_verified_owner(self):
+        def verifier(token, audience):
+            return {
+                "iss": IAP_ISSUER,
+                "sub": "owner-123",
+                "email": "owner@example.com",
+            }
+
+        response = call_wsgi(
+            self._cloud_app(verifier),
+            path="/api/dashboard/summary",
+            headers={"X-Goog-IAP-JWT-Assertion": "signed-token"},
+        )
+        self.assertEqual(response["status"], "200 OK")
+        self.assertEqual(response["json"]["generated_at"], "2026-06-07T08:00:00")
+
     def test_oauth_private_page_redirects_to_login_without_session(self):
         response = call_wsgi(self._oauth_app(), path="/")
         self.assertEqual(response["status"], "302 Found")
@@ -412,6 +433,232 @@ class CloudWebApplicationTests(unittest.TestCase):
         response = call_wsgi(self._oauth_app(), path="/api/dashboard")
         self.assertEqual(response["status"], "401 Unauthorized")
         self.assertEqual(response["json"], {"error": "authentication_required"})
+
+    def test_verification_endpoint_requires_token(self):
+        response = call_wsgi(
+            self._oauth_app(),
+            path="/api/dashboard/verification",
+        )
+        self.assertEqual(response["status"], "401 Unauthorized")
+        self.assertEqual(response["json"], {"error": "authentication_required"})
+
+    def test_verification_endpoint_returns_machine_checks_without_session(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            web_dir = Path(temp_dir)
+            (web_dir / "index.html").write_text(
+                "<h2>Stage 5 validation scoreboard</h2>"
+                "<p>SPY (S&P 500 ETF benchmark)</p>"
+                "<p>QQQ (Nasdaq-100 ETF benchmark)</p>",
+                encoding="utf-8",
+            )
+            (web_dir / "app.js").write_text(
+                'if (ticker === "SPY") return "SPY (S&P 500 ETF benchmark)";\n'
+                'if (ticker === "QQQ") return "QQQ (Nasdaq-100 ETF benchmark)";\n'
+                '"Benchmark scorecard";\n'
+                '"Avg decision edge";\n'
+                '"Adaptive entry pacing";\n'
+                '"Capital rotation scoreboard";\n'
+                '"Sector learning bridge";\n'
+                '"Sector learning gate";\n'
+                '"Sector gate audit";\n'
+                '"Sector gate outcomes";\n'
+                '"Strategy tilt";\n',
+                encoding="utf-8",
+            )
+            data_service = type(
+                "VerificationDataService",
+                (),
+                {
+                    "_latest_snapshot": lambda self: {"generated_at": "2026-06-07T08:00:00"},
+                    "build": lambda self: {
+                        "generated_at": "2026-06-07T08:00:00",
+                        "workspace": {"deployment": {"revision": "atlas-dashboard-stg-00113-mc8"}},
+                        "paper": {
+                            "validation_summary": {"headline": "ready"},
+                            "feedback_summary": {
+                                "horizon_learning": [{"label": "3-snapshot persistence"}],
+                                "entry_strategy_profile": {
+                                    "benchmark_rotation_stats": {"benchmark": "SPY"},
+                                },
+                                "projection_threshold_profile": {
+                                    "benchmark_exit_stats": {"benchmark": "SPY"},
+                                },
+                                "benchmark_scorecard": {
+                                    "scorecards": [{"benchmark": "SPY"}],
+                                },
+                                "sector_learning_bridge": {
+                                    "sectors": [{"sector": "Software"}],
+                                },
+                                "sector_gate_audit": {
+                                    "candidate_counts": {"active": 1},
+                                    "accepted_decision_counts": {"with_gate": 1},
+                                },
+                                "sector_gate_outcomes": {
+                                    "scorecards": [{"status": "cleared"}],
+                                },
+                            },
+                            "feedback": [{"ticker": "NVDA"}],
+                            "accountability_report": {"summary": {}, "tickers": []},
+                            "capital_rotation_scoreboard": {
+                                "totals": {"open_market_value": 1000},
+                                "sectors": [{"sector": "Software"}],
+                            },
+                            "operating_mode": {"current": {"id": "paper_auto_manage"}},
+                            "proposals": {"pending": 0},
+                        },
+                    },
+                },
+            )()
+            owner = StubOwnerControl()
+            owner.model = lambda: {
+                "enabled": True,
+                "paper_proposals": [
+                    {
+                        "proposal_id": "buy-1",
+                        "status": "approved",
+                        "auto_manage_enabled": True,
+                    }
+                ],
+            }
+            app = AtlasCloudApplication(
+                CloudWebSettings(
+                    mode="cloud",
+                    auth_mode="google_oauth",
+                    owner_email="owner@example.com",
+                    google_client_id="client-id",
+                    google_client_secret="client-secret",
+                    oauth_redirect_uri="https://atlas.example/oauth/callback",
+                    session_secret="session-secret-value-that-is-long-enough",
+                    storage_bucket="atlas-private",
+                    owner_controls_enabled=True,
+                    verification_token="verify-token",
+                    web_dir=web_dir,
+                ),
+                data_service=data_service,
+                oauth_client=StubOAuthClient(),
+                oidc_verifier=lambda token, audience: {},
+                owner_control=owner,
+            )
+            response = call_wsgi(
+                app,
+                path="/api/dashboard/verification",
+                headers={"X-Atlas-Verification": "verify-token"},
+            )
+        self.assertEqual(response["status"], "200 OK")
+        self.assertTrue(response["json"]["checks"]["stage5_scoreboard"]["ok"])
+        self.assertTrue(response["json"]["checks"]["persistence_learning"]["ok"])
+        self.assertTrue(response["json"]["checks"]["benchmark_labels"]["ok"])
+        self.assertTrue(response["json"]["checks"]["benchmark_scorecard"]["ok"])
+        self.assertTrue(response["json"]["checks"]["benchmark_exit_tuning"]["ok"])
+        self.assertTrue(response["json"]["checks"]["benchmark_entry_pacing"]["ok"])
+        self.assertTrue(response["json"]["checks"]["capital_rotation_scoreboard"]["ok"])
+        self.assertTrue(response["json"]["checks"]["sector_learning_bridge"]["ok"])
+        self.assertTrue(response["json"]["checks"]["sector_gate_audit"]["ok"])
+        self.assertTrue(response["json"]["checks"]["sector_gate_outcomes"]["ok"])
+        self.assertTrue(response["json"]["checks"]["autonomous_queue"]["ok"])
+        self.assertTrue(response["json"]["checks"]["accountability_report"]["ok"])
+        self.assertEqual(
+            response["json"]["workspace"]["deployment"]["revision"],
+            "atlas-dashboard-stg-00113-mc8",
+        )
+
+    def test_verification_endpoint_bypasses_refreshing_wrapper(self):
+        class InnerDataService:
+            def build_verification(self):
+                return {
+                    "generated_at": "2026-06-07T08:00:00",
+                    "workspace": {"deployment": {"revision": "inner-revision"}},
+                    "paper": {
+                        "validation_summary": {"headline": "ready"},
+                        "feedback_summary": {
+                            "horizon_learning": [{"label": "3-snapshot persistence"}],
+                            "benchmark_scorecard": {"scorecards": [{"benchmark": "SPY"}]},
+                            "projection_threshold_profile": {
+                                "benchmark_exit_stats": {"benchmark": "SPY"}
+                            },
+                            "entry_strategy_profile": {
+                                "benchmark_rotation_stats": {"benchmark": "SPY"}
+                            },
+                            "sector_learning_bridge": {"sectors": [{"sector": "Software"}]},
+                            "sector_gate_audit": {
+                                "candidate_counts": {"active": 1},
+                                "accepted_decision_counts": {"with_gate": 1},
+                            },
+                            "sector_gate_outcomes": {
+                                "scorecards": [{"status": "cleared"}],
+                            },
+                        },
+                        "feedback": [{"ticker": "NVDA"}],
+                        "accountability_report": {"summary": {}, "tickers": []},
+                        "capital_rotation_scoreboard": {
+                            "sectors": [{"sector": "Software"}],
+                            "totals": {},
+                        },
+                        "operating_mode": {"current": {"id": "paper_auto_manage"}},
+                        "proposals": {"pending": 0},
+                    },
+                }
+
+            def build(self):
+                raise AssertionError("verification should not trigger full build")
+
+        class WrapperDataService:
+            def __init__(self):
+                self.data_service = InnerDataService()
+
+            def build(self):
+                raise AssertionError("verification should not trigger refresh wrapper")
+
+        with tempfile.TemporaryDirectory() as temp_dir:
+            web_dir = Path(temp_dir)
+            (web_dir / "index.html").write_text(
+                "<h2>Stage 5 validation scoreboard</h2>"
+                "<p>SPY (S&P 500 ETF benchmark)</p>"
+                "<p>QQQ (Nasdaq-100 ETF benchmark)</p>",
+                encoding="utf-8",
+            )
+            (web_dir / "app.js").write_text(
+                '"Benchmark scorecard";\n'
+                '"Avg decision edge";\n'
+                '"Adaptive entry pacing";\n'
+                '"Capital rotation scoreboard";\n'
+                '"Sector learning bridge";\n'
+                '"Sector learning gate";\n'
+                '"Sector gate audit";\n'
+                '"Sector gate outcomes";\n'
+                '"Strategy tilt";\n',
+                encoding="utf-8",
+            )
+            app = AtlasCloudApplication(
+                settings=CloudWebSettings(
+                    mode="cloud",
+                    auth_mode="google_oauth",
+                    owner_email="owner@example.com",
+                    google_client_id="client-id",
+                    google_client_secret="client-secret",
+                    oauth_redirect_uri="https://atlas.example/oauth/callback",
+                    session_secret="session-secret-value-that-is-long-enough",
+                    storage_bucket="atlas-private",
+                    owner_controls_enabled=True,
+                    verification_token="verify-token",
+                    web_dir=web_dir,
+                ),
+                data_service=WrapperDataService(),
+                oauth_client=StubOAuthClient(),
+                oidc_verifier=lambda token, audience: {},
+                owner_control=StubOwnerControl(),
+            )
+            response = call_wsgi(
+                app,
+                path="/api/dashboard/verification",
+                headers={"X-Atlas-Verification": "verify-token"},
+            )
+
+        self.assertEqual(response["status"], "200 OK")
+        self.assertEqual(
+            response["json"]["workspace"]["deployment"]["revision"],
+            "inner-revision",
+        )
 
     def test_oauth_login_sets_secure_state_and_nonce_cookie(self):
         oauth_client = StubOAuthClient()
@@ -662,6 +909,48 @@ class CloudWebApplicationTests(unittest.TestCase):
                 (
                     "research-decision",
                     {"task_id": "task-1", "decision": "approve"},
+                )
+            ],
+        )
+
+    def test_owner_policy_action_calls_service(self):
+        owner = StubOwnerControl()
+        app = self._oauth_app(
+            owner_controls=True,
+            owner_control=owner,
+        )
+        session = app._sign_payload(
+            {
+                "email": "owner@example.com",
+                "sub": "owner-123",
+                "csrf": "csrf-value",
+                "exp": 2000,
+            }
+        )
+        response = call_wsgi(
+            app,
+            path="/api/owner/paper-policy",
+            method="POST",
+            headers={
+                "Cookie": f"{SESSION_COOKIE}={session}",
+                "X-Atlas-CSRF": "csrf-value",
+            },
+            body={
+                "auto_manage_enabled": True,
+                "strategy_maximum_new_proposals": 5,
+            },
+        )
+
+        self.assertEqual(response["status"], "200 OK")
+        self.assertEqual(
+            owner.actions,
+            [
+                (
+                    "paper-policy",
+                    {
+                        "auto_manage_enabled": True,
+                        "strategy_maximum_new_proposals": 5,
+                    },
                 )
             ],
         )

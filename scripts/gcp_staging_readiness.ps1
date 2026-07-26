@@ -13,6 +13,7 @@ $BucketName = "$ProjectId-atlas-private"
 $DashboardAccount = "atlas-dashboard-stg@$ProjectId.iam.gserviceaccount.com"
 $JobsAccount = "atlas-jobs-stg@$ProjectId.iam.gserviceaccount.com"
 $SchedulerAccount = "atlas-scheduler-stg@$ProjectId.iam.gserviceaccount.com"
+$EvidencePath = Join-Path (Split-Path -Parent $PSScriptRoot) 'cloud\staging_manual_validation.json'
 $script:Failures = 0
 
 if (-not (Test-Path $Gcloud)) {
@@ -44,6 +45,15 @@ function Add-Check {
         Write-Host "[fail] $Name - $Detail"
         $script:Failures += 1
     }
+}
+
+function Write-ValidationGate {
+    param(
+        [Parameter(Mandatory = $true)][string]$Label,
+        [Parameter(Mandatory = $true)]$Entry
+    )
+    $status = [string]$Entry.status
+    Write-Host "  [$status] $Label"
 }
 
 function Get-EnvironmentMap {
@@ -105,6 +115,11 @@ $alertPolicies = @(Get-GcloudJson @(
     'monitoring', 'policies', 'list',
     "--project=$ProjectId", '--format=json'
 ))
+$manualEvidence = if (Test-Path -LiteralPath $EvidencePath) {
+    Get-Content -LiteralPath $EvidencePath -Raw | ConvertFrom-Json
+} else {
+    $null
+}
 
 $container = $service.spec.template.spec.containers[0]
 $environment = Get-EnvironmentMap $container
@@ -205,8 +220,18 @@ Add-Check 'Required alert policies' `
 
 Write-Host ''
 Write-Host 'Validation gates:'
-Write-Host '  [pending] Cross-device owner login'
-Write-Host '  [pending] Non-owner Google account denial'
+if ($manualEvidence) {
+    Write-ValidationGate 'Cross-device owner login' `
+        $manualEvidence.cross_device_owner_login
+    Write-ValidationGate 'Non-owner Google account denial' `
+        $manualEvidence.non_owner_denial
+    Write-ValidationGate 'Owner Stage 5 dashboard walkthrough' `
+        $manualEvidence.owner_dashboard_stage5_review
+} else {
+    Write-Host '  [pending] Cross-device owner login'
+    Write-Host '  [pending] Non-owner Google account denial'
+    Write-Host '  [pending] Owner Stage 5 dashboard walkthrough'
+}
 Write-Host '  [validated] One complete day of uptime and alert telemetry review'
 Write-Host '  [validated] Artifact Registry cost and dry-run retention review'
 Write-Host "  [validated] Recurring schedules are $($ExpectedScheduleState.ToLowerInvariant()) by owner policy"

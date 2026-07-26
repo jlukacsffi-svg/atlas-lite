@@ -107,7 +107,7 @@ Atlas routes daily, weekly, sector, and portfolio signals into persistent role-b
 
 ## Stage 5: Paper Trading
 
-Current phase. Software foundation complete; evaluation period has not started.
+Current phase. Software foundation complete; live autonomous paper evaluation is active.
 
 Goal: prove decision quality without risking money.
 
@@ -138,9 +138,10 @@ accumulated a meaningful performance history.
 Software status:
 
 The Stage 5 software scope is complete. The live paper evaluation period is now
-running with a $100,000 simulated account and its first owner-approved position.
+running with a $100,000 simulated account, autonomous paper-only selection,
+trim, and exit management, and benchmark-aware reporting against SPY and QQQ.
 Stage 5 remains in validation until enough daily history exists to evaluate
-returns, exits, win rate, and benchmark-relative behavior.
+returns, exits, win rate, turnover quality, and benchmark-relative behavior.
 
 ## Stage 6: Human-Approved Trading
 
@@ -330,7 +331,13 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 93%.
+Estimated overall Atlas program completion: 66%.
+
+This estimate measures progress toward the complete Atlas Capital Research
+vision, including validated autonomous research, secure production operations,
+multi-user accounts, and eventually tightly controlled real-money execution.
+The owner-only research and paper-trading prototype is much further along than
+the overall company program.
 
 ## Current Recommended Sequence
 

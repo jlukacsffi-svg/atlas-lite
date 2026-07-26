@@ -108,6 +108,8 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("atlas-google-oauth-client-secret", content)
         self.assertIn("atlas-session-secret", content)
         self.assertIn("ATLAS_OWNER_CONTROLS_ENABLED=true", content)
+        self.assertIn("ATLAS_VERIFICATION_TOKEN", content)
+        self.assertIn("Verification token:", content)
         self.assertIn("'--role=roles/storage.objectUser'", content)
 
     def test_dashboard_storage_write_access_is_bucket_scoped(self):
@@ -204,6 +206,7 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("Cold-start monitoring tolerance", content)
         self.assertIn("Cross-device owner login", content)
         self.assertIn("Non-owner Google account denial", content)
+        self.assertIn("Owner Stage 5 dashboard walkthrough", content)
         self.assertIn("[validated] One complete day", content)
         self.assertIn(
             "[validated] Artifact Registry cost and dry-run retention review",
@@ -242,6 +245,11 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("gcp_staging_readiness.ps1", content)
         self.assertIn("gcp_uptime_report.ps1", content)
         self.assertIn("gcp_manual_validation.ps1", content)
+        self.assertIn("gcp_dashboard_verification.ps1", content)
+        self.assertIn('[string]$VerificationToken = \'\'', content)
+        self.assertIn("Remaining manual gates:", content)
+        self.assertIn("Cross-device owner login", content)
+        self.assertIn("Non-owner Google account denial", content)
         self.assertIn(
             "[validated] Artifact Registry cost and dry-run retention review",
             content,
@@ -266,9 +274,29 @@ class GoogleCloudScriptTests(unittest.TestCase):
         self.assertIn("Recording a result requires -ObservedAt", content)
         self.assertIn("RecordCrossDevice", content)
         self.assertIn("RecordNonOwnerDenial", content)
+        self.assertIn("RecordOwnerDashboardReview", content)
+        self.assertIn("RecordScheduleDecision", content)
+        self.assertIn("Owner Stage 5 dashboard walkthrough", content)
+        self.assertIn("Expected checks:", content)
         self.assertNotIn("gcloud", content.lower())
-        self.assertIn('"status": "pending"', evidence)
-        self.assertIn('"decision": "paused"', evidence)
+        self.assertIn('"cross_device_owner_login"', evidence)
+        self.assertIn('"non_owner_denial"', evidence)
+        self.assertIn('"status":  "pending"', evidence)
+        self.assertIn('"owner_dashboard_stage5_review"', evidence)
+        self.assertIn('"expected_checks"', evidence)
+        self.assertIn('"status":  "validated"', evidence)
+        self.assertIn('"decision":  "enabled"', evidence)
+
+    def test_dashboard_verification_script_is_read_only(self):
+        root = Path(__file__).resolve().parent.parent
+        content = (
+            root / "scripts" / "gcp_dashboard_verification.ps1"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Mode: READ ONLY", content)
+        self.assertIn("X-Atlas-Verification", content)
+        self.assertIn("/api/dashboard/verification", content)
+        self.assertIn("[result] VERIFICATION PASS", content)
+        self.assertNotIn("gcloud", content.lower())
 
     def test_oauth_secret_setup_never_prints_secret_values(self):
         root = Path(__file__).resolve().parent.parent

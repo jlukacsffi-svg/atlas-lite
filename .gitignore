@@ -12,6 +12,9 @@ backups/
 privacy_exports/
 tenant_data/
 *.sqlite3
+_cloud_*/
+_cloud_*.json
+_cloud_*.txt
 
 .vscode/
 

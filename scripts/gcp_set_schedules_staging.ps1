@@ -67,6 +67,7 @@ if ($Action -eq 'Resume') {
             "--job=$job",
             "--project=$ProjectId",
             "--region=$Region",
+            '--sort-by=~metadata.creationTimestamp',
             '--limit=1',
             '--format=value(status.succeededCount)'
         )

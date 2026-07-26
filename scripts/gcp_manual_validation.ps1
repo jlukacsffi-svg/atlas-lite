@@ -1,5 +1,5 @@
 param(
-    [ValidateSet('Status', 'RecordCrossDevice', 'RecordNonOwnerDenial')]
+    [ValidateSet('Status', 'RecordCrossDevice', 'RecordNonOwnerDenial', 'RecordOwnerDashboardReview', 'RecordScheduleDecision')]
     [string]$Action = 'Status',
 
     [string]$ObservedAt = '',
@@ -37,6 +37,12 @@ function Write-ValidationStatus {
     if ($Entry.notes) {
         Write-Host "    Notes: $($Entry.notes)"
     }
+    if ($Entry.expected_checks) {
+        Write-Host '    Expected checks:'
+        foreach ($check in $Entry.expected_checks) {
+            Write-Host "      - $check"
+        }
+    }
 }
 
 if ($Action -eq 'Status') {
@@ -47,6 +53,8 @@ if ($Action -eq 'Status') {
         $evidence.cross_device_owner_login
     Write-ValidationStatus 'Non-owner Google account denial' `
         $evidence.non_owner_denial
+    Write-ValidationStatus 'Owner Stage 5 dashboard walkthrough' `
+        $evidence.owner_dashboard_stage5_review
     Write-ValidationStatus 'Recurring schedule decision' `
         $evidence.schedule_decision
     exit 0
@@ -86,6 +94,27 @@ if ($Action -eq 'RecordNonOwnerDenial') {
         $Notes
     } else {
         'A Google account outside the Atlas allowlist was denied access.'
+    }
+}
+if ($Action -eq 'RecordOwnerDashboardReview') {
+    $entry = $evidence.owner_dashboard_stage5_review
+    $entry.status = 'validated'
+    $entry.observed_at = $normalizedObservedAt
+    $entry.notes = if ($Notes) {
+        $Notes
+    } else {
+        'Owner confirmed the signed-in dashboard shows the Stage 5 scoreboard, persistence learning, benchmark-relative performance, and autonomous paper flow without approval queues.'
+    }
+}
+if ($Action -eq 'RecordScheduleDecision') {
+    $entry = $evidence.schedule_decision
+    $entry.status = 'validated'
+    $entry.decision = 'enabled'
+    $entry.observed_at = $normalizedObservedAt
+    $entry.notes = if ($Notes) {
+        $Notes
+    } else {
+        'Recurring daily and weekly staging schedules are enabled under the approved cost controls.'
     }
 }
 

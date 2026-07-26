@@ -1,7 +1,12 @@
 const money = new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" });
 const number = new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 });
+const DASHBOARD_SUMMARY_CACHE_KEY = "atlas_dashboard_summary_v1";
+const DASHBOARD_FULL_CACHE_KEY = "atlas_dashboard_full_v1";
 let ownerControls = null;
 let pendingPaperFill = null;
+let paperTradeHistory = { total_trades: 0, ticker_count: 0, tickers: [] };
+let paperAccountabilityReport = { summary: {}, tickers: [] };
+let paperPositions = [];
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -97,6 +102,81 @@ function changeClass(value) {
   return Number(value) >= 0 ? "positive" : "negative";
 }
 
+function benchmarkLabel(ticker) {
+  if (ticker === "SPY") return "SPY (S&P 500 ETF benchmark)";
+  if (ticker === "QQQ") return "QQQ (Nasdaq-100 ETF benchmark)";
+  return String(ticker || "");
+}
+
+function setDataFreshness(state, detail = "") {
+  const node = document.getElementById("data-freshness");
+  const normalized = ["live", "cached", "loading"].includes(state) ? state : "loading";
+  node.className = `data-freshness ${normalized}`;
+  if (normalized === "live") {
+    node.textContent = detail ? `Live · ${detail}` : "Live";
+    return;
+  }
+  if (normalized === "cached") {
+    node.textContent = detail ? `Cached snapshot · ${detail}` : "Cached snapshot";
+    return;
+  }
+  node.textContent = detail ? `Refreshing · ${detail}` : "Refreshing";
+}
+
+function readCachedDashboardSummary() {
+  try {
+    const raw = window.localStorage.getItem(DASHBOARD_SUMMARY_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function readCachedDashboardFull() {
+  try {
+    const raw = window.localStorage.getItem(DASHBOARD_FULL_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedDashboardSummary(data) {
+  try {
+    if (!data || typeof data !== "object" || !data.generated_at) return;
+    window.localStorage.setItem(
+      DASHBOARD_SUMMARY_CACHE_KEY,
+      JSON.stringify(data),
+    );
+  } catch {
+    return;
+  }
+}
+
+function sanitizeDashboardForCache(data) {
+  if (!data || typeof data !== "object" || !data.generated_at) return null;
+  const clone = JSON.parse(JSON.stringify(data));
+  delete clone.owner_controls;
+  return clone;
+}
+
+function writeCachedDashboardFull(data) {
+  try {
+    const sanitized = sanitizeDashboardForCache(data);
+    if (!sanitized) return;
+    window.localStorage.setItem(
+      DASHBOARD_FULL_CACHE_KEY,
+      JSON.stringify(sanitized),
+    );
+  } catch {
+    return;
+  }
+}
+
 function renderDashboard(data) {
   document.getElementById("as-of").textContent = data.generated_at
     ? `As of ${new Date(data.generated_at).toLocaleString()}`
@@ -127,11 +207,16 @@ function renderDashboard(data) {
   renderSectors(data.sectors || []);
   renderCorporateActions(data.corporate_actions || []);
   renderThesisOverview(paper.thesis_overview || {});
+  renderPortfolioFocus(paper.portfolio_focus || {});
   renderPositionLadder(paper.position_ladder || []);
+  renderValidationSummary(paper.validation_summary || {});
   renderPositions(paper.positions || []);
   renderPaperActivity(paper.activity || []);
+  renderTradeHistory(paper.trade_history || { total_trades: 0, ticker_count: 0, tickers: [] });
+  renderAccountabilityReport(paper.accountability_report || { summary: {}, tickers: [] });
   renderPaperOperatingMode(paper.operating_mode || {});
   renderPaperFeedbackSummary(paper.feedback_summary || {});
+  renderCapitalRotationScoreboard(paper.capital_rotation_scoreboard || {});
   renderPaperFeedback(paper.feedback || []);
   renderRecommendationSummary(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderRecommendations(data.owner_controls?.paper_proposals || [], data.watchlist || []);
@@ -141,7 +226,58 @@ function renderDashboard(data) {
   renderWorkspace(data.workspace || null);
 }
 
+function renderDashboardSummary(data) {
+  document.getElementById("as-of").textContent = data.generated_at
+    ? `As of ${new Date(data.generated_at).toLocaleString()}`
+    : "No Atlas snapshot available";
+
+  const paper = data.paper || {};
+  document.getElementById("equity").textContent = paper.configured ? money.format(paper.equity) : "--";
+  document.getElementById("return").textContent = paper.configured
+    ? `${signed(paper.total_return_pct)} total return`
+    : "Paper account unavailable";
+  document.getElementById("cash").textContent = paper.configured ? money.format(paper.cash) : "--";
+  document.getElementById("cash-share").textContent = paper.configured && paper.equity
+    ? `${((paper.cash / paper.equity) * 100).toFixed(1)}% of equity`
+    : "Available capital";
+
+  const overview = data.overview || {};
+  document.getElementById("coverage").textContent = `${overview.available || 0}/${overview.tracked || 0}`;
+  document.getElementById("breadth").textContent = `${overview.advancing || 0} up, ${overview.declining || 0} down`;
+  document.getElementById("research-count").textContent = String(data.research?.open || 0);
+  document.getElementById("research-detail").textContent =
+    `${data.research?.high_priority || 0} high priority`;
+
+  renderMarketPills(data.market || []);
+  renderBreadth(overview);
+  renderPerformance(data.history || []);
+  renderThesisOverview(paper.thesis_overview || {});
+  renderPortfolioFocus(paper.portfolio_focus || {});
+  renderPositionLadder(paper.position_ladder || []);
+  renderValidationSummary(paper.validation_summary || {});
+  renderPositions(paper.positions || []);
+  renderPaperOperatingMode(paper.operating_mode || {});
+  renderWorkspace(data.workspace || null);
+}
+
+function hydrateDashboardFromCache() {
+  const cachedFull = readCachedDashboardFull();
+  if (cachedFull) {
+    renderDashboard(cachedFull);
+    setDataFreshness("cached");
+    return true;
+  }
+  const cached = readCachedDashboardSummary();
+  if (!cached) return false;
+  renderDashboardSummary(cached);
+  setDataFreshness("cached");
+  return true;
+}
+
 function recommendationStageLabel(item) {
+  if (item.auto_manage_enabled) {
+    return item.status === "approved" ? "Auto-execution queued" : "Atlas auto-review queue";
+  }
   if (item.side === "sell") {
     return proposalActionLabel(item) === "trim" ? "Trim candidate" : "Exit candidate";
   }
@@ -186,6 +322,7 @@ function compareRecommendations(left, right) {
 
 function renderRecommendationSummary(proposals, watchlist) {
   const rows = proposals || [];
+  const autoManaged = rows.some(item => item.auto_manage_enabled);
   const summary = {
     buyPending: rows.filter(item => item.side === "buy" && item.status === "pending").length,
     buyReady: rows.filter(item => item.side === "buy" && item.status === "approved").length,
@@ -200,14 +337,14 @@ function renderRecommendationSummary(proposals, watchlist) {
   document.getElementById("recommendation-summary").innerHTML = `
     <div class="recommendation-summary-grid">
       <div class="recommendation-summary-card">
-        <span class="summary-label">Buy candidates</span>
+        <span class="summary-label">${autoManaged ? "Atlas auto-review" : "Buy candidates"}</span>
         <strong>${summary.buyPending}</strong>
-        <small>Need owner approval</small>
+        <small>${autoManaged ? "Atlas will review and advance these automatically" : "Need owner approval"}</small>
       </div>
       <div class="recommendation-summary-card ready">
-        <span class="summary-label">Ready to simulate</span>
+        <span class="summary-label">${autoManaged ? "Auto-execution queued" : "Ready to simulate"}</span>
         <strong>${summary.buyReady}</strong>
-        <small>Approved, waiting for Simulate fill</small>
+        <small>${autoManaged ? "Atlas will record paper fills automatically" : "Approved, waiting for Simulate fill"}</small>
       </div>
       <div class="recommendation-summary-card exit">
         <span class="summary-label">Reduce / exit</span>
@@ -239,7 +376,8 @@ function renderRecommendationSummary(proposals, watchlist) {
 }
 
 function setActivePage(pageId) {
-  const target = pageId || "overview";
+  const requested = pageId || "overview";
+  const target = requested === "market" ? "overview" : requested;
   document.querySelectorAll(".dashboard-page").forEach(page => {
     page.classList.toggle("active-page", page.dataset.page === target);
   });
@@ -248,19 +386,58 @@ function setActivePage(pageId) {
   });
 }
 
+function jumpToPageTarget(pageId, targetId) {
+  setActivePage(pageId);
+  const pageHash = `#${pageId}`;
+  if (window.location.hash !== pageHash) {
+    history.replaceState(null, "", pageHash);
+  }
+  const target = document.getElementById(String(targetId || ""));
+  if (!target) return;
+  target.scrollIntoView({ behavior: "smooth", block: "center" });
+}
+
+function jumpToControlsTarget(targetId) {
+  jumpToPageTarget("controls", targetId);
+}
+
+function jumpToPaperTarget(targetId) {
+  jumpToPageTarget("paper", targetId);
+}
+
 function renderWorkspace(workspace) {
   const identity = document.getElementById("workspace-identity");
-  if (!workspace?.tenant || !workspace?.account) {
+  const revision = workspace?.deployment?.revision || "";
+  const service = workspace?.deployment?.service || "";
+  const hasTenantIdentity = Boolean(workspace?.tenant && workspace?.account);
+  const hasDeploymentIdentity = Boolean(revision || service);
+  if (!hasTenantIdentity && !hasDeploymentIdentity) {
     identity.hidden = true;
     return;
   }
   identity.hidden = false;
-  document.getElementById("workspace-name").textContent =
-    workspace.tenant.name;
-  document.getElementById("workspace-role").textContent =
-    workspace.account.role;
-  document.getElementById("workspace-email").textContent =
-    workspace.account.email;
+  const name = document.getElementById("workspace-name");
+  const role = document.getElementById("workspace-role");
+  const email = document.getElementById("workspace-email");
+  const revisionNode = document.getElementById("workspace-revision");
+  if (hasTenantIdentity) {
+    name.hidden = false;
+    role.hidden = false;
+    email.hidden = false;
+    name.textContent = workspace.tenant.name;
+    role.textContent = workspace.account.role;
+    email.textContent = workspace.account.email;
+  } else {
+    name.hidden = true;
+    role.hidden = true;
+    email.hidden = true;
+  }
+  if (hasDeploymentIdentity) {
+    revisionNode.hidden = false;
+    revisionNode.textContent = `Rev ${revision || "unknown"}${service ? ` · ${service}` : ""}`;
+  } else {
+    revisionNode.hidden = true;
+  }
 }
 
 function renderAccess(access) {
@@ -304,16 +481,88 @@ function renderOwnerControls(controls) {
 
   const reviews = controls.research_reviews || [];
   const proposals = controls.paper_proposals || [];
+  const autoManageEnabled = Boolean(controls.paper_auto_manage_enabled);
+  const researchAutoManageEnabled = Boolean(
+    controls.research_auto_manage_enabled ?? controls.paper_auto_manage_enabled
+  );
+  const controlsSummary = controls.controls_summary || {};
+  const portfolioQueue = controls.portfolio_action_queue || [];
+  const healthyHoldings = controls.healthy_holdings_summary || {};
+  const strategyPolicy = controls.paper_strategy_policy || {};
+  const adaptiveProfiles = strategyPolicy.adaptive_profiles || [];
   const buyCount = proposals.filter(item => item.side === "buy").length;
   const sellCount = proposals.filter(item => item.side === "sell").length;
   const actions = controls.daily_action_list || [];
   const outcomes = controls.owner_outcomes || {};
   document.getElementById("research-review-count").textContent =
-    `${reviews.length} awaiting review`;
+    researchAutoManageEnabled
+      ? `${reviews.length} manual review item${reviews.length === 1 ? "" : "s"}`
+      : `${reviews.length} awaiting review`;
+  document.getElementById("controls-summary-label").textContent =
+    `${Number(controlsSummary.counts?.open_positions || 0).toFixed(0)} open holding${Number(controlsSummary.counts?.open_positions || 0) === 1 ? "" : "s"}`;
+  document.getElementById("portfolio-action-count").textContent =
+    `${portfolioQueue.length} ranked item${portfolioQueue.length === 1 ? "" : "s"}`;
+  document.getElementById("healthy-holdings-count").textContent =
+    `${Number(healthyHoldings.count || 0).toFixed(0)} hold-steady holding${Number(healthyHoldings.count || 0) === 1 ? "" : "s"}`;
   document.getElementById("paper-proposal-count").textContent =
     `${buyCount} buy / ${sellCount} exit-trim`;
   renderRecommendations(proposals, null);
   renderOwnerOutcomes(outcomes);
+  renderStrategyControls(strategyPolicy);
+  document.getElementById("controls-summary").innerHTML = `
+    <article class="decision-row">
+      <div>
+        <span class="tag">Controls summary</span>
+        <b class="row-title">${escapeHtml(controlsSummary.headline || "Atlas is preparing the current paper-book posture summary.")}</b>
+        <p>${escapeHtml(controlsSummary.posture || "Paper workflow posture is not available yet.")}</p>
+        ${adaptiveProfiles.map(item => `<small class="row-meta">${escapeHtml(item.label)}: ${escapeHtml(String(item.value || "--"))} · ${escapeHtml(item.status || "watching")} · ${escapeHtml(item.detail || "")}</small>`).join("")}
+        ${controlsSummary.freshest_change?.detail ? `<small class="row-meta">Freshest shift: ${escapeHtml(controlsSummary.freshest_change.detail)} ${escapeHtml(controlsSummary.freshest_change.timestamp_label || "recently")} in ${escapeHtml(controlsSummary.freshest_change.bucket_label || "the paper book")}.${controlsSummary.freshest_change.anchor_id ? ` <button type="button" class="inline-jump" data-controls-target="${escapeHtml(controlsSummary.freshest_change.anchor_id)}">Open item</button>` : ""}</small>` : ""}
+        <small class="row-meta">Ranked queue: ${Number(controlsSummary.counts?.queue || 0).toFixed(0)} Â· Hold steady: ${Number(controlsSummary.counts?.healthy || 0).toFixed(0)} Â· Research reviews: ${Number(controlsSummary.counts?.research_reviews || 0).toFixed(0)}</small>
+        <small class="row-meta">Paper proposals: ${Number(controlsSummary.counts?.buy_proposals || 0).toFixed(0)} buy Â· ${Number(controlsSummary.counts?.sell_proposals || 0).toFixed(0)} exit-trim</small>
+      </div>
+    </article>
+  `;
+  document.getElementById("portfolio-action-list").innerHTML = portfolioQueue.map(item => `
+    <article class="decision-row" id="${escapeHtml(item.anchor_id || "")}">
+      <div>
+        <small class="row-meta">${escapeHtml(item.kind_label || "Portfolio item")}</small>
+        ${item.is_freshest_shift ? `<span class="tag freshest-tag">${escapeHtml(item.freshness_label || "Freshest shift")}</span>` : ""}
+        <span class="tag">${escapeHtml(item.status_label || "Review")} ${Number(item.attention_score || 0).toFixed(0)}</span>
+        ${renderDecisionDriver(item.decision_driver)}
+        <b class="row-title">${escapeHtml(item.title || item.subject || "Portfolio action")}</b>
+        <p>${escapeHtml(item.summary || "Atlas wants attention on this portfolio item.")}</p>
+        ${item.evidence_anchor ? `<small class="row-meta">Evidence anchor: ${escapeHtml(item.evidence_anchor)}</small>` : ""}
+        ${item.portfolio_context ? `<small class="row-meta">Portfolio context: ${escapeHtml(item.portfolio_context)}</small>` : ""}
+        ${item.paper_context ? `<small class="row-meta">Paper context: ${escapeHtml(item.paper_context)}</small>` : ""}
+        ${renderNewsSummary(item.news_summary)}
+        <small class="row-meta">Next step: ${escapeHtml(item.next_step || "Review this item in the paper workflow.")}</small>
+      </div>
+    </article>
+  `).join("") || `<div class="empty">No paper proposals or open holdings currently need ranked portfolio attention.</div>`;
+  document.getElementById("healthy-holdings-list").innerHTML = `
+    <article class="decision-row">
+      <div>
+        <p>${escapeHtml(healthyHoldings.headline || "Atlas will show healthy holdings here when paper positions remain steady.")}</p>
+      </div>
+    </article>
+    ${(healthyHoldings.items || []).map(item => `
+      <article class="decision-row" id="${escapeHtml(item.anchor_id || "")}">
+        <div>
+          ${item.is_freshest_shift ? `<span class="tag freshest-tag">${escapeHtml(item.freshness_label || "Freshest shift")}</span>` : ""}
+          <span class="tag healthy-tag">Hold steady</span>
+          ${renderDecisionDriver(item.decision_driver)}
+          <b class="row-title">${escapeHtml(item.ticker || "Holding")}</b>
+          <p>${escapeHtml(item.summary || "Latest thesis review remains constructive.")}</p>
+          ${Array.isArray(item.journal) && item.journal.length ? `<div class="why-now compact memory"><span>What changed since entry</span><ul>${item.journal.map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>` : ""}
+          ${item.portfolio_context ? `<small class="row-meta">Portfolio context: ${escapeHtml(item.portfolio_context)}</small>` : ""}
+          ${item.paper_context ? `<small class="row-meta">Paper context: ${escapeHtml(item.paper_context)}</small>` : ""}
+          ${renderDecisionDriver(item.decision_driver)}
+          ${renderNewsSummary(item.news_summary)}
+          <small class="row-meta ${changeClass(item.unrealized_gain_loss)}">Current paper result: ${money.format(Number(item.unrealized_gain_loss) || 0)}</small>
+        </div>
+      </article>
+    `).join("")}
+  `;
   document.getElementById("daily-action-list").innerHTML = actions.map(item => `
     <article class="decision-row">
       <div>
@@ -333,7 +582,7 @@ function renderOwnerControls(controls) {
         <small class="row-meta">Suggested disposition: ${escapeHtml(item.suggested_disposition || "Review")}</small>
       </div>
     </article>
-  `).join("") || `<div class="empty">No daily owner actions are awaiting review.</div>`;
+  `).join("") || `<div class="empty">${researchAutoManageEnabled ? "Atlas auto-manages the current research review queue." : "No daily owner actions are awaiting review."}</div>`;
   document.getElementById("research-reviews").innerHTML = reviews.map(item => {
     const result = item.result || {};
     const evidence = (result.evidence || [])
@@ -367,16 +616,19 @@ function renderOwnerControls(controls) {
           ${evidence ? `<details class="evidence-list"><summary>Review evidence</summary><ul>${evidence}</ul></details>` : ""}
         </div>
         <div class="decision-actions">
-          <button type="button" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="approve">Approve</button>
+          ${researchAutoManageEnabled
+            ? `<button type="button" class="secondary" disabled>Atlas auto-manages research reviews</button>`
+            : `<button type="button" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="approve">Approve</button>
           <button type="button" class="secondary" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="defer">Defer</button>
-          <button type="button" class="danger" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="reject">Reject</button>
+          <button type="button" class="danger" data-owner-action="research-decision" data-item-id="${escapeHtml(item.id)}" data-decision="reject">Reject</button>`}
         </div>
       </article>`;
-  }).join("") || `<div class="empty">No research recommendations await your decision.</div>`;
+  }).join("") || `<div class="empty">${researchAutoManageEnabled ? "Atlas auto-resolved current research recommendations." : "No research recommendations await your decision."}</div>`;
 
   document.getElementById("paper-proposals").innerHTML = proposals.map(item => {
     const review = item.risk_review || {};
     const approved = item.status === "approved";
+    const autoManaged = Boolean(item.auto_manage_enabled);
     return `
       <article class="decision-row">
         <div>
@@ -385,13 +637,19 @@ function renderOwnerControls(controls) {
           <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} · Risk ${escapeHtml(review.verdict || "pending")}</small>
           <p>${escapeHtml(item.thesis || "No thesis supplied.")}</p>
           ${proposalImpact(item)}
+          ${renderNewsSummary(item.news_summary)}
           ${renderPaperCalibration(item.paper_calibration)}
+          ${renderSellTrigger(item)}
           ${renderRationale(item.rationale, item)}
           ${renderObjections(item.objections, item)}
-          <small class="row-meta">Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical ${proposalActionLabel(item)} in Atlas paper tracking.</small>
+          <small class="row-meta">${autoManaged
+            ? `Workflow: Atlas is in auto-manage mode, so it will review and record the hypothetical ${proposalActionLabel(item)} in Atlas paper tracking without waiting for owner approval.`
+            : `Workflow: approve the paper idea first, then use Simulate fill to record the hypothetical ${proposalActionLabel(item)} in Atlas paper tracking.`}</small>
         </div>
         <div class="decision-actions">
-          ${approved ? `
+          ${autoManaged ? `
+            <button type="button" class="secondary" disabled>Atlas auto-manages this queue</button>
+          ` : approved ? `
             <button type="button" class="simulate-button" data-owner-action="paper-fill" data-item-id="${escapeHtml(item.proposal_id)}">Simulate fill</button>
           ` : `
             <button type="button" data-owner-action="paper-decision" data-item-id="${escapeHtml(item.proposal_id)}" data-decision="approve">Approve</button>
@@ -399,7 +657,7 @@ function renderOwnerControls(controls) {
           `}
         </div>
       </article>`;
-  }).join("") || `<div class="empty">No paper proposals require action.</div>`;
+  }).join("") || `<div class="empty">${autoManageEnabled ? "No paper proposals are waiting in the Atlas autonomous queue." : "No paper proposals require action."}</div>`;
 }
 
 function renderOwnerOutcomes(outcomes) {
@@ -421,6 +679,151 @@ function renderOwnerOutcomes(outcomes) {
       </div>
     </article>
   `;
+}
+
+function renderStrategyControls(policy) {
+  const target = document.getElementById("paper-strategy-controls");
+  const values = policy.values || {};
+  const adaptiveProfiles = policy.adaptive_profiles || [];
+  if (!policy.available) {
+    target.innerHTML = `<div class="empty">${escapeHtml(policy.headline || "Paper strategy controls are unavailable until the paper account is initialized.")}</div>`;
+    return;
+  }
+  target.innerHTML = `
+    <p>${escapeHtml(policy.headline || "Tune Atlas paper strategy from this page.")}</p>
+    ${adaptiveProfiles.length ? `
+      <div class="feedback-takeaways">
+        ${adaptiveProfiles.map(item => `
+          <div class="feedback-takeaway-card">
+            <span class="access-label">${escapeHtml(item.label || "Adaptive profile")}</span>
+            <strong>${escapeHtml(String(item.value || "--"))}</strong>
+            <small>${escapeHtml(item.status || "watching")} · ${escapeHtml(item.detail || "")}</small>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    <form id="strategy-policy-form" class="strategy-policy-form">
+      <div class="strategy-policy-grid">
+        <label class="strategy-field toggle-field" for="policy-auto-manage-enabled">
+          <span class="strategy-toggle">
+            <input id="policy-auto-manage-enabled" name="auto_manage_enabled" type="checkbox" ${values.auto_manage_enabled ? "checked" : ""}>
+            <span class="strategy-toggle-text">
+              <b>Atlas autonomous paper mode</b>
+              <small>When enabled, Atlas auto-approves and auto-executes paper trades after the normal risk-review gate.</small>
+            </span>
+          </span>
+        </label>
+        <label class="strategy-field" for="policy-buy-slots">
+          <span>Buy slots</span>
+          <input id="policy-buy-slots" name="strategy_maximum_new_proposals" type="number" min="1" max="10" step="1" value="${escapeHtml(values.strategy_maximum_new_proposals ?? 3)}">
+          <small>How many new paper buy ideas Atlas can queue at once.</small>
+        </label>
+        <label class="strategy-field" for="policy-target-size">
+          <span>Target size (%)</span>
+          <input id="policy-target-size" name="strategy_target_position_pct" type="number" min="1" max="20" step="0.5" value="${escapeHtml(values.strategy_target_position_pct ?? 5)}">
+          <small>Percent of starting simulated cash Atlas targets for each new entry.</small>
+        </label>
+        <label class="strategy-field" for="policy-buy-threshold">
+          <span>Buy threshold</span>
+          <input id="policy-buy-threshold" name="strategy_minimum_buy_score" type="number" min="50" max="100" step="0.5" value="${escapeHtml(values.strategy_minimum_buy_score ?? 88)}">
+          <small>Minimum Atlas score required before a new buy proposal can open.</small>
+        </label>
+        <label class="strategy-field" for="policy-exit-threshold">
+          <span>Exit threshold</span>
+          <input id="policy-exit-threshold" name="strategy_maximum_exit_score" type="number" min="0" max="90" step="0.5" value="${escapeHtml(values.strategy_maximum_exit_score ?? 60)}">
+          <small>Score level where Atlas becomes willing to exit or trim weaker holdings.</small>
+        </label>
+        <label class="strategy-field" for="policy-benchmark-weight">
+          <span>Benchmark weight</span>
+          <input id="policy-benchmark-weight" name="strategy_benchmark_excess_weight" type="number" min="0" max="5" step="0.1" value="${escapeHtml(values.strategy_benchmark_excess_weight ?? 1.5)}">
+          <small>Extra emphasis on names outperforming SPY or QQQ.</small>
+        </label>
+        <label class="strategy-field" for="policy-trend-weight">
+          <span>Trend weight</span>
+          <input id="policy-trend-weight" name="strategy_trend_quality_weight" type="number" min="0" max="2" step="0.05" value="${escapeHtml(values.strategy_trend_quality_weight ?? 0.2)}">
+          <small>Extra emphasis on higher-quality momentum leadership.</small>
+        </label>
+        <label class="strategy-field" for="policy-sector-diversity">
+          <span>Sector diversity penalty</span>
+          <input id="policy-sector-diversity" name="strategy_sector_repeat_penalty" type="number" min="0" max="10" step="0.5" value="${escapeHtml(values.strategy_sector_repeat_penalty ?? 3)}">
+          <small>Penalty Atlas applies before doubling up inside one sector.</small>
+        </label>
+        <label class="strategy-field" for="policy-downside-filter">
+          <span>Minimum daily move (%)</span>
+          <input id="policy-downside-filter" name="strategy_minimum_daily_move_pct" type="number" min="-20" max="10" step="0.5" value="${escapeHtml(values.strategy_minimum_daily_move_pct ?? -8)}">
+          <small>Prevents Atlas from buying names that are crashing beyond this daily-move limit.</small>
+        </label>
+      </div>
+      <div class="strategy-actions">
+        <div class="strategy-actions-group">
+          <button type="button" class="secondary" data-strategy-preset="aggressive">Use aggressive preset</button>
+          <button type="button" class="secondary" data-strategy-preset="balanced">Reset to current baseline</button>
+        </div>
+        <button id="strategy-policy-submit" type="submit">Save Atlas strategy</button>
+      </div>
+    </form>
+  `;
+}
+
+function applyStrategyPreset(preset) {
+  const presets = {
+    aggressive: {
+      auto_manage_enabled: true,
+      strategy_maximum_new_proposals: 5,
+      strategy_target_position_pct: 6.0,
+      strategy_minimum_buy_score: 84.0,
+      strategy_maximum_exit_score: 58.0,
+      strategy_benchmark_excess_weight: 2.4,
+      strategy_trend_quality_weight: 0.35,
+      strategy_sector_repeat_penalty: 1.5,
+      strategy_minimum_daily_move_pct: -6.0,
+    },
+    balanced: {
+      auto_manage_enabled: true,
+      strategy_maximum_new_proposals: 3,
+      strategy_target_position_pct: 5.0,
+      strategy_minimum_buy_score: 88.0,
+      strategy_maximum_exit_score: 60.0,
+      strategy_benchmark_excess_weight: 1.5,
+      strategy_trend_quality_weight: 0.2,
+      strategy_sector_repeat_penalty: 3.0,
+      strategy_minimum_daily_move_pct: -8.0,
+    },
+  };
+  const values = presets[preset];
+  if (!values) return;
+  Object.entries(values).forEach(([key, value]) => {
+    const field = document.querySelector(`#strategy-policy-form [name="${key}"]`);
+    if (!field) return;
+    if (field.type === "checkbox") {
+      field.checked = Boolean(value);
+    } else {
+      field.value = String(value);
+    }
+  });
+}
+
+function buildStrategyPolicyPayload(form) {
+  return {
+    auto_manage_enabled: Boolean(form.elements.auto_manage_enabled?.checked),
+    strategy_maximum_new_proposals: Number(form.elements.strategy_maximum_new_proposals?.value),
+    strategy_target_position_pct: Number(form.elements.strategy_target_position_pct?.value),
+    strategy_minimum_buy_score: Number(form.elements.strategy_minimum_buy_score?.value),
+    strategy_maximum_exit_score: Number(form.elements.strategy_maximum_exit_score?.value),
+    strategy_benchmark_excess_weight: Number(form.elements.strategy_benchmark_excess_weight?.value),
+    strategy_trend_quality_weight: Number(form.elements.strategy_trend_quality_weight?.value),
+    strategy_sector_repeat_penalty: Number(form.elements.strategy_sector_repeat_penalty?.value),
+    strategy_minimum_daily_move_pct: Number(form.elements.strategy_minimum_daily_move_pct?.value),
+  };
+}
+
+async function submitStrategyPolicy(form) {
+  const button = document.getElementById("strategy-policy-submit");
+  await submitOwnerAction(
+    "paper-policy",
+    buildStrategyPolicyPayload(form),
+    button
+  );
 }
 
 function proposalActionLabel(item) {
@@ -451,6 +854,20 @@ function proposalImpact(item) {
   return `<small class="row-meta">Current simulated holding: ${held.toFixed(2)} shares.</small>`;
 }
 
+function renderSellTrigger(item) {
+  if (item.side !== "sell") return "";
+  const summary = String(item.sell_trigger_summary || "").trim();
+  const reasons = Array.isArray(item.sell_trigger_reasons) ? item.sell_trigger_reasons.filter(Boolean) : [];
+  if (!summary && !reasons.length) return "";
+  return `
+    <div class="why-now compact memory">
+      <span>${escapeHtml(proposalActionLabel(item) === "trim" ? "Trim trigger" : "Exit trigger")}</span>
+      ${summary ? `<p>${escapeHtml(summary)}</p>` : ""}
+      ${reasons.length ? `<ul>${reasons.map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>` : ""}
+    </div>
+  `;
+}
+
 function renderPaperCalibration(calibration) {
   const judged = Number(calibration?.judged || 0);
   const tickerJudged = Number(calibration?.ticker_judged || 0);
@@ -474,6 +891,9 @@ function proposalControlTitle(item) {
 }
 
 function renderRecommendations(proposals, watchlist) {
+  const adaptiveProfiles = ownerControls?.paper_strategy_policy?.adaptive_profiles || [];
+  const tradePressureProfile = adaptiveProfiles.find(item => item.id === "trade_pressure") || null;
+  const benchmarkTrustProfile = adaptiveProfiles.find(item => item.id === "benchmark_trust") || null;
   const buyProposals = (proposals || [])
     .filter(item => item.side === "buy")
     .sort(compareRecommendations);
@@ -486,11 +906,25 @@ function renderRecommendations(proposals, watchlist) {
       <div>
         <b class="row-title">${proposalHeadline(item)}</b>
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
-        <small class="row-meta">${item.status === "approved" ? "Status: approved by owner and ready for Simulate fill." : "Status: Atlas recommends this idea, but it still needs owner approval."}</small>
+        <small class="row-meta">${item.auto_manage_enabled
+          ? (item.status === "approved"
+            ? "Status: Atlas already approved this idea in auto-manage mode and will record the paper fill automatically."
+            : "Status: Atlas is holding this in its autonomous review queue instead of waiting for owner approval.")
+          : (item.status === "approved"
+            ? "Status: approved by owner and ready for Simulate fill."
+            : "Status: Atlas recommends this idea, but it still needs owner approval.")}</small>
         ${renderPaperCalibration(item.paper_calibration)}
+        ${tradePressureProfile ? `<small class="row-meta">Adaptive trade pressure: ${escapeHtml(String(tradePressureProfile.value || "--"))} daily trades · ${escapeHtml(tradePressureProfile.status || "watching")}</small>` : ""}
+        ${benchmarkTrustProfile ? `<small class="row-meta">Adaptive benchmark trust: ${escapeHtml(String(benchmarkTrustProfile.value || "AUTO"))} · ${escapeHtml(benchmarkTrustProfile.status || "watching")}</small>` : ""}
         ${renderRationale(item.rationale, item)}
         ${renderObjections(item.objections, item)}
-        <small class="row-meta">${item.status === "approved" ? "Next step: use Simulate fill to add this to the paper portfolio." : "Next step: approve or reject this paper proposal in Controls."}</small>
+        <small class="row-meta">${item.auto_manage_enabled
+          ? (item.status === "approved"
+            ? "Next step: Atlas will record the paper fill automatically when the next autonomous cycle has a usable market price."
+            : "Next step: Atlas will auto-review this paper proposal after the risk gate runs.")
+          : (item.status === "approved"
+            ? "Next step: use Simulate fill to add this to the paper portfolio."
+            : "Next step: approve or reject this paper proposal in Controls.")}</small>
       </div>
     </article>
   `).join("") || `<div class="empty">No current paper purchase recommendations. Future Atlas-generated proposals will include a Why now rationale before any owner decision.</div>`;
@@ -504,12 +938,23 @@ function renderRecommendations(proposals, watchlist) {
       <div>
         <b class="row-title">${proposalHeadline(item)}</b>
         <small class="row-meta">Reference ${money.format(Number(item.reference_price) || 0)} - ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
-        <small class="row-meta">Status: Atlas wants to ${escapeHtml(proposalActionLabel(item))} simulated exposure in this holding.</small>
+        <small class="row-meta">${item.auto_manage_enabled
+          ? `Status: Atlas wants to ${escapeHtml(proposalActionLabel(item))} simulated exposure in this holding and will handle the paper workflow automatically.`
+          : `Status: Atlas wants to ${escapeHtml(proposalActionLabel(item))} simulated exposure in this holding.`}</small>
         ${proposalImpact(item)}
         ${renderPaperCalibration(item.paper_calibration)}
+        ${tradePressureProfile ? `<small class="row-meta">Adaptive trade pressure: ${escapeHtml(String(tradePressureProfile.value || "--"))} daily trades · ${escapeHtml(tradePressureProfile.status || "watching")}</small>` : ""}
+        ${benchmarkTrustProfile ? `<small class="row-meta">Adaptive benchmark trust: ${escapeHtml(String(benchmarkTrustProfile.value || "AUTO"))} · ${escapeHtml(benchmarkTrustProfile.status || "watching")}</small>` : ""}
+        ${renderSellTrigger(item)}
         ${renderRationale(item.rationale, item)}
         ${renderObjections(item.objections, item)}
-        <small class="row-meta">${item.status === "approved" ? `Next step: use Simulate fill to record this simulated ${proposalActionLabel(item)}.` : `Next step: approve or reject this simulated ${proposalActionLabel(item)} proposal in Controls.`}</small>
+        <small class="row-meta">${item.auto_manage_enabled
+          ? (item.status === "approved"
+            ? `Next step: Atlas will record this simulated ${proposalActionLabel(item)} automatically on the next autonomous cycle.`
+            : `Next step: Atlas will auto-review this simulated ${proposalActionLabel(item)} proposal after the risk gate runs.`)
+          : (item.status === "approved"
+            ? `Next step: use Simulate fill to record this simulated ${proposalActionLabel(item)}.`
+            : `Next step: approve or reject this simulated ${proposalActionLabel(item)} proposal in Controls.`)}</small>
       </div>
     </article>
   `).join("") || `<div class="empty">No current paper exit or trim recommendations. Atlas will surface one here if an open simulated position weakens.</div>`;
@@ -719,6 +1164,41 @@ function renderThesisOverview(overview) {
   `;
 }
 
+function renderPortfolioFocus(focus) {
+  const counts = focus.counts || {};
+  const highlights = focus.highlights || [];
+  document.getElementById("portfolio-focus").innerHTML = `
+    <div class="portfolio-focus-summary">
+      <span class="access-label">Portfolio action readout</span>
+      <strong>${escapeHtml(focus.headline || "Atlas is collecting paper-position context.")}</strong>
+      <div class="portfolio-focus-counts">
+        ${["healthy", "watch", "trim", "exit"].map(label => `
+          <div class="portfolio-focus-count">
+            <span class="thesis-badge ${label}">${label}</span>
+            <strong>${Number(counts[label] || 0).toFixed(0)}</strong>
+          </div>
+        `).join("")}
+      </div>
+    </div>
+    <div class="portfolio-focus-list">
+      <span class="access-label">Needs review first</span>
+      ${highlights.length ? highlights.map(item => `
+        <div class="portfolio-focus-row">
+          <span class="thesis-badge ${escapeHtml(item.label || "healthy")}">${escapeHtml(item.label || "healthy")}</span>
+          <div>
+            <b class="row-title">${escapeHtml(item.ticker || "Holding")}</b>
+            <small class="row-meta">${escapeHtml(item.summary || "")}</small>
+            ${renderDecisionDriver(item.decision_driver)}
+            ${renderNewsSummary(item.news_summary)}
+            ${item.anchor_id ? `<small class="row-meta"><button type="button" class="inline-jump" data-paper-target="${escapeHtml(item.anchor_id)}">Open holding</button></small>` : ""}
+          </div>
+          <small class="row-meta ${changeClass(item.unrealized_gain_loss)}">${money.format(Number(item.unrealized_gain_loss) || 0)}</small>
+        </div>
+      `).join("") : `<div class="empty">No open simulated positions.</div>`}
+    </div>
+  `;
+}
+
 function renderPositionLadder(rows) {
   document.getElementById("position-ladder").innerHTML = rows.map(item => `
     <div class="ladder-card ${escapeHtml(item.id || "healthy")}">
@@ -743,27 +1223,278 @@ function renderPositionLadder(rows) {
 }
 
 function renderPositions(rows) {
+  paperPositions = Array.isArray(rows) ? rows : [];
   document.getElementById("positions").innerHTML = rows.map(item => {
     const review = item.review || {};
     const thesis = item.thesis_status || { label: "healthy", summary: "Awaiting the next daily thesis review." };
     const memory = item.research_memory || null;
     const journal = item.decision_journal || [];
     return `
-      <div class="position-row">
+      <div class="position-row" id="${escapeHtml(item.anchor_id || "")}">
         <span>
           <b class="row-title">${item.ticker} · ${Number(item.shares).toFixed(0)} shares</b>
           <small class="row-meta">Average ${money.format(item.average_cost)} · ${review.verdict || "unreviewed"} thesis</small>
           <small class="row-meta thesis-summary"><span class="thesis-badge ${escapeHtml(thesis.label)}">${escapeHtml(thesis.label)}</span>${escapeHtml(thesis.summary || "")}</small>
+          ${renderNewsSummary(item.news_summary)}
           ${memory?.summary ? `<small class="row-meta">Research memory: ${escapeHtml(memory.summary)}</small>` : ""}
           ${memory?.detail ? `<small class="row-meta">${escapeHtml(memory.detail)}</small>` : ""}
           ${journal.length ? `<div class="position-journal"><span>What changed since entry</span><ul>${journal.slice(0, 4).map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>` : ""}
         </span>
-        <span>
+        <span class="position-actions">
           <b class="row-title">${money.format(item.market_value || 0)}</b>
           <small class="row-meta ${changeClass(item.unrealized_gain_loss)}">${money.format(item.unrealized_gain_loss || 0)}</small>
+          <button class="link-button" type="button" data-position-detail="${escapeHtml(item.ticker || "")}">Open holding</button>
         </span>
       </div>`;
   }).join("") || `<div class="empty">No open simulated positions.</div>`;
+}
+
+function renderNewsSummary(newsSummary) {
+  if (!newsSummary || !newsSummary.label) return "";
+  return `
+    <small class="row-meta news-tone ${escapeHtml(newsSummary.label)}">
+      <span class="news-tone-label">${escapeHtml(String(newsSummary.label).replaceAll("_", " "))}</span>
+      ${escapeHtml(newsSummary.headline || "")}
+    </small>
+    ${newsSummary.detail ? `<small class="row-meta news-tone-detail">${escapeHtml(newsSummary.detail)}</small>` : ""}
+    ${newsSummary.event_detail ? `<small class="row-meta news-tone-detail">${escapeHtml(newsSummary.event_detail)}</small>` : ""}
+    ${newsSummary.example ? `<small class="row-meta news-tone-detail">Latest example: ${escapeHtml(newsSummary.example)}</small>` : ""}
+  `;
+}
+
+function renderDecisionDriver(driver) {
+  if (!driver || !driver.label) return "";
+  const driverClass = driver.family === "projection"
+    ? "tag driver-tag projection-driver-tag"
+    : "tag driver-tag";
+  return `
+    <span class="${driverClass}">${escapeHtml(driver.label)}</span>
+    ${driver.summary ? `<small class="row-meta decision-driver-meta">Driver: ${escapeHtml(driver.summary)}</small>` : ""}
+  `;
+}
+
+function findPositionAccountability(ticker) {
+  return (paperAccountabilityReport.tickers || []).find(item => item.ticker === ticker) || null;
+}
+
+function findPositionTradeHistory(ticker) {
+  return (paperTradeHistory.tickers || []).find(item => item.ticker === ticker) || null;
+}
+
+function openPositionDetailDialog(ticker) {
+  const position = paperPositions.find(item => item.ticker === ticker);
+  if (!position) {
+    showMessage("That paper holding is no longer available.", true);
+    return;
+  }
+  const accountability = findPositionAccountability(ticker);
+  const history = findPositionTradeHistory(ticker);
+  const review = position.review || {};
+  const thesis = position.thesis_status || {};
+  const memory = position.research_memory || {};
+  const journal = position.decision_journal || [];
+  const adaptiveContext = Array.isArray(position.adaptive_context) ? position.adaptive_context : [];
+  const outcomeSummary = position.outcome_summary || {};
+  const trendSummary = position.trend_summary || {};
+  const confirmationSummary = position.confirmation_summary || {};
+  const projectionSummary = position.projection_summary || {};
+  const decisionDriver = position.decision_driver || {};
+  const transactions = accountability?.transactions || [];
+  const latestTrade = transactions[transactions.length - 1] || null;
+  const realized = Number(accountability?.realized_gain_loss || 0);
+  const openBasis = Number(accountability?.open_basis || 0);
+  const unrealized = Number(position.unrealized_gain_loss || 0);
+  const totalResult = realized + unrealized;
+  document.getElementById("position-detail-title").textContent = `${ticker} lifecycle detail`;
+  document.getElementById("position-detail-summary").textContent =
+    `${Number(position.shares || 0).toFixed(2)} open shares at ${money.format(Number(position.average_cost) || 0)} average cost · Open basis ${money.format(openBasis)} · Market value ${money.format(Number(position.market_value) || 0)}`;
+  document.getElementById("position-detail-content").innerHTML = `
+    <section class="basis-summary-grid position-detail-grid">
+      <article class="basis-summary-card">
+        <span class="summary-label">Current holding</span>
+        <strong>${Number(position.shares || 0).toFixed(2)} shares</strong>
+        <small>Latest price ${money.format(Number(position.price) || 0)}</small>
+      </article>
+      <article class="basis-summary-card">
+        <span class="summary-label">Open basis</span>
+        <strong>${money.format(openBasis)}</strong>
+        <small>Weighted average cost ${money.format(Number(position.average_cost) || 0)}</small>
+      </article>
+      <article class="basis-summary-card">
+        <span class="summary-label">Realized result</span>
+        <strong class="${changeClass(realized)}">${money.format(realized)}</strong>
+        <small>Completed simulated trims and exits</small>
+      </article>
+      <article class="basis-summary-card">
+        <span class="summary-label">Total lifecycle result</span>
+        <strong class="${changeClass(totalResult)}">${money.format(totalResult)}</strong>
+        <small>Realized plus current unrealized result</small>
+      </article>
+    </section>
+    <section class="position-detail-section">
+      <div class="history-ticker-head">
+        <div>
+          <span class="role-chip">${escapeHtml(ticker)}</span>
+          <strong>${escapeHtml(thesis.summary || "Atlas is waiting for the next thesis update.")}</strong>
+          ${renderDecisionDriver(decisionDriver)}
+        </div>
+        <small class="row-meta">${escapeHtml(review.verdict || "unreviewed")} thesis · ${latestTrade ? `Latest trade ${new Date(latestTrade.timestamp).toLocaleString()}` : "No executed trades yet"}</small>
+      </div>
+      ${memory.summary || memory.detail ? `
+        <div class="why-now compact memory">
+          <span>Atlas memory</span>
+          <ul>
+            ${memory.summary ? `<li>${escapeHtml(memory.summary)}</li>` : ""}
+            ${memory.detail ? `<li>${escapeHtml(memory.detail)}</li>` : ""}
+          </ul>
+        </div>
+      ` : ""}
+      ${journal.length ? `
+        <div class="position-journal">
+          <span>What changed since entry</span>
+          <ul>${journal.map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
+        </div>
+      ` : ""}
+      ${outcomeSummary.headline || outcomeSummary.detail ? `
+        <div class="why-now compact">
+          <span>Outcome framing</span>
+          <ul>
+            ${outcomeSummary.headline ? `<li>${escapeHtml(outcomeSummary.headline)}</li>` : ""}
+            ${outcomeSummary.detail ? `<li>${escapeHtml(outcomeSummary.detail)}</li>` : ""}
+          </ul>
+        </div>
+      ` : ""}
+      ${projectionSummary.headline || projectionSummary.detail || (Array.isArray(projectionSummary.watchpoints) && projectionSummary.watchpoints.length) ? `
+        <div class="why-now compact">
+          <span>Projection watch</span>
+          <ul>
+            ${projectionSummary.headline ? `<li>${escapeHtml(projectionSummary.headline)}</li>` : ""}
+            ${projectionSummary.detail ? `<li>${escapeHtml(projectionSummary.detail)}</li>` : ""}
+            ${Array.isArray(projectionSummary.watchpoints) ? projectionSummary.watchpoints.map(line => `<li>${escapeHtml(line)}</li>`).join("") : ""}
+          </ul>
+        </div>
+      ` : ""}
+      ${adaptiveContext.length ? `
+        <div class="why-now compact memory">
+          <span>Adaptive context</span>
+          <ul>${adaptiveContext.map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul>
+        </div>
+      ` : ""}
+    </section>
+    ${Array.isArray(trendSummary.stats) && trendSummary.stats.length ? `
+      <section class="position-detail-section">
+        <div class="history-ticker-head">
+          <div>
+            <span class="access-label">Trend diagnostics</span>
+            <strong>${escapeHtml(trendSummary.headline || "Atlas trend diagnostics")}</strong>
+          </div>
+          <small class="row-meta">${escapeHtml(String(trendSummary.trend_regime || "unknown").replaceAll("_", " "))} regime Â· ${escapeHtml(String(trendSummary.trend_state || "unknown").replaceAll("_", " "))} state</small>
+        </div>
+        <div class="basis-summary-grid trend-summary-grid">
+          ${trendSummary.stats.map(item => `
+            <article class="basis-summary-card">
+              <span class="summary-label">${escapeHtml(item.label || "Trend")}</span>
+              <strong>${escapeHtml(item.value || "--")}</strong>
+              <small>${escapeHtml(item.detail || "")}</small>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    ` : ""}
+    ${Array.isArray(confirmationSummary.stats) && confirmationSummary.stats.length ? `
+      <section class="position-detail-section">
+        <div class="history-ticker-head">
+          <div>
+            <span class="access-label">Confirmation check</span>
+            <strong>${escapeHtml(confirmationSummary.headline || "Atlas confirmation check")}</strong>
+          </div>
+          <small class="row-meta">${escapeHtml(confirmationSummary.sector || "Sector")} sector ${confirmationSummary.strongest_benchmark ? `· strongest benchmark ${escapeHtml(confirmationSummary.strongest_benchmark)}` : ""}</small>
+        </div>
+        <div class="basis-summary-grid trend-summary-grid">
+          ${confirmationSummary.stats.map(item => `
+            <article class="basis-summary-card">
+              <span class="summary-label">${escapeHtml(item.label || "Confirmation")}</span>
+              <strong>${escapeHtml(item.value || "--")}</strong>
+              <small>${escapeHtml(item.detail || "")}</small>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    ` : ""}
+    <section class="position-detail-section">
+      <div class="history-ticker-head">
+        <div>
+          <span class="access-label">Execution timeline</span>
+          <strong>${(history?.trade_count || transactions.length || 0).toFixed(0)} recorded trade${(history?.trade_count || transactions.length || 0) === 1 ? "" : "s"}</strong>
+        </div>
+        <small class="row-meta">Buys ${Number(accountability?.buy_shares || 0).toFixed(2)} · Sells ${Number(accountability?.sell_shares || 0).toFixed(2)} · Open ${Number(accountability?.open_shares || position.shares || 0).toFixed(2)}</small>
+      </div>
+      <div class="basis-table-wrap">
+        <table class="basis-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Action</th>
+              <th>Driver</th>
+              <th>News event</th>
+              <th>Shares</th>
+              <th>Fill</th>
+              <th>Basis</th>
+              <th>Proceeds</th>
+              <th>Realized</th>
+              <th>Remaining</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${transactions.length ? transactions.map(item => `
+              <tr>
+                <td>${escapeHtml(new Date(item.timestamp).toLocaleString())}</td>
+                <td>${escapeHtml(String(item.action_label || item.side || "trade").replaceAll("_", " "))}</td>
+                <td>${escapeHtml(item.decision_driver?.label || "--")}</td>
+                <td>${escapeHtml(item.news_event_summary || "--")}</td>
+                <td>${Number(item.shares || 0).toFixed(2)}</td>
+                <td>${money.format(Number(item.fill_price) || 0)}</td>
+                <td>${money.format(Number(item.basis_amount) || 0)}</td>
+                <td>${item.proceeds !== null && item.proceeds !== undefined ? money.format(Number(item.proceeds) || 0) : "--"}</td>
+                <td class="${changeClass(Number(item.realized_gain_loss) || 0)}">${item.side === "sell" ? money.format(Number(item.realized_gain_loss) || 0) : "--"}</td>
+                <td>${Number(item.position_shares_after || 0).toFixed(2)} sh</td>
+              </tr>
+            `).join("") : `<tr><td colspan="10">No executed simulated trades are available for this holding yet.</td></tr>`}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    ${history?.rows?.length ? `
+      <section class="position-detail-section">
+        <div class="history-ticker-head">
+          <div>
+            <span class="access-label">Execution notes</span>
+            <strong>Why Atlas acted</strong>
+          </div>
+          <small class="row-meta">Grouped from the paper trade history journal</small>
+        </div>
+        <div class="history-ticker-rows">
+          ${history.rows.map(item => `
+            <article class="history-row ${escapeHtml(item.side || "buy")}">
+              <div>
+                <span class="tag ${item.side === "sell" ? "exit-tag" : "buy-tag"}">${escapeHtml(String(item.action_label || item.side || "trade").replaceAll("_", " "))}</span>
+                <b class="row-title">${new Date(item.timestamp).toLocaleString()} · ${Number(item.shares || 0).toFixed(2)} shares · ${money.format(Number(item.fill_price) || 0)}</b>
+                <p>${escapeHtml(item.summary || "Atlas recorded a simulated trade.")}</p>
+                <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+                ${item.side === "sell" ? `<small class="row-meta ${changeClass(item.realized_gain_loss)}">Realized result ${money.format(Number(item.realized_gain_loss) || 0)}</small>` : ""}
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    ` : ""}
+  `;
+  document.getElementById("position-detail-dialog").showModal();
+}
+
+function closePositionDetailDialog() {
+  const dialog = document.getElementById("position-detail-dialog");
+  if (dialog.open) dialog.close();
 }
 
 function renderPaperFeedback(rows) {
@@ -773,9 +1504,10 @@ function renderPaperFeedback(rows) {
     const sideContext = item.side === "sell"
       ? `Post-sell move ${signed(item.security_return_pct)}`
       : `Return ${signed(item.security_return_pct)}`;
+    const horizons = Array.isArray(item.horizon_outcomes) ? item.horizon_outcomes.filter(row => row.available) : [];
     const benchmarkText = ["SPY", "QQQ"].map(ticker => {
       const value = item.benchmark_returns_pct?.[ticker];
-      return `${ticker} ${signed(value)}`;
+      return `${benchmarkLabel(ticker)} ${signed(value)}`;
     }).join(" · ");
     return `
       <article class="feedback-row ${escapeHtml(verdict)}">
@@ -784,7 +1516,9 @@ function renderPaperFeedback(rows) {
           <b class="row-title">${item.side === "sell" ? `${escapeHtml(item.ticker)} simulated ${escapeHtml(String(item.action_label || "sell"))}` : `${escapeHtml(item.ticker)} simulated buy`}</b>
           <small class="row-meta">Fill ${money.format(Number(item.fill_price) || 0)}${item.latest_price === null || item.latest_price === undefined ? "" : ` · latest ${money.format(Number(item.latest_price) || 0)}`}</small>
           <p>${escapeHtml(item.summary || "Atlas is waiting for enough evidence to judge this idea.")}</p>
+          ${renderDecisionDriver(item.decision_driver)}
           <small class="row-meta">${sideContext} · ${benchmarkText} · ${Number(item.snapshots || 0).toFixed(0)} snapshots</small>
+          ${horizons.length ? `<small class="row-meta">Persistence: ${horizons.map(row => `${escapeHtml(row.label)} ${escapeHtml(String(row.verdict || "unknown"))}`).join(" Â· ")}</small>` : ""}
           <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
         </div>
       </article>`;
@@ -801,6 +1535,27 @@ function renderPaperFeedbackSummary(summary) {
   const sellWorking = Number(summary.working_side_counts?.sell || 0);
   const buyRate = buyJudged ? `${((buyWorking / buyJudged) * 100).toFixed(0)}%` : "--";
   const sellRate = sellJudged ? `${((sellWorking / sellJudged) * 100).toFixed(0)}%` : "--";
+  const driverLearning = Array.isArray(summary.decision_driver_learning) ? summary.decision_driver_learning : [];
+  const sellTriggerLearning = Array.isArray(summary.sell_trigger_learning) ? summary.sell_trigger_learning : [];
+  const horizonLearning = Array.isArray(summary.horizon_learning) ? summary.horizon_learning : [];
+  const entryProfile = summary.entry_strategy_profile || {};
+  const projectionProfile = summary.projection_threshold_profile || {};
+  const tradePressureProfile = summary.trade_pressure_profile || {};
+  const benchmarkPreferenceProfile = summary.benchmark_preference_profile || {};
+  const benchmarkScorecard = summary.benchmark_scorecard || {};
+  const sectorLearningBridge = summary.sector_learning_bridge || {};
+  const sectorGateAudit = summary.sector_gate_audit || {};
+  const sectorGateOutcomes = summary.sector_gate_outcomes || {};
+  const benchmarkScorecards = Array.isArray(benchmarkScorecard.scorecards) ? benchmarkScorecard.scorecards : [];
+  const sectorLearningSectors = Array.isArray(sectorLearningBridge.sectors) ? sectorLearningBridge.sectors : [];
+  const sectorGateExamples = Array.isArray(sectorGateAudit.candidate_examples) ? sectorGateAudit.candidate_examples : [];
+  const sectorGateCandidateCounts = sectorGateAudit.candidate_counts || {};
+  const sectorGateAcceptedCounts = sectorGateAudit.accepted_decision_counts || {};
+  const sectorGateScorecards = Array.isArray(sectorGateOutcomes.scorecards) ? sectorGateOutcomes.scorecards : [];
+  const entryAdjustments = Array.isArray(entryProfile.adjustments) ? entryProfile.adjustments : [];
+  const projectionAdjustments = Array.isArray(projectionProfile.adjustments) ? projectionProfile.adjustments : [];
+  const tradePressureAdjustments = Array.isArray(tradePressureProfile.adjustments) ? tradePressureProfile.adjustments : [];
+  const benchmarkPreferenceAdjustments = Array.isArray(benchmarkPreferenceProfile.adjustments) ? benchmarkPreferenceProfile.adjustments : [];
   const takeaways = Array.isArray(summary.takeaways) ? summary.takeaways : [];
   document.getElementById("paper-feedback-summary").innerHTML = `
     <div class="feedback-summary-grid">
@@ -837,6 +1592,217 @@ function renderPaperFeedbackSummary(summary) {
         <small>${sellWorking} of ${sellJudged} judged trims/exits are helping</small>
       </div>
     </div>
+    ${sellTriggerLearning.length ? `
+      <div class="feedback-driver-learning">
+        ${sellTriggerLearning.map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ready">Sell trigger</span>
+            <strong>${escapeHtml(item.label || "Sell trigger")}</strong>
+            <small>${item.working} working, ${item.mixed} mixed, ${item.lagging} lagging across ${item.judged} judged trim${item.judged === 1 ? "" : "s"} or exits.</small>
+            <p>${item.working_rate_pct === null || item.working_rate_pct === undefined ? "--" : `${Number(item.working_rate_pct).toFixed(0)}%`} of judged trims/exits using this trigger are currently helping.</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${driverLearning.length ? `
+      <div class="feedback-driver-learning">
+        ${driverLearning.map(item => `
+          <div class="feedback-driver-card">
+            ${renderDecisionDriver({ family: "projection", label: item.label, summary: `${item.working} working, ${item.mixed} mixed, ${item.lagging} lagging across ${item.judged} judged trade${item.judged === 1 ? "" : "s"}.` })}
+            <strong>${item.working_rate_pct === null || item.working_rate_pct === undefined ? "--" : `${Number(item.working_rate_pct).toFixed(0)}%`}</strong>
+            <small>${item.working} of ${item.judged} judged trades currently look working</small>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${horizonLearning.length ? `
+      <div class="feedback-driver-learning">
+        ${horizonLearning.map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ready">Persistence</span>
+            <strong>${escapeHtml(item.label || "Snapshot persistence")}</strong>
+            <small>${item.working} working, ${item.mixed} mixed, ${item.lagging} lagging across ${item.judged} judged trade${item.judged === 1 ? "" : "s"}.</small>
+            <p>${item.working_rate_pct === null || item.working_rate_pct === undefined ? "--" : `${Number(item.working_rate_pct).toFixed(0)}%`} of judged trades are still working at this checkpoint.</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${projectionProfile.enabled ? `
+      <div class="feedback-takeaways">
+        <div class="feedback-takeaway-card">
+          <span class="access-label">Adaptive projection tuning</span>
+          <strong>${projectionProfile.active ? "Active" : "Watching"}</strong>
+          <small>${escapeHtml(projectionProfile.headline || "Atlas is monitoring projection outcomes.")}</small>
+        </div>
+        <div class="feedback-takeaway-card">
+          <span class="access-label">Judged inputs</span>
+          <strong>${Number(projectionProfile.judged_trades || 0)}</strong>
+          <small>judged projection-linked paper trades used for retuning</small>
+        </div>
+      </div>
+    ` : ""}
+    ${entryProfile.enabled ? `
+      <div class="feedback-takeaways">
+        <div class="feedback-takeaway-card">
+          <span class="access-label">Adaptive entry pacing</span>
+          <strong>${entryProfile.active ? "Active" : "Watching"}</strong>
+          <small>${escapeHtml(entryProfile.headline || "Atlas is monitoring how aggressively it should rotate capital into new paper ideas.")}</small>
+        </div>
+        <div class="feedback-takeaway-card">
+          <span class="access-label">Benchmark rotation read</span>
+          <strong>${escapeHtml(String(entryProfile.benchmark_rotation_stats?.benchmark || "AUTO").toUpperCase())}</strong>
+          <small>${Number(entryProfile.benchmark_rotation_stats?.judged || 0)} judged buy comparisons used for sector and capital pacing</small>
+        </div>
+      </div>
+    ` : ""}
+    ${sectorLearningBridge.enabled ? `
+      <div class="feedback-driver-learning">
+        <div class="feedback-driver-card">
+          <span class="thesis-badge ready">Sector learning bridge</span>
+          <strong>${sectorLearningBridge.active ? "Active" : "Watching"}</strong>
+          <small>${escapeHtml(sectorLearningBridge.headline || "Atlas is tracking whether sector-level paper buys are earning a small strategy tilt.")}</small>
+          <p>Sector learning gate: checkpoint ${escapeHtml(sectorLearningBridge.checkpoint || "3-snapshot persistence")} · minimum ${Number(sectorLearningBridge.minimum_judged_buys || 2)} judged buys per sector.</p>
+        </div>
+        ${sectorLearningSectors.slice(0, 5).map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ${escapeHtml(item.posture || "watch")}">${escapeHtml(item.posture || "watch")}</span>
+            <strong>${escapeHtml(item.sector || "Unclassified")}</strong>
+            <small>${Number(item.working || 0)} working, ${Number(item.mixed || 0)} mixed, ${Number(item.lagging || 0)} lagging across ${Number(item.judged || 0)} judged buy${Number(item.judged || 0) === 1 ? "" : "s"}.</small>
+            <p>${escapeHtml(item.summary || "Atlas is collecting sector-level paper learning evidence.")} Strategy tilt ${Number(item.adjustment || 0) >= 0 ? "+" : ""}${Number(item.adjustment || 0).toFixed(1)}.</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${sectorGateAudit.enabled ? `
+      <div class="feedback-driver-learning">
+        <div class="feedback-driver-card">
+          <span class="thesis-badge ready">Sector gate audit</span>
+          <strong>${sectorGateAudit.active ? "Active" : "Watching"}</strong>
+          <small>${escapeHtml(sectorGateAudit.headline || "Atlas is measuring how sector-learning gates affect simulated entries.")}</small>
+          <p>${Number(sectorGateCandidateCounts.active || 0)} active gated candidate${Number(sectorGateCandidateCounts.active || 0) === 1 ? "" : "s"} today: ${Number(sectorGateCandidateCounts.cleared || 0)} cleared, ${Number(sectorGateCandidateCounts.tightened || 0)} tightened, ${Number(sectorGateCandidateCounts.boost || 0)} boosted.</p>
+          <p>${Number(sectorGateAcceptedCounts.with_gate || 0)} accepted simulated buy${Number(sectorGateAcceptedCounts.with_gate || 0) === 1 ? "" : "s"} include a sector-gate rationale: ${Number(sectorGateAcceptedCounts.cleared || 0)} cleared, ${Number(sectorGateAcceptedCounts.tightened || 0)} tightened, ${Number(sectorGateAcceptedCounts.boost || 0)} boosted.</p>
+        </div>
+        ${sectorGateExamples.slice(0, 4).map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ${escapeHtml(item.status || "watch")}">${escapeHtml(item.status || "watch")}</span>
+            <strong>${escapeHtml(item.ticker || "--")} ${escapeHtml(item.sector || "Unclassified")}</strong>
+            <small>${Number(item.passed_checks || 0)} of ${Number(item.total_checks || 0)} stronger confirmation checks passed.</small>
+            <p>${escapeHtml(item.summary || "Atlas is measuring this sector-learning gate.")} ${item.buy_eligible ? "Currently eligible for simulated entry." : "Not eligible for simulated entry yet."}</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${sectorGateOutcomes.enabled ? `
+      <div class="feedback-driver-learning">
+        <div class="feedback-driver-card">
+          <span class="thesis-badge ready">Sector gate outcomes</span>
+          <strong>${sectorGateOutcomes.active ? "Judging" : "Waiting"}</strong>
+          <small>${escapeHtml(sectorGateOutcomes.headline || "Atlas is measuring whether accepted sector-gate buys are beating the benchmark bar.")}</small>
+          <p>${sectorGateOutcomes.leader ? `Current leader: ${escapeHtml(sectorGateOutcomes.leader.label || sectorGateOutcomes.leader.status || "sector gate")} at ${Number(sectorGateOutcomes.leader.working_rate_pct || 0).toFixed(0)}% working.` : "No accepted sector-gate buy has enough judged outcome evidence yet."}</p>
+        </div>
+        ${sectorGateScorecards.slice(0, 4).map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ${escapeHtml(item.status || "watch")}">${escapeHtml(item.status || "watch")}</span>
+            <strong>${escapeHtml(item.label || "Sector gate")}</strong>
+            <small>${Number(item.working || 0)} working, ${Number(item.mixed || 0)} mixed, ${Number(item.lagging || 0)} lagging across ${Number(item.judged || 0)} judged accepted buy${Number(item.judged || 0) === 1 ? "" : "s"}.</small>
+            <p>${item.working_rate_pct === null || item.working_rate_pct === undefined ? "--" : `${Number(item.working_rate_pct).toFixed(0)}%`} working rate; average edge ${item.avg_edge_pct === null || item.avg_edge_pct === undefined ? "--" : `${Number(item.avg_edge_pct).toFixed(2)}%`} versus the stronger SPY/QQQ bar.</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${tradePressureProfile.enabled ? `
+      <div class="feedback-takeaways">
+        <div class="feedback-takeaway-card">
+          <span class="access-label">Adaptive trade pressure</span>
+          <strong>${tradePressureProfile.active ? "Active" : "Watching"}</strong>
+          <small>${escapeHtml(tradePressureProfile.headline || "Atlas is monitoring how quickly it should turn the paper book.")}</small>
+        </div>
+        <div class="feedback-takeaway-card">
+          <span class="access-label">Current daily cap</span>
+          <strong>${escapeHtml(String(tradePressureProfile.policy_overrides?.maximum_daily_trades ?? tradePressureProfile.baseline?.maximum_daily_trades ?? "--"))}</strong>
+          <small>simulated trades per day after current learning overrides</small>
+        </div>
+      </div>
+    ` : ""}
+    ${benchmarkPreferenceProfile.enabled ? `
+      <div class="feedback-takeaways">
+        <div class="feedback-takeaway-card">
+          <span class="access-label">Adaptive benchmark trust</span>
+          <strong>${benchmarkPreferenceProfile.active ? "Active" : "Watching"}</strong>
+          <small>${escapeHtml(benchmarkPreferenceProfile.headline || "Atlas is monitoring which benchmark bar explains outcomes best.")}</small>
+        </div>
+        <div class="feedback-takeaway-card">
+          <span class="access-label">Current benchmark bar</span>
+          <strong>${escapeHtml(String(benchmarkPreferenceProfile.strategy_overrides?.strategy_preferred_benchmark || benchmarkPreferenceProfile.baseline?.strategy_preferred_benchmark || "auto").toUpperCase())}</strong>
+          <small>${escapeHtml(String(benchmarkPreferenceProfile.strategy_overrides?.strategy_preferred_benchmark || benchmarkPreferenceProfile.baseline?.strategy_preferred_benchmark || "auto").toUpperCase() === "AUTO" ? "Atlas is still auto-picking the stronger daily benchmark." : "Atlas is using the learned benchmark as the stronger bar for borderline entries.")}</small>
+        </div>
+      </div>
+    ` : ""}
+    ${benchmarkScorecard.enabled ? `
+      <div class="feedback-driver-learning">
+        <div class="feedback-driver-card">
+          <span class="thesis-badge ready">Benchmark scorecard</span>
+          <strong>${escapeHtml(benchmarkScorecard.headline || "Atlas is tracking benchmark-specific paper outcomes.")}</strong>
+          <small>${Number(benchmarkScorecard.judged || 0)} judged benchmark comparisons across simulated buys, trims, and exits.</small>
+        </div>
+        ${benchmarkScorecards.map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ready">${escapeHtml(item.benchmark || "Benchmark")}</span>
+            <strong>${item.working_rate_pct === null || item.working_rate_pct === undefined ? "--" : `${Number(item.working_rate_pct).toFixed(0)}%`}</strong>
+            <small>${escapeHtml(item.label || benchmarkLabel(item.benchmark || ""))}</small>
+            <p>${Number(item.working || 0)} working, ${Number(item.mixed || 0)} mixed, ${Number(item.lagging || 0)} lagging. Avg decision edge ${signed(item.avg_decision_edge_pct)}.</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${projectionAdjustments.length ? `
+      <div class="feedback-driver-learning">
+        ${projectionAdjustments.map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ready">${escapeHtml(item.direction || "adjusted")}</span>
+            <strong>${escapeHtml(item.label || "Projection tuning")}</strong>
+            <small>${escapeHtml(String(item.from ?? "--"))} to ${escapeHtml(String(item.to ?? "--"))}</small>
+            <p>${escapeHtml(item.reason || "Atlas adjusted this threshold from judged paper outcomes.")}</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${entryAdjustments.length ? `
+      <div class="feedback-driver-learning">
+        ${entryAdjustments.map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ready">${escapeHtml(item.direction || "adjusted")}</span>
+            <strong>${escapeHtml(item.label || "Entry pacing")}</strong>
+            <small>${escapeHtml(String(item.from ?? "--"))} to ${escapeHtml(String(item.to ?? "--"))}</small>
+            <p>${escapeHtml(item.reason || "Atlas adjusted entry pacing from judged paper outcomes.")}</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${tradePressureAdjustments.length ? `
+      <div class="feedback-driver-learning">
+        ${tradePressureAdjustments.map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ready">${escapeHtml(item.direction || "adjusted")}</span>
+            <strong>${escapeHtml(item.label || "Trade pressure")}</strong>
+            <small>${escapeHtml(String(item.from ?? "--"))} to ${escapeHtml(String(item.to ?? "--"))}</small>
+            <p>${escapeHtml(item.reason || "Atlas adjusted daily trade pressure from judged paper outcomes.")}</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
+    ${benchmarkPreferenceAdjustments.length ? `
+      <div class="feedback-driver-learning">
+        ${benchmarkPreferenceAdjustments.map(item => `
+          <div class="feedback-driver-card">
+            <span class="thesis-badge ready">Benchmark trust</span>
+            <strong>${escapeHtml(item.label || "Benchmark trust")}</strong>
+            <small>${escapeHtml(String(item.from ?? "--").toUpperCase())} to ${escapeHtml(String(item.to ?? "--").toUpperCase())}</small>
+            <p>${escapeHtml(item.reason || "Atlas adjusted which benchmark bar it trusts from judged paper outcomes.")}</p>
+          </div>
+        `).join("")}
+      </div>
+    ` : ""}
     <div class="feedback-takeaway-list">
       ${(takeaways.length ? takeaways : ["Atlas needs more post-trade data before the learning summary becomes meaningful."]).map(item => `
         <div class="feedback-takeaway-row">
@@ -846,6 +1812,96 @@ function renderPaperFeedbackSummary(summary) {
       `).join("")}
     </div>
   `;
+}
+
+function renderCapitalRotationScoreboard(scoreboard) {
+  const target = document.getElementById("capital-rotation-scoreboard");
+  if (!target) return;
+  const sectors = Array.isArray(scoreboard.sectors) ? scoreboard.sectors : [];
+  const totals = scoreboard.totals || {};
+  const rotationRead = scoreboard.benchmark_rotation_read || {};
+  if (!scoreboard.available || !sectors.length) {
+    target.innerHTML = `
+      <div class="capital-rotation-empty">
+        <span class="thesis-badge watch">Capital rotation scoreboard</span>
+        <strong>${escapeHtml(scoreboard.headline || "Atlas is waiting for enough simulated sector activity to score capital rotation.")}</strong>
+      </div>`;
+    return;
+  }
+  target.innerHTML = `
+    <div class="capital-rotation-header">
+      <div>
+        <span class="access-label">Capital rotation scoreboard</span>
+        <strong>${escapeHtml(scoreboard.headline || "Atlas is watching where simulated capital is earning the right to expand.")}</strong>
+        <small>Read-only sector accountability for simulated buys, sells, exposure, and benchmark-relative buy outcomes.</small>
+      </div>
+      <div class="capital-rotation-read">
+        <span>Benchmark buy read</span>
+        <b>${escapeHtml(String(rotationRead.benchmark || "AUTO").toUpperCase())}</b>
+        <small>${Number(rotationRead.judged || 0)} judged comparisons</small>
+      </div>
+    </div>
+    <div class="capital-rotation-totals">
+      <div><span>Open value</span><strong>${money.format(Number(totals.open_market_value || 0))}</strong></div>
+      <div><span>Net committed</span><strong>${money.format(Number(totals.net_notional || 0))}</strong></div>
+      <div><span>Realized P/L</span><strong>${money.format(Number(totals.realized_gain_loss || 0))}</strong></div>
+      <div><span>Unrealized P/L</span><strong>${money.format(Number(totals.unrealized_gain_loss || 0))}</strong></div>
+      <div><span>Buy hit rate</span><strong>${totals.buy_working_rate_pct === null || totals.buy_working_rate_pct === undefined ? "--" : `${Number(totals.buy_working_rate_pct).toFixed(0)}%`}</strong></div>
+    </div>
+    <div class="capital-rotation-grid">
+      ${sectors.map(row => `
+        <article class="capital-rotation-card ${escapeHtml(row.posture || "watch")}">
+          <div class="capital-rotation-card-head">
+            <span class="thesis-badge ${escapeHtml(row.posture || "watch")}">${escapeHtml(String(row.posture || "watch"))}</span>
+            <strong>${escapeHtml(row.sector || "Unclassified")}</strong>
+          </div>
+          <p>${escapeHtml(row.summary || "Atlas is collecting sector-level paper evidence.")}</p>
+          <dl>
+            <div><dt>Open exposure</dt><dd>${money.format(Number(row.open_market_value || 0))} · ${Number(row.open_weight_pct || 0).toFixed(1)}%</dd></div>
+            <div><dt>Buys / sells</dt><dd>${money.format(Number(row.buy_notional || 0))} / ${money.format(Number(row.sell_notional || 0))}</dd></div>
+            <div><dt>Net committed</dt><dd>${money.format(Number(row.net_notional || 0))}</dd></div>
+            <div><dt>Realized / unrealized</dt><dd>${money.format(Number(row.realized_gain_loss || 0))} / ${money.format(Number(row.unrealized_gain_loss || 0))}</dd></div>
+            <div><dt>Judged buys</dt><dd>${Number(row.working_buys || 0)} working of ${Number(row.judged_buys || 0)}</dd></div>
+            <div><dt>Avg benchmark edge</dt><dd>${row.avg_benchmark_edge_pct === null || row.avg_benchmark_edge_pct === undefined ? "--" : signed(row.avg_benchmark_edge_pct)}</dd></div>
+          </dl>
+        </article>
+      `).join("")}
+    </div>`;
+}
+
+function renderValidationSummary(summary) {
+  const scorecards = Array.isArray(summary.scorecards) ? summary.scorecards : [];
+  const takeaways = Array.isArray(summary.takeaways) ? summary.takeaways : [];
+  const stateClass = escapeHtml(String(summary.status || "building"));
+  const html = `
+    <div class="feedback-summary-grid validation-grid">
+      <div class="feedback-summary-card spotlight validation-spotlight ${stateClass}">
+        <span class="summary-label">Stage 5 status</span>
+        <strong>${escapeHtml(summary.status_label || "Evidence building")}</strong>
+        <small>${escapeHtml(summary.headline || "Atlas is building paper-trading validation evidence.")}</small>
+        <p>${escapeHtml(summary.detail || "Benchmark-relative paper evidence will appear here as Atlas accumulates snapshots and judged trade outcomes.")}</p>
+      </div>
+      ${scorecards.map(item => `
+        <div class="feedback-summary-card">
+          <span class="summary-label">${escapeHtml(item.label || "Metric")}</span>
+          <strong>${escapeHtml(String(item.value ?? "--"))}</strong>
+          <small>${escapeHtml(item.detail || "")}</small>
+        </div>
+      `).join("")}
+    </div>
+    <div class="feedback-takeaway-list">
+      ${(takeaways.length ? takeaways : ["Atlas is still collecting the evidence needed to complete Stage 5 validation."]).map(item => `
+        <div class="feedback-takeaway-row">
+          <span class="thesis-badge ready">Stage 5</span>
+          <small>${escapeHtml(item)}</small>
+        </div>
+      `).join("")}
+    </div>
+  `;
+  ["overview-validation-summary", "paper-validation-summary"].forEach(id => {
+    const target = document.getElementById(id);
+    if (target) target.innerHTML = html;
+  });
 }
 
 function renderPaperActivity(rows) {
@@ -861,6 +1917,7 @@ function renderPaperActivity(rows) {
           <b class="row-title">${escapeHtml(item.title || "Atlas activity")}</b>
           <small class="row-meta">${new Date(item.timestamp).toLocaleString()} · ${Number(item.shares || 0).toFixed(2)} shares · ${money.format(Number(item.fill_price) || 0)}</small>
           <p>${escapeHtml(item.summary || "Atlas recorded a simulated trade.")}</p>
+          ${renderDecisionDriver(item.decision_driver)}
           ${item.side === "sell" ? `<small class="row-meta ${changeClass(item.realized_gain_loss)}">Realized result ${money.format(Number(item.realized_gain_loss) || 0)}</small>` : ""}
           <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
           ${rationale.length ? `<div class="why-now compact"><span>${whyHeading}</span><ul>${rationale.slice(0, 3).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
@@ -870,15 +1927,212 @@ function renderPaperActivity(rows) {
   }).join("") || `<div class="empty">No simulated buys or sells have been recorded yet.</div>`;
 }
 
+function renderTradeHistory(history) {
+  paperTradeHistory = history || { total_trades: 0, ticker_count: 0, tickers: [] };
+  const button = document.getElementById("open-trade-history");
+  button.disabled = !paperTradeHistory.total_trades;
+  button.textContent = paperTradeHistory.total_trades
+    ? `View trade history (${paperTradeHistory.ticker_count} ticker${paperTradeHistory.ticker_count === 1 ? "" : "s"})`
+    : "View trade history";
+  document.getElementById("trade-history-summary").textContent = paperTradeHistory.total_trades
+    ? `${paperTradeHistory.total_trades} simulated trade${paperTradeHistory.total_trades === 1 ? "" : "s"} across ${paperTradeHistory.ticker_count} ticker${paperTradeHistory.ticker_count === 1 ? "" : "s"}.`
+    : "No simulated trade history is available yet.";
+  document.getElementById("trade-history-content").innerHTML = paperTradeHistory.tickers.length
+    ? paperTradeHistory.tickers.map(group => `
+      <section class="history-ticker">
+        <div class="history-ticker-head">
+          <div>
+            <span class="role-chip">${escapeHtml(group.ticker)}</span>
+            <strong>${Number(group.trade_count || 0).toFixed(0)} trade${Number(group.trade_count || 0) === 1 ? "" : "s"}</strong>
+          </div>
+          <small class="row-meta">${Number(group.buy_count || 0).toFixed(0)} buy · ${Number(group.sell_count || 0).toFixed(0)} sell</small>
+        </div>
+        <div class="history-ticker-rows">
+          ${group.rows.map(item => `
+            <article class="history-row ${escapeHtml(item.side || "buy")}">
+              <div>
+                <span class="tag ${item.side === "sell" ? "exit-tag" : "buy-tag"}">${escapeHtml(String(item.action_label || item.side || "trade").replaceAll("_", " "))}</span>
+                <b class="row-title">${new Date(item.timestamp).toLocaleString()} · ${Number(item.shares || 0).toFixed(2)} shares · ${money.format(Number(item.fill_price) || 0)}</b>
+                <p>${escapeHtml(item.summary || "Atlas recorded a simulated trade.")}</p>
+                ${renderDecisionDriver(item.decision_driver)}
+                <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+                ${item.side === "sell" ? `<small class="row-meta ${changeClass(item.realized_gain_loss)}">Realized result ${money.format(Number(item.realized_gain_loss) || 0)}</small>` : ""}
+                ${Array.isArray(item.decision_context) && item.decision_context.length ? `<div class="why-now compact memory"><span>Atlas context</span><ul>${item.decision_context.slice(0, 3).map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>` : ""}
+              </div>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `).join("")
+    : `<div class="empty">No simulated trade history is available yet.</div>`;
+}
+
+function renderAccountabilityReport(report) {
+  paperAccountabilityReport = report || { summary: {}, tickers: [] };
+  const summary = paperAccountabilityReport.summary || {};
+  const tickers = paperAccountabilityReport.tickers || [];
+  const transactionCount = Number(summary.transactions || 0);
+  const openButton = document.getElementById("open-basis-report");
+  const exportButton = document.getElementById("export-basis-report");
+  openButton.disabled = !transactionCount;
+  exportButton.disabled = !transactionCount;
+  openButton.textContent = transactionCount
+    ? `Open basis report (${Number(summary.tickers || 0)} ticker${Number(summary.tickers || 0) === 1 ? "" : "s"})`
+    : "Open basis report";
+  document.getElementById("basis-report-summary").textContent = transactionCount
+    ? `${transactionCount} executed trade${transactionCount === 1 ? "" : "s"} · ${Number(summary.open_positions || 0)} open position${Number(summary.open_positions || 0) === 1 ? "" : "s"} · Open basis ${money.format(Number(summary.total_open_basis) || 0)}`
+    : "No executed simulated trades are available for basis reporting yet.";
+  document.getElementById("basis-report-content").innerHTML = tickers.length
+    ? `
+      <section class="basis-summary-grid">
+        <article class="basis-summary-card">
+          <span class="summary-label">Accounting method</span>
+          <strong>${escapeHtml(String(report.accounting_method || "weighted_average_cost").replaceAll("_", " "))}</strong>
+          <small>Simulated paper-account basis method</small>
+        </article>
+        <article class="basis-summary-card">
+          <span class="summary-label">Total buy basis</span>
+          <strong>${money.format(Number(summary.total_buy_basis) || 0)}</strong>
+          <small>Gross basis committed across simulated purchases</small>
+        </article>
+        <article class="basis-summary-card">
+          <span class="summary-label">Sale proceeds</span>
+          <strong>${money.format(Number(summary.total_sale_proceeds) || 0)}</strong>
+          <small>Gross proceeds across simulated trims and exits</small>
+        </article>
+        <article class="basis-summary-card">
+          <span class="summary-label">Realized result</span>
+          <strong class="${changeClass(Number(summary.total_realized_gain_loss) || 0)}">${money.format(Number(summary.total_realized_gain_loss) || 0)}</strong>
+          <small>Aggregate realized gain or loss from completed sells</small>
+        </article>
+      </section>
+      ${tickers.map(group => `
+        <section class="history-ticker basis-ticker">
+          <div class="history-ticker-head">
+            <div>
+              <span class="role-chip">${escapeHtml(group.ticker)}</span>
+              <strong>Open shares ${Number(group.open_shares || 0).toFixed(2)} · Open basis ${money.format(Number(group.open_basis) || 0)}</strong>
+            </div>
+            <small class="row-meta">Average cost ${group.average_cost !== null && group.average_cost !== undefined ? money.format(Number(group.average_cost) || 0) : "--"} · Realized ${money.format(Number(group.realized_gain_loss) || 0)}</small>
+          </div>
+          <div class="basis-table-wrap">
+            <table class="basis-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Action</th>
+                  <th>Driver</th>
+                  <th>News event</th>
+                  <th>Adaptive regime</th>
+                  <th>Shares</th>
+                  <th>Fill</th>
+                  <th>Basis/Share</th>
+                  <th>Basis</th>
+                  <th>Proceeds</th>
+                  <th>Realized</th>
+                  <th>Remaining</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${group.transactions.map(item => `
+                  <tr>
+                    <td>${escapeHtml(new Date(item.timestamp).toLocaleString())}</td>
+                    <td>${escapeHtml(String(item.action_label || item.side || "trade").replaceAll("_", " "))}</td>
+                    <td>${escapeHtml(item.decision_driver?.label || "--")}</td>
+                    <td>${escapeHtml(item.news_event_summary || "--")}</td>
+                    <td>${escapeHtml(item.adaptive_regime || "--")}</td>
+                    <td>${Number(item.shares || 0).toFixed(2)}</td>
+                    <td>${money.format(Number(item.fill_price) || 0)}</td>
+                    <td>${item.basis_per_share !== null && item.basis_per_share !== undefined ? money.format(Number(item.basis_per_share) || 0) : "--"}</td>
+                    <td>${money.format(Number(item.basis_amount) || 0)}</td>
+                    <td>${item.proceeds !== null && item.proceeds !== undefined ? money.format(Number(item.proceeds) || 0) : "--"}</td>
+                    <td class="${changeClass(Number(item.realized_gain_loss) || 0)}">${item.side === "sell" ? money.format(Number(item.realized_gain_loss) || 0) : "--"}</td>
+                    <td>${Number(item.position_shares_after || 0).toFixed(2)} sh</td>
+                  </tr>
+                `).join("")}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      `).join("")}
+    `
+    : `<div class="empty">No executed simulated trades are available for basis reporting yet.</div>`;
+}
+
+function openTradeHistoryDialog() {
+  document.getElementById("trade-history-dialog").showModal();
+}
+
+function closeTradeHistoryDialog() {
+  const dialog = document.getElementById("trade-history-dialog");
+  if (dialog.open) dialog.close();
+}
+
+function openBasisReportDialog() {
+  document.getElementById("basis-report-dialog").showModal();
+}
+
+function closeBasisReportDialog() {
+  const dialog = document.getElementById("basis-report-dialog");
+  if (dialog.open) dialog.close();
+}
+
+function exportBasisReportCsv() {
+  const rows = [["Ticker", "Timestamp", "Action", "Driver", "Driver Detail", "News Event", "Adaptive Regime", "Shares", "Fill Price", "Basis Per Share", "Basis Amount", "Proceeds", "Realized Gain Loss", "Position Shares After", "Open Shares", "Average Cost", "Open Basis"]];
+  (paperAccountabilityReport.tickers || []).forEach(group => {
+    (group.transactions || []).forEach(item => {
+      rows.push([
+        group.ticker || "",
+        item.timestamp || "",
+        item.action_label || item.side || "",
+        item.decision_driver?.label || "",
+        item.decision_driver?.summary || "",
+        item.news_event_summary || "",
+        item.adaptive_regime || "",
+        Number(item.shares || 0).toFixed(2),
+        Number(item.fill_price || 0).toFixed(4),
+        item.basis_per_share === null || item.basis_per_share === undefined ? "" : Number(item.basis_per_share).toFixed(4),
+        Number(item.basis_amount || 0).toFixed(2),
+        item.proceeds === null || item.proceeds === undefined ? "" : Number(item.proceeds).toFixed(2),
+        item.side === "sell" ? Number(item.realized_gain_loss || 0).toFixed(2) : "",
+        Number(item.position_shares_after || 0).toFixed(2),
+        Number(group.open_shares || 0).toFixed(2),
+        group.average_cost === null || group.average_cost === undefined ? "" : Number(group.average_cost).toFixed(4),
+        Number(group.open_basis || 0).toFixed(2),
+      ]);
+    });
+  });
+  const csv = rows.map(columns => columns.map(value => `"${String(value ?? "").replaceAll('"', '""')}"`).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "atlas-paper-basis-report.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
 function renderPaperOperatingMode(mode) {
   const current = mode.current || {};
   const modes = mode.modes || [];
+  const settings = mode.strategy_settings || [];
   document.getElementById("paper-operating-mode").innerHTML = `
     <div class="mode-current">
       <span class="access-label">Current mode</span>
       <strong>${escapeHtml(current.label || "Recommendation mode")}</strong>
       <p>${escapeHtml(current.description || "Atlas is currently operating as a recommendation engine.")}</p>
       <small>${escapeHtml(mode.boundary || "Real-money trading remains disabled.")}</small>
+    </div>
+    <div class="mode-options strategy-settings">
+      ${settings.map(item => `
+        <div class="mode-option active">
+          <span class="tag ready-tag">${escapeHtml(item.label || "Setting")}</span>
+          <b class="row-title">${escapeHtml(item.value || "--")}</b>
+          <p>${escapeHtml(item.detail || "")}</p>
+        </div>
+      `).join("")}
     </div>
     <div class="mode-options">
       ${modes.map(item => `
@@ -935,7 +2189,7 @@ function openPaperFillDialog(proposalId, button) {
 }
 
 async function submitOwnerAction(action, payload, button) {
-  button.disabled = true;
+  if (button) button.disabled = true;
   try {
     const response = await fetch(`/api/owner/${action}`, {
       method: "POST",
@@ -952,6 +2206,8 @@ async function submitOwnerAction(action, payload, button) {
     showMessage(
       action === "paper-fill"
         ? `Simulated ${result.result?.action_label || (result.result?.side === "sell" ? "sell" : "purchase")} recorded. Portfolio tracking is active.`
+        : action === "paper-policy"
+        ? `Atlas paper strategy updated. Auto-manage is ${result.result?.auto_manage_enabled ? "on" : "off"}.`
         : "Owner action saved.",
       false
     );
@@ -959,7 +2215,7 @@ async function submitOwnerAction(action, payload, button) {
   } catch (cause) {
     showMessage(cause.message, true);
   } finally {
-    button.disabled = false;
+    if (button) button.disabled = false;
   }
 }
 
@@ -991,13 +2247,28 @@ function showMessage(message, isError) {
 async function loadDashboard() {
   const error = document.getElementById("error-banner");
   error.hidden = true;
+  setDataFreshness("loading");
   try {
-    const response = await fetch("/api/dashboard", { cache: "no-store" });
+    const fullRequest = fetch("/api/dashboard", { cache: "no-store" });
+    const summaryResponse = await fetch("/api/dashboard/summary", { cache: "no-store" });
+    if (!summaryResponse.ok) throw new Error(`Dashboard summary request failed (${summaryResponse.status})`);
+    const summaryData = await summaryResponse.json();
+    renderDashboardSummary(summaryData);
+    writeCachedDashboardSummary(summaryData);
+    setDataFreshness("loading", "summary loaded");
+
+    const response = await fullRequest;
     if (!response.ok) throw new Error(`Dashboard request failed (${response.status})`);
-    renderDashboard(await response.json());
+    const fullData = await response.json();
+    renderDashboard(fullData);
+    writeCachedDashboardFull(fullData);
+    setDataFreshness("live");
   } catch (cause) {
     error.textContent = cause.message;
     error.hidden = false;
+    if (!readCachedDashboardFull() && !readCachedDashboardSummary()) {
+      setDataFreshness("loading", "retry needed");
+    }
   }
 }
 
@@ -1005,9 +2276,31 @@ document.getElementById("refresh").addEventListener("click", loadDashboard);
 window.addEventListener("hashchange", () => {
   setActivePage(window.location.hash.replace("#", "") || "overview");
 });
+document.getElementById("overview").addEventListener("click", event => {
+  const jumpButton = event.target.closest("[data-paper-target]");
+  if (jumpButton) {
+    jumpToPaperTarget(jumpButton.dataset.paperTarget);
+  }
+});
 document.getElementById("controls").addEventListener("click", event => {
+  const jumpButton = event.target.closest("[data-controls-target]");
+  if (jumpButton) {
+    jumpToControlsTarget(jumpButton.dataset.controlsTarget);
+    return;
+  }
+  const presetButton = event.target.closest("[data-strategy-preset]");
+  if (presetButton) {
+    applyStrategyPreset(presetButton.dataset.strategyPreset);
+    return;
+  }
   const button = event.target.closest("[data-owner-action]");
   if (button) applyOwnerAction(button);
+});
+document.getElementById("controls").addEventListener("submit", async event => {
+  const form = event.target.closest("#strategy-policy-form");
+  if (!form) return;
+  event.preventDefault();
+  await submitStrategyPolicy(form);
 });
 document.getElementById("paper-fill-confirmation").addEventListener("input", event => {
   document.getElementById("paper-fill-submit").disabled =
@@ -1032,7 +2325,36 @@ document.getElementById("paper-fill-dialog").addEventListener("cancel", event =>
   event.preventDefault();
   closePaperFillDialog();
 });
+document.getElementById("open-trade-history").addEventListener("click", openTradeHistoryDialog);
+document.getElementById("trade-history-close").addEventListener("click", closeTradeHistoryDialog);
+document.getElementById("trade-history-dialog").addEventListener("cancel", event => {
+  event.preventDefault();
+  closeTradeHistoryDialog();
+});
+document.getElementById("open-basis-report").addEventListener("click", openBasisReportDialog);
+document.getElementById("basis-report-close").addEventListener("click", closeBasisReportDialog);
+document.getElementById("export-basis-report").addEventListener("click", exportBasisReportCsv);
+document.getElementById("basis-report-dialog").addEventListener("cancel", event => {
+  event.preventDefault();
+  closeBasisReportDialog();
+});
+document.getElementById("paper").addEventListener("click", event => {
+  const button = event.target.closest("[data-position-detail]");
+  if (button) {
+    openPositionDetailDialog(button.dataset.positionDetail);
+  }
+});
+document.getElementById("position-detail-open-basis").addEventListener("click", () => {
+  closePositionDetailDialog();
+  openBasisReportDialog();
+});
+document.getElementById("position-detail-close").addEventListener("click", closePositionDetailDialog);
+document.getElementById("position-detail-dialog").addEventListener("cancel", event => {
+  event.preventDefault();
+  closePositionDetailDialog();
+});
 renderEnvironment();
 initializeHelpPopovers();
 setActivePage(window.location.hash.replace("#", "") || "overview");
+hydrateDashboardFromCache();
 loadDashboard();

@@ -44,6 +44,7 @@ class CloudWebSettings:
     session_secret: str = ""
     storage_bucket: str = ""
     owner_controls_enabled: bool = False
+    verification_token: str = ""
     web_dir: Path = WEB_DIR
 
     @classmethod
@@ -66,6 +67,10 @@ class CloudWebSettings:
                 "ATLAS_OWNER_CONTROLS_ENABLED",
                 "false",
             ).strip().lower() == "true",
+            verification_token=os.getenv(
+                "ATLAS_VERIFICATION_TOKEN",
+                "",
+            ).strip(),
             web_dir=Path(os.getenv("ATLAS_WEB_DIR", str(WEB_DIR))),
         )
 
@@ -291,6 +296,24 @@ class AtlasCloudApplication:
                 status,
                 {"status": "ready" if ready else "not_ready"},
             )
+        if path == "/api/dashboard/verification":
+            if not self.settings.verification_token:
+                return self._json_response(
+                    start_response,
+                    "404 Not Found",
+                    {"error": "not_found"},
+                )
+            if not self._verification_authorized(environ):
+                return self._json_response(
+                    start_response,
+                    "401 Unauthorized",
+                    {"error": "authentication_required"},
+                )
+            return self._json_response(
+                start_response,
+                "200 OK",
+                self._verification_payload(),
+            )
         if self.settings.auth_mode == "google_oauth":
             if path == "/login":
                 return self._start_google_login(start_response)
@@ -319,6 +342,12 @@ class AtlasCloudApplication:
 
         if method == "POST":
             return self._owner_action(environ, start_response, path)
+        if path == "/api/dashboard/summary":
+            return self._json_response(
+                start_response,
+                "200 OK",
+                self.data_service.build_summary(),
+            )
         if path == "/api/dashboard":
             data = self.data_service.build()
             if self.settings.owner_controls_enabled:
@@ -414,6 +443,150 @@ class AtlasCloudApplication:
                 )
             ],
         )
+
+    def _verification_authorized(self, environ):
+        provided = environ.get("HTTP_X_ATLAS_VERIFICATION", "").strip()
+        expected = self.settings.verification_token.strip()
+        if not provided or not expected:
+            return False
+        return hmac.compare_digest(provided, expected)
+
+    def _verification_payload(self):
+        # Verification must stay read-only and fast. Avoid the refreshing wrapper
+        # here so smoke checks do not attempt a cloud artifact sync under the
+        # Cloud Run request timeout.
+        data_service = getattr(self.data_service, "data_service", self.data_service)
+        if hasattr(data_service, "build_verification"):
+            data = data_service.build_verification()
+        else:
+            data = data_service.build()
+        paper = data.get("paper") or {}
+        validation = paper.get("validation_summary") or {}
+        feedback_summary = paper.get("feedback_summary") or {}
+        accountability = paper.get("accountability_report") or {}
+        capital_rotation = paper.get("capital_rotation_scoreboard") or {}
+        proposal_counts = paper.get("proposals") or {}
+        auto_manage_enabled = (
+            str(
+                ((paper.get("operating_mode") or {}).get("current") or {}).get("id")
+                or ""
+            )
+            == "paper_auto_manage"
+        )
+        pending_manual_count = int(proposal_counts.get("pending") or 0)
+        return {
+            "generated_at": data.get("generated_at"),
+            "workspace": data.get("workspace") or {},
+            "checks": {
+                "stage5_scoreboard": {
+                    "ok": bool(validation),
+                    "detail": "Stage 5 validation summary is available for the overview dashboard.",
+                },
+                "persistence_learning": {
+                    "ok": bool(
+                        (feedback_summary.get("horizon_learning") or [])
+                        or (paper.get("feedback") or [])
+                    ),
+                    "detail": "Paper feedback includes persistence checkpoints and learning context.",
+                },
+                "benchmark_labels": {
+                    "ok": self._ui_contains("Stage 5 validation scoreboard")
+                    and self._ui_contains("SPY (S&P 500 ETF benchmark)")
+                    and self._ui_contains("QQQ (Nasdaq-100 ETF benchmark)"),
+                    "detail": "UI assets label SPY and QQQ explicitly and keep the Stage 5 scoreboard contract.",
+                },
+                "benchmark_scorecard": {
+                    "ok": bool(feedback_summary.get("benchmark_scorecard"))
+                    and self._ui_contains("Benchmark scorecard")
+                    and self._ui_contains("Avg decision edge"),
+                    "detail": "Paper feedback includes benchmark-specific decision scorecards for SPY and QQQ.",
+                },
+                "benchmark_exit_tuning": {
+                    "ok": "benchmark_exit_stats"
+                    in (
+                        (feedback_summary.get("projection_threshold_profile") or {})
+                    ),
+                    "detail": "Adaptive projection tuning carries benchmark-specific exit scorecard evidence.",
+                },
+                "benchmark_entry_pacing": {
+                    "ok": "benchmark_rotation_stats"
+                    in ((feedback_summary.get("entry_strategy_profile") or {}))
+                    and self._ui_contains("Adaptive entry pacing"),
+                    "detail": "Adaptive entry pacing carries benchmark-specific buy scorecard evidence.",
+                },
+                "capital_rotation_scoreboard": {
+                    "ok": "sectors" in capital_rotation
+                    and "totals" in capital_rotation
+                    and self._ui_contains("Capital rotation scoreboard"),
+                    "detail": "Dashboard exposes sector-level simulated capital rotation, exposure, and outcome accountability.",
+                    "sector_count": len(capital_rotation.get("sectors") or []),
+                },
+                "sector_learning_bridge": {
+                    "ok": "sector_learning_bridge" in feedback_summary
+                    and self._ui_contains("Sector learning bridge")
+                    and self._ui_contains("Sector learning gate")
+                    and self._ui_contains("Strategy tilt"),
+                    "detail": "Dashboard exposes the sector-level paper-learning bridge behind small strategy boosts or cautions.",
+                    "sector_count": len(
+                        (feedback_summary.get("sector_learning_bridge") or {}).get(
+                            "sectors"
+                        )
+                        or []
+                    ),
+                },
+                "sector_gate_audit": {
+                    "ok": "sector_gate_audit" in feedback_summary
+                    and "candidate_counts"
+                    in (feedback_summary.get("sector_gate_audit") or {})
+                    and "accepted_decision_counts"
+                    in (feedback_summary.get("sector_gate_audit") or {})
+                    and self._ui_contains("Sector gate audit"),
+                    "detail": "Dashboard exposes sector-gate pass, tighten, boost, and accepted-decision accountability.",
+                },
+                "sector_gate_outcomes": {
+                    "ok": "sector_gate_outcomes" in feedback_summary
+                    and "scorecards"
+                    in (feedback_summary.get("sector_gate_outcomes") or {})
+                    and self._ui_contains("Sector gate outcomes"),
+                    "detail": "Dashboard measures whether accepted sector-gate buys are working versus the stronger SPY/QQQ benchmark bar.",
+                },
+                "autonomous_queue": {
+                    "ok": auto_manage_enabled and pending_manual_count == 0,
+                    "detail": (
+                        "Atlas paper auto-manage mode is active and no pending paper proposals "
+                        "still require manual approval."
+                    ),
+                    "pending_manual_proposals": pending_manual_count,
+                },
+                "accountability_report": {
+                    "ok": "tickers" in accountability and "summary" in accountability,
+                    "detail": "Paper accountability report exposes ticker-grouped lot history and summary fields for tax review.",
+                    "ticker_count": len(accountability.get("tickers") or []),
+                },
+            },
+            "paper": {
+                "validation_summary": validation,
+                "feedback_summary": feedback_summary,
+                "accountability_report": accountability,
+                "capital_rotation_scoreboard": capital_rotation,
+                "operating_mode": paper.get("operating_mode") or {},
+                "proposal_counts": proposal_counts,
+            },
+            "owner_controls": {
+                "enabled": bool(self.settings.owner_controls_enabled),
+                "paper_proposals": [],
+            },
+        }
+
+    def _ui_contains(self, needle):
+        for filename in ("index.html", "app.js"):
+            path = self.settings.web_dir / filename
+            try:
+                if needle in path.read_text(encoding="utf-8"):
+                    return True
+            except OSError:
+                continue
+        return False
 
     def _finish_google_login(self, environ, start_response):
         query = parse_qs(environ.get("QUERY_STRING", ""), keep_blank_values=True)
@@ -709,6 +882,10 @@ class RefreshingDashboardDataService:
     def build(self):
         self._refresh_if_due()
         return self.data_service.build()
+
+    def build_summary(self):
+        self._refresh_if_due()
+        return self.data_service.build_summary()
 
     def _latest_snapshot(self):
         self._refresh_if_due()

@@ -1,20 +1,32 @@
-{
-  "schema_version": 1,
-  "project_id": "atlas-capital-research-stg",
-  "cross_device_owner_login": {
-    "status": "pending",
-    "observed_at": null,
-    "notes": ""
-  },
-  "non_owner_denial": {
-    "status": "pending",
-    "observed_at": null,
-    "notes": ""
-  },
-  "schedule_decision": {
-    "status": "validated",
-    "decision": "paused",
-    "observed_at": "2026-06-11",
-    "notes": "Schedules remain paused. Activation requires separate explicit owner approval."
-  }
+﻿{
+    "schema_version":  1,
+    "project_id":  "atlas-capital-research-stg",
+    "cross_device_owner_login":  {
+                                     "status":  "pending",
+                                     "observed_at":  null,
+                                     "notes":  ""
+                                 },
+    "non_owner_denial":  {
+                             "status":  "pending",
+                             "observed_at":  null,
+                             "notes":  ""
+                         },
+    "owner_dashboard_stage5_review":  {
+                                          "status":  "validated",
+                                          "observed_at":  "2026-07-12T20:24:00.0000000-07:00",
+                                          "notes":  "Validated via the token-protected staging verification endpoint on revision atlas-dashboard-stg-00115-xqh. Confirmed Stage 5 scoreboard, persistence learning, SPY/QQQ labeling, autonomous paper queue behavior, adaptive trade-pressure and benchmark-trust visibility, holding drilldown context, and accountability report availability.",
+                                          "expected_checks":  [
+                                                                  "Overview shows the Stage 5 validation scoreboard with benchmark-relative returns and judged-trade evidence.",
+                                                                  "Paper feedback and learning sections show persistence checkpoints such as 1-snapshot, 3-snapshot, and 5-snapshot follow-through.",
+                                                                  "Overview shows performance-versus-benchmarks context and labels SPY and QQQ clearly.",
+                                                                  "Controls no longer leave autonomous paper decisions waiting on manual approval unless a separate policy explicitly requires it.",
+                                                                  "History and tax-accountability views expose lot-level buy and sell details that can support cost-basis review."
+                                                              ]
+                                      },
+    "schedule_decision":  {
+                              "status":  "validated",
+                              "decision":  "enabled",
+                              "observed_at":  "2026-07-12T20:24:00.0000000-07:00",
+                              "notes":  "Recurring daily and weekly staging schedules are enabled under the approved cost controls after successful manual executions atlas-daily-stg-cxwbh and atlas-weekly-stg-44drh."
+                          }
 }

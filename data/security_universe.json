@@ -1,5 +1,5 @@
 {
-  "version": "1.5",
+  "version": "1.7",
   "securities": [
     {
       "ticker": "NVDA",
@@ -920,6 +920,406 @@
       "profile": {"thesis": "Online travel platform with global scale, strong cash generation, and marketplace economics.", "key_driver": "Travel demand, take rates, and direct booking efficiency.", "key_risk": "Travel cyclicality, regulation, and competition."},
       "score_source": "manual_v1",
       "scores": {"growth": 60, "quality": 88, "moat": 82, "momentum": 62, "risk": 72}
+    },
+    {
+      "ticker": "CAT",
+      "company_name": "Caterpillar Inc.",
+      "sector": "Industrials & Infrastructure",
+      "category": "Watchlist",
+      "notes": "Construction, mining, and infrastructure equipment leader.",
+      "profile": {"thesis": "Global heavy-equipment leader with leverage to infrastructure, energy, and mining capital cycles.", "key_driver": "Backlog strength, services growth, and global infrastructure spending.", "key_risk": "Cyclical order slowdowns and commodity-linked capex weakness."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 84, "moat": 82, "momentum": 68, "risk": 74}
+    },
+    {
+      "ticker": "DE",
+      "company_name": "Deere & Company",
+      "sector": "Industrials & Infrastructure",
+      "category": "Watchlist",
+      "notes": "Precision agriculture and heavy-equipment platform.",
+      "profile": {"thesis": "High-quality industrial platform with precision-agriculture, autonomy, and equipment-cycle upside.", "key_driver": "Farm income resilience, software adoption, and precision-ag upgrade cycles.", "key_risk": "Agricultural demand cyclicality and dealer inventory normalization."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 60, "quality": 86, "moat": 84, "momentum": 64, "risk": 72}
+    },
+    {
+      "ticker": "PH",
+      "company_name": "Parker-Hannifin Corporation",
+      "sector": "Industrials & Infrastructure",
+      "category": "Watchlist",
+      "notes": "Motion-control and aerospace components supplier.",
+      "profile": {"thesis": "Diversified industrial compounder with strong margin discipline and mission-critical components exposure.", "key_driver": "Aftermarket demand, aerospace recovery, and productivity execution.", "key_risk": "Industrial production slowdowns and aerospace-cycle interruptions."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 88, "moat": 82, "momentum": 66, "risk": 76}
+    },
+    {
+      "ticker": "TT",
+      "company_name": "Trane Technologies plc",
+      "sector": "Industrials & Infrastructure",
+      "category": "Watchlist",
+      "notes": "Climate systems and building-efficiency leader.",
+      "profile": {"thesis": "Building-efficiency leader with attractive HVAC, retrofit, and sustainable-cooling demand.", "key_driver": "Commercial retrofit activity, energy-efficiency demand, and pricing discipline.", "key_risk": "Construction-cycle softness and margin pressure from slower volumes."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 64, "quality": 84, "moat": 78, "momentum": 70, "risk": 74}
+    },
+    {
+      "ticker": "URI",
+      "company_name": "United Rentals, Inc.",
+      "sector": "Industrials & Infrastructure",
+      "category": "Emerging",
+      "notes": "Equipment-rental leader tied to construction and industrial projects.",
+      "profile": {"thesis": "Rental-equipment leader with strong free-cash-flow leverage to non-residential and infrastructure demand.", "key_driver": "Rental pricing, fleet utilization, and large-project activity.", "key_risk": "Construction slowdown and used-equipment pricing pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 66, "quality": 76, "moat": 74, "momentum": 72, "risk": 60}
+    },
+    {
+      "ticker": "ROP",
+      "company_name": "Roper Technologies, Inc.",
+      "sector": "Industrials & Infrastructure",
+      "category": "Watchlist",
+      "notes": "Asset-light industrial software and niche instrumentation platform.",
+      "profile": {"thesis": "Asset-light compounder combining vertical software and niche industrial technologies.", "key_driver": "Recurring software revenue, bolt-on acquisitions, and disciplined capital allocation.", "key_risk": "Acquisition execution and valuation sensitivity."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 88, "moat": 84, "momentum": 62, "risk": 78}
+    },
+    {
+      "ticker": "XOM",
+      "company_name": "Exxon Mobil Corporation",
+      "sector": "Energy Majors & Resources",
+      "category": "Core",
+      "notes": "Integrated energy major with large upstream and downstream scale.",
+      "profile": {"thesis": "Integrated energy giant with cash-generation scale, advantaged assets, and shareholder-return capacity.", "key_driver": "Oil and gas realizations, Guyana growth, and disciplined capital returns.", "key_risk": "Commodity-price volatility, regulation, and energy-transition pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 56, "quality": 82, "moat": 84, "momentum": 68, "risk": 78}
+    },
+    {
+      "ticker": "CVX",
+      "company_name": "Chevron Corporation",
+      "sector": "Energy Majors & Resources",
+      "category": "Watchlist",
+      "notes": "Integrated energy major with high shareholder-return focus.",
+      "profile": {"thesis": "Integrated major with resilient balance sheet and attractive long-cycle production portfolio.", "key_driver": "Production execution, buybacks, and oil-price support.", "key_risk": "Commodity swings, project delays, and policy pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 52, "quality": 80, "moat": 80, "momentum": 64, "risk": 78}
+    },
+    {
+      "ticker": "COP",
+      "company_name": "ConocoPhillips",
+      "sector": "Energy Majors & Resources",
+      "category": "Watchlist",
+      "notes": "Upstream energy producer with shale and international scale.",
+      "profile": {"thesis": "Large exploration-and-production company with efficient shale exposure and flexible capital returns.", "key_driver": "Production mix, oil-price support, and cash-return discipline.", "key_risk": "Commodity volatility and reserve-replacement risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 74, "moat": 72, "momentum": 70, "risk": 68}
+    },
+    {
+      "ticker": "SLB",
+      "company_name": "Schlumberger Limited",
+      "sector": "Energy Majors & Resources",
+      "category": "Emerging",
+      "notes": "Global oilfield-services and energy-technology leader.",
+      "profile": {"thesis": "Oilfield-services leader with international-cycle leverage and differentiated energy-technology exposure.", "key_driver": "International drilling activity, offshore recovery, and digital-services adoption.", "key_risk": "Energy capex volatility and geopolitics."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 62, "quality": 66, "moat": 74, "momentum": 72, "risk": 56}
+    },
+    {
+      "ticker": "WMT",
+      "company_name": "Walmart Inc.",
+      "sector": "Consumer Staples & Retail",
+      "category": "Core",
+      "notes": "Scale retailer with defensive traffic and growing digital mix.",
+      "profile": {"thesis": "Scale retailer with defensive grocery exposure, improving digital economics, and resilient traffic.", "key_driver": "Comparable sales, e-commerce margin improvement, and membership monetization.", "key_risk": "Consumer weakness, wage inflation, and competitive pricing pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 56, "quality": 82, "moat": 86, "momentum": 68, "risk": 84}
+    },
+    {
+      "ticker": "PG",
+      "company_name": "The Procter & Gamble Company",
+      "sector": "Consumer Staples & Retail",
+      "category": "Watchlist",
+      "notes": "Global household and personal-care staple franchise.",
+      "profile": {"thesis": "Staples compounder with strong brands, pricing power, and defensive cash generation.", "key_driver": "Pricing, premium mix, and emerging-market demand.", "key_risk": "Volume softness, FX headwinds, and input-cost inflation."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 46, "quality": 88, "moat": 88, "momentum": 58, "risk": 86}
+    },
+    {
+      "ticker": "KO",
+      "company_name": "The Coca-Cola Company",
+      "sector": "Consumer Staples & Retail",
+      "category": "Watchlist",
+      "notes": "Global beverage franchise with strong distribution and brand power.",
+      "profile": {"thesis": "Global beverage leader with brand strength, distribution scale, and defensive cash flows.", "key_driver": "Pricing, away-from-home demand, and disciplined capital returns.", "key_risk": "FX headwinds, sugar-policy risk, and slower consumer demand."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 42, "quality": 86, "moat": 90, "momentum": 56, "risk": 86}
+    },
+    {
+      "ticker": "PEP",
+      "company_name": "PepsiCo, Inc.",
+      "sector": "Consumer Staples & Retail",
+      "category": "Watchlist",
+      "notes": "Beverage and snack leader with broad staple exposure.",
+      "profile": {"thesis": "Snacks-and-beverages leader with diversified staple cash flows and pricing power.", "key_driver": "Convenience-channel demand, international expansion, and productivity execution.", "key_risk": "Consumer trade-down, commodity inflation, and FX pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 44, "quality": 84, "moat": 88, "momentum": 54, "risk": 84}
+    },
+    {
+      "ticker": "LLY",
+      "company_name": "Eli Lilly and Company",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Core",
+      "notes": "Large-cap biopharma leader with obesity and metabolic exposure.",
+      "profile": {"thesis": "Biopharma leader with powerful obesity, diabetes, and immunology growth drivers.", "key_driver": "GLP-1 demand, pipeline execution, and manufacturing scale-up.", "key_risk": "Valuation, supply constraints, and regulatory pricing pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 90, "quality": 86, "moat": 88, "momentum": 84, "risk": 68}
+    },
+    {
+      "ticker": "ABBV",
+      "company_name": "AbbVie Inc.",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Cash-generative biopharma platform with immunology and aesthetics exposure.",
+      "profile": {"thesis": "Cash-generative biopharma platform rebuilding growth through immunology, neuroscience, and aesthetics.", "key_driver": "Skyrizi and Rinvoq growth, margin durability, and capital returns.", "key_risk": "Patent cliffs, drug-pricing pressure, and pipeline concentration."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 82, "moat": 84, "momentum": 60, "risk": 78}
+    },
+    {
+      "ticker": "MCK",
+      "company_name": "McKesson Corporation",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Pharmaceutical distribution and healthcare-services leader.",
+      "profile": {"thesis": "Healthcare-distribution leader with resilient cash generation and scale advantages in drug distribution.", "key_driver": "Prescription volumes, specialty distribution, and capital returns.", "key_risk": "Drug-pricing pressure, reimbursement changes, and legal overhangs."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 54, "quality": 84, "moat": 78, "momentum": 70, "risk": 78}
+    },
+    {
+      "ticker": "ZTS",
+      "company_name": "Zoetis Inc.",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Watchlist",
+      "notes": "Animal-health compounder with durable recurring demand.",
+      "profile": {"thesis": "Animal-health leader with defensible recurring demand and attractive margin structure.", "key_driver": "Companion-animal treatment growth, innovation cadence, and international expansion.", "key_risk": "Valuation, product competition, and slower livestock markets."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 86, "moat": 82, "momentum": 60, "risk": 80}
+    },
+    {
+      "ticker": "MDT",
+      "company_name": "Medtronic plc",
+      "sector": "Healthcare & Life Sciences",
+      "category": "Emerging",
+      "notes": "Diversified med-tech franchise with turnaround potential.",
+      "profile": {"thesis": "Diversified med-tech platform with durable procedure franchises and potential for operational improvement.", "key_driver": "Procedure normalization, innovation launches, and margin recovery.", "key_risk": "Execution slippage, reimbursement pressure, and slower growth than peers."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 46, "quality": 74, "moat": 78, "momentum": 44, "risk": 74}
+    },
+    {
+      "ticker": "EQIX",
+      "company_name": "Equinix, Inc.",
+      "sector": "Real Assets & Connectivity",
+      "category": "Core",
+      "notes": "Global data-center and interconnection REIT.",
+      "profile": {"thesis": "Mission-critical digital-infrastructure REIT with durable interconnection and colocation economics.", "key_driver": "Enterprise and cloud interconnection demand, pricing, and global footprint expansion.", "key_risk": "Interest rates, capital intensity, and slower leasing demand."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 82, "moat": 88, "momentum": 64, "risk": 76}
+    },
+    {
+      "ticker": "DLR",
+      "company_name": "Digital Realty Trust, Inc.",
+      "sector": "Real Assets & Connectivity",
+      "category": "Watchlist",
+      "notes": "Data-center REIT with global wholesale and enterprise exposure.",
+      "profile": {"thesis": "Data-center REIT with wholesale and interconnection exposure that benefits from AI and cloud infrastructure demand.", "key_driver": "Leasing activity, pricing power, and digital-infrastructure demand.", "key_risk": "Interest-rate sensitivity, competition, and development execution."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 52, "quality": 74, "moat": 78, "momentum": 58, "risk": 70}
+    },
+    {
+      "ticker": "AMT",
+      "company_name": "American Tower Corporation",
+      "sector": "Real Assets & Connectivity",
+      "category": "Watchlist",
+      "notes": "Wireless-tower REIT with global mobile infrastructure exposure.",
+      "profile": {"thesis": "Wireless-tower owner with recurring infrastructure cash flows and mobile-data demand tailwinds.", "key_driver": "Carrier leasing, international tenancy growth, and 5G densification.", "key_risk": "Interest rates, tenant concentration, and international FX exposure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 50, "quality": 78, "moat": 84, "momentum": 52, "risk": 72}
+    },
+    {
+      "ticker": "TMUS",
+      "company_name": "T-Mobile US, Inc.",
+      "sector": "Real Assets & Connectivity",
+      "category": "Watchlist",
+      "notes": "Wireless operator with share-gain and cash-flow momentum.",
+      "profile": {"thesis": "Wireless leader with post-merger scale, customer growth, and improving free-cash-flow leverage.", "key_driver": "Subscriber additions, pricing discipline, and network-performance differentiation.", "key_risk": "Competitive pricing, regulation, and slower subscriber gains."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 64, "quality": 78, "moat": 76, "momentum": 72, "risk": 74}
+    },
+    {
+      "ticker": "FCX",
+      "company_name": "Freeport-McMoRan Inc.",
+      "sector": "Materials & Industrials",
+      "category": "Emerging",
+      "notes": "Copper miner with leverage to electrification and industrial demand.",
+      "profile": {"thesis": "Copper producer with direct leverage to electrification, infrastructure, and cyclical industrial demand.", "key_driver": "Copper prices, mine productivity, and global industrial spending.", "key_risk": "Commodity volatility, geopolitics, and cost inflation."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 60, "quality": 60, "moat": 70, "momentum": 70, "risk": 50}
+    },
+    {
+      "ticker": "NUE",
+      "company_name": "Nucor Corporation",
+      "sector": "Materials & Industrials",
+      "category": "Watchlist",
+      "notes": "Steel and downstream products leader with efficient U.S. production.",
+      "profile": {"thesis": "Efficient steel producer with flexible operations and infrastructure-cycle leverage.", "key_driver": "Steel pricing, non-residential demand, and disciplined capital returns.", "key_risk": "Steel-cycle downturns and margin compression."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 54, "quality": 76, "moat": 70, "momentum": 62, "risk": 66}
+    },
+    {
+      "ticker": "XLF",
+      "company_name": "Financial Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap financials sector ETF benchmark.",
+      "profile": {"thesis": "Financials benchmark for banks, insurers, brokers, and diversified financial leadership.", "key_driver": "Net interest margins, capital-markets activity, and sector rotation.", "key_risk": "Credit stress, yield-curve shifts, and recession risk."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 74, "moat": 64, "momentum": 62, "risk": 72}
+    },
+    {
+      "ticker": "XLE",
+      "company_name": "Energy Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap energy sector ETF benchmark.",
+      "profile": {"thesis": "Energy benchmark for integrated oils, E&P exposure, and sector rotation against commodity strength.", "key_driver": "Oil and gas prices, cash returns, and energy-sector flows.", "key_risk": "Commodity-price volatility and macro demand shocks."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 56, "quality": 72, "moat": 62, "momentum": 66, "risk": 68}
+    },
+    {
+      "ticker": "XLV",
+      "company_name": "Health Care Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap healthcare sector ETF benchmark.",
+      "profile": {"thesis": "Healthcare benchmark for large-cap pharma, managed care, devices, and defensive growth rotation.", "key_driver": "Drug pipelines, medical utilization, and defensive sector flows.", "key_risk": "Drug pricing, reimbursement pressure, and regulatory shifts."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 54, "quality": 78, "moat": 66, "momentum": 58, "risk": 78}
+    },
+    {
+      "ticker": "XLI",
+      "company_name": "Industrial Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap industrials sector ETF benchmark.",
+      "profile": {"thesis": "Industrials benchmark for infrastructure, machinery, transportation, and capital-cycle leadership.", "key_driver": "PMI trends, infrastructure spending, and capital-goods demand.", "key_risk": "Industrial slowdown and global growth weakness."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 76, "moat": 64, "momentum": 64, "risk": 72}
+    },
+    {
+      "ticker": "XLP",
+      "company_name": "Consumer Staples Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap consumer staples ETF benchmark.",
+      "profile": {"thesis": "Staples benchmark for defensive cash-flow leaders during lower-risk market rotation.", "key_driver": "Defensive inflows, pricing power, and earnings resilience.", "key_risk": "Rate sensitivity and weak relative growth."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 42, "quality": 78, "moat": 64, "momentum": 50, "risk": 84}
+    },
+    {
+      "ticker": "XLU",
+      "company_name": "Utilities Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap utilities ETF benchmark.",
+      "profile": {"thesis": "Utilities benchmark for regulated defensives, power demand, and lower-volatility market rotation.", "key_driver": "Rate expectations, power demand, and defensive-sector flows.", "key_risk": "Interest-rate sensitivity and regulation."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 40, "quality": 72, "moat": 62, "momentum": 48, "risk": 82}
+    },
+    {
+      "ticker": "XLB",
+      "company_name": "Materials Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap materials sector ETF benchmark.",
+      "profile": {"thesis": "Materials benchmark for chemicals, metals, packaging, and cyclical reflation themes.", "key_driver": "Commodity trends, construction activity, and industrial demand.", "key_risk": "Commodity weakness and cyclicality."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 50, "quality": 68, "moat": 60, "momentum": 58, "risk": 70}
+    },
+    {
+      "ticker": "XLRE",
+      "company_name": "Real Estate Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap real estate sector ETF benchmark.",
+      "profile": {"thesis": "Real-estate benchmark for REIT leadership, yield sensitivity, and digital-infrastructure rotation.", "key_driver": "Interest rates, occupancy trends, and REIT fund flows.", "key_risk": "Higher rates and weaker leasing demand."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 44, "quality": 70, "moat": 60, "momentum": 50, "risk": 76}
+    },
+    {
+      "ticker": "XLC",
+      "company_name": "Communication Services Select Sector SPDR Fund",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap communication services ETF benchmark.",
+      "profile": {"thesis": "Communication-services benchmark spanning digital advertising, telecom, and streaming platform leadership.", "key_driver": "Ad spending, subscriber trends, and sector rotation.", "key_risk": "Advertising cyclicality and regulatory pressure."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 60, "quality": 72, "moat": 66, "momentum": 64, "risk": 70}
+    },
+    {
+      "ticker": "IWM",
+      "company_name": "iShares Russell 2000 ETF",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Small-cap U.S. equity benchmark.",
+      "profile": {"thesis": "Small-cap benchmark for domestic cyclicals and breadth beyond mega-cap leadership.", "key_driver": "Rate expectations, domestic growth, and broad market risk appetite.", "key_risk": "Economic slowdown and tighter financing conditions."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 54, "quality": 60, "moat": 52, "momentum": 60, "risk": 62}
+    },
+    {
+      "ticker": "DIA",
+      "company_name": "SPDR Dow Jones Industrial Average ETF Trust",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Blue-chip industrial and value benchmark.",
+      "profile": {"thesis": "Blue-chip benchmark for industrial, financial, and defensive large-cap rotation.", "key_driver": "Dividend-oriented flows, industrial leadership, and value rotation.", "key_risk": "Narrow constituent set and slower growth profile."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 52, "quality": 76, "moat": 66, "momentum": 58, "risk": 80}
+    },
+    {
+      "ticker": "RSP",
+      "company_name": "Invesco S&P 500 Equal Weight ETF",
+      "sector": "Benchmark ETF",
+      "category": "Core",
+      "notes": "Equal-weight broad U.S. equity benchmark.",
+      "profile": {"thesis": "Equal-weight S&P 500 benchmark for measuring breadth beyond mega-cap concentration.", "key_driver": "Broad participation, equal-weight rotation, and cyclical leadership.", "key_risk": "Weaker mega-cap leadership and broader economic slowdowns."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 58, "quality": 74, "moat": 62, "momentum": 62, "risk": 78}
+    },
+    {
+      "ticker": "VTV",
+      "company_name": "Vanguard Value ETF",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap value style benchmark.",
+      "profile": {"thesis": "Value-style benchmark for financials, industrials, healthcare, and energy rotation.", "key_driver": "Value factor leadership, earnings resilience, and rate backdrop.", "key_risk": "Growth-stock dominance and weaker cyclicals."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 48, "quality": 74, "moat": 62, "momentum": 56, "risk": 80}
+    },
+    {
+      "ticker": "VUG",
+      "company_name": "Vanguard Growth ETF",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Large-cap growth style benchmark.",
+      "profile": {"thesis": "Growth-style benchmark for innovation leadership outside a single Nasdaq-heavy reference point.", "key_driver": "Large-cap growth earnings, risk appetite, and long-duration factor performance.", "key_risk": "Rate pressure and valuation compression."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 68, "quality": 78, "moat": 68, "momentum": 70, "risk": 72}
+    },
+    {
+      "ticker": "SCHD",
+      "company_name": "Schwab U.S. Dividend Equity ETF",
+      "sector": "Benchmark ETF",
+      "category": "Watchlist",
+      "notes": "Dividend-quality U.S. equity benchmark.",
+      "profile": {"thesis": "Dividend-quality benchmark for defensive cash-flow leadership and shareholder-return discipline.", "key_driver": "Quality factor rotation, dividend demand, and earnings resilience.", "key_risk": "Rate sensitivity and factor lag during high-beta rallies."},
+      "score_source": "manual_v1",
+      "scores": {"growth": 46, "quality": 80, "moat": 64, "momentum": 54, "risk": 84}
     },
     {
       "ticker": "SPY",

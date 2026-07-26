@@ -14,6 +14,7 @@ param(
     [string]$GoogleClientIdSecret = 'atlas-google-oauth-client-id',
     [string]$GoogleClientSecretSecret = 'atlas-google-oauth-client-secret',
     [string]$SessionSecret = 'atlas-session-secret',
+    [string]$VerificationToken = '',
     [switch]$Apply,
     [switch]$ConfirmCosts
 )
@@ -52,10 +53,27 @@ if ($Apply -and -not $projectNumber) {
 $Image = "$Region-docker.pkg.dev/$ProjectId/$Repository/atlas:$ImageTag"
 $ServiceUrl = "https://$Service-$projectNumber.$Region.run.app"
 $RedirectUri = "$ServiceUrl/oauth/callback"
+$EnvVars = @(
+    'ATLAS_WEB_MODE=cloud',
+    'ATLAS_AUTH_MODE=google_oauth',
+    "ATLAS_OWNER_EMAIL=$OwnerEmail",
+    "ATLAS_OAUTH_REDIRECT_URI=$RedirectUri",
+    "ATLAS_GCS_BUCKET=$Bucket",
+    'ATLAS_GCS_PREFIX=owner-v1',
+    'ATLAS_DATA_ROOT=/tmp/atlas-data',
+    'ATLAS_OWNER_CONTROLS_ENABLED=true'
+)
+if ($VerificationToken) {
+    $EnvVars += "ATLAS_VERIFICATION_TOKEN=$VerificationToken"
+}
 
 function Invoke-Gcloud {
     param([Parameter(Mandatory = $true)][string[]]$Arguments)
     $display = 'gcloud ' + ($Arguments -join ' ')
+    $display = $display -replace (
+        'ATLAS_VERIFICATION_TOKEN=[^,\s]+',
+        'ATLAS_VERIFICATION_TOKEN=<redacted>'
+    )
     if (-not $Apply) {
         Write-Host "[plan] $display"
         return
@@ -74,6 +92,7 @@ Write-Host "  Image: $Image"
 Write-Host "  Service: $Service"
 Write-Host "  Owner: $OwnerEmail"
 Write-Host "  OAuth callback: $RedirectUri"
+Write-Host "  Verification token: $(if ($VerificationToken) { 'configured' } else { 'disabled' })"
 Write-Host "  Mode: $(if ($Apply) { 'APPLY' } else { 'PLAN ONLY' })"
 
 foreach ($secretName in $OAuthSecrets) {
@@ -119,7 +138,7 @@ Invoke-Gcloud @(
     '--memory=512Mi',
     '--concurrency=20',
     '--timeout=60',
-    "--set-env-vars=ATLAS_WEB_MODE=cloud,ATLAS_AUTH_MODE=google_oauth,ATLAS_OWNER_EMAIL=$OwnerEmail,ATLAS_OAUTH_REDIRECT_URI=$RedirectUri,ATLAS_GCS_BUCKET=$Bucket,ATLAS_GCS_PREFIX=owner-v1,ATLAS_DATA_ROOT=/tmp/atlas-data,ATLAS_OWNER_CONTROLS_ENABLED=true",
+    "--set-env-vars=$($EnvVars -join ',')",
     "--set-secrets=ATLAS_GOOGLE_CLIENT_ID=$GoogleClientIdSecret`:latest,ATLAS_GOOGLE_CLIENT_SECRET=$GoogleClientSecretSecret`:latest,ATLAS_SESSION_SECRET=$SessionSecret`:latest"
 )
 

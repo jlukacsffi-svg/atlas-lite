@@ -33,6 +33,12 @@ ALLOWED_PATTERNS = (
     "data/portfolio.json",
 )
 
+STARTUP_REQUIRED_PATHS = (
+    "paper_trading/account.json",
+    "paper_trading/ledger.jsonl",
+    "research_tasks/tasks.json",
+)
+
 
 @dataclass(frozen=True)
 class CloudStorageSettings:
@@ -133,10 +139,38 @@ class CloudArtifactSync:
         manifest_blob = self.bucket.blob(self._manifest_object())
         manifest = json.loads(manifest_blob.download_as_bytes(checksum="auto"))
         self._validate_manifest(manifest)
+        return self._download_entries(manifest["files"])
 
+    def pull_startup_bundle(self):
+        manifest_blob = self.bucket.blob(self._manifest_object())
+        manifest = json.loads(manifest_blob.download_as_bytes(checksum="auto"))
+        self._validate_manifest(manifest)
+        entries = list(manifest["files"])
+        startup = []
+        latest_snapshot = None
+        for entry in entries:
+            path = str(entry.get("path") or "")
+            if path.startswith("research_archive/snapshot_"):
+                if latest_snapshot is None or path > str(latest_snapshot.get("path") or ""):
+                    latest_snapshot = entry
+            if path in STARTUP_REQUIRED_PATHS:
+                startup.append(entry)
+        if latest_snapshot is not None:
+            startup.append(latest_snapshot)
+        deduped = []
+        seen = set()
+        for entry in startup:
+            path = str(entry.get("path") or "")
+            if path in seen:
+                continue
+            seen.add(path)
+            deduped.append(entry)
+        return self._download_entries(deduped)
+
+    def _download_entries(self, entries):
         downloaded = []
         total_bytes = 0
-        for entry in manifest["files"]:
+        for entry in entries:
             relative = self._validate_relative_path(entry["path"])
             size = int(entry["size"])
             self._validate_size(relative.as_posix(), size)
@@ -295,6 +329,8 @@ def sync_from_environment(direction, paths=None):
     sync = CloudArtifactSync(CloudStorageSettings.from_environment())
     if direction == "pull":
         return sync.pull()
+    if direction == "pull_startup":
+        return sync.pull_startup_bundle()
     if direction == "push":
         return sync.push(paths=paths)
-    raise ValueError("direction must be pull or push")
+    raise ValueError("direction must be pull, pull_startup, or push")

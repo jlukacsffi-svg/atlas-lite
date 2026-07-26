@@ -15,6 +15,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent))
 
 from app.market_data import MarketDataFetcher
+from app.news_data import NewsFetcher
 from app.report_generator import ReportGenerator
 from app.email_delivery import EmailDelivery
 from app.analyst_actions import AnalystActionTracker
@@ -32,6 +33,41 @@ from app.security_universe import SecurityUniverse
 from app.paths import data_path
 
 LOG_DIR = data_path("logs")
+
+
+def news_focus_tickers(market_data, held_tickers=None, max_ranked=12, move_threshold=2.0):
+    held_tickers = {str(ticker).strip().upper() for ticker in (held_tickers or []) if str(ticker).strip()}
+    focus = set(held_tickers)
+
+    movers = sorted(
+        (
+            ticker
+            for ticker, data in market_data.items()
+            if data.get("status") == "available"
+            and data.get("sector") != "Benchmark ETF"
+            and abs(float(data.get("percent_change") or 0.0)) >= move_threshold
+        ),
+        key=lambda ticker: abs(float(market_data[ticker].get("percent_change") or 0.0)),
+        reverse=True,
+    )
+    focus.update(movers[:max_ranked])
+
+    scored = sorted(
+        (
+            (ticker, data)
+            for ticker, data in market_data.items()
+            if data.get("status") == "available"
+            and data.get("sector") != "Benchmark ETF"
+            and data.get("scores")
+        ),
+        key=lambda item: (
+            sum(float(value or 0.0) for value in item[1].get("scores", {}).values()),
+            float(item[1].get("percent_change") or 0.0),
+        ),
+        reverse=True,
+    )
+    focus.update(ticker for ticker, _data in scored[:max_ranked])
+    return sorted(focus)
 
 
 def verify_internet_connectivity(timeout=5):
@@ -168,6 +204,12 @@ def main():
         try:
             paper_account = PaperTradingAccount()
             if paper_account.account_file.exists():
+                held_tickers = set(paper_account.load().get("positions", {}).keys())
+                focused_news = news_focus_tickers(market_data, held_tickers=held_tickers)
+                NewsFetcher().enrich_market_data(market_data, focused_news)
+                print(
+                    f"[ok] Refreshed company-news signals for {len(focused_news)} focus ticker(s)."
+                )
                 prices = {
                     ticker: data.get("price")
                     for ticker, data in market_data.items()
@@ -180,14 +222,31 @@ def main():
                         "QQQ": prices.get("QQQ"),
                     },
                 )
-                paper_proposals = PaperStrategy().generate(paper_account, market_data)
-                position_monitor = PaperPositionMonitor().review(
+                paper_proposals = PaperStrategy.from_account_policy(
+                    paper_account
+                ).generate(paper_account, market_data)
+                position_monitor = PaperPositionMonitor.from_account(
+                    paper_account,
+                    latest_prices=prices,
+                ).review(
                     paper_account,
                     market_data,
                 )
                 paper_reviews = PaperRiskReviewer().review_pending(
                     paper_account,
                     market_data,
+                )
+                autonomous_cycle = paper_account.run_autonomous_cycle(
+                    latest_prices=prices,
+                )
+                # Refresh the performance snapshot after any autonomous actions so
+                # the saved report reflects the actual post-trade paper book.
+                paper_account.record_performance_snapshot(
+                    prices=prices,
+                    benchmark_prices={
+                        "SPY": prices.get("SPY"),
+                        "QQQ": prices.get("QQQ"),
+                    },
                 )
                 paper_summary = paper_account.performance_summary()
                 paper_summary["configured"] = True
@@ -207,6 +266,19 @@ def main():
                     f"reviews and {len(position_monitor['exit_proposals'])} exit proposals."
                 )
                 print(f"[ok] Recorded {len(paper_reviews)} paper proposal risk reviews.")
+                if autonomous_cycle["enabled"]:
+                    print(
+                        f"[ok] Auto-managed paper mode approved "
+                        f"{len(autonomous_cycle['approved'])}, rejected "
+                        f"{len(autonomous_cycle['rejected'])}, and executed "
+                        f"{len(autonomous_cycle['executed'])} simulated proposal(s)."
+                    )
+                    if autonomous_cycle["skipped"]:
+                        print(
+                            f"[paper] Auto-managed paper mode skipped "
+                            f"{len(autonomous_cycle['skipped'])} proposal(s) that still "
+                            "needed data or failed policy checks."
+                        )
                 print(f"[ok] Paper performance report refreshed: {performance_report_path}")
             else:
                 paper_summary = {"configured": False, "available": False}

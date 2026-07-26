@@ -3,9 +3,22 @@
 from pathlib import Path
 import threading
 
+from app.decision_driver import infer_decision_driver
+
 
 VALID_RESEARCH_DECISIONS = {"approve", "reject", "defer"}
 VALID_PAPER_DECISIONS = {"approve", "reject"}
+PAPER_POLICY_FIELDS = (
+    "auto_manage_enabled",
+    "strategy_minimum_buy_score",
+    "strategy_maximum_exit_score",
+    "strategy_target_position_pct",
+    "strategy_maximum_new_proposals",
+    "strategy_minimum_daily_move_pct",
+    "strategy_benchmark_excess_weight",
+    "strategy_trend_quality_weight",
+    "strategy_sector_repeat_penalty",
+)
 
 
 class OwnerControlService:
@@ -20,12 +33,24 @@ class OwnerControlService:
         self.lock = threading.Lock()
 
     def model(self):
+        auto_manage_enabled = self._auto_manage_enabled()
+        autonomous_research_cycle = self._run_research_autonomy_if_enabled(
+            auto_manage_enabled
+        )
         awaiting = self.research_queue.list_tasks(status="awaiting_owner")
         ranked_reviews = self._rank_research_reviews(awaiting)
         action_context = self._action_context()
         snapshot = self.dashboard_service._latest_snapshot()
         securities = snapshot.get("securities", {})
         latest_prices = self._latest_prices()
+        autonomous_cycle = self._run_autonomous_cycle_if_enabled(
+            latest_prices,
+            auto_manage_enabled,
+        )
+        self._persist_autonomous_updates(
+            autonomous_research_cycle,
+            autonomous_cycle,
+        )
         position_shares = self._position_shares_with_prices(latest_prices)
         paper_feedback = (
             self.paper_account.proposal_feedback(latest_prices=latest_prices)
@@ -37,69 +62,299 @@ class OwnerControlService:
             for proposal in self.paper_account.proposals()
             if proposal["status"] in {"pending", "approved"}
         ] if self.paper_account.account_file.exists() else []
+        proposal_models = [
+            self._proposal_model(
+                item,
+                securities.get(item["ticker"], {}),
+                position_shares,
+                paper_feedback,
+                auto_manage_enabled,
+            )
+            for item in proposals
+        ]
+        position_models = self._position_models(latest_prices, proposals)
+        portfolio_action_queue = self._portfolio_action_queue(
+            proposal_models,
+            position_models,
+            action_context,
+        )
+        healthy_holdings_summary = self._healthy_holdings_summary(
+            position_models,
+            action_context,
+        )
+        controls_summary = self._controls_summary(
+            ranked_reviews,
+            proposal_models,
+            position_models,
+        )
+        portfolio_action_queue, healthy_holdings_summary = (
+            self._apply_controls_freshness(
+                portfolio_action_queue,
+                healthy_holdings_summary,
+                controls_summary,
+            )
+        )
         return {
             "enabled": True,
             "boundary": "Owner only; simulation and research decisions",
+            "paper_strategy_policy": self._paper_strategy_policy(),
             "daily_action_list": self._daily_action_list(
                 ranked_reviews,
                 action_context,
             ),
+            "portfolio_action_queue": portfolio_action_queue,
+            "healthy_holdings_summary": healthy_holdings_summary,
+            "controls_summary": controls_summary,
             "owner_outcomes": self._owner_outcomes(),
             "research_reviews": ranked_reviews,
-            "paper_proposals": [
-                {
-                    "proposal_id": item["proposal_id"],
-                    "status": item["status"],
-                    "side": item["side"],
-                    "ticker": item["ticker"],
-                    "shares": item["shares"],
-                    "reference_price": item["price"],
-                    "thesis": item["thesis"],
-                    "rationale": self._proposal_rationale(
-                        item,
-                        securities.get(item["ticker"], {}),
-                        position_shares,
-                        self._paper_proposal_calibration(
-                            item,
-                            paper_feedback,
-                            position_shares,
-                        ),
-                    ),
-                    "objections": self._proposal_objections(
-                        item,
-                        securities.get(item["ticker"], {}),
-                        position_shares,
-                        self._paper_proposal_calibration(
-                            item,
-                            paper_feedback,
-                            position_shares,
-                        ),
-                    ),
-                    "risk_review": item.get("risk_review"),
-                    "position_shares": position_shares.get(item["ticker"], 0.0),
-                    "action_label": self._proposal_action_label(
-                        item,
-                        position_shares,
-                    ),
-                    "paper_calibration": self._paper_proposal_calibration(
-                        item,
-                        paper_feedback,
-                        position_shares,
-                    ),
-                }
-                for item in proposals
-            ],
+            "paper_proposals": proposal_models,
+            "paper_auto_manage_enabled": auto_manage_enabled,
+            "research_auto_manage_enabled": auto_manage_enabled,
+            "autonomous_cycle": autonomous_cycle,
+            "autonomous_research_cycle": autonomous_research_cycle,
             "capabilities": {
-                "research_decisions": True,
-                "paper_proposal_decisions": True,
-                "simulated_fills": True,
+                "research_decisions": not auto_manage_enabled,
+                "paper_proposal_decisions": not auto_manage_enabled,
+                "simulated_fills": not auto_manage_enabled,
                 "real_trading": False,
                 "brokerage_connection": False,
             },
         }
 
+    def _paper_strategy_policy(self):
+        if not self.paper_account.account_file.exists():
+            return {
+                "available": False,
+                "headline": "Initialize the Atlas paper account before changing strategy policy.",
+                "values": {},
+                "adaptive_profiles": [],
+            }
+        account = self.paper_account.load()
+        policy = dict(self.paper_account.policy)
+        policy.update(account.get("policy", {}))
+        latest_prices = self._latest_prices()
+        entry_strategy = self.paper_account.entry_strategy_profile(
+            latest_prices=latest_prices
+        )
+        trade_pressure = self.paper_account.trade_pressure_profile(
+            latest_prices=latest_prices
+        )
+        benchmark_preference = self.paper_account.benchmark_preference_profile(
+            latest_prices=latest_prices
+        )
+        values = {
+            "auto_manage_enabled": bool(policy.get("auto_manage_enabled")),
+            "strategy_minimum_buy_score": float(
+                policy.get("strategy_minimum_buy_score", 88.0)
+            ),
+            "strategy_maximum_exit_score": float(
+                policy.get("strategy_maximum_exit_score", 60.0)
+            ),
+            "strategy_target_position_pct": float(
+                policy.get("strategy_target_position_pct", 5.0)
+            ),
+            "strategy_maximum_new_proposals": int(
+                policy.get("strategy_maximum_new_proposals", 3)
+            ),
+            "strategy_minimum_daily_move_pct": float(
+                policy.get("strategy_minimum_daily_move_pct", -8.0)
+            ),
+            "strategy_benchmark_excess_weight": float(
+                policy.get("strategy_benchmark_excess_weight", 1.5)
+            ),
+            "strategy_trend_quality_weight": float(
+                policy.get("strategy_trend_quality_weight", 0.2)
+            ),
+            "strategy_sector_repeat_penalty": float(
+                policy.get("strategy_sector_repeat_penalty", 3.0)
+            ),
+        }
+        return {
+            "available": True,
+            "headline": (
+                "These settings change how aggressively Atlas opens, sizes, and "
+                "diversifies autonomous paper trades."
+            ),
+            "values": values,
+            "adaptive_profiles": self._strategy_adaptive_profiles(
+                entry_strategy,
+                trade_pressure,
+                benchmark_preference,
+            ),
+        }
+
+    @staticmethod
+    def _strategy_adaptive_profiles(entry_strategy, trade_pressure, benchmark_preference):
+        return [
+            {
+                "id": "trade_pressure",
+                "label": "Adaptive trade pressure",
+                "status": "active" if trade_pressure.get("active") else "watching",
+                "value": str(
+                    trade_pressure.get("policy_overrides", {}).get(
+                        "maximum_daily_trades",
+                        trade_pressure.get("baseline", {}).get(
+                            "maximum_daily_trades", "--"
+                        ),
+                    )
+                ),
+                "detail": trade_pressure.get("headline")
+                or "Atlas is monitoring how quickly it should turn the paper book.",
+            },
+            {
+                "id": "benchmark_trust",
+                "label": "Adaptive benchmark trust",
+                "status": (
+                    "active" if benchmark_preference.get("active") else "watching"
+                ),
+                "value": str(
+                    benchmark_preference.get("strategy_overrides", {}).get(
+                        "strategy_preferred_benchmark",
+                        benchmark_preference.get("baseline", {}).get(
+                            "strategy_preferred_benchmark", "auto"
+                        ),
+                    )
+                ).upper(),
+                "detail": benchmark_preference.get("headline")
+                or "Atlas is monitoring which benchmark bar explains outcomes best.",
+            },
+            {
+                "id": "entry_pacing",
+                "label": "Adaptive entry pacing",
+                "status": "active" if entry_strategy.get("active") else "watching",
+                "value": str(
+                    entry_strategy.get("strategy_overrides", {}).get(
+                        "strategy_target_position_pct",
+                        entry_strategy.get("baseline", {}).get(
+                            "strategy_target_position_pct", "--"
+                        ),
+                    )
+                ),
+                "detail": entry_strategy.get("headline")
+                or "Atlas is monitoring how aggressively it should rotate capital into new paper ideas.",
+            },
+        ]
+
     def _position_shares(self):
         return self._position_shares_with_prices(self._latest_prices())
+
+    def _auto_manage_enabled(self):
+        if not self.paper_account.account_file.exists():
+            return False
+        try:
+            return self.paper_account.auto_manage_enabled()
+        except ValueError:
+            return False
+
+    def _run_autonomous_cycle_if_enabled(self, latest_prices, auto_manage_enabled):
+        if not auto_manage_enabled or not self.paper_account.account_file.exists():
+            return {"enabled": False}
+        cycle = self.paper_account.run_autonomous_cycle(
+            latest_prices=latest_prices,
+            source="owner_controls_auto_manage",
+        )
+        self.paper_account.save_performance_report()
+        return cycle
+
+    def _run_research_autonomy_if_enabled(self, auto_manage_enabled):
+        if not auto_manage_enabled:
+            return {"enabled": False}
+        resolved = []
+        for task in self.research_queue.list_tasks(status="awaiting_owner"):
+            self.research_queue.record_owner_decision(
+                task["id"],
+                "approve",
+                notes=(
+                    "Auto-managed Atlas mode accepted this research recommendation "
+                    "without waiting for manual owner review."
+                ),
+            )
+            resolved.append(task["id"])
+        if resolved:
+            self.research_queue.save_review_outputs()
+        return {
+            "enabled": True,
+            "approved": resolved,
+        }
+
+    def _persist_autonomous_updates(self, research_cycle, paper_cycle):
+        paths = []
+        if (research_cycle.get("approved") or []) and self.research_queue.task_file.exists():
+            paths.extend([self.research_queue.task_file, *self._research_outputs()])
+        if (
+            paper_cycle.get("approved")
+            or paper_cycle.get("rejected")
+            or paper_cycle.get("executed")
+        ) and self.paper_account.account_file.exists():
+            paths.extend(
+                [
+                    self.paper_account.account_file,
+                    self.paper_account.ledger_file,
+                    self.paper_account.account_file.parent / "performance.md",
+                ]
+            )
+        if paths:
+            self.persist(paths)
+
+    def _proposal_model(
+        self,
+        proposal,
+        security,
+        position_shares,
+        paper_feedback,
+        auto_manage_enabled=False,
+    ):
+        paper_calibration = self._paper_proposal_calibration(
+            proposal,
+            paper_feedback,
+            position_shares,
+        )
+        research_context = self._latest_research_context(proposal.get("ticker"))
+        sell_trigger_summary = ""
+        sell_trigger_reasons = []
+        if str(proposal.get("side") or "").lower() == "sell":
+            sell_trigger_summary, sell_trigger_reasons = self._sell_trigger_context(
+                proposal,
+                security,
+                position_shares,
+                paper_calibration,
+                research_context=research_context,
+            )
+        return {
+            "proposal_id": proposal["proposal_id"],
+            "status": proposal["status"],
+            "side": proposal["side"],
+            "ticker": proposal["ticker"],
+            "timestamp": proposal.get("timestamp"),
+            "updated_at": self._proposal_updated_at(proposal["proposal_id"]),
+            "shares": proposal["shares"],
+            "reference_price": proposal["price"],
+            "thesis": proposal["thesis"],
+            "rationale": self._proposal_rationale(
+                proposal,
+                security,
+                position_shares,
+                paper_calibration,
+            ),
+            "objections": self._proposal_objections(
+                proposal,
+                security,
+                position_shares,
+                paper_calibration,
+            ),
+            "risk_review": proposal.get("risk_review"),
+            "position_shares": position_shares.get(proposal["ticker"], 0.0),
+            "action_label": self._proposal_action_label(
+                proposal,
+                position_shares,
+            ),
+            "news_summary": self._news_signal_summary(security),
+            "paper_calibration": paper_calibration,
+            "auto_manage_enabled": bool(auto_manage_enabled),
+            "decision_driver": self._proposal_decision_driver(proposal),
+            "sell_trigger_summary": sell_trigger_summary,
+            "sell_trigger_reasons": sell_trigger_reasons,
+        }
 
     def _position_shares_with_prices(self, prices):
         if not self.paper_account.account_file.exists():
@@ -114,6 +369,39 @@ class OwnerControlService:
             if position.get("ticker")
         }
 
+    def _proposal_decision_driver(self, proposal):
+        texts = list(proposal.get("rationale") or [])
+        review = proposal.get("risk_review") or {}
+        texts.extend(review.get("flags") or [])
+        thesis = str(proposal.get("thesis") or "").strip()
+        if thesis:
+            texts.append(thesis)
+        return self._decision_driver(
+            texts,
+            side=proposal.get("side"),
+            action_label=proposal.get("action_label"),
+        )
+
+    def _position_decision_driver(self, review, thesis_status):
+        review = review or {}
+        texts = list(review.get("flags") or [])
+        thesis = str(review.get("thesis") or "").strip()
+        if thesis:
+            texts.append(thesis)
+        return self._decision_driver(
+            texts,
+            side="hold",
+            action_label=(thesis_status or {}).get("label"),
+        )
+
+    @staticmethod
+    def _decision_driver(texts, *, side="", action_label=""):
+        return infer_decision_driver(
+            texts,
+            side=side,
+            action_label=action_label,
+        )
+
     @staticmethod
     def _proposal_action_label(proposal, position_shares):
         if proposal.get("side") != "sell":
@@ -126,6 +414,280 @@ class OwnerControlService:
         if held:
             return "exit"
         return "sell"
+
+    def _position_models(self, latest_prices, proposals):
+        if not self.paper_account.account_file.exists():
+            return []
+        try:
+            status = self.paper_account.status(prices=latest_prices)
+        except ValueError:
+            return []
+        history = self.paper_account.performance_history()
+        latest_reviews = self.paper_account.latest_position_reviews()
+        securities = self.dashboard_service._latest_snapshot().get("securities", {})
+        active_sell_proposals = {
+            proposal["ticker"]: proposal
+            for proposal in proposals
+            if proposal.get("side") == "sell"
+            and proposal.get("status") in {"pending", "approved"}
+        }
+        rows = []
+        for position in status.get("positions", []):
+            ticker = position.get("ticker")
+            review = latest_reviews.get(ticker)
+            active_sell = active_sell_proposals.get(ticker)
+            thesis_status = self._position_thesis_status(position, review, active_sell)
+            decision_driver = self._position_decision_driver(review, thesis_status)
+            rows.append(
+                {
+                    "ticker": ticker,
+                    "shares": float(position.get("shares") or 0.0),
+                    "market_value": float(position.get("market_value") or 0.0),
+                    "unrealized_gain_loss": float(
+                        position.get("unrealized_gain_loss") or 0.0
+                    ),
+                    "review": review,
+                    "thesis_status": thesis_status,
+                    "decision_driver": decision_driver,
+                    "decision_journal": self._position_decision_journal(
+                        position,
+                        review,
+                        active_sell,
+                        history,
+                    ),
+                    "news_summary": self._news_signal_summary(securities.get(ticker, {})),
+                    "has_active_sell_proposal": bool(active_sell),
+                }
+            )
+        return rows
+
+    @staticmethod
+    def _news_signal_summary(security):
+        signal = (security or {}).get("news_signal") or {}
+        label = str(signal.get("signal_label") or "").strip().lower()
+        if not label:
+            return None
+        positive = int(signal.get("positive_count") or 0)
+        negative = int(signal.get("negative_count") or 0)
+        company_headlines = int(signal.get("company_headline_count") or 0)
+        score = float(signal.get("signal_score") or 50.0)
+        dominant_event = OwnerControlService._friendly_news_event(
+            signal.get("dominant_event_type")
+        )
+        high_impact_negative = int(signal.get("high_impact_negative_count") or 0)
+        high_impact_positive = int(signal.get("high_impact_positive_count") or 0)
+        examples = []
+        for text in signal.get("negative_examples") or []:
+            cleaned = str(text).strip()
+            if cleaned:
+                examples.append(cleaned)
+        if not examples:
+            for text in signal.get("positive_examples") or []:
+                cleaned = str(text).strip()
+                if cleaned:
+                    examples.append(cleaned)
+
+        tone = label.replace("_", " ")
+        headline = (
+            f"News tone is {tone} with {positive} positive and {negative} negative "
+            f"company headline{'s' if company_headlines != 1 else ''} in the latest scan."
+        )
+        detail = (
+            f"Signal score {score:.0f} across {company_headlines} company-specific "
+            f"headline{'s' if company_headlines != 1 else ''}."
+        )
+        event_detail = f"Main event read: {dominant_event}."
+        if high_impact_negative > 0:
+            event_detail += " Atlas currently treats this as high-impact downside news."
+        elif high_impact_positive > 0:
+            event_detail += " Atlas currently treats this as high-impact supportive news."
+        return {
+            "label": label,
+            "headline": headline,
+            "detail": detail,
+            "event_detail": event_detail,
+            "score": score,
+            "positive_count": positive,
+            "negative_count": negative,
+            "company_headline_count": company_headlines,
+            "dominant_event_type": str(signal.get("dominant_event_type") or "routine"),
+            "example": examples[0] if examples else "",
+        }
+
+    @staticmethod
+    def _friendly_news_event(value):
+        text = str(value or "").strip().lower()
+        if not text or text == "routine":
+            return "routine mention"
+        return text.replace("_", " ")
+
+    def _position_decision_journal(self, position, review, active_sell, history):
+        rows = []
+        ticker = position.get("ticker") or "This holding"
+        average_cost = position.get("average_cost")
+        price = position.get("price")
+        if average_cost is not None and price is not None:
+            rows.append(
+                f"Current basis is ${float(average_cost):,.2f} versus latest price ${float(price):,.2f}."
+            )
+        benchmark_line = self._position_benchmark_line(ticker, history, price)
+        if benchmark_line:
+            rows.append(benchmark_line)
+        if review:
+            flags = review.get("flags") or []
+            verdict = str(review.get("verdict") or "maintain").replace("_", " ")
+            review_date = self._friendly_timestamp(review.get("timestamp"))
+            review_line = f"Latest thesis review ({review_date}): {verdict}."
+            if flags:
+                review_line += f" Main flag: {flags[0]}"
+            rows.append(review_line)
+        rows.append(self._position_escalation_line(position, review, active_sell))
+        return rows[:4]
+
+    def _position_benchmark_line(self, ticker, history, latest_price):
+        if latest_price is None:
+            return ""
+        entry_trade = self._latest_open_buy_trade(ticker)
+        if not entry_trade:
+            return ""
+        start = self.paper_account._first_snapshot_after(
+            history,
+            entry_trade.get("timestamp"),
+        )
+        latest = history[-1] if history else None
+        if not start or not latest or start.get("timestamp") == latest.get("timestamp"):
+            return ""
+        security_return = self.paper_account._pct_return(
+            entry_trade.get("fill_price"),
+            latest_price,
+        )
+        if security_return is None:
+            return ""
+        spy_return = self.paper_account._pct_return(
+            start.get("benchmark_prices", {}).get("SPY"),
+            latest.get("benchmark_prices", {}).get("SPY"),
+        )
+        qqq_return = self.paper_account._pct_return(
+            start.get("benchmark_prices", {}).get("QQQ"),
+            latest.get("benchmark_prices", {}).get("QQQ"),
+        )
+        benchmarks = []
+        if spy_return is not None:
+            benchmarks.append(f"SPY {spy_return:+.2f}%")
+        if qqq_return is not None:
+            benchmarks.append(f"QQQ {qqq_return:+.2f}%")
+        if not benchmarks:
+            return ""
+        return (
+            f"Since the latest buy fill, {ticker} is {security_return:+.2f}% versus "
+            + " and ".join(benchmarks)
+            + "."
+        )
+
+    def _latest_open_buy_trade(self, ticker):
+        ticker = str(ticker or "").strip().upper()
+        if not ticker:
+            return None
+        for trade in reversed(self.paper_account.trade_activity(limit=1000)):
+            if str(trade.get("ticker") or "").strip().upper() != ticker:
+                continue
+            if str(trade.get("side") or "").lower() != "buy":
+                continue
+            return trade
+        return None
+
+    @staticmethod
+    def _friendly_timestamp(value):
+        text = str(value or "").strip()
+        if not text:
+            return "recently"
+        return text.replace("T", " ")
+
+    def _proposal_updated_at(self, proposal_id):
+        proposal_id = str(proposal_id or "").strip()
+        if not proposal_id:
+            return ""
+        latest = ""
+        for event in self.paper_account.ledger():
+            if event.get("proposal_id") != proposal_id:
+                continue
+            timestamp = str(event.get("timestamp") or "").strip()
+            if timestamp and timestamp > latest:
+                latest = timestamp
+        return latest
+
+    @staticmethod
+    def _position_escalation_line(position, review, active_sell):
+        ticker = position.get("ticker") or "This holding"
+        if active_sell:
+            shares = float(position.get("shares") or 0.0)
+            sell_shares = float(active_sell.get("shares") or 0.0)
+            if shares and sell_shares < shares:
+                return (
+                    f"Escalation state: Atlas already wants to trim {sell_shares:g} of {shares:g} simulated shares."
+                )
+            return "Escalation state: Atlas already has an exit path active for this holding."
+        if review:
+            verdict = str(review.get("verdict") or "").lower()
+            if verdict == "exit":
+                return f"Escalation cue: {ticker} has already crossed Atlas's exit threshold on the latest review."
+            if verdict == "review":
+                return (
+                    "Escalation cue: move from hold toward trim or exit if the next thesis review repeats weakness or adds new risk flags."
+                )
+        return (
+            "Escalation cue: stay in hold mode unless a future thesis review downgrades the position or Atlas opens a trim/exit proposal."
+        )
+
+    @staticmethod
+    def _position_thesis_status(position, review, active_sell):
+        shares = float(position.get("shares") or 0.0)
+        if active_sell:
+            sell_shares = float(active_sell.get("shares") or 0.0)
+            if shares and sell_shares < shares:
+                return {
+                    "label": "trim",
+                    "summary": (
+                        f"Atlas has an active simulated trim proposal for "
+                        f"{sell_shares:g} of {shares:g} shares."
+                    ),
+                }
+            return {
+                "label": "exit",
+                "summary": "Atlas has an active simulated exit proposal for this holding.",
+            }
+        if not review:
+            return {
+                "label": "healthy",
+                "summary": "Awaiting the next daily thesis review.",
+            }
+        verdict = str(review.get("verdict") or "maintain").lower()
+        flags = review.get("flags") or []
+        score = review.get("atlas_score")
+        score_text = f" Atlas score {score:.1f}." if score is not None else ""
+        if verdict == "exit":
+            return {
+                "label": "exit",
+                "summary": (
+                    (flags[0] if flags else "Atlas marked this holding for simulated exit.")
+                    + score_text
+                ).strip(),
+            }
+        if verdict == "review":
+            return {
+                "label": "watch",
+                "summary": (
+                    (flags[0] if flags else "Atlas wants a closer thesis review on this holding.")
+                    + score_text
+                ).strip(),
+            }
+        return {
+            "label": "healthy",
+            "summary": (
+                (flags[0] if flags else "Latest thesis review remains constructive.")
+                + score_text
+            ).strip(),
+        }
 
     def _rank_research_reviews(self, tasks):
         reviews = []
@@ -341,6 +903,30 @@ class OwnerControlService:
                     f"latest judged {ticker} {self._paper_side_label(side, action_label)} outcome was lagging"
                 )
 
+            persistence_rows = [
+                item
+                for item in (latest.get("horizon_outcomes") or [])
+                if item.get("available") and int(item.get("snapshots") or 0) == 3
+            ]
+            if persistence_rows:
+                persistence = persistence_rows[0]
+                persistence_verdict = str(
+                    persistence.get("verdict") or ""
+                ).strip().lower()
+                if persistence_verdict == "working":
+                    adjustment += 2
+                    if adjustment >= 0:
+                        label = "supportive"
+                    reasons.append(
+                        f"latest judged {ticker} {self._paper_side_label(side, action_label)} 3-snapshot persistence stayed working"
+                    )
+                elif persistence_verdict == "lagging":
+                    adjustment -= 3
+                    label = "caution"
+                    reasons.append(
+                        f"latest judged {ticker} {self._paper_side_label(side, action_label)} 3-snapshot persistence stayed lagging"
+                    )
+
         if not judged_rows:
             summary = "Atlas does not have enough judged simulated outcomes yet for this proposal type."
         elif adjustment > 0:
@@ -535,6 +1121,55 @@ class OwnerControlService:
         if calibration_reason:
             rows.append(calibration_reason)
         return rows[:4]
+
+    def _sell_trigger_context(
+        self,
+        proposal,
+        security,
+        position_shares,
+        paper_calibration,
+        research_context=None,
+    ):
+        ticker = str(proposal.get("ticker") or "This position")
+        action_label = self._proposal_action_label(proposal, position_shares)
+        review = proposal.get("risk_review") or {}
+        flags = [
+            str(flag).strip()
+            for flag in review.get("flags") or []
+            if str(flag).strip()
+        ]
+        score = security.get("total_score")
+        move = security.get("percent_change")
+        reasons = []
+        if research_context and research_context.get("thesis_alignment") == "risk_to_thesis":
+            reasons.append(
+                f"Latest Atlas research tagged {ticker} as risk to thesis."
+            )
+        if flags:
+            reasons.append("Risk review flags: " + ", ".join(flags[:2]) + ".")
+        if score is not None:
+            reasons.append(
+                f"Atlas score is now {float(score):.1f}, which keeps this holding in active thesis review."
+            )
+        if move is not None and float(move) < 0:
+            reasons.append(
+                f"Latest move is {float(move):+.2f}%, which supports a more defensive posture."
+            )
+        calibration_summary = str((paper_calibration or {}).get("summary") or "").strip()
+        if calibration_summary:
+            reasons.append("Paper learning: " + calibration_summary)
+
+        if action_label == "trim":
+            summary = (
+                "Trim trigger: Atlas sees enough thesis or confirmation weakness to reduce exposure, "
+                "but not enough to close the simulated position entirely."
+            )
+        else:
+            summary = (
+                "Exit trigger: Atlas sees enough thesis or confirmation weakness to close the simulated "
+                "position rather than keep partial exposure."
+            )
+        return summary, reasons[:4]
 
     def _sell_objections(
         self,
@@ -753,6 +1388,452 @@ class OwnerControlService:
             )
         return actions
 
+    def _portfolio_action_queue(
+        self,
+        proposal_models,
+        position_models,
+        action_context=None,
+        limit=8,
+    ):
+        action_context = action_context or {}
+        queue = []
+        for proposal in proposal_models:
+            ticker = str(proposal.get("ticker") or "")
+            ticker_context = action_context.get("tickers", {}).get(ticker, {})
+            queue.append(
+                {
+                    "kind": "proposal",
+                    "kind_label": "Paper proposal",
+                    "subject": ticker,
+                    "title": self._proposal_queue_title(proposal),
+                    "attention_score": self._proposal_action_score(proposal),
+                    "attention_label": self._attention_label(
+                        self._proposal_action_score(proposal)
+                    ),
+                    "summary": self._proposal_queue_summary(proposal),
+                    "evidence_anchor": self._proposal_queue_evidence(proposal),
+                    "portfolio_context": ticker_context.get(
+                        "portfolio_context",
+                        action_context.get("default_portfolio_context", ""),
+                    ),
+                    "paper_context": ticker_context.get(
+                        "paper_context",
+                        action_context.get("default_paper_context", ""),
+                    ),
+                    "decision_driver": proposal.get("decision_driver"),
+                    "news_summary": proposal.get("news_summary") or {},
+                    "next_step": self._proposal_queue_next_step(proposal),
+                    "status_label": self._proposal_queue_status_label(proposal),
+                    "anchor_id": self._controls_anchor_id("queue", ticker),
+                }
+            )
+
+        for position in position_models:
+            thesis = position.get("thesis_status") or {}
+            label = thesis.get("label") or "healthy"
+            if label == "healthy" or position.get("has_active_sell_proposal"):
+                continue
+            ticker = str(position.get("ticker") or "")
+            ticker_context = action_context.get("tickers", {}).get(ticker, {})
+            queue.append(
+                {
+                    "kind": "position",
+                    "kind_label": "Open holding",
+                    "subject": ticker,
+                    "title": f"{ticker} open position",
+                    "attention_score": self._position_action_score(position),
+                    "attention_label": self._attention_label(
+                        self._position_action_score(position)
+                    ),
+                    "summary": thesis.get("summary")
+                    or "Atlas wants fresh attention on this simulated holding.",
+                    "evidence_anchor": self._position_queue_evidence(position),
+                    "portfolio_context": ticker_context.get(
+                        "portfolio_context",
+                        action_context.get("default_portfolio_context", ""),
+                    ),
+                    "paper_context": ticker_context.get(
+                        "paper_context",
+                        action_context.get("default_paper_context", ""),
+                    ),
+                    "decision_driver": position.get("decision_driver"),
+                    "news_summary": position.get("news_summary") or {},
+                    "next_step": self._position_queue_next_step(position),
+                    "status_label": self._position_status_label(position),
+                    "anchor_id": self._controls_anchor_id("queue", ticker),
+                }
+            )
+
+        queue.sort(
+            key=lambda item: (
+                -float(item.get("attention_score") or 0),
+                0 if item.get("kind") == "proposal" else 1,
+                item.get("subject") or "",
+            )
+        )
+        return queue[:limit]
+
+    def _healthy_holdings_summary(
+        self,
+        position_models,
+        action_context=None,
+        limit=6,
+    ):
+        action_context = action_context or {}
+        rows = []
+        for position in position_models:
+            thesis = position.get("thesis_status") or {}
+            if str(thesis.get("label") or "").lower() != "healthy":
+                continue
+            ticker = str(position.get("ticker") or "")
+            ticker_context = action_context.get("tickers", {}).get(ticker, {})
+            rows.append(
+                {
+                    "ticker": ticker,
+                    "summary": thesis.get("summary")
+                    or "Latest thesis review remains constructive.",
+                    "journal": list(position.get("decision_journal") or [])[:2],
+                    "portfolio_context": ticker_context.get(
+                        "portfolio_context",
+                        action_context.get("default_portfolio_context", ""),
+                    ),
+                    "paper_context": ticker_context.get(
+                        "paper_context",
+                        action_context.get("default_paper_context", ""),
+                    ),
+                    "decision_driver": position.get("decision_driver"),
+                    "news_summary": position.get("news_summary") or {},
+                    "unrealized_gain_loss": float(
+                        position.get("unrealized_gain_loss") or 0.0
+                    ),
+                    "market_value": float(position.get("market_value") or 0.0),
+                    "anchor_id": self._controls_anchor_id("healthy", ticker),
+                }
+            )
+        rows.sort(
+            key=lambda item: (
+                -float(item.get("market_value") or 0.0),
+                item.get("ticker") or "",
+            )
+        )
+        headline = (
+            "No open simulated holdings are currently in hold-steady mode."
+            if not rows
+            else "These open simulated holdings remain healthy and are intentionally absent from the ranked action queue."
+        )
+        return {
+            "count": len(rows),
+            "headline": headline,
+            "items": rows[:limit],
+        }
+
+    def _controls_summary(
+        self,
+        ranked_reviews,
+        proposal_models,
+        position_models,
+    ):
+        queue = self._portfolio_action_queue(
+            proposal_models,
+            position_models,
+            {},
+            limit=100,
+        )
+        healthy = self._healthy_holdings_summary(
+            position_models,
+            {},
+            limit=100,
+        )
+        open_positions = len(position_models)
+        buy_proposals = sum(1 for item in proposal_models if item.get("side") == "buy")
+        sell_proposals = sum(1 for item in proposal_models if item.get("side") == "sell")
+        research_reviews = len(ranked_reviews)
+        queue_count = len(queue)
+        healthy_count = int(healthy.get("count") or 0)
+        freshest_change = self._controls_freshest_change(
+            proposal_models,
+            position_models,
+        )
+
+        if queue_count and healthy_count:
+            headline = (
+                f"Atlas is actively tracking {queue_count} action item"
+                f"{'' if queue_count == 1 else 's'} while {healthy_count} holding"
+                f"{'' if healthy_count == 1 else 's'} remain steady."
+            )
+        elif queue_count:
+            headline = (
+                f"Atlas is actively tracking {queue_count} action item"
+                f"{'' if queue_count == 1 else 's'} across the current paper book."
+            )
+        elif healthy_count:
+            headline = (
+                f"No paper-book actions are currently ranked; {healthy_count} holding"
+                f"{'' if healthy_count == 1 else 's'} remain steady."
+            )
+        else:
+            headline = "No open paper positions or action items are currently tracked."
+
+        if sell_proposals:
+            posture = "Reduction paths are active in the paper workflow."
+        elif buy_proposals:
+            posture = "Paper workflow is currently entry-led."
+        elif healthy_count:
+            posture = "Current paper posture is mostly hold steady."
+        else:
+            posture = "Paper workflow is waiting for the next actionable signal."
+
+        return {
+            "headline": headline,
+            "posture": posture,
+            "counts": {
+                "queue": queue_count,
+                "healthy": healthy_count,
+                "open_positions": open_positions,
+                "research_reviews": research_reviews,
+                "buy_proposals": buy_proposals,
+                "sell_proposals": sell_proposals,
+            },
+            "freshest_change": freshest_change,
+        }
+
+    def _controls_freshest_change(self, proposal_models, position_models):
+        candidates = []
+        for proposal in proposal_models:
+            timestamp = str(
+                proposal.get("updated_at") or proposal.get("timestamp") or ""
+            ).strip()
+            if not timestamp:
+                continue
+            ticker = str(proposal.get("ticker") or "Proposal")
+            status_label = self._proposal_queue_status_label(proposal)
+            if proposal.get("side") == "sell":
+                detail = (
+                    f"{ticker} is the newest {status_label.lower()} in the ranked action queue."
+                )
+            else:
+                detail = (
+                    f"{ticker} is the newest {status_label.lower()} in the ranked action queue."
+                )
+            candidates.append(
+                {
+                    "bucket": "queue",
+                    "bucket_label": "Portfolio action queue",
+                    "timestamp": timestamp,
+                    "subject": ticker,
+                    "detail": detail,
+                    "anchor_id": self._controls_anchor_id("queue", ticker),
+                }
+            )
+        for position in position_models:
+            thesis = position.get("thesis_status") or {}
+            label = str(thesis.get("label") or "healthy").lower()
+            review = position.get("review") or {}
+            timestamp = str(review.get("timestamp") or "").strip()
+            if not timestamp:
+                continue
+            ticker = str(position.get("ticker") or "Holding")
+            if label == "healthy":
+                detail = f"{ticker} was most recently reaffirmed as hold steady."
+                bucket = {
+                    "bucket": "healthy",
+                    "bucket_label": "Hold-steady holdings",
+                }
+            elif position.get("has_active_sell_proposal"):
+                continue
+            else:
+                detail = (
+                    f"{ticker} most recently shifted into {self._position_status_label(position).lower()} review."
+                )
+                bucket = {
+                    "bucket": "queue",
+                    "bucket_label": "Portfolio action queue",
+                }
+            candidates.append(
+                {
+                    **bucket,
+                    "timestamp": timestamp,
+                    "subject": ticker,
+                    "detail": detail,
+                    "anchor_id": self._controls_anchor_id(bucket["bucket"], ticker),
+                }
+            )
+        if not candidates:
+            return {}
+        latest = max(candidates, key=lambda item: item.get("timestamp") or "")
+        return {
+            **latest,
+            "timestamp_label": self._friendly_timestamp(latest.get("timestamp")),
+        }
+
+    @staticmethod
+    def _controls_anchor_id(bucket, subject):
+        bucket = str(bucket or "").strip().lower() or "controls"
+        subject = str(subject or "").strip().lower()
+        safe_subject = "".join(
+            char if char.isalnum() else "-"
+            for char in subject
+        ).strip("-") or "item"
+        return f"controls-{bucket}-{safe_subject}"
+
+    def _apply_controls_freshness(
+        self,
+        portfolio_action_queue,
+        healthy_holdings_summary,
+        controls_summary,
+    ):
+        freshest = controls_summary.get("freshest_change") or {}
+        freshest_bucket = str(freshest.get("bucket") or "").strip().lower()
+        freshest_subject = str(freshest.get("subject") or "").strip().upper()
+        freshest_label = (
+            f"Freshest shift as of {freshest.get('timestamp_label')}"
+            if freshest.get("timestamp_label")
+            else "Freshest shift"
+        )
+        queue = []
+        for item in portfolio_action_queue:
+            subject = str(item.get("subject") or "").strip().upper()
+            is_freshest = (
+                freshest_bucket == "queue"
+                and freshest_subject
+                and subject == freshest_subject
+            )
+            queue.append(
+                {
+                    **item,
+                    "is_freshest_shift": is_freshest,
+                    "freshness_label": freshest_label if is_freshest else "",
+                }
+            )
+        items = []
+        for item in healthy_holdings_summary.get("items", []):
+            ticker = str(item.get("ticker") or "").strip().upper()
+            is_freshest = (
+                freshest_bucket == "healthy"
+                and freshest_subject
+                and ticker == freshest_subject
+            )
+            items.append(
+                {
+                    **item,
+                    "is_freshest_shift": is_freshest,
+                    "freshness_label": freshest_label if is_freshest else "",
+                }
+            )
+        return queue, {
+            **healthy_holdings_summary,
+            "items": items,
+        }
+
+    def _proposal_action_score(self, proposal):
+        side = str(proposal.get("side") or "buy").lower()
+        status = str(proposal.get("status") or "pending").lower()
+        action_label = str(proposal.get("action_label") or "purchase").lower()
+        adjustment = float((proposal.get("paper_calibration") or {}).get("adjustment") or 0)
+        if side == "sell":
+            base = 90 if action_label == "exit" else 84
+            if status == "approved":
+                base += 4
+        else:
+            base = 76 if status == "approved" else 70
+        return max(0, min(100, round(base + adjustment, 1)))
+
+    def _proposal_queue_title(self, proposal):
+        ticker = str(proposal.get("ticker") or "Proposal")
+        action = self._proposal_queue_status_label(proposal)
+        return f"{ticker} {action.lower()}"
+
+    @staticmethod
+    def _proposal_queue_status_label(proposal):
+        if proposal.get("auto_manage_enabled"):
+            if proposal.get("status") == "approved":
+                return "Auto-execution queued"
+            return "Atlas auto-review queue"
+        if proposal.get("side") == "sell":
+            action = str(proposal.get("action_label") or "sell").lower()
+            return "Trim candidate" if action == "trim" else "Exit candidate"
+        return "Ready to simulate" if proposal.get("status") == "approved" else "Buy candidate"
+
+    @staticmethod
+    def _proposal_queue_summary(proposal):
+        rationale = proposal.get("rationale") or []
+        thesis = str(proposal.get("thesis") or "").strip()
+        if rationale:
+            return str(rationale[0]).strip()
+        if thesis:
+            return thesis
+        if proposal.get("auto_manage_enabled"):
+            return "Atlas will auto-review and auto-execute this paper proposal when the risk and pricing checks pass."
+        return "Atlas has a paper proposal awaiting owner attention."
+
+    @staticmethod
+    def _proposal_queue_evidence(proposal):
+        driver = proposal.get("decision_driver") or {}
+        if driver.get("evidence"):
+            return str(driver["evidence"]).strip()
+        calibration = proposal.get("paper_calibration") or {}
+        reasons = calibration.get("reasons") or []
+        if reasons:
+            return str(reasons[0]).strip()
+        objections = proposal.get("objections") or []
+        if objections:
+            return str(objections[0]).strip()
+        return ""
+
+    @staticmethod
+    def _proposal_queue_next_step(proposal):
+        if proposal.get("auto_manage_enabled"):
+            if proposal.get("status") == "approved":
+                return "Atlas will record the simulated fill automatically on the next autonomous cycle with a usable market price."
+            if proposal.get("side") == "sell":
+                return "Atlas will auto-review this simulated trim or exit proposal after the risk gate runs."
+            return "Atlas will auto-review this simulated buy proposal after the risk gate runs."
+        if proposal.get("status") == "approved":
+            if proposal.get("side") == "sell":
+                return "Use Simulate fill when you are ready to record the paper trim or exit."
+            return "Use Simulate fill when you are ready to add the paper position."
+        if proposal.get("side") == "sell":
+            return "Approve or reject this simulated trim or exit proposal."
+        return "Approve or reject this simulated buy proposal."
+
+    def _position_action_score(self, position):
+        label = str((position.get("thesis_status") or {}).get("label") or "healthy").lower()
+        base = {"exit": 88, "trim": 82, "watch": 68, "healthy": 40}.get(label, 40)
+        review = position.get("review") or {}
+        flags = review.get("flags") or []
+        return max(0, min(100, round(base + min(len(flags), 2) * 2, 1)))
+
+    @staticmethod
+    def _position_status_label(position):
+        label = str((position.get("thesis_status") or {}).get("label") or "healthy").lower()
+        return {
+            "watch": "Watch closely",
+            "trim": "Trim candidate",
+            "exit": "Exit candidate",
+        }.get(label, "Hold steady")
+
+    @staticmethod
+    def _position_queue_evidence(position):
+        driver = position.get("decision_driver") or {}
+        if driver.get("evidence"):
+            return str(driver["evidence"]).strip()
+        review = position.get("review") or {}
+        flags = review.get("flags") or []
+        if flags:
+            return str(flags[0]).strip()
+        thesis = str(review.get("thesis") or "").strip()
+        return thesis[:180] if thesis else ""
+
+    def _position_queue_next_step(self, position):
+        label = str((position.get("thesis_status") or {}).get("label") or "healthy").lower()
+        if label == "exit":
+            return "Review this holding now and confirm whether Atlas should open or refresh an exit path."
+        if label == "trim":
+            return "Review this holding now and decide whether a trim proposal is still appropriate."
+        if label == "watch":
+            return "Review the latest thesis signals and wait for confirmation before Atlas escalates."
+        return "Continue monitoring this simulated holding."
+
     def _suggested_disposition(self, review):
         result = review.get("result", {})
         drift = result.get("thesis_drift")
@@ -808,6 +1889,12 @@ class OwnerControlService:
                 "default_paper_context": "Paper-performance context is unavailable.",
             }
         performance = self.paper_account.performance_summary()
+        trade_pressure = self.paper_account.trade_pressure_profile(
+            latest_prices=self._latest_prices()
+        )
+        benchmark_preference = self.paper_account.benchmark_preference_profile(
+            latest_prices=self._latest_prices()
+        )
         reviews = self.paper_account.latest_position_reviews()
         equity = float(status.get("equity") or 0)
         ticker_context = {}
@@ -820,6 +1907,8 @@ class OwnerControlService:
                 ticker,
                 performance,
                 reviews.get(ticker),
+                trade_pressure,
+                benchmark_preference,
             )
             ticker_context[ticker] = {
                 "portfolio_context": portfolio_context,
@@ -828,7 +1917,13 @@ class OwnerControlService:
         return {
             "tickers": ticker_context,
             "default_portfolio_context": "No open simulated position is currently tracked.",
-            "default_paper_context": self._paper_context(None, performance, None),
+            "default_paper_context": self._paper_context(
+                None,
+                performance,
+                None,
+                trade_pressure,
+                benchmark_preference,
+            ),
         }
 
     def _latest_prices(self):
@@ -856,7 +1951,13 @@ class OwnerControlService:
         return "; ".join(pieces) + "."
 
     @staticmethod
-    def _paper_context(ticker, performance, review):
+    def _paper_context(
+        ticker,
+        performance,
+        review,
+        trade_pressure=None,
+        benchmark_preference=None,
+    ):
         if not performance.get("available"):
             return "Paper-performance history is not available yet."
         latest = performance.get("latest", {})
@@ -887,6 +1988,32 @@ class OwnerControlService:
             if flags:
                 review_text += f" ({'; '.join(flags[:2])})"
             pieces.append(review_text)
+        if trade_pressure:
+            trade_cap = trade_pressure.get("policy_overrides", {}).get(
+                "maximum_daily_trades",
+                trade_pressure.get("baseline", {}).get("maximum_daily_trades"),
+            )
+            if trade_cap is not None:
+                state = (
+                    "active" if trade_pressure.get("active") else "watching"
+                )
+                pieces.append(
+                    f"adaptive daily trade pressure: {trade_cap} trades ({state})"
+                )
+        if benchmark_preference:
+            benchmark_bar = str(
+                benchmark_preference.get("strategy_overrides", {}).get(
+                    "strategy_preferred_benchmark",
+                    benchmark_preference.get("baseline", {}).get(
+                        "strategy_preferred_benchmark",
+                        "auto",
+                    ),
+                )
+            ).upper()
+            state = "active" if benchmark_preference.get("active") else "watching"
+            pieces.append(
+                f"adaptive benchmark trust: {benchmark_bar} ({state})"
+            )
         return "; ".join(pieces) + "."
 
     def _attention_score(self, task):
@@ -977,6 +2104,8 @@ class OwnerControlService:
                     result = self._paper_decision(payload)
                 elif action == "paper-fill":
                     result = self._paper_fill(payload)
+                elif action == "paper-policy":
+                    result = self._paper_policy(payload)
                 else:
                     raise ValueError("Unknown owner action")
                 self.persist(paths)
@@ -1079,14 +2208,36 @@ class OwnerControlService:
             "simulation_only": True,
         }
 
+    def _paper_policy(self, payload):
+        if not self.paper_account.account_file.exists():
+            raise ValueError("Paper account is not initialized")
+        updates = {
+            key: payload[key]
+            for key in PAPER_POLICY_FIELDS
+            if key in payload
+        }
+        if not updates:
+            raise ValueError("No paper policy updates were supplied")
+        policy = self.paper_account.update_policy(
+            updates,
+            source="owner_cloud_policy",
+        )
+        return {
+            "action": "paper-policy",
+            "policy": {
+                key: policy.get(key)
+                for key in PAPER_POLICY_FIELDS
+            },
+            "auto_manage_enabled": bool(policy.get("auto_manage_enabled")),
+        }
+
     def _affected_paths(self, action):
         if action == "research-decision":
             return [self.research_queue.task_file, *self._research_outputs()]
-        if action in {"paper-decision", "paper-fill"}:
+        if action in {"paper-decision", "paper-fill", "paper-policy"}:
             return [
                 self.paper_account.account_file,
                 self.paper_account.ledger_file,
-                self.paper_account.account_file.parent / "performance.md",
             ]
         return []
 

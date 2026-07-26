@@ -28,6 +28,15 @@ class StubDashboardService:
                     "category": "Watchlist",
                     "sector": "AI & Semiconductors",
                     "total_score": 88.0,
+                    "news_signal": {
+                        "signal_label": "constructive",
+                        "signal_score": 64.0,
+                        "positive_count": 1,
+                        "negative_count": 0,
+                        "company_headline_count": 2,
+                        "dominant_event_type": "product_launch",
+                        "positive_examples": ["NVIDIA announced a new product launch."],
+                    },
                     "scores": {
                         "growth": 92.0,
                         "quality": 84.0,
@@ -100,6 +109,56 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertFalse(model["capabilities"]["brokerage_connection"])
         self.assertIn("owner_outcomes", model)
         self.assertTrue(model["paper_proposals"][0]["rationale"])
+        self.assertEqual(
+            model["paper_proposals"][0]["news_summary"]["label"],
+            "constructive",
+        )
+        self.assertIn(
+            "Main event read: product launch.",
+            model["paper_proposals"][0]["news_summary"]["event_detail"],
+        )
+        self.assertTrue(model["paper_strategy_policy"]["available"])
+        self.assertIn(
+            "strategy_maximum_new_proposals",
+            model["paper_strategy_policy"]["values"],
+        )
+        self.assertEqual(
+            model["paper_strategy_policy"]["adaptive_profiles"][0]["label"],
+            "Adaptive trade pressure",
+        )
+        self.assertEqual(
+            model["paper_strategy_policy"]["adaptive_profiles"][1]["label"],
+            "Adaptive benchmark trust",
+        )
+
+    def test_apply_updates_paper_strategy_policy(self):
+        result = self.service.apply(
+            "paper-policy",
+            {
+                "auto_manage_enabled": True,
+                "strategy_maximum_new_proposals": 5,
+                "strategy_target_position_pct": 6.5,
+                "strategy_minimum_buy_score": 84.0,
+                "strategy_maximum_exit_score": 58.0,
+                "strategy_benchmark_excess_weight": 2.4,
+                "strategy_trend_quality_weight": 0.35,
+                "strategy_sector_repeat_penalty": 1.5,
+                "strategy_minimum_daily_move_pct": -6.0,
+            },
+        )
+        policy = self.dashboard.paper_account.load()["policy"]
+
+        self.assertEqual(result["action"], "paper-policy")
+        self.assertTrue(result["auto_manage_enabled"])
+        self.assertTrue(policy["auto_manage_enabled"])
+        self.assertEqual(policy["strategy_maximum_new_proposals"], 5)
+        self.assertEqual(policy["strategy_target_position_pct"], 6.5)
+        self.assertEqual(policy["strategy_minimum_buy_score"], 84.0)
+        self.assertEqual(policy["strategy_maximum_exit_score"], 58.0)
+        self.assertEqual(policy["strategy_benchmark_excess_weight"], 2.4)
+        self.assertEqual(policy["strategy_trend_quality_weight"], 0.35)
+        self.assertEqual(policy["strategy_sector_repeat_penalty"], 1.5)
+        self.assertEqual(policy["strategy_minimum_daily_move_pct"], -6.0)
 
     def test_model_backfills_structured_rationale_for_legacy_buy_proposals(self):
         proposal = self.dashboard.paper_account.create_proposal(
@@ -221,6 +280,13 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertIn("proposing a trim of 5", combined)
         self.assertIn("Risk review flags:", combined)
         self.assertIn("Paper learning context:", combined)
+        self.assertIn("Trim trigger:", item["sell_trigger_summary"])
+        self.assertTrue(
+            any("risk to thesis" in row for row in item["sell_trigger_reasons"])
+        )
+        self.assertTrue(
+            any("Risk review flags:" in row for row in item["sell_trigger_reasons"])
+        )
         objections = " ".join(item["objections"])
         self.assertIn("Latest stored Atlas review tagged RISK as risk to thesis", objections)
         self.assertIn("Recent disconfirming evidence: RISK thesis history.", objections)
@@ -276,6 +342,7 @@ class OwnerControlServiceTests(unittest.TestCase):
                 datetime(2026, 6, 12, 16, 0, 0),
                 datetime(2026, 6, 13, 16, 0, 0),
                 datetime(2026, 6, 14, 16, 0, 0),
+                datetime(2026, 6, 15, 16, 0, 0),
                 datetime(2026, 6, 15, 9, 0, 0),
                 datetime(2026, 6, 15, 9, 1, 0),
             ]
@@ -320,6 +387,10 @@ class OwnerControlServiceTests(unittest.TestCase):
             prices={"NVDA": 132},
             benchmark_prices={"SPY": 506, "QQQ": 405},
         )
+        self.dashboard.paper_account.record_performance_snapshot(
+            prices={"NVDA": 135},
+            benchmark_prices={"SPY": 507, "QQQ": 406},
+        )
         current = self.dashboard.paper_account.create_proposal(
             "buy",
             "NVDA",
@@ -339,6 +410,10 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertEqual(proposal["paper_calibration"]["label"], "supportive")
         self.assertIn(
             "latest judged NVDA buy ideas outcome was working",
+            proposal["paper_calibration"]["reasons"],
+        )
+        self.assertIn(
+            "latest judged NVDA buy ideas 3-snapshot persistence stayed working",
             proposal["paper_calibration"]["reasons"],
         )
 
@@ -445,6 +520,10 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertEqual(proposal["paper_calibration"]["label"], "caution")
         self.assertIn(
             "lagging",
+            " ".join(proposal["paper_calibration"]["reasons"]),
+        )
+        self.assertIn(
+            "3-snapshot persistence stayed lagging",
             " ".join(proposal["paper_calibration"]["reasons"]),
         )
 
@@ -557,6 +636,14 @@ class OwnerControlServiceTests(unittest.TestCase):
             "latest RISK thesis review",
             model["daily_action_list"][0]["paper_context"],
         )
+        self.assertIn(
+            "adaptive daily trade pressure",
+            model["daily_action_list"][0]["paper_context"],
+        )
+        self.assertIn(
+            "adaptive benchmark trust",
+            model["daily_action_list"][0]["paper_context"],
+        )
 
     def test_model_summarizes_owner_outcome_history(self):
         second, _ = self.dashboard.research_queue.add_task(
@@ -646,6 +733,304 @@ class OwnerControlServiceTests(unittest.TestCase):
                 if item["subject"] == "CAL"
             ),
         )
+
+    def test_model_builds_ranked_portfolio_action_queue(self):
+        buy_fill = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            buy_fill["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(
+            buy_fill["proposal_id"],
+            "approve",
+        )
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+            proposal_id=buy_fill["proposal_id"],
+        )
+        self.dashboard.paper_account.record_position_review(
+            "NVDA",
+            "review",
+            118,
+            -1.6667,
+            68,
+            ["Atlas score 68.0 is below the 70.0 review threshold."],
+            "Atlas wants a closer thesis review on this holding.",
+        )
+        self.dashboard.paper_account.create_proposal(
+            "buy",
+            "RISK",
+            5,
+            125,
+            "Paper entry for risk review.",
+        )
+
+        model = self.service.model()
+        queue = model["portfolio_action_queue"]
+
+        self.assertEqual(len(queue), 2)
+        self.assertEqual(queue[0]["kind"], "proposal")
+        self.assertEqual(queue[0]["subject"], "RISK")
+        self.assertEqual(queue[0]["status_label"], "Buy candidate")
+        self.assertEqual(queue[1]["kind"], "position")
+        self.assertEqual(queue[1]["subject"], "NVDA")
+        self.assertEqual(queue[1]["status_label"], "Watch closely")
+        self.assertIn("latest thesis signals", queue[1]["next_step"])
+
+    def test_queue_surfaces_projection_caution_on_open_holding(self):
+        entry = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            entry["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(
+            entry["proposal_id"],
+            "approve",
+        )
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+            proposal_id=entry["proposal_id"],
+        )
+        self.dashboard.paper_account.record_position_review(
+            "NVDA",
+            "review",
+            118,
+            -1.6667,
+            68,
+            [
+                "Projection caution triggered: Atlas wants more proof because benchmark leadership, sector participation, or news tone is no longer clearly supportive."
+            ],
+            (
+                "Daily paper thesis review for NVDA: Atlas currently wants to review this simulated holding. "
+                "Projection posture is needs proof with -0.80% excess return versus SPY since entry. "
+                "Sector breadth is 40%."
+            ),
+        )
+
+        model = self.service.model()
+        queue_item = next(
+            item for item in model["portfolio_action_queue"] if item["subject"] == "NVDA"
+        )
+
+        self.assertEqual(queue_item["decision_driver"]["label"], "Projection caution")
+        self.assertIn("more proof", queue_item["decision_driver"]["summary"])
+        self.assertIn("Projection caution triggered", queue_item["evidence_anchor"])
+
+    def test_queue_surfaces_projection_supported_add_on_buy_proposal(self):
+        self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            5,
+            130,
+            "Atlas winner add rule for NVDA remains constructive.",
+            rationale=[
+                "Winner add rule triggered: Atlas score 92.0 is at or above the 90.0 add threshold.",
+                "Projection watch remains supportive with 75% sector breadth and a leadership trend posture.",
+            ],
+        )
+
+        model = self.service.model()
+        queue_item = next(
+            item for item in model["portfolio_action_queue"] if item["subject"] == "NVDA"
+        )
+
+        self.assertEqual(queue_item["decision_driver"]["label"], "Projection-supported add")
+        self.assertIn("support adding", queue_item["decision_driver"]["summary"])
+        self.assertIn("Projection watch remains supportive", queue_item["evidence_anchor"])
+
+    def test_active_sell_proposal_suppresses_duplicate_open_position_queue_item(self):
+        entry = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            entry["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(
+            entry["proposal_id"],
+            "approve",
+        )
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+            proposal_id=entry["proposal_id"],
+        )
+        self.dashboard.paper_account.record_position_review(
+            "NVDA",
+            "exit",
+            95,
+            -20.8333,
+            55,
+            ["Atlas score 55.0 is at or below the 60.0 exit threshold."],
+            "Atlas wants to reduce or exit this holding.",
+        )
+        exit_proposal = self.dashboard.paper_account.create_proposal(
+            "sell",
+            "NVDA",
+            10,
+            95,
+            "Atlas wants to exit the simulated holding.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            exit_proposal["proposal_id"],
+            "clear",
+            [],
+        )
+
+        model = self.service.model()
+        queue = [
+            item
+            for item in model["portfolio_action_queue"]
+            if item["subject"] == "NVDA"
+        ]
+
+        self.assertEqual(len(queue), 1)
+        self.assertEqual(queue[0]["kind"], "proposal")
+        self.assertEqual(queue[0]["status_label"], "Exit candidate")
+
+    def test_model_explains_healthy_holdings_absent_from_queue(self):
+        entry = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            entry["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(
+            entry["proposal_id"],
+            "approve",
+        )
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+            proposal_id=entry["proposal_id"],
+        )
+        self.dashboard.paper_account.record_position_review(
+            "NVDA",
+            "maintain",
+            126,
+            5.0,
+            88,
+            ["Latest thesis review remains constructive."],
+            "Atlas keeps the simulated position in hold mode.",
+        )
+
+        model = self.service.model()
+        summary = model["healthy_holdings_summary"]
+
+        self.assertEqual(summary["count"], 1)
+        self.assertIn("intentionally absent", summary["headline"])
+        self.assertEqual(summary["items"][0]["ticker"], "NVDA")
+        self.assertIn("constructive", summary["items"][0]["summary"].lower())
+        self.assertTrue(summary["items"][0]["journal"])
+        self.assertIn("Current basis", summary["items"][0]["journal"][0])
+        self.assertTrue(summary["items"][0]["is_freshest_shift"])
+        self.assertIn("Freshest shift as of", summary["items"][0]["freshness_label"])
+        self.assertEqual(summary["items"][0]["anchor_id"], "controls-healthy-nvda")
+
+    def test_model_builds_controls_summary(self):
+        entry = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            entry["proposal_id"],
+            "clear",
+            [],
+        )
+        self.dashboard.paper_account.decide_proposal(
+            entry["proposal_id"],
+            "approve",
+        )
+        self.dashboard.paper_account.execute_order(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+            proposal_id=entry["proposal_id"],
+        )
+        self.dashboard.paper_account.record_position_review(
+            "NVDA",
+            "maintain",
+            126,
+            5.0,
+            88,
+            ["Latest thesis review remains constructive."],
+            "Atlas keeps the simulated position in hold mode.",
+        )
+        self.dashboard.paper_account.create_proposal(
+            "buy",
+            "RISK",
+            5,
+            125,
+            "Paper entry for risk review.",
+        )
+
+        model = self.service.model()
+        summary = model["controls_summary"]
+
+        self.assertEqual(summary["counts"]["open_positions"], 1)
+        self.assertEqual(summary["counts"]["queue"], 1)
+        self.assertEqual(summary["counts"]["healthy"], 1)
+        self.assertEqual(summary["counts"]["buy_proposals"], 1)
+        self.assertIn("remain steady", summary["headline"])
+        self.assertIn("entry-led", summary["posture"])
+        self.assertEqual(summary["freshest_change"]["bucket"], "queue")
+        self.assertEqual(summary["freshest_change"]["bucket_label"], "Portfolio action queue")
+        self.assertEqual(summary["freshest_change"]["subject"], "RISK")
+        self.assertIn("newest buy candidate", summary["freshest_change"]["detail"].lower())
+        self.assertTrue(summary["freshest_change"]["timestamp_label"])
+        self.assertIn(" ", summary["freshest_change"]["timestamp_label"])
+        self.assertEqual(summary["freshest_change"]["anchor_id"], "controls-queue-risk")
+        self.assertTrue(model["portfolio_action_queue"][0]["is_freshest_shift"])
+        self.assertIn(
+            "Freshest shift as of",
+            model["portfolio_action_queue"][0]["freshness_label"],
+        )
+        self.assertEqual(model["portfolio_action_queue"][0]["anchor_id"], "controls-queue-risk")
+        self.assertFalse(model["healthy_holdings_summary"]["items"][0]["is_freshest_shift"])
 
     def test_research_decision_is_saved_and_persisted(self):
         persisted = []
@@ -846,6 +1231,62 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertEqual(result["side"], "sell")
         self.assertEqual(result["action_label"], "trim")
         self.assertEqual(state["positions"]["RISK"]["shares"], 5.0)
+
+    def test_auto_manage_mode_clears_pending_paper_approval_work(self):
+        self.dashboard.paper_account.update_policy(
+            {"auto_manage_enabled": True},
+            source="test",
+        )
+        proposal = self.dashboard.paper_account.create_proposal(
+            "buy",
+            "NVDA",
+            10,
+            120,
+            "Paper entry.",
+        )
+        self.dashboard.paper_account.record_proposal_risk_review(
+            proposal["proposal_id"],
+            "clear",
+            [],
+        )
+
+        model = self.service.model()
+
+        self.assertTrue(model["paper_auto_manage_enabled"])
+        self.assertFalse(model["capabilities"]["paper_proposal_decisions"])
+        self.assertFalse(model["capabilities"]["simulated_fills"])
+        self.assertEqual(model["paper_proposals"], [])
+        self.assertEqual(model["autonomous_cycle"]["approved"], [proposal["proposal_id"]])
+        self.assertEqual(len(model["autonomous_cycle"]["executed"]), 1)
+        self.assertEqual(
+            self.dashboard.paper_account.proposal_status(proposal["proposal_id"]),
+            "executed",
+        )
+
+    def test_auto_manage_mode_auto_resolves_research_reviews(self):
+        self.dashboard.paper_account.update_policy(
+            {"auto_manage_enabled": True},
+            source="test",
+        )
+
+        model = self.service.model()
+        updated_task = next(
+            item
+            for item in self.dashboard.research_queue.load()["tasks"]
+            if item["id"] == self.task_id
+        )
+
+        self.assertFalse(model["capabilities"]["research_decisions"])
+        self.assertEqual(model["research_reviews"], [])
+        self.assertEqual(
+            model["autonomous_research_cycle"]["approved"],
+            [self.task_id],
+        )
+        self.assertEqual(updated_task["status"], "closed")
+        self.assertEqual(
+            updated_task["owner_decision"]["decision"],
+            "approve",
+        )
 
     def test_persistence_failure_restores_local_artifacts(self):
         original = self.dashboard.research_queue.task_file.read_bytes()

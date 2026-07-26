@@ -2,12 +2,32 @@ import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from io import StringIO
 
 import paper_trading
 from app.paper_trading import PaperTradingAccount
 
 
 class PaperTradingCliTests(unittest.TestCase):
+    def test_auto_manage_can_be_enabled_from_cli(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+            )
+            account.initialize(100000)
+            stdout = StringIO()
+
+            with patch("paper_trading.PaperTradingAccount", return_value=account), patch(
+                "sys.stdout",
+                new=stdout,
+            ):
+                result = paper_trading.main(["auto-manage", "enable"])
+                self.assertTrue(account.auto_manage_enabled())
+
+            self.assertEqual(result, 0)
+            self.assertIn("Auto-managed paper mode enabled.", stdout.getvalue())
+
     def test_propose_research_requires_owner_approved_task(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = PaperTradingAccount(

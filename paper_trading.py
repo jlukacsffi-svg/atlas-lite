@@ -99,6 +99,14 @@ def build_parser():
         "--status",
         choices=["pending", "approved", "rejected", "executed"],
     )
+    auto_manage_parser = subparsers.add_parser(
+        "auto-manage",
+        help="Enable, disable, or inspect autonomous paper-only simulation mode.",
+    )
+    auto_manage_parser.add_argument(
+        "mode",
+        choices=["enable", "disable", "status"],
+    )
     subparsers.add_parser("ledger", help="Show the append-only paper ledger.")
     return parser
 
@@ -269,6 +277,34 @@ def main(argv=None):
                 f"{ticker}: {value:+.2f}% "
                 f"(Atlas excess {summary['excess_return_pct'][ticker]:+.2f}%)"
             )
+        return 0
+
+    if args.command == "auto-manage":
+        if args.mode == "status":
+            enabled = account.auto_manage_enabled()
+            print(
+                "[paper] Auto-managed paper mode is "
+                + ("ENABLED." if enabled else "DISABLED.")
+            )
+            print(
+                "[safety] This mode can auto-approve and auto-execute simulated paper trades only."
+            )
+            print("[safety] Brokerage access and real trading remain disabled.")
+            return 0
+
+        enabled = args.mode == "enable"
+        policy = account.update_policy(
+            {"auto_manage_enabled": enabled},
+            source="paper_trading_cli",
+        )
+        print(
+            "[ok] Auto-managed paper mode "
+            + ("enabled." if enabled else "disabled.")
+        )
+        print(
+            f"[paper] Account policy now sets auto_manage_enabled={policy['auto_manage_enabled']}."
+        )
+        print("[safety] Atlas will still use simulated paper trades only.")
         return 0
 
     if args.command == "report":

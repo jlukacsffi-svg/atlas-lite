@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-06-27
+Last updated: 2026-07-26
 
 ## Current Roadmap Position
 
@@ -48,9 +48,36 @@ Never commit `.env`.
 
 ## Current Development Phase
 
-Stage 3: Portfolio Intelligence.
+Stage 5: Paper Trading validation.
 
-Stage 2: Research Memory And Scoring is complete at the foundation level.
+Stage 1 through Stage 4 are complete at their current planned software scope.
+Stage 5 software is complete and the live simulated evaluation period is now
+running. Web Phase 2 secure single-owner cloud hosting is complete at the
+software and staging-verification level, with only two owner-assisted manual
+identity checks still open before final sign-off:
+
+- Cross-device owner login
+- Non-owner Google account denial
+
+Most recent Stage 5 refinement:
+
+- Atlas now audits sector-learning gate effects across both current simulated
+  candidates and accepted paper buy recommendations.
+- The dashboard paper-learning panel now includes a `Sector gate audit` card
+  showing how many active sector-gated candidates cleared, tightened, or
+  received a modest boost, plus how many accepted paper buys carried a
+  sector-gate rationale.
+- Atlas now uses the same 3-snapshot sector-learning checkpoint for strategy
+  gate telemetry that the owner-visible sector-learning bridge already shows.
+- The owner dashboard sector-learning bridge now describes the checkpoint as a
+  `Sector learning gate`, making it clearer when a sector is in watch, caution,
+  or modest-boost posture.
+- The token-protected dashboard verification endpoint now uses a lightweight
+  `build_verification()` read model that bypasses the refresh wrapper and full
+  dashboard build while preserving the Stage 5 contract fields.
+- Stage 5 remains simulated paper-only: Atlas can autonomously approve and
+  execute paper buys, trims, and exits, but real trading and brokerage access
+  remain disabled.
 
 Completed Stage 2 foundations:
 
@@ -90,9 +117,14 @@ Stage 3 portfolio-intelligence foundations completed:
 - Local portfolio history snapshots in ignored `portfolio_history/`.
 - Real portfolio file is ignored by Git.
 
-Recommended next Stage 3 task:
+Recommended next roadmap task:
 
-Create the local `data/portfolio.json` file when Joe is ready to add real holdings. After that, run `py -3.12 portfolio_check.py`, then run `py -3.12 main.py` to generate the first portfolio-aware brief. If Joe wants to wait on real holdings, the next software step is Stage 4 planning for a lightweight research task queue and agent-role boundaries.
+Continue Stage 5 validation and autonomous-decision refinement by measuring
+whether sector-learning gate decisions improve simulated outcomes over time,
+then use the evidence to tune sector-specific entry strictness and position
+pacing. Keep all autonomy limited to the simulated paper account, preserve
+accountant-style lot accountability, and continue using SPY/QQQ benchmark
+evidence to evaluate whether Atlas is beating the market.
 
 Stage 4 planning artifact:
 
@@ -138,6 +170,19 @@ Stage 5 paper-trading foundation:
 - Strategy proposals now create and link immutable recommendation records first.
 - The daily run refreshes `paper_trading/performance.md`.
 - Stage 5 software is complete; the live paper evaluation period is in progress.
+- Atlas can now run in autonomous paper-only mode, automatically approving
+  paper proposals and research queue items inside the simulated environment
+  when auto-manage is enabled.
+- The secure dashboard now includes grouped trade history and an accountant-
+  style basis report so each simulated buy, trim, and exit can be reviewed by
+  ticker, timestamp, shares, fill price, basis, proceeds, realized result,
+  and decision-driver context.
+- Stage 5 benchmark reporting explicitly labels `SPY` as the `SPDR S&P 500
+  ETF Trust` and `QQQ` as the `Invesco QQQ Trust`, so benchmark comparisons
+  are readable to non-specialists.
+- Atlas now carries projection-driver and sell-trigger explanations through
+  Controls, Overview, trade history, and basis-report surfaces for better
+  auditability of simulated autonomous decisions.
 
 Secure web-platform direction:
 
@@ -254,8 +299,128 @@ Secure web-platform direction:
 - Authenticated redeployment, manual cloud job validation, and monitoring are
   complete. Cross-device testing, manual non-owner denial, and final staging
   sign-off remain. Schedules stay paused by owner policy.
+- Atlas paper-strategy tuning is now owner-editable from the secure dashboard
+  Controls page. The owner can change auto-manage mode, buy-slot count, target
+  size, buy and exit thresholds, benchmark and trend weighting, sector-repeat
+  pressure, and the daily downside filter without editing files.
+- Cloud Run revision `atlas-dashboard-stg-00079-6k7` serves the live strategy
+  editor. The owner workspace has already been switched to a more aggressive
+  autonomous paper preset: auto-manage on, 5 buy slots, 6% target size, 84
+  buy threshold, 58 exit threshold, 2.4 benchmark weight, 0.35 trend weight,
+  1.5 sector-repeat penalty, and -6% minimum daily move filter.
+- Manual cloud execution `atlas-daily-stg-284c4` completed successfully on
+  July 4, 2026 after the strategy update and refreshed the live workspace at
+  5:38 PM Pacific. The run still produced `0 buy / 0 exit-trim`, which
+  suggests the next meaningful lever is to widen the research universe rather
+  than only tuning paper policy.
+- Atlas Universe v1.6 now expands coverage from 100 to 125 tickers. The new
+  additions emphasize liquid cross-sector leaders in industrials,
+  infrastructure, energy majors, consumer staples, healthcare, data-center and
+  wireless infrastructure, and materials so Atlas has more ways to pursue
+  excess return beyond AI and IT.
 
-Estimated overall Atlas program completion: 93%.
+Recommended next Stage 3/5 task:
+
+- Deploy Atlas Universe v1.6 to staging and run a fresh cloud daily cycle to
+  observe whether the broader field increases autonomous paper buy or trim
+  activity under the current aggressive preset.
+- If autonomous activity is still sparse, add a second universe expansion pass
+  for sector ETFs, cyclicals, and market-structure leaders, then consider
+  slightly loosening paper risk gates rather than lowering quality too far.
+
+Latest live staging state on July 5, 2026:
+
+- Atlas paper selection now uses sector-rotation context plus a new
+  `follow_through_score` so autonomous paper buys and sells react to stronger
+  leadership confirmation and weaker laggard behavior.
+- Candidate ranking now includes sector-relative strength versus the active
+  benchmark, and buy rationale text now explains sector rotation and
+  follow-through explicitly.
+- Exit logic now escalates more readily when a held name has both weak sector
+  confirmation and weak follow-through, even before it fully degrades into the
+  worst regime bucket.
+- Cloud Run revision `atlas-dashboard-stg-00085-l78` is live on image tag
+  `20260705-rotation-followthrough`.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same image without pausing the owner-approved autonomous schedules.
+- Manual Cloud Run execution `atlas-daily-stg-vz7ld` completed successfully on
+  July 5, 2026 after the job update.
+- The Paper Portfolio page now includes an `Open basis report` button beside
+  the grouped trade-history workflow.
+- Atlas now exposes an accountant-style accountability report derived directly
+  from the append-only paper ledger, including weighted-average cost, open
+  basis, realized gain or loss, and full transaction drill-down by ticker.
+- Each transaction row now includes timestamp, action, shares, fill price,
+  gross amount, basis per share, basis amount, proceeds, realized gain or
+  loss, remaining position size, thesis, and source metadata.
+- The dashboard can export this detail as `atlas-paper-basis-report.csv` for
+  outside review and cost-basis support.
+- Cloud Run revision `atlas-dashboard-stg-00083-hmn` is live on image tag
+  `20260705-basis-report`.
+- Focused tests for `tests.test_paper_trading` and `tests.test_web_dashboard`
+  pass, and staging `/readyz` returns `{"status":"ready"}` after deployment.
+- The first broader universe pass shipped as `Atlas Universe v1.6` and the
+  second pass shipped as `Atlas Universe v1.7`.
+- `v1.7` expands the tracked set from 125 to 140 names by adding sector,
+  style, and benchmark ETFs including `XLF`, `XLE`, `XLV`, `XLI`, `XLP`,
+  `XLU`, `XLB`, `XLRE`, `XLC`, `IWM`, `DIA`, `RSP`, `VTV`, `VUG`, and
+  `SCHD`.
+- Cloud Run revision `atlas-dashboard-stg-00081-qp9` is live on image tag
+  `20260705-universe-v17`.
+- Manual Cloud Run execution `atlas-daily-stg-fmtsj` completed successfully on
+  July 5, 2026 and published a fresh private snapshot with
+  `universe_version=1.7`, `tracked=140`, and `available=140`.
+- The persisted paper-account policy remains in aggressive autonomous mode:
+  auto-manage on, 5 buy slots, 6% target size, 84 buy threshold, 58 exit
+  threshold, 2.4 benchmark weight, 0.35 trend weight, 1.5 sector-repeat
+  penalty, and a -6% daily downside filter.
+- The secure dashboard experience now includes the moved benchmark chart on
+  Overview, benchmark labels that explain `SPY` and `QQQ`, a visible revision
+  badge, a click-through Atlas logo/header, and paper trade history by ticker.
+- Live browser verification before the session reset confirmed there is no
+  `About Atlas` nav tab and the Controls page no longer shows pending manual
+  approval items when autonomous mode is active.
+- The live UI briefly lagged behind the latest private snapshot because
+  `/api/dashboard` was slow to refresh, but direct cloud-artifact inspection
+  confirmed the backend state is already at `140/140`.
+- The next live strategy pass is now deployed on revision
+  `atlas-dashboard-stg-00082-cd4` and image `20260705-regime-strategy`.
+- This pass adds richer regime-aware trend fields such as
+  `trend_regime_score`, `trend_regime`, drawdown context, and moving-average
+  distance context, then uses them inside paper selection and exit gating.
+- Cloud job execution `atlas-daily-stg-ng595` completed successfully on the
+  matching image digest and published private snapshot
+  `snapshot_20260705_180651.json`.
+- That latest snapshot still shows `universe_version=1.7`, `tracked=140`, and
+  `available=140`, with new benchmark ETF regime data present in the private
+  artifacts.
+- The new regime-aware run improved signal quality but did not create any new
+  simulated buy or exit actions on that exact market snapshot.
+- `atlas-daily-stg` and `atlas-weekly-stg` scheduler jobs are resumed and
+  `ENABLED` in `America/Los_Angeles`, matching the owner's request for Atlas to
+  continue autonomously.
+
+Recommended next Stage 3/5 task now:
+
+- Verify the next live dashboard snapshot for whether the stronger rotation and
+  follow-through signals actually increase autonomous paper buy or sell
+  activity on the current broader universe.
+- If activity is still too sparse, add one more market-structure layer such as
+  multi-day follow-through persistence, sector breadth, or benchmark breadth
+  deterioration so Atlas can separate real leadership from one-day noise more
+  confidently.
+- Verify the live `Open basis report` modal and CSV export inside the
+  authenticated dashboard, then carry that same basis and lifecycle detail
+  into the position cards so the owner can drill from a holding directly into
+  its cost basis and realized history.
+- Improve the signal engine further so Atlas opens and closes simulated
+  positions more often for good reasons, not just because the universe is
+  larger.
+- Focus next on stronger relative-strength, rotation, and follow-through
+  inputs layered on top of the new regime engine so Atlas can recognize sector
+  leadership changes and deteriorating winners sooner.
+
+Estimated overall Atlas program completion: 66%.
 
 ## Useful Files
 
@@ -562,7 +727,7 @@ Latest staging update:
 - Cache-busted web asset image tag is `20260627-paper-calibration`.
 - Full test suite passes with 308 tests before deploy.
 
-Current in-flight stage:
+Latest staging update:
 
 - The next software step is to incorporate this calibration into ranking and
   prioritization, so the highest-signal recommendations rise first instead of
@@ -661,10 +826,1294 @@ Latest staging update:
   inferring it one row at a time.
 - Each ladder column includes a short description, position count, and the
   highest-priority names in that bucket with compact gain/loss context.
+- Cloud Run revision `atlas-dashboard-stg-00057-p2s` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260628-position-ladder`.
+- `/readyz` returns `{"status":"ready"}`.
+- The live Paper Portfolio page shows the grouped next-action layout, with the
+  current simulated book fully in `Hold steady`.
 - Full test suite passes with 312 tests before deploy.
+
+Latest staging update:
+
+- Atlas now surfaces the same portfolio posture earlier on the Overview page
+  through a compact `Portfolio focus right now` panel.
+- The new summary reuses live thesis-state labels to show a headline portfolio
+  readout, healthy/watch/trim/exit counts, and the holdings that need review
+  first without requiring a jump into the Paper Portfolio page.
+- Cloud Run revision `atlas-dashboard-stg-00058-wjn` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260628-portfolio-focus`.
+- `/readyz` returns `{"status":"ready"}`.
+- The live Overview page now shows the portfolio-focus panel with current paper
+  holdings and thesis-derived posture counts.
+- Full test suite passes with 313 tests before deploy.
+
+Latest staging update:
+
+- Atlas now merges paper proposals and open-position posture into a ranked
+  `Portfolio action queue` inside the Controls workflow.
+- The new queue surfaces active paper proposals beside already-open simulated
+  holdings that need closer review, while suppressing duplicate holding entries
+  when an active trim or exit proposal already represents that name.
+- This keeps paper workflow and live paper posture in one owner-facing control
+  surface instead of splitting attention between the Paper page and Controls.
+- Cloud Run revision `atlas-dashboard-stg-00059-clc` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260628-controls-queue`.
+- `/readyz` returns `{"status":"ready"}`.
+- The live Controls page shows the ranked portfolio action queue with 3 current
+  items on the present dataset.
+- Full test suite passes with 315 tests before deploy.
+
+Latest staging update:
+
+- Controls now include a `Hold-steady holdings` section that explains which
+  open simulated names are intentionally absent from the ranked action queue
+  because Atlas still considers them healthy.
+- The new summary reuses live paper-position thesis status plus portfolio and
+  paper context, so the owner can distinguish between names needing action and
+  names deliberately staying steady from the same control surface.
+- Cloud Run revision `atlas-dashboard-stg-00060-xgt` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260628-healthy-holdings`.
+- `/readyz` returns `{"status":"ready"}`.
+- Full test suite passes with 316 tests before deploy.
+- Live authenticated content verification for this specific section was blocked
+  in the fresh in-app browser session because Google sign-in was required again
+  after the browser automation session reset.
+
+Latest staging update:
+
+- The Controls `Hold-steady holdings` section now includes compact
+  `What changed since entry` journal context for healthy positions.
+- This reuses the same basis, benchmark-relative, thesis-review, and
+  escalation-cue narrative layer already available on the Paper Portfolio page,
+  so steady names feel explained from the Controls workflow instead of merely
+  listed as healthy.
+- Cloud Run revision `atlas-dashboard-stg-00061-sdr` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260628-healthy-journal`.
+- `/readyz` returns `{"status":"ready"}`.
+- Full test suite passes with 316 tests before deploy.
 
 Current in-flight stage:
 
-- Deploy the new action-ladder view to Cloud Run staging, verify readiness, and
-  confirm the live Paper Portfolio page is showing the grouped next-action
-  layout.
+- The next software step is to let the Controls workflow summarize the current
+  paper book at the section level, so the owner can see one top-line posture
+  readout for actions needed, healthy holds, and queue coverage before drilling
+  into individual cards.
+
+Latest staging update:
+
+- Controls now include a top-line `Paper book posture` summary above the
+  ranked action queue and healthy-holdings section.
+- The new summary gives one section-level readout for open holdings, ranked
+  queue size, healthy hold count, research-review count, and buy versus
+  exit/trim proposal balance before the owner drills into individual cards.
+- Cloud Run revision `atlas-dashboard-stg-00062-sj7` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260702-controls-summary`.
+- `/readyz` returns `{"status":"ready"}`.
+- Full test suite passes with 317 tests before deploy.
+
+Current in-flight stage:
+
+- The next software step is to make the Controls summary more directional by
+  highlighting which bucket changed most recently, so the top-line posture
+  readout can point the owner toward the freshest shift in the paper book.
+
+Latest staging update:
+
+- The Controls `Paper book posture` summary now calls out the freshest paper-
+  book shift, including whether the newest change landed in the ranked action
+  queue or the hold-steady bucket.
+- Atlas derives this from existing proposal and thesis-review timestamps, so
+  the owner gets a more directional top-line readout without introducing a
+  separate state tracker.
+- Cloud Run revision `atlas-dashboard-stg-00063-7t2` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260702-controls-freshness`.
+- `/readyz` returns `{"status":"ready"}`.
+- Full test suite passes with 317 tests before deploy.
+
+Current in-flight stage:
+
+- The next software step is to carry this freshness cue into the matching
+  queue or hold-steady card itself, so the top-line summary and the underlying
+  paper-book item feel explicitly linked instead of only verbally connected.
+
+Latest staging update:
+
+- Atlas now carries the Controls freshness cue into the matching paper-book
+  card itself, so the exact queue or hold-steady item referenced by the
+  summary is visibly tagged as the freshest shift.
+- This keeps the top-line `Paper book posture` summary and the underlying
+  owner workflow card aligned without changing any approval or simulation
+  authority.
+- Cloud Run revision `atlas-dashboard-stg-00064-97g` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260702-controls-linked-freshness`.
+- `/readyz` returns `{"status":"ready"}`.
+- Full test suite passes with 317 tests before deploy.
+- Live authenticated content verification for this specific pass was blocked in
+  the in-app browser because Google sign-in was required again before the
+  Controls page could be inspected.
+
+Current in-flight stage:
+
+- The next software step is to make this linkage actionable by letting the
+  summary jump or scroll directly to the tagged queue or hold-steady card, so
+  the owner can move from posture readout to the exact item in one click.
+
+Latest staging update:
+
+- The Controls freshness summary now tries to expose a direct `Open item`
+  jump control so the owner can move from the top-line posture readout to the
+  tagged queue or hold-steady card in one click.
+- Stable card anchor ids are now generated in the owner-controls model and
+  rendered into the Controls cards, with the web client prepared to switch to
+  the Controls page and scroll the matching card into view.
+- Cloud Run revision `atlas-dashboard-stg-00065-lnz` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260702-controls-jump`.
+- `/readyz` returns `{"status":"ready"}`.
+- Full test suite passes with 317 tests before deploy.
+- Live authenticated verification partially succeeded: the in-app browser
+  picked up the new `controls-jump` assets after reload, but the rendered
+  Controls summary still did not show the `Open item` control, so the next
+  software step is to inspect why the live owner-controls payload is not yet
+  surfacing the expected anchor metadata.
+
+Current in-flight stage:
+
+- The next software step is to debug the live owner-controls payload versus the
+  local tested model, so the deployed Controls summary actually renders the
+  jump control and card anchors in production as intended.
+
+Latest staging update:
+
+- The Controls freshness summary now renders and jumps to the tagged card in
+  live staging, and the top-line Overview `Portfolio focus right now` panel is
+  also prepared to jump directly into the matching Paper Portfolio holding.
+- Atlas now supports a paper-only `Auto-manage paper portfolio` mode. When the
+  paper-account policy enables it, the daily run auto-approves clear or caution
+  paper proposals after risk review, rejects hold-risk proposals, and records
+  simulated fills without waiting for manual owner approval.
+- The local simulated paper account was switched to auto-manage mode.
+- The cloud paper-account bundle was switched to auto-manage mode and pushed
+  back to the private bucket.
+- Cloud Run revision `atlas-dashboard-stg-00068-qzw` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260703-paper-auto-manage`.
+- The Cloud Run jobs were updated to image `20260703-paper-auto-manage`.
+- Manual cloud daily execution `atlas-daily-stg-vccqm` completed successfully
+  after the job update and auto-executed three previously approved simulated
+  buys: MRVL, TSM, and AMD.
+- The live cloud paper portfolio now holds 7 simulated positions: NVDA, ANET,
+  KLAC, LRCX, MRVL, TSM, and AMD.
+- `/readyz` returns `{"status":"ready"}`.
+- Full automated test suite passes with 322 tests before deploy.
+
+Current in-flight stage:
+
+- The next software step is to make autonomous paper mode tunable, so Atlas can
+  become more or less aggressive about new simulated selections without
+  changing the real-trading boundary.
+
+Latest staging update:
+
+- The Paper Portfolio page now includes a `View trade history` button in the
+  executed-activity section.
+- The new dialog groups simulated buys, trims, and exits by ticker so the owner
+  can inspect each name's purchase and sell timeline without scanning the mixed
+  global activity feed.
+- The history view reuses the append-only paper ledger and existing execution
+  context instead of introducing a second activity store.
+- Cloud Run revision `atlas-dashboard-stg-00069-sxh` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260703-trade-history`.
+- `/readyz` returns `{"status":"ready"}`.
+- Full automated test suite passes with 323 tests before deploy.
+
+Current in-flight stage:
+
+- The next software step is to let the owner drill from that grouped trade
+  history back into per-position lifecycle context, such as current open result
+  versus each prior entry and exit in the same name.
+
+Latest staging update:
+
+- Atlas paper selection is now more explicitly benchmark-focused and sector-
+  aware.
+- The investable universe was already broader than AI and IT, but the paper
+  strategy had still been acting like a score-first queue. It now compares
+  candidate daily strength against the stronger of `SPY` or `QQQ`, uses that
+  benchmark-relative excess return inside ranking, and prefers sector-diverse
+  picks before doubling up in the same area.
+- This keeps the simulated strategy aimed at beating the major benchmarks while
+  remaining open to opportunities across software, healthcare, financials,
+  consumer, defense, energy, cybersecurity, automation, and other covered
+  sectors.
+- Cloud Run revision `atlas-dashboard-stg-00070-pjs` is serving 100% traffic.
+- The Cloud Run jobs were updated to image `20260703-benchmark-focus`.
+- Manual cloud daily execution `atlas-daily-stg-zw4bc` completed successfully
+  on the updated benchmark-focused strategy.
+- The immediate post-run cloud paper book remained at 7 simulated positions, so
+  the new ranking logic did not force an unnecessary trade on this specific
+  daily snapshot.
+- `/readyz` returns `{"status":"ready"}`.
+- Full automated test suite passes with 325 tests before deploy.
+
+Current in-flight stage:
+
+- The next software step is to make this benchmark-focused paper strategy
+  tunable, including more aggressive buy-slot counts, stronger benchmark-excess
+  weighting, and adjustable sector-diversity pressure.
+
+Latest staging update:
+
+- Atlas now spells out the benchmark names more clearly anywhere they are most
+  visible in the owner dashboard.
+- The Market performance legend now labels `SPY` as the `S&P 500 ETF
+  benchmark` and `QQQ` as the `Nasdaq-100 ETF benchmark`, with a short
+  explanatory note directly under the chart.
+- The Paper recommendation-performance section also includes an inline
+  benchmark explainer, and paper feedback rows now expand the benchmark names
+  instead of showing bare ticker symbols only.
+- Cloud Run revision `atlas-dashboard-stg-00071-n4v` is serving 100% traffic.
+- Cache-busted web asset image tag is `20260704-benchmark-labels`.
+- `/readyz` returns `{"status":"ready"}`.
+- Focused web-dashboard tests pass, and the full automated test suite still
+  passes with 325 tests before deploy.
+
+Current in-flight stage:
+
+- The next software step is still to make the benchmark-focused paper strategy
+  tunable, including more aggressive buy-slot counts, stronger benchmark-excess
+  weighting, and adjustable sector-diversity pressure.
+
+Latest local update not yet deployed:
+
+- Atlas now has a first trend-quality layer inside the momentum engine instead
+  of relying only on simple 1-month and 3-month return scoring.
+- `MomentumEngine` now computes additional pure-Python trend features from the
+  same 1-year Yahoo price history:
+  - `return_12m`
+  - `sma_20`, `sma_50`, `sma_200`
+  - `ema_20` and `ema_20_slope_pct`
+  - `rsi_14`
+  - `volatility_20d_pct`
+  - `distance_from_52w_high_pct`
+  - `trend_quality_score`
+  - `trend_state`
+- The legacy return-based score is preserved as `legacy_momentum_score`, and
+  the published `momentum_score` is now a blended composite of the legacy score
+  and the new `trend_quality_score`.
+- The paper strategy now reads `momentum_metrics.trend_quality_score` and
+  `trend_state` when present, uses trend quality as an extra ranking input when
+  candidates are otherwise close, and explains that trend context directly in
+  buy rationale text.
+- This is still paper-only logic. It improves simulated selection quality and
+  explainability only; it does not enable brokerage integration or real-money
+  trading.
+- Focused tests pass for `tests.test_momentum`,
+  `tests.test_paper_strategy`, and `tests.test_market_data_metadata`.
+- Full automated test suite passes locally with 330 tests.
+
+Current in-flight stage:
+
+- The next software step is to make this new trend-aware paper strategy
+  tunable and visible, including owner-facing controls for aggressiveness,
+  stronger trend weighting, and dashboard surfacing of the new trend-quality
+  signals inside Atlas recommendations.
+
+Latest staging update:
+
+- Cloud Run revision `atlas-dashboard-stg-00075-njb` is now serving 100% of
+  traffic as of 2026-07-04.
+- Dashboard image `20260704-trend-nav` is deployed.
+- The sidebar no longer includes a separate `About Atlas` tab; the Atlas
+  overview remains reachable only from the top brand/logo link.
+- The former Market page content is folded into Overview, so portfolio KPIs,
+  benchmark performance, and breadth sit together on one dashboard page.
+- The deployed bundle also includes the first trend-quality engine pass, so
+  Atlas now computes richer trend context and can lean on it during simulated
+  paper selection.
+- `/readyz` returns `{"status":"ready"}` after deploy.
+- The live root HTML no longer contains `About Atlas` tab text or `href="#market"`.
+- Focused web-dashboard tests pass, and the full automated test suite passed
+  locally with 330 tests before deploy.
+
+Latest staging update:
+
+- Atlas paper selection now uses broader confirmation instead of leaning too
+  heavily on a single day's move.
+- The paper strategy now scores benchmark breadth across `SPY`, `QQQ`, `IWM`,
+  and `RSP`, measures sector breadth participation, and calculates a
+  multi-day persistence score from recent returns, trend slope, price versus
+  moving averages, and drawdown context.
+- These new signals now feed autonomous buy ranking, cautious-market buy
+  gating, and exit escalation so Atlas can prefer names with stronger
+  follow-through and reduce holdings faster when participation fades.
+- Paper recommendation and proposal rationale storage now preserves more lines,
+  which means the dashboard can surface the added breadth, persistence, and
+  follow-through explanation instead of truncating it away.
+- Cloud Run revision `atlas-dashboard-stg-00086-cfh` is serving 100% of
+  traffic as of 2026-07-05.
+- Dashboard and job image tag `20260705-persistence-breadth` is deployed.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` now use the same
+  image.
+- Manual cloud daily execution `atlas-daily-stg-wcw9d` completed successfully
+  in 4m34s on the updated strategy.
+- Manual cloud weekly execution `atlas-weekly-stg-dddr7` also completed
+  successfully after the jobs update.
+- `/readyz` returns `{"status":"ready"}` after deploy.
+- The recurring `atlas-daily-stg` and `atlas-weekly-stg` scheduler jobs are
+  enabled again after manual verification.
+- The full local automated test suite passes with 348 tests before deploy.
+
+Current in-flight stage:
+
+- The next practical software step is to add position-management intelligence
+  on top of the stronger entry engine, especially staged adds/trims, holding-
+  period awareness, and benchmark-relative rebalance rules so Atlas can manage
+  open winners and laggards more proactively instead of only deciding initial
+  entries and exits.
+
+Latest staging update:
+
+- The daily workflow now refreshes paper-performance snapshots after the
+  autonomous paper cycle runs, not just before it.
+- This closes a live reporting gap where Atlas could execute an autonomous
+  sell and still publish a stale pre-trade `performance.md` artifact.
+- The updated live bundle now consistently reflects the same-run autonomous
+  `NVDA` exit across `paper_trading/account.json` and
+  `paper_trading/performance.md`.
+- Cloud Run revision `atlas-dashboard-stg-00087-q79` is serving 100% of
+  traffic as of 2026-07-05.
+- Dashboard and job image tag `20260705-posttrade-sync` is deployed.
+- Manual cloud daily execution `atlas-daily-stg-hzqxn` completed successfully
+  on the updated reporting-sync build.
+- `/readyz` returns `{"status":"ready"}` after deploy.
+- The recurring `atlas-daily-stg` and `atlas-weekly-stg` scheduler jobs are
+  enabled again after manual verification.
+- The full local automated test suite passes with 348 tests before deploy.
+
+Current in-flight stage:
+
+- The next practical software step remains richer position-management
+  intelligence, especially staged adds/trims, holding-period awareness, and
+  benchmark-relative rebalance rules so Atlas can manage open winners and
+  laggards more proactively after entry.
+
+Latest staging update:
+
+- Atlas now has its first proactive open-position management layer in the
+  paper account, not just entry selection and hard exits.
+- `PaperPositionMonitor` can now escalate repeated review-level weakness into
+  a trim proposal, and it can also open a follow-on simulated buy proposal for
+  a held leader that keeps outperforming after entry with enough benchmark
+  confirmation.
+- This logic stays inside the same proposal, risk-review, approval, and
+  autonomous-execution path, so the decision trail remains audit-friendly.
+- Cloud Run revision `atlas-dashboard-stg-00088-z5f` is serving 100% of
+  traffic as of 2026-07-05.
+- Dashboard and job image tag `20260705-position-management` is deployed.
+- Manual cloud daily execution `atlas-daily-stg-p8zdn` completed successfully
+  on the updated build.
+- The live paper book immediately used the new trim logic on `KLAC`, reducing
+  the position from `19` to `9.5` simulated shares after repeated review-level
+  weakness and benchmark lag. Cash increased to `$57,354.78`, and realized
+  gain or loss moved to `-$426.88`.
+- `/readyz` returns `{"status":"ready"}` after deploy.
+- The recurring `atlas-daily-stg` and `atlas-weekly-stg` scheduler jobs are
+  enabled again after manual verification.
+- The full local automated test suite passes with 350 tests before deploy.
+
+Latest staging update:
+
+- Atlas now shows company-news tone directly in the owner dashboard.
+- The Overview `Portfolio focus right now` panel, Paper Portfolio holdings,
+  ranked Controls queue, hold-steady holdings, and paper proposal cards now
+  render the persisted `news_signal` so the owner can see whether recent
+  company-specific news is supportive, constructive, neutral, cautious, or
+  adverse.
+- Cloud Run service revision `atlas-dashboard-stg-00091-bmz` is live on image
+  `20260706-dashboard-news-tone`.
+- `/readyz` returns `{"status":"ready"}` after deployment verification.
+- The full local automated test suite now passes with 355 tests.
+
+Latest staging update:
+
+- Atlas now has a live news-aware paper-decision layer in staging. The daily
+  run refreshes company-news signals for held names, major movers, and top
+  ranked candidates before paper selection and open-position review.
+- Cloud Run service revision `atlas-dashboard-stg-00090-rv7` is live on image
+  `20260705-news-audit`.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` both point to the
+  same image.
+- Manual cloud daily execution `atlas-daily-stg-4pfbw` completed successfully
+  and published a new private manifest at `2026-07-06T02:40:59Z`.
+- The recurring `atlas-daily-stg` and `atlas-weekly-stg` scheduler jobs are
+  enabled again after this verification pass. The jobs-deploy script paused
+  them during rollout, and they were resumed after the post-deploy checks.
+- The latest cloud paper account remains at 9 open simulated positions:
+  `AMD`, `ANET`, `CRWD`, `KLAC`, `LLY`, `LRCX`, `MRVL`, `MU`, and `TSM`.
+- The latest cloud paper equity remains `$99,095.01` with cash
+  `$57,354.78`, realized gain or loss `-$426.88`, and unrealized gain or
+  loss `-$478.10`.
+- This verification run did not create a new simulated buy, trim, or exit; it
+  confirmed that the news-aware build ran successfully and preserved the post-
+  `KLAC` trim state.
+- The former archive-visibility gap is now closed. The latest archived cloud
+  snapshot `research_archive/snapshot_20260706_024044.json` preserves
+  `news_signal` for live tracked names, and held names such as `AMD`, `ANET`,
+  `CRWD`, `KLAC`, `LLY`, `LRCX`, `MRVL`, `MU`, and `TSM` now show persisted
+  neutral signals in the cloud snapshot on this dataset.
+- Focused local tests for `tests.test_news_data`, `tests.test_paper_strategy`,
+  `tests.test_paper_monitor`, and `tests.test_research_memory` pass.
+- The full local automated test suite passes with 354 tests.
+
+Current in-flight stage:
+
+- Atlas now has richer news intelligence, owner-visible event explanations,
+  and report-level event context live in Cloud Run staging.
+- `app/news_data.py` classifies company headlines into higher-signal event
+  types such as `earnings_beat`, `earnings_miss`, `guidance_raise`,
+  `guidance_cut`, `analyst_upgrade`, `analyst_downgrade`, `product_launch`,
+  `contract_win`, `approval`, `legal_risk`, and `offering_or_dilution`.
+- News signals now carry lightweight source weighting, high-impact event
+  counts, positive and negative weighted totals, a dominant event type, and a
+  compact `headline_events` summary list so Atlas can react differently to a
+  routine mention versus a lawsuit, guidance cut, or earnings surprise.
+- `PaperStrategy` now blocks otherwise-strong paper buys when even a single
+  high-impact negative event is present, not only when multiple weak negative
+  headlines accumulate.
+- `PaperPositionMonitor` now escalates adverse single-event news risk into a
+  trim or closer thesis review when that event is severe enough.
+- The dashboard and owner controls now show the specific event class driving
+  the news tone, not just the positive or negative label.
+- The paper decision trail now names the dominant news event inside buy,
+  review, trim, and exit language so autonomous paper actions read like a real
+  audit journal.
+- The saved paper performance report and accountability report now preserve
+  recent execution context with inferred news-event summaries, keeping the
+  exported artifacts aligned with the live dashboard and decision logic.
+- The paper position-detail drilldown and basis-report workflow now carry the
+  same event-specific context, including a per-execution `News event` field,
+  so a reviewer can trace entry, trim, and exit decisions without switching
+  between panels.
+- The holding lifecycle drilldown now also exposes a compact trend-diagnostics
+  block built from Atlas momentum metrics, including trend quality, regime,
+  moving-average posture, RSI, EMA slope, and distance from the 52-week high.
+- The holding lifecycle drilldown now also exposes a sector-and-benchmark
+  confirmation block so Atlas can show whether a name's move is being
+  confirmed by its sector and the broader benchmark tape, not only by the
+  chart structure of the single name.
+- The holding lifecycle drilldown now also exposes an outcome-framing block
+  so Atlas can separate genuine leadership from simple market lift by
+  comparing each open holding's post-entry return with the stronger of `SPY`
+  or `QQQ`.
+- The holding lifecycle drilldown now also exposes a `Projection watch` block
+  so Atlas can turn trend, confirmation, outcome, and news context into a
+  forward-looking read plus concrete watchpoints.
+- Cloud Run service revision `atlas-dashboard-stg-00100-xrb` is live on image
+  `20260706-position-projection-watch`.
+- Manual cloud daily execution `atlas-daily-stg-wnp4r` completed successfully
+  at `2026-07-07T02:57:55Z`.
+- Manual cloud weekly execution `atlas-weekly-stg-8nhdp` completed
+  successfully at `2026-07-07T02:54:01Z`.
+- The refreshed private manifest now reports `generated_at` of
+  `2026-07-07T02:57:51+00:00`.
+- The latest archived cloud snapshot
+  `research_archive/snapshot_20260707_025733.json` is present in the private
+  manifest after the projection-watch rollout.
+- `/readyz` returns `{"status":"ready"}` after deployment verification.
+- The recurring `atlas-daily-stg` and `atlas-weekly-stg` scheduler jobs are
+  enabled again after the rollout checks passed.
+- The full local automated test suite now passes with 359 tests.
+
+Recommended next practical step:
+
+- Extend this predictive layer one step further by surfacing the new
+  projection-driven paper-monitor decisions more explicitly in the owner
+  dashboard, especially which trims or reviews were triggered by benchmark
+  lag, thin sector breadth, damaged trend posture, or supportive add
+  confirmation.
+
+Latest staging update:
+
+- `PaperPositionMonitor` now converts the same ingredients behind the
+  dashboard's `Projection watch` block into actual autonomous paper-management
+  thresholds in live staging.
+- The monitor now computes lightweight projection signals from post-entry
+  benchmark excess, sector breadth, trend regime, trend quality, and current
+  news tone.
+- Atlas can now escalate a holding from maintain to review when projection
+  confirmation is no longer clearly supportive, even if older hard-stop rules
+  have not fired yet.
+- Atlas can now trigger a projection-driven trim when post-entry benchmark lag,
+  weak sector participation, and damaged trend posture line up together.
+- Winner-add proposals are now stricter: Atlas requires a supportive
+  projection posture, stronger sector breadth, and healthier trend quality
+  before adding to an existing leader.
+- Cloud Run service revision `atlas-dashboard-stg-00101-rg4` is live on image
+  `20260710-projection-monitor`.
+- Manual cloud daily execution `atlas-daily-stg-6fckm` completed successfully
+  at `2026-07-11T02:33:53Z`.
+- Manual cloud weekly execution `atlas-weekly-stg-4vw4k` completed
+  successfully at `2026-07-11T02:29:23Z`.
+- The refreshed private manifest now reports `generated_at` of
+  `2026-07-11T02:33:48+00:00`.
+- The latest archived cloud snapshot
+  `research_archive/snapshot_20260711_023331.json` is present in the private
+  manifest after the projection-monitor rollout.
+- `/readyz` returns `{"status":"ready"}` after deployment verification.
+- The recurring `atlas-daily-stg` and `atlas-weekly-stg` scheduler jobs are
+  enabled again after the rollout checks passed.
+- Focused tests for `tests.test_paper_monitor`, `tests.test_web_dashboard`,
+  and `tests.test_paper_strategy` pass, and the full local automated test
+  suite now passes with 361 tests.
+
+Current in-flight stage:
+
+- The next practical software step is to carry this same projection-driver
+  labeling beyond Controls into the broader paper workflow, especially the
+  Overview portfolio-focus summary, paper holding drilldowns, and exported
+  accountability artifacts so the same autonomous reason is visible
+  everywhere the owner audits a position.
+
+Latest staging update:
+
+- Atlas now explicitly labels when a ranked paper action is being driven by
+  the new projection layer instead of only older score, lag, or news wording.
+- The Controls `Portfolio action queue` and `Hold-steady holdings` cards now
+  show compact decision-driver tags such as `Projection de-risk`,
+  `Projection caution`, `Projection leadership`, and
+  `Projection-supported add`.
+- The queue evidence anchor now prefers the exact projection trigger line when
+  one exists, so the owner can see whether Atlas acted because of benchmark
+  lag, thinning sector breadth, weakened trend posture, or still-supportive
+  continuation.
+- This deploy changes the live dashboard surface only. The daily and weekly
+  jobs remain on the prior `20260710-projection-monitor` image because the
+  new logic is owner-visibility code rather than execution-path logic.
+- Cloud Run service revision `atlas-dashboard-stg-00102-5gw` is live on image
+  `20260710-projection-driver-ui`.
+- The image digest is
+  `sha256:a7747bc40911b86a768d63afd61d50c5a89382fe74b9f87f02844164e03ea15e`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00102-5gw` as both the latest created and latest ready
+  revision.
+- `/readyz` returns `{"status":"ready"}` after deployment verification.
+- Focused tests for `tests.test_owner_controls` and `tests.test_web_dashboard`
+  pass, and the full local automated test suite now passes with 363 tests.
+
+Current in-flight stage:
+
+- The next practical software step is to push the same projection-driver
+  labeling one layer deeper into Atlas's saved paper exports and execution
+  narratives, especially trade-history cards, paper-performance artifacts, and
+  any owner-facing summaries that still talk about trims or adds without
+  naming the exact projection reason.
+
+Latest staging update:
+
+- Atlas now carries the same projection-driver language across the broader
+  paper workflow, not just the Controls page.
+- The Overview `Portfolio focus right now` list now shows the same driver tag
+  beside high-priority paper holdings, so the owner can see at a glance when
+  a name is under `Projection caution` or `Projection de-risk`.
+- Open holding rows and the paper holding lifecycle dialog now display the
+  same decision-driver badge, keeping the autonomous reason aligned from the
+  overview dashboard down into the per-position drilldown.
+- The accountant-style accountability report now includes a `Driver` column
+  per simulated trade, and the CSV export now includes both `Driver` and
+  `Driver Detail` fields for outside review.
+- The accountability payload now infers these driver labels directly from the
+  stored thesis and rationale trail rather than introducing a second manual
+  explanation store.
+- This deploy changes the live dashboard and owner-visible export workflow
+  only. The daily and weekly jobs remain on the prior
+  `20260710-projection-monitor` image because the new work is explainability
+  and reporting code rather than execution-path logic.
+- Cloud Run service revision `atlas-dashboard-stg-00103-ppw` is live on image
+  `20260710-projection-driver-workflow`.
+- The image digest is
+  `sha256:c4c98578bd1fe8613d96942a53b7eaa4adf9c85572c6eea824cbaa8ed970effb`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00103-ppw` as both the latest created and latest ready
+  revision.
+- `/readyz` returns `{"status":"ready"}` after deployment verification.
+- Focused tests for `tests.test_web_dashboard`, `tests.test_paper_trading`,
+  and `tests.test_owner_controls` pass, and the full local automated test
+  suite still passes with 363 tests.
+
+Current in-flight stage:
+
+- The next practical software step is to make the same projection-driver
+  language part of Atlas's post-trade learning loop itself, especially paper
+  feedback summaries and any future comparative review of which projection-led
+  adds, trims, or exits actually worked best versus the benchmarks.
+
+Latest staging update:
+
+- Atlas now carries projection-driver labels through the recent paper activity
+  feed, grouped trade-history cards, and saved paper-performance reporting.
+- The live `What Atlas bought and sold` activity cards now show the same
+  driver badge that appears in Controls and holding drilldowns.
+- The grouped `View trade history` workflow now shows that same driver badge
+  on each simulated trade row, so historical buys, trims, and exits keep the
+  autonomous reason visible.
+- The saved `performance.md` report now adds a `Driver` column inside
+  `Recent Execution Context`, which keeps the durable paper-performance
+  artifact aligned with the live dashboard's projection explanation.
+- This deploy is still owner-visibility code only. The daily and weekly jobs
+  remain on the prior `20260710-projection-monitor` image because no execution
+  thresholds or autonomous trading logic changed here.
+- Cloud Run service revision `atlas-dashboard-stg-00104-nzq` is live on image
+  `20260710-projection-driver-history`.
+- The image digest is
+  `sha256:6e2ba3a01ee62d82bb4becc706390b01c9b16fbd83d01bd7285c94ec6fff58f2`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00104-nzq` as both the latest created and latest ready
+  revision.
+- `/readyz` returns `{"status":"ready"}` after deployment verification.
+- Focused tests for `tests.test_paper_trading` and `tests.test_web_dashboard`
+  pass, and the full local automated test suite still passes with 363 tests.
+
+Current in-flight stage:
+
+- The next practical software step is to close the loop between projection-led
+  learning and actual autonomous thresholds, especially whether Atlas should
+  gradually tune add, review, or trim aggressiveness based on which
+  projection-driver patterns are outperforming or underperforming over time.
+
+Latest staging update:
+
+- Atlas now folds projection-driver learning directly into the paper feedback
+  readout instead of only labeling past decisions.
+- The paper learning summary now tracks judged outcomes by projection driver,
+  such as `Projection-supported add` versus `Projection caution`, and shows a
+  compact working-rate card for the strongest recent projection patterns.
+- The learning takeaway list now explicitly names the strongest and weaker
+  projection reads observed so far, giving the owner a clearer signal about
+  which autonomous projection patterns are earning trust.
+- Executed paper-feedback rows now also render the same driver badge, so the
+  learning list, trade history, accountability report, and activity feed all
+  use one aligned projection explanation path.
+- This deploy remains owner-visibility and learning-summary code only. The
+  daily and weekly jobs still run the prior `20260710-projection-monitor`
+  execution image because the new work does not yet change autonomous
+  thresholds or execution logic.
+- Cloud Run service revision `atlas-dashboard-stg-00105-xdg` is live on image
+  `20260711-projection-learning`.
+- The image digest is
+  `sha256:0c09091ad011f782afb8bb009d449b8997353b6dd9be26abe6da853801305253`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00105-xdg` as both the latest created and latest ready
+  revision.
+- `/readyz` returns `{"status":"ready"}` after deployment verification.
+- `scripts/gcp_staging_readiness.ps1` now reports a new successful daily
+  manual execution `atlas-daily-stg-72tww` while the weekly verified execution
+  remains `atlas-weekly-stg-4vw4k`.
+- Focused tests for `tests.test_paper_trading` and `tests.test_web_dashboard`
+  pass, and the full local automated test suite still passes with 363 tests.
+
+Latest local repo update:
+
+- Atlas now uses judged projection-driver outcomes to gently retune the
+  simulated paper monitor instead of only reporting which driver was working.
+- `PaperTradingAccount.projection_threshold_profile()` now converts judged
+  projection-linked buy and sell outcomes into a bounded adaptive profile for
+  winner-add, review, and trim thresholds.
+- `PaperPositionMonitor.from_account(...)` now reads that adaptive profile so
+  the daily paper monitor can tighten or ease projection confirmation gates
+  without changing any real-money boundary.
+- The dashboard learning panel now shows whether adaptive projection tuning is
+  merely watching or actively retuning, plus the specific threshold changes
+  Atlas made from judged paper outcomes.
+- This update is currently local only. It changes autonomous paper-monitor
+  behavior, so it has not been deployed to staging yet.
+- Focused tests for `tests.test_paper_trading`, `tests.test_paper_monitor`,
+  and `tests.test_web_dashboard` pass, and the full automated test suite now
+  passes locally with 366 tests.
+
+Current in-flight stage:
+
+- The next practical step is to validate the new adaptive paper thresholds in
+  staging, observe whether the retuning creates clearer autonomous buys and
+  sells, and then decide whether owner-visible policy controls are needed for
+  projection-learning sensitivity or minimum evidence thresholds.
+
+Latest staging update:
+
+- Atlas now loads the executive dashboard in two stages so the Overview page
+  can paint its top-line readout before heavier paper-trade detail finishes.
+- The new fast path adds `/api/dashboard/summary`, which serves the Overview
+  essentials first: market pills, KPI totals, benchmark chart data, paper-book
+  posture, thesis overview, portfolio focus, and the current holdings list.
+- The browser now renders that summary immediately, then follows with the full
+  `/api/dashboard` payload for deeper sections such as accountability, trade
+  history, feedback, and owner controls.
+- Local timing checks on the new code path reduced the first response build
+  from about `1.12s` for the full payload to about `0.18s` for the summary
+  payload.
+- Cloud Run service revision `atlas-dashboard-stg-00106-vwm` is live on image
+  `20260711-dashboard-summary-fast`.
+- The image digest is
+  `sha256:13408efc01ed5c6ba7de8a8eecf078602bb2c1baec01de1d539d003557fd1c19`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00106-vwm` as both the latest created and latest ready
+  revision.
+- `/readyz` returns `{"status":"ready"}` after deployment verification.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00106-vwm`.
+- Focused tests for `tests.test_web_dashboard` and `tests.test_web_cloud`
+  pass, and the full automated test suite now passes locally with 367 tests.
+
+Latest staging refinement:
+
+- Atlas now starts the full dashboard fetch in parallel with the summary fetch
+  instead of waiting for the summary request to finish first.
+- The summary payload was also trimmed to only the fields the Overview first
+  paint actually uses, dropping unused watchlist and task-detail data from the
+  initial response.
+- Local timing checks on the refined path reduced the summary build again from
+  about `0.18s` and `22.2 KB` down to about `0.11s` and `6.3 KB`, while the
+  full payload remains available for the richer follow-up render.
+- Cloud Run service revision `atlas-dashboard-stg-00107-bjn` is live on image
+  `20260711-dashboard-summary-slim`.
+- The image digest is
+  `sha256:aee69dbb31c25eadcb5bc9746fcca722a09af81ff2bd0b336dc30835d4fb7688`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00107-bjn` as both the latest created and latest ready
+  revision.
+- `/readyz` remains healthy after deployment verification.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00107-bjn`.
+
+Latest staging refinement:
+
+- Atlas now hydrates the executive dashboard from the browser's last cached
+  summary snapshot before it asks the network for fresh data.
+- That means repeat opens can show the last known Overview immediately, then
+  refresh in place with the current summary and full dashboard payload.
+- The cached startup path is additive to the existing slim summary endpoint and
+  parallel full-dashboard fetch, so Atlas now combines browser-side reuse with
+  the lighter server-side first paint path.
+- Cloud Run service revision `atlas-dashboard-stg-00108-gxl` is live on image
+  `20260711-dashboard-cached-start`.
+- The image digest is
+  `sha256:413484d758ef6bb28b6cc1f82c3f7ee8ebc8670c21d431c346f3b09c017a3adf`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00108-gxl` as both the latest created and latest ready
+  revision.
+- `/readyz` remains healthy after deployment verification.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00108-gxl`.
+
+Latest staging refinement:
+
+- Atlas now reuses a cached full dashboard snapshot for the read-only sections
+  on repeat opens, not just the executive summary tiles.
+- Cached owner-control state is explicitly stripped before reuse, so controls
+  still wait for the fresh authenticated network response and current CSRF
+  token.
+- This keeps Overview, paper positions, trade-history context, and other
+  read-only sections feeling fuller immediately while preserving safe live
+  control behavior.
+- Cloud Run service revision `atlas-dashboard-stg-00109-nlz` is live on image
+  `20260711-dashboard-full-cache-safe`.
+- The image digest is
+  `sha256:b77068740a3389a8633d86ddf45de6f981668d58ef3665ed40bafcb367a29150`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00109-nlz` as both the latest created and latest ready
+  revision.
+- `/readyz` remains healthy after deployment verification.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00109-nlz`.
+
+Latest staging refinement:
+
+- Atlas now shows an explicit freshness badge in the top bar so the faster
+  startup states are visible to the owner.
+- The badge now steps through `Cached snapshot`, `Refreshing`, and `Live`
+  during startup and refresh, making the cached-first behavior legible instead
+  of silent.
+- This pairs with the cached summary and cached safe full-dashboard reuse so
+  Atlas can feel both faster and clearer about what it is showing.
+- Cloud Run service revision `atlas-dashboard-stg-00110-gm5` is live on image
+  `20260711-dashboard-freshness-badge`.
+- The image digest is
+  `sha256:daf10ff1b1af01b6245210ab619b2ff2cb34314708c1d90b2886ad477a38b87e`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00110-gm5` as both the latest created and latest ready
+  revision.
+- `/readyz` remains healthy after deployment verification.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00110-gm5`.
+
+Latest staging refinement:
+
+- Atlas no longer blocks Cloud Run cold start on a full private-artifact pull
+  before the dashboard can serve.
+- The cloud dashboard now pulls only a startup bundle at boot: the latest
+  research snapshot, the paper account, the paper ledger, and the research
+  task file. A full artifact sync now continues in the background after the
+  service is already available.
+- This is the first startup optimization aimed directly at the very first open
+  on a cold instance, not just repeat visits inside the browser.
+- Cloud Run service revision `atlas-dashboard-stg-00111-gjj` is live on image
+  `20260711-dashboard-startup-bundle`.
+- The image digest is
+  `sha256:e94abce57b48f6363539069293f88d9bce13464acf45a3be3d262c76956a05a8`.
+- Direct post-deploy verification confirms the service reports
+  `atlas-dashboard-stg-00111-gjj` as both the latest created and latest ready
+  revision.
+- `/readyz` remains healthy after deployment verification.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00111-gjj`.
+
+Latest Stage 5 learning deploy:
+
+- Atlas Stage 5 paper validation now tracks sustained learning, not just the
+  latest verdict.
+- Paper snapshots now retain the security-price map used for each
+  mark-to-market checkpoint.
+- Executed paper trades now record 1-, 3-, and 5-snapshot persistence reads,
+  so Atlas can tell whether a trade only worked briefly or kept working across
+  multiple checkpoints.
+- The Stage 5 validation summary and standalone paper performance report now
+  include judged-trade working rate, judged sell help rate, gross turnover,
+  and multi-snapshot persistence context.
+- The owner dashboard now surfaces persistence in the paper feedback section,
+  and owner-control paper calibration now treats 3-snapshot persistence as an
+  extra support/caution input.
+- `PaperStrategy` now uses judged paper-learning context during close ranking
+  decisions, so sustained prior winners or laggards can tilt otherwise similar
+  buy candidates.
+- Cloud Run service revision `atlas-dashboard-stg-00112-k9g` is live on image
+  `20260712-stage5-persistence-learning`.
+- The image digest is
+  `sha256:913f35a98c4db6cd3c9ac06921f825e96c2eb69c0e8ad40a614281bed9743ec4`.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00112-k9g`.
+- Focused strategy, owner-control, paper-trading, and dashboard tests pass
+  locally for the new persistence-learning path.
+
+Latest strategy-learning follow-up:
+
+- Atlas now uses supportive sustained paper-learning not only for proposal
+  ranking, but also for modest buy-gate relaxation on borderline setups.
+- Negative sustained paper-learning can now block borderline paper buys when
+  similar setups recently lost follow-through.
+- This pushes Stage 5 learning from reporting, to calibration, to actual
+  autonomous entry behavior.
+- Cloud Run service revision `atlas-dashboard-stg-00113-mc8` is live on image
+  `20260712-stage5-learning-gate-tuning`.
+- The image digest is
+  `sha256:e67d14e33f3086bd2b262a9a81fc2d8f40873709d206a78693e33c1113ccc1a7`.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00113-mc8`.
+- Focused strategy, owner-control, paper-trading, and dashboard tests pass
+  locally for the new gate-tuning path.
+
+Latest staging-validation refinement:
+
+- Manual staging validation now includes an explicit signed-in owner dashboard
+  walkthrough, not just login and deny-list confirmation.
+- `cloud/staging_manual_validation.json` now records the expected Stage 5
+  walkthrough checks: validation scoreboard visibility, persistence-learning
+  reads, benchmark labeling, autonomous queue behavior, and lot-level
+  accountability review.
+- `scripts/gcp_manual_validation.ps1` can now display and record that owner
+  walkthrough as a separate evidence gate.
+- `scripts/gcp_staging_readiness.ps1` now keeps that dashboard walkthrough
+  visible as a pending manual gate during automated readiness review.
+
+Latest self-verification deploy:
+
+- Atlas cloud mode now supports a token-protected
+  `/api/dashboard/verification` endpoint for staging smoke checks.
+- The verification payload checks the live Stage 5 scoreboard contract,
+  persistence-learning availability, SPY/QQQ benchmark labeling, autonomous
+  paper-queue behavior, and accountability-report availability without
+  requiring interactive browser login.
+- `scripts/gcp_dashboard_verification.ps1` now calls that endpoint in a
+  read-only way and reports pass/fail for each dashboard contract.
+- `scripts/gcp_deploy_staging.ps1` can now enable the verification endpoint by
+  passing `-VerificationToken`.
+- Cloud Run service revision `atlas-dashboard-stg-00114-8bt` is live on image
+  `20260712-dashboard-verification-selfcheck`.
+- The image digest is
+  `sha256:e56091e8dcb7f7db788921d4ff19e414751a8284a4e36af2965301112143b9e1`.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00114-8bt`.
+- `scripts/gcp_dashboard_verification.ps1` passes on the deployed service and
+  confirms all five current dashboard checks.
+- `cloud/staging_manual_validation.json` now records the owner Stage 5
+  dashboard walkthrough as validated on `2026-07-12T16:15:00-07:00`.
+- `scripts/gcp_staging_readiness.ps1` now reads the same manual-validation
+  evidence file, so it reports the owner Stage 5 dashboard walkthrough as
+  validated instead of showing a stale hardcoded pending line.
+- Remaining manual staging gates are now only cross-device owner login and
+  non-owner Google account denial.
+- `scripts/gcp_final_staging_review.ps1` now supports an optional
+  `-VerificationToken` so the final read-only review can include the live
+  dashboard contract check in the same pass.
+- `scripts/gcp_final_staging_review.ps1` now also reads the manual-validation
+  evidence file and names the actual remaining manual gates directly in its
+  closeout instead of ending with only a generic pending sign-off line.
+
+Latest staging update:
+
+- Adaptive daily trade-pressure and benchmark-trust visibility is deployed to
+  staging across Controls, holding drilldowns, performance reporting, and
+  accountant-style basis exports.
+- Cloud Run service revision `atlas-dashboard-stg-00115-xqh` is live on image
+  `20260712-adaptive-audit-context`.
+- The deployed image digest is
+  `sha256:43c4581b555a3d0ab7f0c64aadcc2258f3894a6cff234219b4b22a1906f4cf57`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00115-xqh` and confirms the Stage 5 dashboard contract, persistence
+  learning, benchmark labels, autonomous queue behavior, and accountability
+  report availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same image; manual executions `atlas-daily-stg-cxwbh` and
+  `atlas-weekly-stg-44drh` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow:
+  `atlas-daily-stg` at `0 7 * * * America/Los_Angeles` and
+  `atlas-weekly-stg` at `0 8 * * 0 America/Los_Angeles`.
+- `scripts/gcp_set_schedules_staging.ps1` and
+  `scripts/gcp_staging_status.ps1` now sort Cloud Run executions newest-first
+  before reading latest execution status, avoiding stale failed executions
+  appearing as the current job state.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00115-xqh`.
+- `scripts/gcp_final_staging_review.ps1 -VerificationToken ...` passes on
+  revision `00115-xqh`, with 100% uptime telemetry across 2,592 samples in the
+  24-hour report window.
+- `cloud/staging_manual_validation.json` now records the owner Stage 5
+  dashboard walkthrough on revision `00115-xqh` and records recurring schedules
+  as enabled after the successful daily and weekly manual executions.
+- Remaining manual gates are still only cross-device owner login and
+  non-owner Google account denial, followed by final owner security/cost
+  sign-off.
+
+Latest staging update:
+
+- Atlas now builds a benchmark-specific Stage 5 decision scorecard for `SPY`
+  and `QQQ`.
+- Simulated buys are scored by whether the owned stock beat each benchmark,
+  while trims/exits are scored by whether selling avoided later weakness
+  versus each benchmark.
+- The dashboard paper-learning panel now shows the benchmark scorecard with
+  judged comparisons, working/mixed/lagging counts, working rate, and average
+  decision edge.
+- The saved paper-performance report now includes the same benchmark-specific
+  scorecard, and the token-protected staging verification contract now checks
+  that the scorecard data and UI strings are present.
+- Cloud Run service revision `atlas-dashboard-stg-00116-zv8` is live on image
+  `20260712-benchmark-scorecards`.
+- The deployed image digest is
+  `sha256:80698bcfe94bc080935df38d11b84e8e4d7c921102960593ce18d43dc1285db3`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00116-zv8` and now confirms the new `benchmark_scorecard` contract in
+  addition to the Stage 5 scoreboard, persistence learning, benchmark labels,
+  autonomous queue behavior, and accountability report availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same image; manual executions `atlas-daily-stg-5jshm` and
+  `atlas-weekly-stg-qhfzc` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00116-zv8`.
+- The in-app browser reaches the live staging app and correctly redirects to
+  the owner Google sign-in boundary.
+- Focused tests for `tests.test_paper_strategy`, `tests.test_paper_trading`,
+  `tests.test_owner_controls`, `tests.test_web_dashboard`,
+  `tests.test_web_cloud`, and `tests.test_gcp_scripts` pass with 159 tests.
+
+Current in-flight stage:
+
+- The next practical step is to decide whether the new benchmark-specific
+  scorecards should retune autonomous paper exit strictness or sector pacing,
+  while continuing to keep real trading and brokerage access disabled.
+
+Latest staging update:
+
+- Atlas now uses benchmark-specific sell scorecards to gently retune
+  autonomous paper exit strictness.
+- The benchmark scorecard now tracks sell-only judged counts, working/mixed/
+  lagging counts, sell working rate, and sell average decision edge for `SPY`
+  and `QQQ`.
+- When projection-driver and sell-trigger learning have not already adjusted
+  the paper monitor, strong benchmark-specific sell evidence can move
+  projection review/trim thresholds slightly earlier; weak benchmark-specific
+  sell evidence can move them slightly slower.
+- The adaptive projection-tuning profile now includes `benchmark_exit_stats`,
+  and the token-protected staging verification contract checks the new
+  `benchmark_exit_tuning` evidence path.
+- Cloud Run service revision `atlas-dashboard-stg-00117-5vw` is live on image
+  `20260712-benchmark-exit-tuning`.
+- The deployed image digest is
+  `sha256:bdac74ccd5c83fadcae8c40344b02afd87985286dfa550d3115e0cec76f3fb4e`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00117-5vw` and confirms the Stage 5 dashboard contract, persistence
+  learning, benchmark labels, benchmark scorecard, benchmark exit tuning,
+  autonomous queue behavior, and accountability report availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same image; manual executions `atlas-daily-stg-q684b` and
+  `atlas-weekly-stg-dwdfh` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00117-5vw`.
+- The in-app browser reaches the live staging app and correctly redirects to
+  the owner Google sign-in boundary.
+- Focused tests for `tests.test_paper_strategy`, `tests.test_paper_trading`,
+  `tests.test_paper_monitor`, `tests.test_owner_controls`,
+  `tests.test_web_dashboard`, `tests.test_web_cloud`, and
+  `tests.test_gcp_scripts` pass with 175 tests.
+
+Current in-flight stage:
+
+- The next practical step is to decide whether benchmark-specific scorecards
+  should also affect sector pacing or capital rotation pressure, while keeping
+  all autonomy limited to the simulated paper account.
+
+Latest staging update:
+
+- Atlas now uses benchmark-specific buy scorecards to gently retune autonomous
+  paper entry pacing and capital rotation pressure.
+- The benchmark scorecard now tracks buy-only judged counts, working/mixed/
+  lagging counts, buy working rate, and buy average decision edge for `SPY`
+  and `QQQ`.
+- When broader buy/persistence learning has not already adjusted entry rules,
+  strong benchmark-specific buy evidence can slightly increase target entry
+  size, add one new-idea slot, and loosen sector-repeat pressure; weak
+  benchmark-specific buy evidence can slightly reduce target size, remove one
+  new-idea slot, and strengthen sector diversification pressure.
+- The entry strategy profile now includes `benchmark_rotation_stats`, and the
+  token-protected staging verification contract checks the new
+  `benchmark_entry_pacing` evidence path.
+- Cloud Run service revision `atlas-dashboard-stg-00118-f7x` is live on image
+  `20260712-benchmark-entry-pacing`.
+- The deployed image digest is
+  `sha256:e469493715c0b890ca323166ac20fe32003ad2d589b604fe35cdc09a07f8851b`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00118-f7x` and confirms the Stage 5 dashboard contract, persistence
+  learning, benchmark labels, benchmark scorecard, benchmark exit tuning,
+  benchmark entry pacing, autonomous queue behavior, and accountability report
+  availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same image; manual executions `atlas-daily-stg-xdnhd` and
+  `atlas-weekly-stg-n2lwj` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00118-f7x`.
+- The in-app browser reaches the live staging app and correctly redirects to
+  the owner Google sign-in boundary.
+- Focused tests for `tests.test_paper_strategy`, `tests.test_paper_trading`,
+  `tests.test_paper_monitor`, `tests.test_owner_controls`,
+  `tests.test_web_dashboard`, `tests.test_web_cloud`, and
+  `tests.test_gcp_scripts` pass with 177 tests.
+
+Latest staging update:
+
+- Atlas now exposes an owner-facing capital-rotation scoreboard in the Stage 5
+  paper-learning section.
+- The scoreboard groups simulated capital by sector and shows open exposure,
+  open weight, gross buys, gross sells, net committed capital, realized and
+  unrealized P/L, judged buy counts, buy working rate, and average
+  benchmark-relative edge.
+- Each sector receives a plain-language posture such as `press`, `watch`,
+  `diversify`, or `review`, so the owner can see whether Atlas believes a
+  sector is earning more simulated capital or should face concentration/review
+  pressure.
+- The token-protected dashboard verification contract now includes
+  `capital_rotation_scoreboard`.
+- Cloud Run service revision `atlas-dashboard-stg-00120-lmh` is live on image
+  `20260713-capital-rotation-scoreboard-fast`.
+- The deployed image digest is
+  `sha256:8dffd994b555e381d49735107eff613ee9236e756516a4e0c22d7368dee1942f`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00120-lmh` and confirms the Stage 5 dashboard contract, persistence
+  learning, benchmark labels, benchmark scorecard, benchmark exit tuning,
+  benchmark entry pacing, capital rotation scoreboard, autonomous queue
+  behavior, and accountability report availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same optimized image; manual executions `atlas-daily-stg-7pcmh` and
+  `atlas-weekly-stg-v8nm5` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00120-lmh`.
+- The in-app browser reaches the live staging app and correctly redirects to
+  the owner Google sign-in boundary.
+- Focused tests for `tests.test_paper_strategy`, `tests.test_paper_trading`,
+  `tests.test_paper_monitor`, `tests.test_owner_controls`,
+  `tests.test_web_dashboard`, `tests.test_web_cloud`, and
+  `tests.test_gcp_scripts` pass with 178 tests.
+
+Latest staging update:
+
+- Atlas now exposes the sector-level paper-learning bridge behind its small
+  strategy boosts and cautions.
+- The strategy helper now summarizes 3-snapshot sector buy evidence using the
+  same rules already used for paper-entry ranking: sectors with at least two
+  judged buys and more working than lagging outcomes can receive a `+1.5`
+  paper-learning sector boost, while sectors with more lagging than working
+  outcomes can receive a `-2.0` caution.
+- The dashboard paper-learning panel now shows a `Sector learning bridge`
+  card with the checkpoint, minimum judged-buy count, sector posture,
+  working/mixed/lagging counts, and visible `Strategy tilt` amount.
+- The token-protected dashboard verification contract now includes
+  `sector_learning_bridge`.
+- The verification endpoint no longer calls the full owner-control model; it
+  checks the already-built paper payload directly, avoiding unnecessary
+  autonomous-review work during read-only smoke checks.
+- Cloud Run service revision `atlas-dashboard-stg-00122-2vz` is live on image
+  `20260715-sector-learning-bridge-verification-fast`.
+- The deployed image digest is
+  `sha256:d2a4aab7827d7cda17341deecf67b742102f9ea22e02e6ea75666d9ef9fe9b41`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00122-2vz` and confirms the Stage 5 dashboard contract, persistence
+  learning, benchmark labels, benchmark scorecard, benchmark exit tuning,
+  benchmark entry pacing, capital rotation scoreboard, sector learning bridge,
+  autonomous queue behavior, and accountability report availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same optimized image; manual executions `atlas-daily-stg-tchkh` and
+  `atlas-weekly-stg-kb9jf` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00122-2vz`.
+- Focused tests for `tests.test_paper_strategy`, `tests.test_paper_trading`,
+  `tests.test_paper_monitor`, `tests.test_owner_controls`,
+  `tests.test_web_dashboard`, `tests.test_web_cloud`, and
+  `tests.test_gcp_scripts` pass with 180 tests.
+- The in-app browser controller could not be used on this pass because the
+  current bundled browser runtime failed during setup by attempting to redefine
+  a protected `process` global in the Node kernel. Live dashboard verification
+  and staging readiness still passed through the token-protected contract.
+
+Latest staging update:
+
+- Atlas now uses sector-learning cautions as a stronger simulated paper-entry
+  gate, not just a ranking adjustment.
+- Sectors with at least two judged 3-snapshot buys and more lagging than
+  working outcomes still receive the visible `-2.0` sector caution, and Atlas
+  now requires stronger benchmark excess, sector-relative strength, sector
+  breadth, trend quality, persistence, and follow-through before opening
+  another simulated buy in that sector.
+- Positive sector learning remains intentionally modest: it can still provide a
+  small `+1.5` simulated strategy boost and slightly easier confirmation
+  thresholds, but it does not bypass trend, news, risk, or benchmark filters.
+- The sector-learning bridge headline and caution summaries now explain that
+  lagging sectors face stronger simulated-entry confirmation.
+- Cloud Run service revision `atlas-dashboard-stg-00123-kh4` is live on image
+  `20260715-sector-caution-gating`.
+- The deployed image digest is
+  `sha256:0e4f84fd5a1ac49d9186247a5e6a077374d5e497b2aa3dc3fec78c03247c9b47`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00123-kh4` and confirms the Stage 5 dashboard contract, persistence
+  learning, benchmark labels, benchmark scorecard, benchmark exit tuning,
+  benchmark entry pacing, capital rotation scoreboard, sector learning bridge,
+  autonomous queue behavior, and accountability report availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same image; manual executions `atlas-daily-stg-tr5dp` and
+  `atlas-weekly-stg-c2cgk` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00123-kh4`.
+- Focused tests for `tests.test_paper_strategy`, `tests.test_paper_trading`,
+  `tests.test_paper_monitor`, `tests.test_owner_controls`,
+  `tests.test_web_dashboard`, `tests.test_web_cloud`, and
+  `tests.test_gcp_scripts` pass with 181 tests.
+- The in-app browser controller still cannot be used because the current
+  bundled browser runtime fails during setup by attempting to redefine a
+  protected `process` global in the Node kernel. Live dashboard verification
+  and staging readiness passed through the token-protected contract.
+
+Current in-flight stage:
+
+- The next practical step is to measure whether sector-gate cleared,
+  tightened, and boosted decisions subsequently outperform their SPY/QQQ
+  benchmarks, then use that evidence to tune sector-specific simulated entry
+  strictness and position pacing. Keep all autonomy limited to the simulated
+  paper account and preserve the owner-visible audit trail.
+
+Latest staging update:
+
+- Atlas now exposes a `Sector gate audit` in the paper-learning dashboard,
+  counting active sector-gated candidates by cleared, tightened, boosted, and
+  eligible status.
+- Accepted simulated buy recommendations are now audited for sector-gate
+  rationale usage, so Atlas can show how many accepted paper buys cleared,
+  tightened, or benefited from constructive sector evidence.
+- The strategy learning context now uses the same 3-snapshot sector checkpoint
+  that the owner-visible sector-learning bridge already shows, keeping
+  candidate gating and dashboard telemetry aligned.
+- The token-protected dashboard verification contract now includes
+  `sector_gate_audit`.
+- Cloud Run service revision `atlas-dashboard-stg-00128-n86` is live on image
+  `20260715-sector-gate-audit`.
+- The deployed image digest is
+  `sha256:e97cd40d025c39696a6cab8e018d97af17a24093419c15be137a7eaf7f25db37`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00128-n86` and confirms the Stage 5 dashboard contract, persistence
+  learning, benchmark labels, benchmark scorecard, benchmark exit tuning,
+  benchmark entry pacing, capital rotation scoreboard, sector learning bridge,
+  sector gate audit, autonomous queue behavior, and accountability report
+  availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same image; manual executions `atlas-daily-stg-9znm9` and
+  `atlas-weekly-stg-8r55h` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00128-n86` with both
+  recurring schedules enabled.
+- Focused tests for `tests.test_paper_strategy`, `tests.test_paper_trading`,
+  `tests.test_paper_monitor`, `tests.test_owner_controls`,
+  `tests.test_web_dashboard`, `tests.test_web_cloud`, and
+  `tests.test_gcp_scripts` pass with 185 tests.
+- The in-app browser controller still cannot be used because the current
+  bundled browser runtime fails during setup by attempting to redefine a
+  protected `process` global in the Node kernel. Live dashboard verification
+  and staging readiness passed through the token-protected contract.
+
+Latest staging update:
+
+- Atlas now exposes sector-learning gate telemetry in accepted simulated buy
+  rationales and the owner dashboard sector bridge.
+- Strong lagging-sector paper buys now show that they cleared stronger
+  confirmation, including the number of gate checks that passed.
+- The dashboard verification endpoint now uses a lightweight
+  `build_verification()` read model that bypasses the refresh wrapper and full
+  dashboard build, preventing smoke-check timeouts while preserving Stage 5
+  contract fields.
+- Cloud Run service revision `atlas-dashboard-stg-00127-88b` is live on image
+  `20260715-sector-gate-telemetry-lightverify2`.
+- The deployed image digest is
+  `sha256:363bdd77ba297591b3074f83270bdc95dd5507021a6e589393852b4649ef0969`.
+- `scripts/gcp_dashboard_verification.ps1` passes against revision
+  `00127-88b` and confirms the Stage 5 dashboard contract, persistence
+  learning, benchmark labels, benchmark scorecard, benchmark exit tuning,
+  benchmark entry pacing, capital rotation scoreboard, sector learning bridge,
+  autonomous queue behavior, and accountability report availability.
+- Cloud Run jobs `atlas-daily-stg` and `atlas-weekly-stg` were updated to the
+  same image; manual executions `atlas-daily-stg-5n4vl` and
+  `atlas-weekly-stg-rcmgx` both completed successfully.
+- Recurring schedules are enabled again after the guarded resume flow.
+- `scripts/gcp_staging_readiness.ps1` passes on revision `00127-88b` with both
+  recurring schedules enabled.
+- Focused tests for `tests.test_paper_strategy`, `tests.test_paper_trading`,
+  `tests.test_paper_monitor`, `tests.test_owner_controls`,
+  `tests.test_web_dashboard`, `tests.test_web_cloud`, and
+  `tests.test_gcp_scripts` pass with 184 tests.
+- The in-app browser controller still cannot be used because the current
+  bundled browser runtime fails during setup by attempting to redefine a
+  protected `process` global in the Node kernel. Live dashboard verification
+  and staging readiness passed through the token-protected contract.
+
+Latest stabilization update:
+
+- Atlas now preserves the sector-gate outcome contract even when the live
+  paper account has not accumulated a judged sector-gate buy yet.
+- The deployment helper redacts the dashboard verification token from its
+  displayed Cloud Run command.
+- Temporary cloud-inspection downloads are ignored by Git and must remain
+  private local artifacts.
+- Cloud Run service revision `atlas-dashboard-stg-00130-d28` is live on image
+  `20260726-stabilize-sector-outcomes`.
+- The deployed image digest is
+  `sha256:95f8aff567fc0e76e1765fd1b3ad68bfa340966e14f12dbab3dcce0e9cc9558e`.
+- The token-protected dashboard verification passes all 12 Stage 5 contract
+  checks, including sector-gate outcomes.
+- Manual executions `atlas-daily-stg-bq5x9` and
+  `atlas-weekly-stg-qngb5` both completed successfully on the same image.
+- Recurring schedules are enabled again under the existing owner-approved
+  `$0-$5` monthly target and `$10` gross-usage alert.
+- `scripts/gcp_staging_readiness.ps1` passes all 25 automated checks on
+  revision `00130-d28`.
+- The full local automated suite passes with 399 tests.
+- The only remaining Web Phase 2 manual identity gates are cross-device owner
+  login and non-owner Google account denial.
+
+Current in-flight stage:
+
+- Accumulate live simulated sector-gate outcome evidence and use it only after
+  a meaningful sample exists to tune sector-specific paper entry strictness
+  and position pacing. Keep all autonomy limited to the simulated paper
+  account and preserve the owner-visible audit trail.

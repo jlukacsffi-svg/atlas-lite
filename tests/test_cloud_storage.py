@@ -181,6 +181,87 @@ class CloudArtifactSyncTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "Unsafe Atlas cloud path"):
                 sync.pull()
 
+    def test_pull_startup_bundle_downloads_latest_snapshot_and_core_state_only(self):
+        client = FakeStorageClient()
+        manifest = {
+            "manifest_version": "1.0",
+            "generated_at": "2026-06-07T01:00:00+00:00",
+            "files": [
+                {
+                    "path": "research_archive/snapshot_20260606_010000.json",
+                    "size": 2,
+                    "sha256": hashlib.sha256(b"{}").hexdigest(),
+                    "object": "owner-v1/artifacts/research_archive/snapshot_20260606_010000.json",
+                },
+                {
+                    "path": "research_archive/snapshot_20260607_010000.json",
+                    "size": 2,
+                    "sha256": hashlib.sha256(b"{}").hexdigest(),
+                    "object": "owner-v1/artifacts/research_archive/snapshot_20260607_010000.json",
+                },
+                {
+                    "path": "paper_trading/account.json",
+                    "size": 2,
+                    "sha256": hashlib.sha256(b"{}").hexdigest(),
+                    "object": "owner-v1/artifacts/paper_trading/account.json",
+                },
+                {
+                    "path": "paper_trading/ledger.jsonl",
+                    "size": 2,
+                    "sha256": hashlib.sha256(b"[]").hexdigest(),
+                    "object": "owner-v1/artifacts/paper_trading/ledger.jsonl",
+                },
+                {
+                    "path": "research_tasks/tasks.json",
+                    "size": 2,
+                    "sha256": hashlib.sha256(b"[]").hexdigest(),
+                    "object": "owner-v1/artifacts/research_tasks/tasks.json",
+                },
+                {
+                    "path": "reports/daily.html",
+                    "size": 13,
+                    "sha256": hashlib.sha256(b"<html></html>").hexdigest(),
+                    "object": "owner-v1/artifacts/reports/daily.html",
+                },
+            ],
+        }
+        client.objects["owner-v1/manifest.json"] = {
+            "body": json.dumps(manifest).encode("utf-8"),
+            "content_type": "application/json",
+            "generation": 1,
+        }
+        for entry in manifest["files"]:
+            body = b"{}"
+            if entry["path"].endswith("ledger.jsonl") or entry["path"].endswith("tasks.json"):
+                body = b"[]"
+            if entry["path"].endswith("daily.html"):
+                body = b"<html></html>"
+            client.objects[entry["object"]] = {
+                "body": body,
+                "content_type": "application/octet-stream",
+                "generation": 1,
+            }
+        with tempfile.TemporaryDirectory() as target_dir:
+            sync = CloudArtifactSync(
+                CloudStorageSettings(
+                    bucket="atlas-private",
+                    data_root=Path(target_dir),
+                ),
+                storage_client=client,
+            )
+            pulled = sync.pull_startup_bundle()
+
+            self.assertEqual(
+                sorted(path.relative_to(target_dir).as_posix() for path in pulled),
+                [
+                    "paper_trading/account.json",
+                    "paper_trading/ledger.jsonl",
+                    "research_archive/snapshot_20260607_010000.json",
+                    "research_tasks/tasks.json",
+                ],
+            )
+            self.assertFalse((Path(target_dir) / "reports" / "daily.html").exists())
+
     def test_pull_rejects_checksum_mismatch_without_replacing_local_file(self):
         client = FakeStorageClient()
         relative = "paper_trading/account.json"

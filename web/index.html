@@ -4,19 +4,31 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260628-position-ladder">
+  <link rel="stylesheet" href="/styles.css?v=20260704-research-auto-manage">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <div class="brand">
-        <span class="brand-mark">A</span>
+      <a class="brand" href="#about" aria-label="Open Atlas summary page">
+        <span class="brand-mark" aria-hidden="true">
+          <svg class="atlas-logo" viewBox="0 0 64 64" role="img" aria-label="Atlas logo">
+            <defs>
+              <linearGradient id="atlasPeak" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#f6fffb"></stop>
+                <stop offset="100%" stop-color="#b7ead6"></stop>
+              </linearGradient>
+            </defs>
+            <rect x="4" y="4" width="56" height="56" rx="16" fill="#0f1f1c"></rect>
+            <path d="M16 44L30 18L38 32L44 24L50 44H44L40 34L36 40H29L31 36L29 32L22 44H16Z" fill="url(#atlasPeak)"></path>
+            <path d="M18 48H46" stroke="#6fd1a8" stroke-width="4" stroke-linecap="round"></path>
+            <circle cx="44" cy="24" r="4" fill="#f1c56b"></circle>
+          </svg>
+        </span>
         <span><strong>Atlas</strong><small>Capital Research</small></span>
-      </div>
+      </a>
       <nav aria-label="Primary navigation">
         <a class="nav-item active" href="#overview">Overview</a>
         <a class="nav-item" href="#recommendations">Recommendations</a>
-        <a class="nav-item" href="#market">Market</a>
         <a class="nav-item" href="#research">Research</a>
         <a class="nav-item" href="#paper">Paper Portfolio</a>
         <a class="nav-item" href="#controls">Controls</a>
@@ -44,13 +56,90 @@
             <span id="workspace-name">--</span>
             <span id="workspace-role">--</span>
             <span id="workspace-email">--</span>
+            <span id="workspace-revision">--</span>
           </div>
         </div>
         <div class="topbar-actions">
+          <span id="data-freshness" class="data-freshness loading">Refreshing</span>
           <span id="as-of" class="as-of">Loading latest run...</span>
           <button id="refresh" type="button">Refresh</button>
         </div>
       </header>
+
+      <section id="about" class="dashboard-page" data-page="about">
+      <section class="panel about-hero-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Atlas summary</p>
+            <h2>Purpose, function, and goals</h2>
+          </div>
+          <span class="tag">Research and simulation only</span>
+        </div>
+        <div class="about-hero">
+          <div class="about-hero-brand">
+            <span class="about-logo" aria-hidden="true">
+              <svg class="atlas-logo hero" viewBox="0 0 64 64" role="img" aria-label="Atlas logo">
+                <defs>
+                  <linearGradient id="atlasPeakHero" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ffffff"></stop>
+                    <stop offset="100%" stop-color="#b7ead6"></stop>
+                  </linearGradient>
+                </defs>
+                <rect x="4" y="4" width="56" height="56" rx="16" fill="#0f1f1c"></rect>
+                <path d="M16 44L30 18L38 32L44 24L50 44H44L40 34L36 40H29L31 36L29 32L22 44H16Z" fill="url(#atlasPeakHero)"></path>
+                <path d="M18 48H46" stroke="#6fd1a8" stroke-width="4" stroke-linecap="round"></path>
+                <circle cx="44" cy="24" r="4" fill="#f1c56b"></circle>
+              </svg>
+            </span>
+            <div>
+              <span class="about-logo-kicker">Atlas identity</span>
+              <h3>Research with a map, a summit, and a scoreboard</h3>
+            </div>
+          </div>
+          <strong>Atlas Capital Research is an AI-driven investment research and paper-portfolio operating system built to find strong opportunities, explain its reasoning, and improve toward benchmark-beating results.</strong>
+          <p>Atlas does not place real-money trades. It researches markets, ranks securities, tracks simulated positions, evaluates outcomes against benchmarks, and helps the owner understand what it is doing and why.</p>
+        </div>
+      </section>
+      <section class="content-grid lower-grid about-grid">
+        <article class="panel about-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Purpose</p>
+              <h2>Why Atlas exists</h2>
+            </div>
+          </div>
+          <div class="about-list">
+            <p>Atlas exists to maximize long-term returns through disciplined research, benchmark-aware selection, and continuous learning from simulated outcomes.</p>
+            <p>It is designed to widen the search beyond one sector, follow the strongest opportunities across the covered universe, and keep the process auditable instead of relying on black-box intuition.</p>
+          </div>
+        </article>
+        <article class="panel about-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Function</p>
+              <h2>What Atlas does</h2>
+            </div>
+          </div>
+          <div class="about-list">
+            <p>Atlas gathers market data, scores securities, compares ideas against benchmarks like SPY and QQQ, generates buy and sell proposals, and monitors simulated positions after entry.</p>
+            <p>It also records trade history, tracks paper performance, surfaces portfolio priorities, and explains the current thesis, risk, and next action for each holding.</p>
+          </div>
+        </article>
+        <article class="panel about-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Goals</p>
+              <h2>What Atlas is trying to achieve</h2>
+            </div>
+          </div>
+          <div class="about-list">
+            <p>Beat the major benchmarks over time with a repeatable process, not random wins.</p>
+            <p>Increase autonomous paper selection quality while keeping every decision visible, reviewable, and measured against results.</p>
+            <p>Grow from a strong owner-only research workspace into a disciplined investment operating system with clear controls and safety boundaries.</p>
+          </div>
+        </article>
+      </section>
+      </section>
 
       <section id="overview" class="dashboard-page active-page" data-page="overview">
       <div class="kpi-grid" aria-label="Market overview">
@@ -75,6 +164,54 @@
           <small id="research-detail">Open assignments</small>
         </article>
       </div>
+      <section class="content-grid">
+        <article class="panel performance-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Paper portfolio</p>
+              <div class="title-with-help">
+                <h2>Performance versus benchmarks</h2>
+                <details class="info-popover">
+                  <summary aria-label="About performance benchmarks">?</summary>
+                  <p>Atlas is the simulated paper portfolio. SPY is an ETF commonly used as a broad S&amp;P 500 market benchmark. QQQ is an ETF commonly used as a Nasdaq-100 growth/technology benchmark.</p>
+                </details>
+              </div>
+            </div>
+            <div id="market-pills" class="market-pills"></div>
+          </div>
+          <div class="chart-wrap">
+            <svg id="performance-chart" viewBox="0 0 720 260" role="img" aria-label="Atlas, SPY, and QQQ return history"></svg>
+          </div>
+          <div class="legend">
+            <span><i class="legend-line atlas"></i>Atlas</span>
+            <span><i class="legend-line spy"></i>SPY (S&amp;P 500 ETF benchmark)</span>
+            <span><i class="legend-line qqq"></i>QQQ (Nasdaq-100 ETF benchmark)</span>
+          </div>
+          <p class="legend-note">SPY tracks the S&amp;P 500 as a broad U.S. large-cap benchmark. QQQ tracks the Nasdaq-100 and is commonly used as a growth and technology benchmark.</p>
+        </article>
+
+        <article class="panel breadth-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Market breadth</p>
+              <div class="title-with-help">
+                <h2>Advancing versus declining</h2>
+                <details class="info-popover">
+                  <summary aria-label="About market breadth">?</summary>
+                  <p>Shows how many tracked securities are up versus down in the latest market snapshot. Broad participation can matter more than one large mover.</p>
+                </details>
+              </div>
+            </div>
+          </div>
+          <div class="donut-wrap">
+            <div id="breadth-donut" class="donut"><span id="breadth-center">--</span></div>
+            <div class="breadth-stats">
+              <div><span class="swatch positive"></span><strong id="advancing">--</strong><small>Advancing</small></div>
+              <div><span class="swatch negative"></span><strong id="declining">--</strong><small>Declining</small></div>
+            </div>
+          </div>
+        </article>
+      </section>
       <section class="content-grid lower-grid">
         <article class="panel recommendation-panel">
           <div class="panel-heading">
@@ -96,6 +233,16 @@
           </div>
           <div id="overview-recommended-exits" class="recommendation-list"></div>
         </article>
+        <article class="panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Portfolio posture</p>
+              <h2>Portfolio focus right now</h2>
+            </div>
+            <a class="section-link" href="#paper">Open page</a>
+          </div>
+          <div id="portfolio-focus" class="portfolio-focus"></div>
+        </article>
         <article class="panel current-list-panel">
           <div class="panel-heading">
             <div>
@@ -105,6 +252,22 @@
             <a class="section-link" href="#recommendations">View all</a>
           </div>
           <div id="overview-current-list" class="watchlist-grid"></div>
+        </article>
+        <article class="panel validation-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Original roadmap focus</p>
+              <div class="title-with-help">
+                <h2>Stage 5 validation scoreboard</h2>
+                <details class="info-popover">
+                  <summary aria-label="About Stage 5 validation">?</summary>
+                  <p>Stage 5 is the paper-trading validation phase. Atlas is trying to prove decision quality through benchmark-relative returns, judged trade outcomes, exit discipline, and a complete audit trail before any future real-trading discussion.</p>
+                </details>
+              </div>
+            </div>
+            <span class="tag">Paper proof</span>
+          </div>
+          <div id="overview-validation-summary" class="feedback-summary"></div>
         </article>
         <article class="panel">
           <div class="panel-heading">
@@ -186,56 +349,6 @@
             <div id="current-watchlist" class="watchlist-grid"></div>
           </article>
         </section>
-      </section>
-
-      <section id="market" class="dashboard-page" data-page="market">
-      <section class="content-grid">
-        <article class="panel performance-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Paper portfolio</p>
-              <div class="title-with-help">
-                <h2>Performance versus benchmarks</h2>
-                <details class="info-popover">
-                  <summary aria-label="About performance benchmarks">?</summary>
-                  <p>Atlas is the simulated paper portfolio. SPY is an ETF commonly used as a broad S&amp;P 500 market benchmark. QQQ is an ETF commonly used as a Nasdaq-100 growth/technology benchmark.</p>
-                </details>
-              </div>
-            </div>
-            <div id="market-pills" class="market-pills"></div>
-          </div>
-          <div class="chart-wrap">
-            <svg id="performance-chart" viewBox="0 0 720 260" role="img" aria-label="Atlas, SPY, and QQQ return history"></svg>
-          </div>
-          <div class="legend">
-            <span><i class="legend-line atlas"></i>Atlas</span>
-            <span><i class="legend-line spy"></i>SPY</span>
-            <span><i class="legend-line qqq"></i>QQQ</span>
-          </div>
-        </article>
-
-        <article class="panel breadth-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Market breadth</p>
-              <div class="title-with-help">
-                <h2>Advancing versus declining</h2>
-                <details class="info-popover">
-                  <summary aria-label="About market breadth">?</summary>
-                  <p>Shows how many tracked securities are up versus down in the latest market snapshot. Broad participation can matter more than one large mover.</p>
-                </details>
-              </div>
-            </div>
-          </div>
-          <div class="donut-wrap">
-            <div id="breadth-donut" class="donut"><span id="breadth-center">--</span></div>
-            <div class="breadth-stats">
-              <div><span class="swatch positive"></span><strong id="advancing">--</strong><small>Advancing</small></div>
-              <div><span class="swatch negative"></span><strong id="declining">--</strong><small>Declining</small></div>
-            </div>
-          </div>
-        </article>
-      </section>
       </section>
 
       <section id="research" class="dashboard-page" data-page="research">
@@ -388,7 +501,11 @@
             </div>
             <span class="tag">Learning mode</span>
           </div>
+          <div class="explain-box">This is the original Stage 5 checkpoint: Atlas should beat or meaningfully inform benchmarks over time with clear accountability before any later autonomy discussion.</div>
+          <div id="paper-validation-summary" class="feedback-summary"></div>
+          <div class="explain-box">Benchmark reference: <b>SPY</b> is the broad S&amp;P 500 ETF yardstick, and <b>QQQ</b> is the Nasdaq-100 growth and technology ETF yardstick.</div>
           <div id="paper-feedback-summary" class="feedback-summary"></div>
+          <div id="capital-rotation-scoreboard" class="capital-rotation-scoreboard"></div>
           <div id="paper-feedback" class="feedback-list"></div>
         </article>
       </section>
@@ -405,7 +522,11 @@
                 </details>
               </div>
             </div>
-            <span class="tag">Execution audit</span>
+            <div class="panel-actions">
+              <button id="open-trade-history" class="history-button" type="button">View trade history</button>
+              <button id="open-basis-report" class="history-button" type="button">Open basis report</button>
+              <span class="tag">Execution audit</span>
+            </div>
           </div>
           <div id="paper-activity" class="activity-list"></div>
         </article>
@@ -482,6 +603,35 @@
             <div id="research-reviews" class="decision-list"></div>
           </div>
           <div>
+            <div class="control-heading">
+              <span class="access-label">Autonomy &amp; strategy</span>
+              <strong>Owner editable</strong>
+            </div>
+            <div class="control-note">
+              Change how aggressively Atlas runs the simulated paper portfolio. These settings affect paper-only behavior and never place a real trade.
+            </div>
+            <div id="paper-strategy-controls" class="strategy-policy-panel"></div>
+            <div class="control-heading">
+              <span class="access-label">Paper book posture</span>
+              <strong id="controls-summary-label">Current snapshot</strong>
+            </div>
+            <div id="controls-summary" class="decision-list"></div>
+            <div class="control-heading">
+              <span class="access-label">Portfolio action queue</span>
+              <strong id="portfolio-action-count">0 items</strong>
+            </div>
+            <div class="control-note">
+              Atlas ranks active paper proposals beside already-open simulated holdings that need closer review, so paper workflow and paper posture stay in one view.
+            </div>
+            <div id="portfolio-action-list" class="decision-list"></div>
+            <div class="control-heading">
+              <span class="access-label">Hold-steady holdings</span>
+              <strong id="healthy-holdings-count">0 holdings</strong>
+            </div>
+            <div class="control-note">
+              Healthy holdings stay out of the ranked queue on purpose. This section explains which open simulated names Atlas currently believes can remain steady.
+            </div>
+            <div id="healthy-holdings-list" class="decision-list"></div>
             <div class="control-heading">
               <span class="access-label">Paper trade proposals</span>
               <strong id="paper-proposal-count">0 proposals</strong>
@@ -579,6 +729,46 @@
     </main>
   </div>
   <div id="error-banner" class="error-banner" role="alert" hidden></div>
+  <dialog id="trade-history-dialog" class="history-dialog">
+    <div class="dialog-heading">
+      <div>
+        <p class="eyebrow">Paper trade history</p>
+        <h2>Buy and sell timeline by ticker</h2>
+      </div>
+      <button id="trade-history-close" class="icon-button" type="button" aria-label="Close trade history">&times;</button>
+    </div>
+    <p id="trade-history-summary" class="dialog-summary"></p>
+    <div id="trade-history-content" class="history-content"></div>
+  </dialog>
+  <dialog id="basis-report-dialog" class="history-dialog basis-report-dialog">
+    <div class="dialog-heading">
+      <div>
+        <p class="eyebrow">Accountability report</p>
+        <h2>Purchase, sale, and basis detail</h2>
+      </div>
+      <div class="panel-actions">
+        <button id="export-basis-report" class="history-button" type="button">Export CSV</button>
+        <button id="basis-report-close" class="icon-button" type="button" aria-label="Close basis report">&times;</button>
+      </div>
+    </div>
+    <p id="basis-report-summary" class="dialog-summary"></p>
+    <div class="explain-box">Atlas uses a <b>weighted average cost</b> method for this simulated paper account. Each transaction row shows execution date, shares, fill price, transaction basis, sale proceeds, realized result, and remaining open shares.</div>
+    <div id="basis-report-content" class="history-content"></div>
+  </dialog>
+  <dialog id="position-detail-dialog" class="history-dialog position-detail-dialog">
+    <div class="dialog-heading">
+      <div>
+        <p class="eyebrow">Holding lifecycle</p>
+        <h2 id="position-detail-title">Position detail</h2>
+      </div>
+      <div class="panel-actions">
+        <button id="position-detail-open-basis" class="history-button" type="button">Open basis report</button>
+        <button id="position-detail-close" class="icon-button" type="button" aria-label="Close position detail">&times;</button>
+      </div>
+    </div>
+    <p id="position-detail-summary" class="dialog-summary"></p>
+    <div id="position-detail-content" class="history-content"></div>
+  </dialog>
   <dialog id="paper-fill-dialog" class="confirmation-dialog">
     <form id="paper-fill-form" method="dialog">
       <div class="dialog-heading">
@@ -602,6 +792,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260628-position-ladder"></script>
+  <script src="/app.js?v=20260704-research-auto-manage"></script>
 </body>
 </html>

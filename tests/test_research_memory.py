@@ -35,6 +35,10 @@ class ResearchMemoryTests(unittest.TestCase):
                 loaded["securities"]["AAA"]["quality_metrics"]["source"],
                 "sec_companyfacts",
             )
+            self.assertEqual(
+                loaded["securities"]["AAA"]["news_signal"]["signal_label"],
+                "supportive",
+            )
 
     def test_latest_snapshot_is_returned(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -206,6 +210,19 @@ class ResearchMemoryTests(unittest.TestCase):
                     "operating_cash_flow_margin": 0.0,
                     "free_cash_flow_margin": 0.0,
                     "source": "sec_companyfacts",
+                },
+                "news_signal": {
+                    "ticker": "AAA",
+                    "headline_count": 3,
+                    "company_headline_count": 2,
+                    "positive_count": 2,
+                    "negative_count": 0,
+                    "signal_score": 86.0,
+                    "signal_label": "supportive",
+                    "positive_examples": [
+                        "AAA raises guidance after strong demand",
+                    ],
+                    "negative_examples": [],
                 },
                 "scores": {
                     "growth": 50,

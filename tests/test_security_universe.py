@@ -12,8 +12,8 @@ class SecurityUniverseTests(unittest.TestCase):
     def test_default_universe_loads_current_watchlist(self):
         universe = SecurityUniverse()
 
-        self.assertEqual(universe.version, "1.5")
-        self.assertEqual(len(universe.tickers()), 100)
+        self.assertEqual(universe.version, "1.7")
+        self.assertEqual(len(universe.tickers()), 140)
         self.assertIn("NVDA", universe.tickers())
         self.assertIn("ASML", universe.tickers())
         self.assertIn("CGNX", universe.tickers())
@@ -27,8 +27,24 @@ class SecurityUniverseTests(unittest.TestCase):
         self.assertIn("V", universe.tickers())
         self.assertIn("COST", universe.tickers())
         self.assertIn("BE", universe.tickers())
+        self.assertIn("CAT", universe.tickers())
+        self.assertIn("XOM", universe.tickers())
+        self.assertIn("WMT", universe.tickers())
+        self.assertIn("LLY", universe.tickers())
+        self.assertIn("EQIX", universe.tickers())
+        self.assertIn("TMUS", universe.tickers())
+        self.assertIn("XLF", universe.tickers())
+        self.assertIn("XLI", universe.tickers())
+        self.assertIn("IWM", universe.tickers())
+        self.assertIn("RSP", universe.tickers())
+        self.assertIn("SCHD", universe.tickers())
         self.assertEqual(universe.get("NVDA")["category"], "Core")
         self.assertEqual(universe.get("CRWD")["sector"], "Cybersecurity")
+        self.assertEqual(
+            universe.get("EQIX")["sector"],
+            "Real Assets & Connectivity",
+        )
+        self.assertEqual(universe.get("RSP")["category"], "Core")
         self.assertIn("key_risk", universe.get("NVDA")["profile"])
 
     def test_avoid_securities_are_excluded_by_default(self):

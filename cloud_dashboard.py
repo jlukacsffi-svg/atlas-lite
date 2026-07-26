@@ -3,6 +3,7 @@
 
 import os
 import sys
+import threading
 
 from app.cloud_storage import sync_from_environment
 from app.owner_controls import OwnerControlService
@@ -30,8 +31,10 @@ def main():
     host = "127.0.0.1" if settings.mode == "local" else "0.0.0.0"
     port = int(os.getenv("PORT", "8765"))
     if settings.mode == "cloud":
-        downloaded = sync_from_environment("pull")
-        print(f"[cloud-storage] Loaded {len(downloaded)} private artifacts")
+        downloaded = sync_from_environment("pull_startup")
+        print(
+            f"[cloud-storage] Loaded {len(downloaded)} startup artifacts"
+        )
     data_service = data_service_from_environment()
     owner_control = None
     if settings.owner_controls_enabled:
@@ -48,6 +51,11 @@ def main():
             data_service,
             lambda: sync_from_environment("pull"),
         )
+        threading.Thread(
+            target=lambda: sync_from_environment("pull"),
+            name="atlas-cloud-full-sync",
+            daemon=True,
+        ).start()
     print(f"[web] Atlas {settings.mode} dashboard listening on {host}:{port}")
     serve(
         create_application(

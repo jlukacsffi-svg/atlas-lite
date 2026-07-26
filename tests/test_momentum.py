@@ -88,6 +88,65 @@ class MomentumEngineTests(unittest.TestCase):
 
         self.assertAlmostEqual(self.engine._return_from_period(closes, 21), 10.0)
 
+    def test_trend_quality_score_rewards_persistent_uptrend(self):
+        closes = [100 + index for index in range(260)]
+
+        trend_quality = self.engine._trend_quality_score(
+            current=closes[-1],
+            return_1m=self.engine._return_from_period(closes, 21),
+            return_3m=self.engine._return_from_period(closes, 63),
+            return_6m=self.engine._return_from_period(closes, 126),
+            return_12m=self.engine._return_from_period(closes, 252),
+            sma_20=self.engine._simple_moving_average(closes, 20),
+            sma_50=self.engine._simple_moving_average(closes, 50),
+            sma_200=self.engine._simple_moving_average(closes, 200),
+            rsi_14=self.engine._rsi(closes, 14),
+            distance_from_52w_high=self.engine._distance_from_high(closes, 252),
+            volatility_20d=self.engine._volatility(closes, 20),
+        )
+
+        self.assertGreaterEqual(trend_quality, 75.0)
+
+    def test_composite_momentum_blends_legacy_and_trend_scores(self):
+        self.assertEqual(self.engine._composite_momentum_score(60.0, 80.0), 71.0)
+
+    def test_trend_state_marks_downtrend_when_price_loses_key_averages(self):
+        state = self.engine._trend_state(
+            current=90.0,
+            sma_20=95.0,
+            sma_50=100.0,
+            sma_200=110.0,
+            rsi_14=35.0,
+        )
+
+        self.assertEqual(state, "downtrend")
+
+    def test_trend_regime_score_rewards_constructive_structure(self):
+        regime_score = self.engine._trend_regime_score(
+            trend_quality_score=78.0,
+            ema_20_slope=2.0,
+            price_vs_sma_50=4.0,
+            price_vs_sma_200=10.0,
+            sma_50_vs_sma_200=6.0,
+            drawdown_63d=-3.0,
+        )
+
+        self.assertGreaterEqual(regime_score, 82.0)
+        self.assertEqual(self.engine._trend_regime(regime_score), "leadership")
+
+    def test_trend_regime_marks_breakdown_when_structure_is_weak(self):
+        regime_score = self.engine._trend_regime_score(
+            trend_quality_score=35.0,
+            ema_20_slope=-2.0,
+            price_vs_sma_50=-6.0,
+            price_vs_sma_200=-15.0,
+            sma_50_vs_sma_200=-8.0,
+            drawdown_63d=-20.0,
+        )
+
+        self.assertLess(regime_score, 38.0)
+        self.assertEqual(self.engine._trend_regime(regime_score), "breakdown")
+
 
 if __name__ == "__main__":
     unittest.main()
