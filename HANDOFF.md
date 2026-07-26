@@ -61,6 +61,24 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Recent prospective defensive-review changes now appear directly in Today's
+  owner briefing on Overview, so the owner does not need to search the
+  detailed Paper Portfolio for a material status change.
+- The digest keeps only the latest state per signal, considers the last three
+  paper snapshots, prioritizes completed loss and persistent weakness, and
+  shows at most four concise updates.
+- The live starting state correctly reads `Forward review study starts with
+  the next snapshot`. The next scheduled paper run will establish the
+  forward-only study marker; no manual run was forced.
+- Cloud Run revision `atlas-dashboard-stg-00151-sb4` is live on image
+  `20260726-owner-signal-digest-verified`; the full 411-test suite, all 25
+  readiness checks, and all 17 protected dashboard checks pass.
+- The deployed image digest is
+  `sha256:251cc86a4ea5968afb3ea2b39cdc70bbc2d933b451e5c5fe8d6ceb9c141843be`.
+- Desktop and 390-by-844 mobile Chrome checks show no overlap or horizontal
+  overflow.
+- This is a reporting refinement only. Paper policy is unchanged, and real
+  trading and brokerage access remain disabled.
 - The forward defensive-review study now has an effectiveness scorecard that
   separates confirmed weakness from recoveries and other false alarms.
 - Atlas requires 10 resolved signals, 5 completed outcomes, and at least 65%

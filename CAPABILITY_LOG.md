@@ -3,6 +3,42 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Review-signal changes now appear in the owner briefing
+
+New capabilities:
+
+- Surface recent forward defensive-review changes directly in Today's owner
+  briefing on the Overview page.
+- Show the latest state for each affected ticker, including new review,
+  persistent weakness, recovery, completed loss, or completed gain.
+- Prioritize loss and persistent-weakness updates while limiting the briefing
+  to four concise items.
+- Deduplicate repeated signal history and consider only the three most recent
+  paper snapshots for the owner digest.
+- Display a quiet starting state until the next scheduled snapshot establishes
+  the forward-only study boundary.
+
+Validated result:
+
+- The live Overview correctly reports `Forward review study starts with the
+  next snapshot` and links to the detailed Paper Portfolio tracker.
+- The full local suite passes with 411 tests.
+- Cloud Run revision `atlas-dashboard-stg-00151-sb4` is live on image
+  `20260726-owner-signal-digest-verified`.
+- The deployed image digest is
+  `sha256:251cc86a4ea5968afb3ea2b39cdc70bbc2d933b451e5c5fe8d6ceb9c141843be`.
+- All 25 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass.
+- Desktop and 390-by-844 mobile Chrome walkthroughs show a clear layout with
+  no horizontal overflow.
+
+Current boundaries:
+
+- The digest reports evidence; it cannot change paper policy or execute a
+  trade.
+- No transition is shown until the scheduled forward study records one.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Review signals now have an effectiveness scorecard
 
 New capabilities:

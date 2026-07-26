@@ -476,7 +476,9 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Completed position diagnosis";\n'
                 '"Defensive trigger shadow test";\n'
                 '"Prospective review tracker";\n'
-                '"Review signal effectiveness";\n',
+                '"Review signal effectiveness";\n'
+                '"Paper evidence updates";\n'
+                '"owner-signal-digest";\n',
                 encoding="utf-8",
             )
             data_service = type(
@@ -512,6 +514,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "mode": "review_only",
                                     "policy_changed": False,
                                     "transition_count": 0,
+                                    "recent_transition_count": 0,
+                                    "recent_transitions": [],
                                     "counts": {"total": 0},
                                     "signals": [],
                                 },
@@ -630,6 +634,11 @@ class CloudWebApplicationTests(unittest.TestCase):
             response["json"]["checks"][
                 "prospective_review_effectiveness"
             ]["ready_for_owner_review"]
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "owner_review_transition_digest"
+            ]["ok"]
         )
         self.assertIn(
             "snapshot_count",

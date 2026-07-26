@@ -1926,6 +1926,39 @@ class PaperTradingAccountTests(unittest.TestCase):
                 "position_shares_before": 10,
                 "position_shares_after": 0,
             },
+            {
+                "event": "defensive_review_signal",
+                "signal_id": "review_amd",
+                "timestamp": "2026-07-01T10:00:00",
+                "ticker": "AMD",
+                "status": "active",
+                "status_label": "New review",
+                "latest_return_pct": -3.0,
+                "latest_lag_pct": -4.0,
+                "snapshots_observed": 1,
+            },
+            {
+                "event": "defensive_review_signal",
+                "signal_id": "review_amd",
+                "timestamp": "2026-07-01T10:02:00",
+                "ticker": "AMD",
+                "status": "recovered",
+                "status_label": "Recovered above trigger",
+                "latest_return_pct": -2.0,
+                "latest_lag_pct": -5.0,
+                "snapshots_observed": 3,
+            },
+            {
+                "event": "defensive_review_signal",
+                "signal_id": "review_nvda",
+                "timestamp": "2026-07-01T10:02:00",
+                "ticker": "NVDA",
+                "status": "completed_loss",
+                "status_label": "Completed loss",
+                "latest_return_pct": -5.0,
+                "latest_lag_pct": -8.0,
+                "snapshots_observed": 3,
+            },
         ]
 
         tracker = PaperTradingAccount.prospective_defensive_review_tracker(
@@ -1942,6 +1975,16 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(by_ticker["NVDA"]["snapshots_observed"], 3)
         self.assertEqual(by_ticker["AMD"]["status"], "recovered")
         self.assertEqual(by_ticker["AMD"]["latest_return_pct"], -2.0)
+        self.assertEqual(tracker["transition_count"], 3)
+        self.assertEqual(tracker["recent_transition_count"], 2)
+        self.assertEqual(
+            [item["ticker"] for item in tracker["recent_transitions"]],
+            ["NVDA", "AMD"],
+        )
+        self.assertEqual(
+            tracker["recent_transitions"][1]["status"],
+            "recovered",
+        )
 
     def test_performance_snapshot_starts_review_tracking_once(self):
         with tempfile.TemporaryDirectory() as temp_dir:

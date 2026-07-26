@@ -4152,6 +4152,8 @@ class PaperTradingAccount:
                 "lag_threshold_pct": DEFENSIVE_REVIEW_LAG_THRESHOLD_PCT,
                 "started_at": None,
                 "transition_count": 0,
+                "recent_transition_count": 0,
+                "recent_transitions": [],
                 "counts": {
                     "total": 0,
                     "active": 0,
@@ -4368,6 +4370,47 @@ class PaperTradingAccount:
         }
         for signal in signals:
             counts[signal["status"]] += 1
+        latest_snapshot_timestamps = {
+            str(snapshot.get("timestamp") or "")
+            for snapshot in snapshots[-3:]
+        }
+        latest_transition_by_signal = {}
+        for transition in transitions:
+            signal_id = str(transition.get("signal_id") or "")
+            if signal_id:
+                latest_transition_by_signal[signal_id] = transition
+        transition_priority = {
+            "completed_loss": 0,
+            "persistent_weakness": 1,
+            "active": 2,
+            "recovered": 3,
+            "completed_gain": 4,
+        }
+        recent_transitions = sorted(
+            [
+                {
+                    "signal_id": transition.get("signal_id"),
+                    "ticker": transition.get("ticker"),
+                    "status": transition.get("status"),
+                    "status_label": transition.get("status_label"),
+                    "timestamp": transition.get("timestamp"),
+                    "latest_return_pct": transition.get(
+                        "latest_return_pct"
+                    ),
+                    "latest_lag_pct": transition.get("latest_lag_pct"),
+                    "snapshots_observed": transition.get(
+                        "snapshots_observed"
+                    ),
+                }
+                for transition in latest_transition_by_signal.values()
+                if str(transition.get("timestamp") or "")
+                in latest_snapshot_timestamps
+            ],
+            key=lambda item: (
+                transition_priority.get(item.get("status"), 9),
+                str(item.get("timestamp") or ""),
+            ),
+        )[:4]
         headline = (
             f"Atlas is following {len(signals)} prospective review signal"
             f"{'' if len(signals) == 1 else 's'}."
@@ -4388,6 +4431,8 @@ class PaperTradingAccount:
             "lag_threshold_pct": DEFENSIVE_REVIEW_LAG_THRESHOLD_PCT,
             "started_at": marker.get("timestamp"),
             "transition_count": len(transitions),
+            "recent_transition_count": len(recent_transitions),
+            "recent_transitions": recent_transitions,
             "counts": counts,
             "signals": signals,
         }

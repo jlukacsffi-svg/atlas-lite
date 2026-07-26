@@ -458,6 +458,13 @@ function renderRecommendationSummary(proposals, watchlist) {
 
 function renderOwnerBriefing(data) {
   const paper = data.paper || {};
+  const prospectiveTracker =
+    paper.validation_summary?.prospective_review_tracker || {};
+  const recentTransitions = Array.isArray(
+    prospectiveTracker.recent_transitions
+  )
+    ? prospectiveTracker.recent_transitions
+    : [];
   const focus = paper.portfolio_focus || {};
   const counts = focus.counts || {};
   const highlights = focus.highlights || [];
@@ -528,6 +535,38 @@ function renderOwnerBriefing(data) {
       <span>Your next step</span>
       <strong>${escapeHtml(nextTitle)}</strong>
       <small>${escapeHtml(nextDetail)}</small>
+    </div>
+  `;
+
+  const signalDigest = document.getElementById("owner-signal-digest");
+  signalDigest.hidden = !prospectiveTracker.available;
+  signalDigest.innerHTML = !prospectiveTracker.available ? "" : recentTransitions.length ? `
+    <div class="owner-signal-digest-heading">
+      <div>
+        <span>Paper evidence updates</span>
+        <b>${recentTransitions.length} recent review transition${recentTransitions.length === 1 ? "" : "s"}</b>
+      </div>
+      <a href="#paper">Open tracker</a>
+    </div>
+    <div class="owner-signal-digest-list">
+      ${recentTransitions.map(item => `
+        <div class="owner-signal-digest-item ${escapeHtml(item.status || "active")}">
+          <div>
+            <b>${escapeHtml(item.ticker || "Holding")}</b>
+            <span>${escapeHtml(item.status_label || "Review signal")}</span>
+          </div>
+          <small>${signed(Number(item.latest_return_pct || 0))} return · ${signed(Number(item.latest_lag_pct || 0))} benchmark lag</small>
+        </div>
+      `).join("")}
+    </div>
+    <small class="owner-signal-disclosure">Review-only evidence. These transitions do not place or force a simulated trade.</small>
+  ` : `
+    <div class="owner-signal-digest-empty">
+      <div>
+        <span>Paper evidence updates</span>
+        <b>${prospectiveTracker.activated ? "No new review transitions" : "Forward review study starts with the next snapshot"}</b>
+      </div>
+      <a href="#paper">Open tracker</a>
     </div>
   `;
 }

@@ -616,6 +616,23 @@ class AtlasCloudApplication:
                         or 0
                     ),
                 },
+                "owner_review_transition_digest": {
+                    "ok": "recent_transitions" in prospective_review_tracker
+                    and "recent_transition_count"
+                    in prospective_review_tracker
+                    and self._ui_contains("Paper evidence updates")
+                    and self._ui_contains("owner-signal-digest"),
+                    "detail": (
+                        "Overview can surface recent defensive review "
+                        "transitions without changing paper authority."
+                    ),
+                    "recent_transition_count": int(
+                        prospective_review_tracker.get(
+                            "recent_transition_count"
+                        )
+                        or 0
+                    ),
+                },
                 "persistence_learning": {
                     "ok": bool(
                         (feedback_summary.get("horizon_learning") or [])
