@@ -558,6 +558,16 @@ class DashboardDataService:
                     "value": f"{float(policy.get('strategy_sector_repeat_penalty', 3.0)):.1f}",
                     "detail": "penalty applied before Atlas doubles up in one sector",
                 },
+                {
+                    "label": "Trim escalation",
+                    "value": (
+                        f"{int(policy.get('maximum_partial_trims_per_position', 2))} trims"
+                    ),
+                    "detail": (
+                        "the next repeated risk signal closes the remaining paper "
+                        "position instead of creating another fractional trim"
+                    ),
+                },
             ],
             "modes": [
                 {

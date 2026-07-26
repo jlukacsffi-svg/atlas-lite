@@ -71,6 +71,9 @@ class PaperPositionMonitorTests(unittest.TestCase):
 
     def test_from_account_applies_projection_learning_overrides(self):
         class StubAccount:
+            def effective_policy(self):
+                return {"maximum_partial_trims_per_position": 3}
+
             def projection_threshold_profile(self, latest_prices=None):
                 return {
                     "monitor_overrides": {
@@ -86,6 +89,7 @@ class PaperPositionMonitorTests(unittest.TestCase):
 
         self.assertEqual(monitor.projection_add_sector_breadth_pct, 65.0)
         self.assertEqual(monitor.projection_add_trend_quality, 75.0)
+        self.assertEqual(monitor.maximum_partial_trims_per_position, 3)
 
     def test_weak_score_creates_exit_proposal(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -229,6 +233,109 @@ class PaperPositionMonitorTests(unittest.TestCase):
         self.assertIn("Benchmark lag is 11.00 percentage points", result["reviews"][0]["thesis"])
         self.assertEqual(result["exit_proposals"][0]["side"], "sell")
         self.assertEqual(result["exit_proposals"][0]["shares"], 5)
+
+    def test_third_partial_trim_escalates_to_full_exit(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account_with_position(temp_dir)
+            for shares in (5, 2.5):
+                proposal = account.create_proposal(
+                    "sell",
+                    "NVDA",
+                    shares,
+                    90,
+                    "Paper trim.",
+                )
+                account.record_proposal_risk_review(
+                    proposal["proposal_id"],
+                    "clear",
+                    [],
+                )
+                account.decide_proposal(proposal["proposal_id"], "approve")
+                account.execute_order(
+                    "sell",
+                    "NVDA",
+                    shares,
+                    90,
+                    "Paper trim.",
+                    proposal_id=proposal["proposal_id"],
+                )
+
+            verdict, flags, sell_shares = PaperPositionMonitor()._review_decision(
+                category="Core",
+                score=90,
+                score_text="90.0",
+                return_pct=-10.0,
+                lag={
+                    "lag_pct": -9.0,
+                    "snapshots": 5,
+                    "security_return_pct": -8.0,
+                    "weakest_benchmark": "SPY",
+                    "weakest_benchmark_return_pct": 1.0,
+                },
+                current_shares=2.5,
+                account=account,
+                ticker="NVDA",
+                news_signal={},
+                projection={},
+            )
+
+        self.assertEqual(verdict, "exit")
+        self.assertEqual(sell_shares, 2.5)
+        self.assertIn("Trim escalation exit triggered", flags[-1])
+
+    def test_new_entry_resets_partial_trim_escalation_count(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account_with_position(temp_dir)
+            for shares in (5, 5):
+                proposal = account.create_proposal(
+                    "sell",
+                    "NVDA",
+                    shares,
+                    90,
+                    "Paper sale.",
+                )
+                account.record_proposal_risk_review(
+                    proposal["proposal_id"],
+                    "clear",
+                    [],
+                )
+                account.decide_proposal(proposal["proposal_id"], "approve")
+                account.execute_order(
+                    "sell",
+                    "NVDA",
+                    shares,
+                    90,
+                    "Paper sale.",
+                    proposal_id=proposal["proposal_id"],
+                )
+            proposal = account.create_proposal(
+                "buy",
+                "NVDA",
+                10,
+                100,
+                "New entry.",
+            )
+            account.record_proposal_risk_review(
+                proposal["proposal_id"],
+                "clear",
+                [],
+            )
+            account.decide_proposal(proposal["proposal_id"], "approve")
+            account.execute_order(
+                "buy",
+                "NVDA",
+                10,
+                100,
+                "New entry.",
+                proposal_id=proposal["proposal_id"],
+            )
+
+            trim_count = PaperPositionMonitor._partial_trims_since_entry(
+                account,
+                "NVDA",
+            )
+
+        self.assertEqual(trim_count, 0)
 
     def test_review_can_include_multiple_reasons(self):
         with tempfile.TemporaryDirectory() as temp_dir:

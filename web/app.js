@@ -748,6 +748,7 @@ function renderControlWorkspace({
   const exitThreshold = Number(values.strategy_maximum_exit_score ?? 60);
   const targetSize = Number(values.strategy_target_position_pct ?? 5);
   const buySlots = Number(values.strategy_maximum_new_proposals ?? 3);
+  const trimEscalation = Number(values.maximum_partial_trims_per_position ?? 2);
   const paperMode = autoManageEnabled ? "Automatic paper management" : "Recommendations only";
   const researchMode = researchAutoManageEnabled ? "Automatic research review" : "Owner research review";
 
@@ -797,6 +798,7 @@ function renderControlWorkspace({
           <div><small>Exit score</small><b>${exitThreshold.toFixed(1)} or below</b></div>
           <div><small>Target size</small><b>${targetSize.toFixed(1)}%</b></div>
           <div><small>New buy slots</small><b>${buySlots.toFixed(0)}</b></div>
+          <div><small>Trim escalation</small><b>${trimEscalation.toFixed(0)} trims</b></div>
         </div>
       </section>
     </div>

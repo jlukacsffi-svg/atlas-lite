@@ -61,6 +61,18 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Atlas now permits at most two partial trims within one uninterrupted paper
+  holding cycle. A fresh third de-risk signal proposes a full simulated exit
+  instead of another fractional remainder; a new entry resets the count.
+- A replay of the live ledger reduces 33 sell executions to 21 and avoids 12
+  redundant trims without forcing any immediate sale.
+- The active `2 trims` guardrail is visible in the main Controls policy brief
+  and the detailed Paper Portfolio operating-mode view.
+- Cloud Run revision `atlas-dashboard-stg-00145-xl5` is live on image
+  `20260726-trim-escalation-ui`; the full 405-test suite, all 25 readiness
+  checks, and all 12 protected dashboard checks pass.
+- The deployed image digest is
+  `sha256:c07d2884afbf75663903e0a833a95b0a69a0c08811eed6375579f542247dc249`.
 - Atlas now separates 30 partial trims from 3 fully completed paper positions
   instead of labeling all 33 sell executions as realized exits.
 - Realized win rate is calculated from completed position cycles, including
@@ -69,11 +81,6 @@ Most recent Stage 5 refinement:
   simulated realized losses.
 - Current live evidence maturity is 58.4%, with 2 of 9 conservative gates
   passing.
-- Cloud Run revision `atlas-dashboard-stg-00143-dtv` is live on image
-  `20260726-completed-outcomes`; the full 403-test suite, all 25 readiness
-  checks, and all 12 protected dashboard checks pass.
-- Chrome integration is installed and Atlas is open there for owner sign-in
-  and the next visual walkthrough.
 - Stage 5 remains simulated paper-only. Real trading and brokerage access
   remain disabled.
 

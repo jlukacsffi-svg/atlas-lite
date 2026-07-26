@@ -36,6 +36,7 @@ DEFAULT_POLICY = {
     "strategy_preferred_benchmark": "auto",
     "strategy_trend_quality_weight": 0.2,
     "strategy_sector_repeat_penalty": 3.0,
+    "maximum_partial_trims_per_position": 2,
     "projection_learning_enabled": True,
     "projection_learning_min_judged_trades": 3,
 }
@@ -115,6 +116,7 @@ class PaperTradingAccount:
         int_fields = {
             "maximum_daily_trades",
             "strategy_maximum_new_proposals",
+            "maximum_partial_trims_per_position",
             "projection_learning_min_judged_trades",
         }
         for key, value in dict(updates or {}).items():

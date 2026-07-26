@@ -3,6 +3,41 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Repeated paper trims now escalate cleanly
+
+New capabilities:
+
+- Count partial simulated trims within each uninterrupted holding cycle.
+- Allow two partial trims, then convert the next independent de-risk signal
+  into a full simulated exit instead of repeatedly halving a small remainder.
+- Reset the trim count after a new simulated entry.
+- Configure the maximum partial-trim count through the paper strategy policy.
+- Show the active `2 trims` escalation guardrail in the main Controls policy
+  brief and the detailed Paper Portfolio operating-mode view.
+
+Validated result:
+
+- Replaying the current ledger under the rule reduces 33 sell executions to
+  21, avoiding 12 redundant fractional trims.
+- The rule does not force an immediate exit. Atlas still requires a fresh,
+  independently generated risk signal before closing the remainder.
+- The full local suite passes with 405 tests.
+- Cloud Run revision `atlas-dashboard-stg-00145-xl5` is live on image
+  `20260726-trim-escalation-ui`.
+- The deployed image digest is
+  `sha256:c07d2884afbf75663903e0a833a95b0a69a0c08811eed6375579f542247dc249`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+- The signed-in Chrome walkthrough confirms the guardrail is visible in the
+  owner Controls workspace.
+
+Current boundaries:
+
+- This changes simulated paper management only.
+- The three completed paper positions remain losses; Atlas still needs more
+  evidence and better entry/exit timing before any real-capital discussion.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Completed paper outcomes are now counted correctly
 
 New capabilities:

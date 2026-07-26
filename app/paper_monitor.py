@@ -27,6 +27,7 @@ class PaperPositionMonitor:
         add_min_snapshots=3,
         add_fraction_of_target=0.5,
         repeated_review_trim_count=2,
+        maximum_partial_trims_per_position=2,
         projection_trim_excess_pct=DEFAULT_PROJECTION_TRIM_EXCESS_PCT,
         projection_trim_sector_breadth_pct=DEFAULT_PROJECTION_TRIM_SECTOR_BREADTH_PCT,
         projection_review_excess_pct=DEFAULT_PROJECTION_REVIEW_EXCESS_PCT,
@@ -46,6 +47,10 @@ class PaperPositionMonitor:
         self.add_min_snapshots = int(add_min_snapshots)
         self.add_fraction_of_target = float(add_fraction_of_target)
         self.repeated_review_trim_count = int(repeated_review_trim_count)
+        self.maximum_partial_trims_per_position = max(
+            int(maximum_partial_trims_per_position),
+            0,
+        )
         self.projection_trim_excess_pct = float(projection_trim_excess_pct)
         self.projection_trim_sector_breadth_pct = float(
             projection_trim_sector_breadth_pct
@@ -63,6 +68,11 @@ class PaperPositionMonitor:
     @classmethod
     def from_account(cls, account, latest_prices=None):
         overrides = {}
+        if hasattr(account, "effective_policy"):
+            policy = account.effective_policy()
+            overrides["maximum_partial_trims_per_position"] = int(
+                policy.get("maximum_partial_trims_per_position", 2)
+            )
         if hasattr(account, "projection_threshold_profile"):
             profile = account.projection_threshold_profile(latest_prices=latest_prices)
             overrides.update(profile.get("monitor_overrides", {}))
@@ -351,6 +361,17 @@ class PaperPositionMonitor:
                     "Projection caution triggered: Atlas wants more proof because benchmark leadership, sector participation, or news tone is no longer clearly supportive."
                 )
 
+        if verdict == "exit" and float(sell_shares) < float(current_shares):
+            prior_trims = self._partial_trims_since_entry(account, ticker)
+            if prior_trims >= self.maximum_partial_trims_per_position:
+                sell_shares = current_shares
+                flags.append(
+                    "Trim escalation exit triggered: Atlas already reduced this "
+                    f"position {prior_trims} times during the current holding cycle, "
+                    "so another independent risk signal now closes the remaining "
+                    "simulated position instead of creating a fractional remnant."
+                )
+
         return verdict, flags, sell_shares
 
     @staticmethod
@@ -435,6 +456,24 @@ class PaperPositionMonitor:
     @staticmethod
     def _trim_shares(shares):
         return max(round(float(shares) / 2, 6), 0.000001)
+
+    @staticmethod
+    def _partial_trims_since_entry(account, ticker):
+        count = 0
+        target = str(ticker or "").strip().upper()
+        for event in reversed(account.ledger()):
+            if event.get("event") != "paper_trade":
+                continue
+            if str(event.get("ticker") or "").strip().upper() != target:
+                continue
+            side = str(event.get("side") or "").strip().lower()
+            if side == "buy":
+                break
+            if side == "sell":
+                if float(event.get("position_shares_after") or 0.0) <= 0.0000001:
+                    break
+                count += 1
+        return count
 
     @staticmethod
     def _lag_flag(lag, prefix):
