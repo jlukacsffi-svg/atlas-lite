@@ -3077,3 +3077,26 @@ Current boundaries:
 - Sector-gate outcome evidence is still accumulating and must not drive larger
   simulated strategy changes until the sample is meaningful.
 - Brokerage integration and real-money order routing remain disabled.
+
+## 2026-07-26 - Real-capital discussion readiness is explicit
+
+New capabilities:
+
+- Show nine conservative evidence standards inside the Stage 5 scoreboard.
+- Mark each standard as passing or open with its current value and target.
+- Keep the status at `Paper only` until every standard passes.
+- Limit a fully passing result to `Ready for owner review`; it grants no
+  brokerage or real-money authority.
+
+Validated result:
+
+- The full local automated suite passes with 399 tests.
+- Cloud Run revision `atlas-dashboard-stg-00131-2qh` is live on image
+  `20260726-real-capital-readiness`.
+- The live paper account currently passes 3 of 9 standards.
+- Existing dashboard contract verification remains green.
+
+Current boundaries:
+
+- This is a transparency and governance feature, not a trading integration.
+- Atlas remains simulation-only.

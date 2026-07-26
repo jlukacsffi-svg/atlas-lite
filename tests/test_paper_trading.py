@@ -1317,6 +1317,24 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(summary["status_label"], "Evidence building")
         self.assertEqual(summary["judged_trades"], 2)
         self.assertEqual(summary["realized_exits"], 1)
+        readiness = summary["capital_readiness"]
+        self.assertFalse(readiness["ready_for_owner_review"])
+        self.assertEqual(readiness["status"], "paper_only")
+        self.assertEqual(readiness["total"], 9)
+        self.assertEqual(
+            {item["id"] for item in readiness["criteria"]},
+            {
+                "observation_depth",
+                "judged_decisions",
+                "realized_exits",
+                "benchmark_outperformance",
+                "decision_quality",
+                "exit_quality",
+                "realized_win_rate",
+                "persistence",
+                "turnover_discipline",
+            },
+        )
         scorecards = {
             item["label"]: item
             for item in summary["scorecards"]

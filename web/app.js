@@ -1872,6 +1872,8 @@ function renderCapitalRotationScoreboard(scoreboard) {
 function renderValidationSummary(summary) {
   const scorecards = Array.isArray(summary.scorecards) ? summary.scorecards : [];
   const takeaways = Array.isArray(summary.takeaways) ? summary.takeaways : [];
+  const readiness = summary.capital_readiness || {};
+  const readinessCriteria = Array.isArray(readiness.criteria) ? readiness.criteria : [];
   const stateClass = escapeHtml(String(summary.status || "building"));
   const html = `
     <div class="feedback-summary-grid validation-grid">
@@ -1881,6 +1883,25 @@ function renderValidationSummary(summary) {
         <small>${escapeHtml(summary.headline || "Atlas is building paper-trading validation evidence.")}</small>
         <p>${escapeHtml(summary.detail || "Benchmark-relative paper evidence will appear here as Atlas accumulates snapshots and judged trade outcomes.")}</p>
       </div>
+      ${readinessCriteria.length ? `
+        <div class="feedback-summary-card spotlight capital-readiness ${readiness.ready_for_owner_review ? "ready" : "paper-only"}">
+          <span class="summary-label">Real-capital discussion gate</span>
+          <strong>${escapeHtml(readiness.status_label || "Paper only")}</strong>
+          <small>${escapeHtml(readiness.headline || "Atlas must prove itself in simulation first.")}</small>
+          <p>${escapeHtml(readiness.detail || "")}</p>
+          <div class="capital-readiness-list">
+            ${readinessCriteria.map(item => `
+              <div class="capital-readiness-row ${item.passed ? "passed" : "open"}">
+                <span>${item.passed ? "Pass" : "Open"}</span>
+                <div>
+                  <b>${escapeHtml(item.label || "Evidence gate")}</b>
+                  <small>${escapeHtml(item.current || "N/A")} | target ${escapeHtml(item.target || "")}</small>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+      ` : ""}
       ${scorecards.map(item => `
         <div class="feedback-summary-card">
           <span class="summary-label">${escapeHtml(item.label || "Metric")}</span>

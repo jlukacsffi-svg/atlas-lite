@@ -420,7 +420,7 @@ Recommended next Stage 3/5 task now:
   inputs layered on top of the new regime engine so Atlas can recognize sector
   leadership changes and deteriorating winners sooner.
 
-Estimated overall Atlas program completion: 66%.
+Estimated overall Atlas program completion: 67%.
 
 ## Useful Files
 
@@ -2117,3 +2117,26 @@ Current in-flight stage:
   a meaningful sample exists to tune sector-specific paper entry strictness
   and position pacing. Keep all autonomy limited to the simulated paper
   account and preserve the owner-visible audit trail.
+
+Latest owner-readiness update:
+
+- Atlas now exposes a conservative `Real-capital discussion gate` inside the
+  Stage 5 validation scoreboard.
+- The gate measures nine standards: observation depth, judged decisions,
+  realized exits, SPY/QQQ outperformance, decision quality, exit quality,
+  realized win rate, five-snapshot persistence, and turnover discipline.
+- Passing every standard can only mark Atlas ready for owner review. It cannot
+  enable brokerage access or real-money trading.
+- Current live status is `Paper only`, with 3 of 9 standards passing.
+- Cloud Run revision `atlas-dashboard-stg-00131-2qh` is live on image
+  `20260726-real-capital-readiness`.
+- The deployed image digest is
+  `sha256:d9edb76b7385af3e1700915b90675788cf9aa9b74269abb6fb247dd3397ba6ed`.
+- All existing token-protected dashboard checks pass on revision `00131-2qh`.
+- The full local automated suite passes with 399 tests.
+
+Current in-flight stage:
+
+- Let the enabled daily and weekly paper cycle accumulate evidence against the
+  nine discussion gates. Improve decision and exit quality before considering
+  any expansion beyond paper simulation.

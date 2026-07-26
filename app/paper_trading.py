@@ -881,6 +881,119 @@ class PaperTradingAccount:
             takeaways.append(
                 "Exit evidence is still light, so win-rate and sell-discipline reads are early."
             )
+        persistence_5_rate = (
+            persistence_5.get("working_rate_pct") if persistence_5 else None
+        )
+        readiness_criteria = [
+            {
+                "id": "observation_depth",
+                "label": "Observation depth",
+                "passed": snapshots >= 250,
+                "current": str(snapshots),
+                "target": "250+ snapshots",
+            },
+            {
+                "id": "judged_decisions",
+                "label": "Judged decisions",
+                "passed": judged >= 100,
+                "current": str(judged),
+                "target": "100+ outcomes",
+            },
+            {
+                "id": "realized_exits",
+                "label": "Realized exits",
+                "passed": realized_exits >= 30,
+                "current": str(realized_exits),
+                "target": "30+ exits",
+            },
+            {
+                "id": "benchmark_outperformance",
+                "label": "Benchmark outperformance",
+                "passed": bool(benchmark_excess)
+                and len(positive_benchmarks) == len(benchmark_excess),
+                "current": (
+                    f"{len(positive_benchmarks)} of {len(benchmark_excess)} ahead"
+                ),
+                "target": "Ahead of SPY and QQQ",
+            },
+            {
+                "id": "decision_quality",
+                "label": "Decision quality",
+                "passed": (judged_trade_working_rate_pct or 0.0) >= 55.0,
+                "current": (
+                    f"{judged_trade_working_rate_pct:.1f}%"
+                    if judged_trade_working_rate_pct is not None
+                    else "N/A"
+                ),
+                "target": "55%+ working",
+            },
+            {
+                "id": "exit_quality",
+                "label": "Exit quality",
+                "passed": (judged_sell_help_rate_pct or 0.0) >= 55.0,
+                "current": (
+                    f"{judged_sell_help_rate_pct:.1f}%"
+                    if judged_sell_help_rate_pct is not None
+                    else "N/A"
+                ),
+                "target": "55%+ helpful",
+            },
+            {
+                "id": "realized_win_rate",
+                "label": "Realized win rate",
+                "passed": (win_rate or 0.0) >= 50.0,
+                "current": win_rate_text,
+                "target": "50%+ profitable",
+            },
+            {
+                "id": "persistence",
+                "label": "Five-snapshot persistence",
+                "passed": (persistence_5_rate or 0.0) >= 55.0,
+                "current": (
+                    f"{persistence_5_rate:.1f}%"
+                    if persistence_5_rate is not None
+                    else "N/A"
+                ),
+                "target": "55%+ working",
+            },
+            {
+                "id": "turnover_discipline",
+                "label": "Turnover discipline",
+                "passed": turnover_pct is not None and turnover_pct <= 100.0,
+                "current": (
+                    f"{turnover_pct:.1f}%" if turnover_pct is not None else "N/A"
+                ),
+                "target": "100% or less",
+            },
+        ]
+        passed_criteria = sum(1 for item in readiness_criteria if item["passed"])
+        capital_readiness = {
+            "ready_for_owner_review": passed_criteria == len(readiness_criteria),
+            "status": (
+                "owner_review"
+                if passed_criteria == len(readiness_criteria)
+                else "paper_only"
+            ),
+            "status_label": (
+                "Ready for owner review"
+                if passed_criteria == len(readiness_criteria)
+                else "Paper only"
+            ),
+            "headline": (
+                "Atlas has cleared the initial evidence gates for an owner-led "
+                "real-capital discussion."
+                if passed_criteria == len(readiness_criteria)
+                else "Atlas has not yet earned a real-capital discussion."
+            ),
+            "detail": (
+                f"{passed_criteria} of {len(readiness_criteria)} conservative "
+                "evidence gates currently pass. Passing every gate does not "
+                "enable brokerage access or real-money trading."
+            ),
+            "passed": passed_criteria,
+            "total": len(readiness_criteria),
+            "criteria": readiness_criteria,
+        }
         return {
             "available": True,
             "status": status,
@@ -893,6 +1006,7 @@ class PaperTradingAccount:
             "win_rate_pct": round(win_rate, 1) if win_rate is not None else None,
             "scorecards": scorecards,
             "takeaways": takeaways[:8],
+            "capital_readiness": capital_readiness,
         }
 
     def proposal_feedback(self, latest_prices=None):

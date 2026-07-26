@@ -1129,6 +1129,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Stage 5 validation scoreboard", html)
         self.assertIn("Original roadmap focus", html)
         self.assertIn("original Stage 5 checkpoint", html)
+        self.assertIn("Real-capital discussion gate", script)
+        self.assertIn("ready_for_owner_review", script)
         self.assertIn("overview-validation-summary", html)
         self.assertIn("paper-validation-summary", html)
         self.assertIn("capital-rotation-scoreboard", html)
