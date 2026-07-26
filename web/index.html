@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260726-decision-desk">
+  <link rel="stylesheet" href="/styles.css?v=20260726-paper-workspace">
 </head>
 <body>
   <div class="app-shell">
@@ -492,6 +492,22 @@
 
       <section id="paper" class="dashboard-page" data-page="paper">
       <section class="content-grid">
+        <article class="panel paper-summary-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Owner paper workspace</p>
+              <div class="title-with-help">
+                <h2>Paper portfolio at a glance</h2>
+                <details class="info-popover">
+                  <summary aria-label="About paper portfolio summary">?</summary>
+                  <p>Summarizes simulated account performance, holdings that need attention, and the latest recorded paper action. Nothing here represents a real brokerage position or order.</p>
+                </details>
+              </div>
+            </div>
+            <span class="tag">Simulation only</span>
+          </div>
+          <div id="paper-workspace-summary" class="paper-workspace-summary"></div>
+        </article>
         <article class="panel thesis-overview-panel">
           <div class="panel-heading">
             <div>
@@ -506,7 +522,10 @@
             </div>
             <span class="tag">Paper only</span>
           </div>
-          <div id="thesis-overview" class="thesis-overview"></div>
+          <details class="paper-disclosure">
+            <summary>Open thesis status detail</summary>
+            <div id="thesis-overview" class="thesis-overview"></div>
+          </details>
         </article>
         <article class="panel ladder-panel">
           <div class="panel-heading">
@@ -522,9 +541,12 @@
             </div>
             <span class="tag">Priority view</span>
           </div>
-          <div id="position-ladder" class="position-ladder"></div>
+          <details class="paper-disclosure">
+            <summary>Open full action ladder</summary>
+            <div id="position-ladder" class="position-ladder"></div>
+          </details>
         </article>
-        <article class="panel">
+        <article id="paper-positions-panel" class="panel paper-positions-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Current simulation</p>
@@ -540,7 +562,7 @@
           </div>
           <div id="positions" class="positions"></div>
         </article>
-        <article class="panel feedback-panel">
+        <article id="paper-learning-panel" class="panel feedback-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Paper feedback loop</p>
@@ -554,16 +576,21 @@
             </div>
             <span class="tag">Learning mode</span>
           </div>
-          <div class="explain-box">This is the original Stage 5 checkpoint: Atlas should beat or meaningfully inform benchmarks over time with clear accountability before any later autonomy discussion.</div>
-          <div id="paper-validation-summary" class="feedback-summary"></div>
-          <div class="explain-box">Benchmark reference: <b>SPY</b> is the broad S&amp;P 500 ETF yardstick, and <b>QQQ</b> is the Nasdaq-100 growth and technology ETF yardstick.</div>
-          <div id="paper-feedback-summary" class="feedback-summary"></div>
-          <div id="capital-rotation-scoreboard" class="capital-rotation-scoreboard"></div>
-          <div id="paper-feedback" class="feedback-list"></div>
+          <details class="paper-disclosure learning-disclosure">
+            <summary>Open Stage 5 validation and learning detail</summary>
+            <div class="paper-disclosure-content">
+              <div class="explain-box">This is the original Stage 5 checkpoint: Atlas should beat or meaningfully inform benchmarks over time with clear accountability before any later autonomy discussion.</div>
+              <div id="paper-validation-summary" class="feedback-summary"></div>
+              <div class="explain-box">Benchmark reference: <b>SPY</b> is the broad S&amp;P 500 ETF yardstick, and <b>QQQ</b> is the Nasdaq-100 growth and technology ETF yardstick.</div>
+              <div id="paper-feedback-summary" class="feedback-summary"></div>
+              <div id="capital-rotation-scoreboard" class="capital-rotation-scoreboard"></div>
+              <div id="paper-feedback" class="feedback-list"></div>
+            </div>
+          </details>
         </article>
       </section>
       <section class="content-grid">
-        <article class="panel activity-panel">
+        <article id="paper-activity-panel" class="panel activity-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Executed paper activity</p>
@@ -845,6 +872,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260726-decision-desk"></script>
+  <script src="/app.js?v=20260726-paper-workspace"></script>
 </body>
 </html>

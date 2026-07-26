@@ -57,6 +57,12 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function conciseText(value, maxLength = 180) {
+  const text = String(value || "").trim();
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, Math.max(0, maxLength - 3)).trim()}...`;
+}
+
 function safeExternalUrl(value) {
   try {
     const url = new URL(String(value || ""));
@@ -247,6 +253,7 @@ function renderDashboard(data) {
   renderMovers(data.movers || []);
   renderSectors(data.sectors || []);
   renderCorporateActions(data.corporate_actions || []);
+  renderPaperWorkspaceSummary(paper);
   renderThesisOverview(paper.thesis_overview || {});
   renderPortfolioFocus(paper.portfolio_focus || {});
   renderPositionLadder(paper.position_ladder || []);
@@ -293,6 +300,7 @@ function renderDashboardSummary(data) {
   renderMarketPills(data.market || []);
   renderBreadth(overview);
   renderPerformance(data.history || []);
+  renderPaperWorkspaceSummary(paper);
   renderThesisOverview(paper.thesis_overview || {});
   renderPortfolioFocus(paper.portfolio_focus || {});
   renderPositionLadder(paper.position_ladder || []);
@@ -546,6 +554,13 @@ function jumpToControlsTarget(targetId) {
 
 function jumpToPaperTarget(targetId) {
   jumpToPageTarget("paper", targetId);
+}
+
+function jumpToPaperSection(targetId) {
+  const target = document.getElementById(String(targetId || ""));
+  const disclosure = target?.querySelector(".paper-disclosure");
+  if (disclosure) disclosure.open = true;
+  jumpToPaperTarget(targetId);
 }
 
 function renderWorkspace(workspace) {
@@ -1349,6 +1364,82 @@ function renderCorporateActions(rows) {
     <div class="empty">No recent corporate actions detected in the current research universe.</div>`;
 }
 
+function renderPaperWorkspaceSummary(paper) {
+  const positions = Array.isArray(paper.positions) ? paper.positions : [];
+  const activity = Array.isArray(paper.activity) ? paper.activity : [];
+  const focus = paper.portfolio_focus || {};
+  const highlights = Array.isArray(focus.highlights) ? focus.highlights : [];
+  const counts = focus.counts || {};
+  const actionCount = Number(counts.watch || 0) + Number(counts.trim || 0) + Number(counts.exit || 0);
+  const latestAction = activity[0] || null;
+  const validation = paper.validation_summary || {};
+  const readiness = validation.capital_readiness || {};
+  const readinessPassed = Array.isArray(readiness.criteria)
+    ? readiness.criteria.filter(item => item.passed).length
+    : 0;
+  const readinessTotal = Array.isArray(readiness.criteria) ? readiness.criteria.length : 0;
+
+  document.getElementById("paper-workspace-summary").innerHTML = `
+    <div class="paper-summary-grid">
+      <div class="paper-summary-card result">
+        <span class="summary-label">Simulated equity</span>
+        <strong>${paper.configured ? money.format(Number(paper.equity || 0)) : "--"}</strong>
+        <small class="${changeClass(Number(paper.total_return_pct || 0))}">${paper.configured ? `${signed(Number(paper.total_return_pct || 0))} total return` : "Paper account unavailable"}</small>
+      </div>
+      <div class="paper-summary-card">
+        <span class="summary-label">Open holdings</span>
+        <strong>${positions.length}</strong>
+        <small>${money.format(Number(paper.cash || 0))} simulated cash available</small>
+      </div>
+      <div class="paper-summary-card ${actionCount ? "attention" : "steady"}">
+        <span class="summary-label">Need attention</span>
+        <strong>${actionCount}</strong>
+        <small>${actionCount ? `${Number(counts.exit || 0)} exit, ${Number(counts.trim || 0)} trim, ${Number(counts.watch || 0)} watch` : "No position exceptions"}</small>
+      </div>
+      <div class="paper-summary-card">
+        <span class="summary-label">Stage 5 evidence</span>
+        <strong>${readinessTotal ? `${readinessPassed}/${readinessTotal}` : "--"}</strong>
+        <small>${escapeHtml(readiness.status_label || validation.status_label || "Evidence building")}</small>
+      </div>
+    </div>
+    <div class="paper-priority-grid">
+      <section class="paper-priority-section">
+        <span class="access-label">Positions requiring attention</span>
+        <div class="paper-priority-list">
+          ${highlights.filter(item => ["watch", "trim", "exit"].includes(String(item.label || "").toLowerCase())).slice(0, 4).map(item => `
+            <div class="paper-priority-row">
+              <span class="thesis-badge ${escapeHtml(item.label || "watch")}">${escapeHtml(item.label || "watch")}</span>
+              <div>
+                <b class="row-title">${escapeHtml(item.ticker || "Holding")}</b>
+                <small class="row-meta">${escapeHtml(item.summary || "Atlas recommends review.")}</small>
+              </div>
+              <button class="link-button" type="button" data-paper-target="${escapeHtml(item.anchor_id || "")}">Review</button>
+            </div>
+          `).join("") || `<div class="empty compact">No simulated holdings currently require attention.</div>`}
+        </div>
+      </section>
+      <section class="paper-priority-section">
+        <span class="access-label">Latest simulated action</span>
+        ${latestAction ? `
+          <div class="latest-paper-action">
+            <span class="tag ${latestAction.side === "sell" ? "exit-tag" : "buy-tag"}">${escapeHtml(String(latestAction.action_label || latestAction.side || "trade").replaceAll("_", " "))}</span>
+            <div>
+              <b class="row-title">${escapeHtml(latestAction.title || `${latestAction.ticker || "Atlas"} paper action`)}</b>
+              <small class="row-meta">${new Date(latestAction.timestamp).toLocaleString()} · ${Number(latestAction.shares || 0).toFixed(2)} shares at ${money.format(Number(latestAction.fill_price) || 0)}</small>
+              <small class="row-meta">${escapeHtml(conciseText(latestAction.summary || "Atlas recorded a simulated trade.", 170))}</small>
+            </div>
+          </div>
+        ` : `<div class="empty compact">No simulated purchases or sales have been recorded yet.</div>`}
+      </section>
+    </div>
+    <div class="paper-summary-actions">
+      <button class="secondary-button" type="button" data-paper-section="paper-positions-panel">View holdings</button>
+      <button class="secondary-button" type="button" data-paper-section="paper-activity-panel">View recent activity</button>
+      <button class="secondary-button" type="button" data-paper-section="paper-learning-panel">View Stage 5 evidence</button>
+    </div>
+  `;
+}
+
 function renderThesisOverview(overview) {
   const counts = overview.counts || {};
   const attention = overview.attention || [];
@@ -1438,25 +1529,39 @@ function renderPositionLadder(rows) {
 
 function renderPositions(rows) {
   paperPositions = Array.isArray(rows) ? rows : [];
-  document.getElementById("positions").innerHTML = rows.map(item => {
+  const priority = { exit: 0, trim: 1, watch: 2, healthy: 3 };
+  const ordered = paperPositions.slice().sort((left, right) => {
+    const leftLabel = String(left.thesis_status?.label || "healthy").toLowerCase();
+    const rightLabel = String(right.thesis_status?.label || "healthy").toLowerCase();
+    return (priority[leftLabel] ?? 4) - (priority[rightLabel] ?? 4) ||
+      Number(left.unrealized_gain_loss || 0) - Number(right.unrealized_gain_loss || 0);
+  });
+  document.getElementById("positions").innerHTML = ordered.map(item => {
     const review = item.review || {};
     const thesis = item.thesis_status || { label: "healthy", summary: "Awaiting the next daily thesis review." };
     const memory = item.research_memory || null;
     const journal = item.decision_journal || [];
     return `
       <div class="position-row" id="${escapeHtml(item.anchor_id || "")}">
-        <span>
+        <span class="position-main">
           <b class="row-title">${item.ticker} · ${Number(item.shares).toFixed(0)} shares</b>
-          <small class="row-meta">Average ${money.format(item.average_cost)} · ${review.verdict || "unreviewed"} thesis</small>
+          <small class="row-meta">Average cost ${money.format(item.average_cost)} · latest price ${money.format(Number(item.price) || 0)}</small>
           <small class="row-meta thesis-summary"><span class="thesis-badge ${escapeHtml(thesis.label)}">${escapeHtml(thesis.label)}</span>${escapeHtml(thesis.summary || "")}</small>
-          ${renderNewsSummary(item.news_summary)}
-          ${memory?.summary ? `<small class="row-meta">Research memory: ${escapeHtml(memory.summary)}</small>` : ""}
-          ${memory?.detail ? `<small class="row-meta">${escapeHtml(memory.detail)}</small>` : ""}
-          ${journal.length ? `<div class="position-journal"><span>What changed since entry</span><ul>${journal.slice(0, 4).map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>` : ""}
+          <details class="evidence-disclosure position-evidence">
+            <summary>View position evidence</summary>
+            <div class="evidence-content">
+              <small class="row-meta">${escapeHtml(review.verdict || "unreviewed")} thesis review</small>
+              ${renderDecisionDriver(item.decision_driver)}
+              ${renderNewsSummary(item.news_summary)}
+              ${memory?.summary ? `<small class="row-meta">Research memory: ${escapeHtml(memory.summary)}</small>` : ""}
+              ${memory?.detail ? `<small class="row-meta">${escapeHtml(memory.detail)}</small>` : ""}
+              ${journal.length ? `<div class="position-journal"><span>What changed since entry</span><ul>${journal.slice(0, 4).map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>` : ""}
+            </div>
+          </details>
         </span>
         <span class="position-actions">
           <b class="row-title">${money.format(item.market_value || 0)}</b>
-          <small class="row-meta ${changeClass(item.unrealized_gain_loss)}">${money.format(item.unrealized_gain_loss || 0)}</small>
+          <small class="row-meta ${changeClass(item.unrealized_gain_loss)}">${money.format(item.unrealized_gain_loss || 0)} open result</small>
           <button class="link-button" type="button" data-position-detail="${escapeHtml(item.ticker || "")}">Open holding</button>
         </span>
       </div>`;
@@ -2152,11 +2257,16 @@ function renderPaperActivity(rows) {
           <b class="row-title">${escapeHtml(item.title || "Atlas activity")}</b>
           <small class="row-meta">${new Date(item.timestamp).toLocaleString()} · ${Number(item.shares || 0).toFixed(2)} shares · ${money.format(Number(item.fill_price) || 0)}</small>
           <p>${escapeHtml(item.summary || "Atlas recorded a simulated trade.")}</p>
-          ${renderDecisionDriver(item.decision_driver)}
           ${item.side === "sell" ? `<small class="row-meta ${changeClass(item.realized_gain_loss)}">Realized result ${money.format(Number(item.realized_gain_loss) || 0)}</small>` : ""}
-          <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
-          ${rationale.length ? `<div class="why-now compact"><span>${whyHeading}</span><ul>${rationale.slice(0, 3).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
-          ${decisionContext.length ? `<div class="why-now compact memory"><span>Atlas context</span><ul>${decisionContext.slice(0, 4).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
+          <details class="evidence-disclosure activity-evidence">
+            <summary>Why Atlas acted</summary>
+            <div class="evidence-content">
+              ${renderDecisionDriver(item.decision_driver)}
+              <small class="row-meta">Thesis: ${escapeHtml(item.thesis || "No thesis supplied.")}</small>
+              ${rationale.length ? `<div class="why-now compact"><span>${whyHeading}</span><ul>${rationale.slice(0, 3).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
+              ${decisionContext.length ? `<div class="why-now compact memory"><span>Atlas context</span><ul>${decisionContext.slice(0, 4).map(reason => `<li>${escapeHtml(reason)}</li>`).join("")}</ul></div>` : ""}
+            </div>
+          </details>
         </div>
       </article>`;
   }).join("") || `<div class="empty">No simulated buys or sells have been recorded yet.</div>`;
@@ -2586,6 +2696,16 @@ document.getElementById("basis-report-dialog").addEventListener("cancel", event 
   closeBasisReportDialog();
 });
 document.getElementById("paper").addEventListener("click", event => {
+  const sectionButton = event.target.closest("[data-paper-section]");
+  if (sectionButton) {
+    jumpToPaperSection(sectionButton.dataset.paperSection);
+    return;
+  }
+  const jumpButton = event.target.closest("[data-paper-target]");
+  if (jumpButton) {
+    jumpToPaperTarget(jumpButton.dataset.paperTarget);
+    return;
+  }
   const button = event.target.closest("[data-position-detail]");
   if (button) {
     openPositionDetailDialog(button.dataset.positionDetail);

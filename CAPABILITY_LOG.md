@@ -3,6 +3,43 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Paper Portfolio is now an owner workspace
+
+New capabilities:
+
+- Lead the Paper Portfolio with simulated equity, total return, open-holding
+  count, available cash, action-exception count, and Stage 5 evidence progress.
+- Show the positions requiring attention and the latest simulated purchase or
+  sale directly in the opening workspace.
+- Link directly from the summary to holdings, recent activity, and the Stage 5
+  evidence section.
+- Sort open holdings by exit, trim, watch, and healthy priority.
+- Keep position research memory, news, decision drivers, and journal detail
+  behind `View position evidence`.
+- Keep purchase and sale rationale behind `Why Atlas acted`.
+- Collapse the thesis map, full action ladder, and extensive Stage 5 learning
+  scorecards until the owner asks to inspect them.
+- Preserve the full holding lifecycle dialog, trade history, basis report, and
+  CSV export.
+
+Validated result:
+
+- The full local suite passes with 402 tests.
+- Cloud Run revision `atlas-dashboard-stg-00137-w4c` is live on image
+  `20260726-paper-workspace`.
+- The deployed image digest is
+  `sha256:838aad9b78bb174bdff860f160550a20b3ba62d11d2217becccf207ca5fc3e81`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+- Local rendered interaction checks confirm the Stage 5 shortcut opens its
+  disclosure and that position evidence and lifecycle dialogs still work.
+
+Current boundaries:
+
+- Every position, result, purchase, sale, and accounting record remains
+  simulated.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Recommendations is now an owner decision desk
 
 New capabilities:

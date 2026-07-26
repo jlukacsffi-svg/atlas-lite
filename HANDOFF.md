@@ -61,16 +61,16 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
-- The Recommendations page now functions as a concise owner decision desk.
-- Open-position trim and exit warnings appear beside formal paper proposals
-  and count toward the `Reduce / exit` summary.
-- Detailed rationale remains available through `View evidence`, while each
-  warning links directly to the matching paper holding.
-- The 140-name research universe now shows the 24 highest scores first and
-  supports ticker/sector/category search, category filters, and deliberate
-  show-all expansion.
-- Cloud Run revision `atlas-dashboard-stg-00136-lvd` is live on image
-  `20260726-decision-desk`; all 25 readiness checks and all 12 protected
+- The Paper Portfolio now opens with a concise owner workspace showing
+  simulated equity and return, open holdings and cash, action exceptions,
+  Stage 5 evidence progress, and the latest simulated trade.
+- Open holdings are sorted by urgency. Research memory, news, decision drivers,
+  activity rationale, the thesis map, action ladder, and Stage 5 scorecards
+  remain available through on-demand disclosures.
+- Full lifecycle dialogs, trade history, basis reporting, and CSV export remain
+  intact.
+- Cloud Run revision `atlas-dashboard-stg-00137-w4c` is live on image
+  `20260726-paper-workspace`; all 25 readiness checks and all 12 protected
   dashboard checks pass.
 - Stage 5 remains simulated paper-only. Real trading and brokerage access
   remain disabled.
@@ -115,11 +115,12 @@ Stage 3 portfolio-intelligence foundations completed:
 
 Recommended next roadmap task:
 
-Simplify Paper Portfolio around the information the owner needs first:
-holdings requiring action, current performance, recent simulated purchases and
-sales, and exceptions. Preserve the full lifecycle, lot-accountability, and
-research evidence behind on-demand disclosures. Continue Stage 5 validation
-in parallel and keep all autonomy limited to the simulated paper account.
+Simplify Research into a prioritized intelligence queue. Lead with Atlas's
+current conclusions, the evidence that is changing, and the follow-up work
+assigned to research roles. Preserve the detailed market, sector, corporate
+action, and task evidence behind clear drill-downs. Continue Stage 5 validation
+in parallel and keep all financial autonomy limited to the simulated paper
+account.
 
 Stage 4 planning artifact:
 
