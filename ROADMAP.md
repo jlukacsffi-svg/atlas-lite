@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 68%.
+Estimated overall Atlas program completion: 69%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -356,7 +356,8 @@ the overall company program.
 - Completed: responsive desktop and mobile presentation for the briefing.
 - Completed: full-dashboard performance work that removed the live `504`
   failure without raising Cloud Run limits or the approved cost envelope.
-- Next: simplify Recommendations into a clearer decision queue with compact
-  evidence summaries and details available on demand.
-- Then: simplify Paper Portfolio around holdings, recent actions, performance,
+- Completed: Recommendations now combines formal proposals with open-position
+  warnings, keeps evidence behind deliberate disclosures, and provides a
+  searchable, filterable, collapsed research universe.
+- Next: simplify Paper Portfolio around holdings, recent actions, performance,
   and exceptions while keeping full lifecycle evidence accessible.

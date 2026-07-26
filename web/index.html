@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260726-owner-briefing">
+  <link rel="stylesheet" href="/styles.css?v=20260726-decision-desk">
 </head>
 <body>
   <div class="app-shell">
@@ -317,7 +317,7 @@
 
       <section id="recommendations" class="dashboard-page" data-page="recommendations">
         <section class="content-grid">
-          <article class="panel recommendation-summary-panel">
+          <article class="panel recommendation-summary-panel decision-desk-panel">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Decision framing</p>
@@ -365,7 +365,7 @@
             </div>
             <div id="recommended-exits" class="recommendation-list"></div>
           </article>
-          <article class="panel current-list-panel">
+          <article class="panel current-list-panel universe-panel">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Research universe</p>
@@ -378,6 +378,27 @@
                 </div>
               </div>
             </div>
+            <div class="universe-toolbar" aria-label="Research universe filters">
+              <label>
+                <span>Find a security</span>
+                <input id="universe-search" type="search" placeholder="Ticker, sector, or category">
+              </label>
+              <label>
+                <span>Category</span>
+                <select id="universe-category">
+                  <option value="all">All categories</option>
+                  <option value="Core">Core</option>
+                  <option value="Watchlist">Watchlist</option>
+                  <option value="Emerging">Emerging</option>
+                  <option value="Avoid">Avoid</option>
+                </select>
+              </label>
+              <div class="universe-toolbar-action">
+                <span id="universe-result-count">Loading tracked securities...</span>
+                <button id="universe-toggle" class="secondary-button" type="button">Show all</button>
+              </div>
+            </div>
+            <p class="universe-note">Atlas scores indicate research priority, not a purchase recommendation. The highest scores are shown first.</p>
             <div id="current-watchlist" class="watchlist-grid"></div>
           </article>
         </section>
@@ -824,6 +845,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260726-owner-briefing"></script>
+  <script src="/app.js?v=20260726-decision-desk"></script>
 </body>
 </html>

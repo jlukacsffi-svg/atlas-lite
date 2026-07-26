@@ -61,22 +61,18 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
-- Atlas now audits sector-learning gate effects across both current simulated
-  candidates and accepted paper buy recommendations.
-- The dashboard paper-learning panel now includes a `Sector gate audit` card
-  showing how many active sector-gated candidates cleared, tightened, or
-  received a modest boost, plus how many accepted paper buys carried a
-  sector-gate rationale.
-- Atlas now uses the same 3-snapshot sector-learning checkpoint for strategy
-  gate telemetry that the owner-visible sector-learning bridge already shows.
-- The owner dashboard sector-learning bridge now describes the checkpoint as a
-  `Sector learning gate`, making it clearer when a sector is in watch, caution,
-  or modest-boost posture.
-- The token-protected dashboard verification endpoint now uses a lightweight
-  `build_verification()` read model that bypasses the refresh wrapper and full
-  dashboard build while preserving the Stage 5 contract fields.
-- Stage 5 remains simulated paper-only: Atlas can autonomously approve and
-  execute paper buys, trims, and exits, but real trading and brokerage access
+- The Recommendations page now functions as a concise owner decision desk.
+- Open-position trim and exit warnings appear beside formal paper proposals
+  and count toward the `Reduce / exit` summary.
+- Detailed rationale remains available through `View evidence`, while each
+  warning links directly to the matching paper holding.
+- The 140-name research universe now shows the 24 highest scores first and
+  supports ticker/sector/category search, category filters, and deliberate
+  show-all expansion.
+- Cloud Run revision `atlas-dashboard-stg-00136-lvd` is live on image
+  `20260726-decision-desk`; all 25 readiness checks and all 12 protected
+  dashboard checks pass.
+- Stage 5 remains simulated paper-only. Real trading and brokerage access
   remain disabled.
 
 Completed Stage 2 foundations:
@@ -119,12 +115,11 @@ Stage 3 portfolio-intelligence foundations completed:
 
 Recommended next roadmap task:
 
-Continue Stage 5 validation and autonomous-decision refinement by measuring
-whether sector-learning gate decisions improve simulated outcomes over time,
-then use the evidence to tune sector-specific entry strictness and position
-pacing. Keep all autonomy limited to the simulated paper account, preserve
-accountant-style lot accountability, and continue using SPY/QQQ benchmark
-evidence to evaluate whether Atlas is beating the market.
+Simplify Paper Portfolio around the information the owner needs first:
+holdings requiring action, current performance, recent simulated purchases and
+sales, and exceptions. Preserve the full lifecycle, lot-accountability, and
+research evidence behind on-demand disclosures. Continue Stage 5 validation
+in parallel and keep all autonomy limited to the simulated paper account.
 
 Stage 4 planning artifact:
 

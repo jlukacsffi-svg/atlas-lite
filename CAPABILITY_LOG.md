@@ -3,6 +3,40 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Recommendations is now an owner decision desk
+
+New capabilities:
+
+- Surface exit and trim thesis warnings from open simulated positions in the
+  same queue as formal paper proposals.
+- Count those warnings in the `Reduce / exit` summary so the queue cannot say
+  there is nothing to review while a holding has an exit-level warning.
+- Keep recommendation evidence available on demand through a compact `View
+  evidence` disclosure.
+- Link each position warning directly to its matching simulated holding.
+- Show the highest-scoring 24 securities first instead of expanding the full
+  140-name research universe.
+- Search the universe by ticker, sector, or category; filter by Atlas category;
+  and deliberately expand or collapse the full list.
+
+Validated result:
+
+- The full local suite passes with 402 tests.
+- Cloud Run revision `atlas-dashboard-stg-00136-lvd` is live on image
+  `20260726-decision-desk`.
+- The deployed image digest is
+  `sha256:f17edbed5a961417f715b47ef350bcf3ac2d8ebf9e8c7cd3acc2c330b6c04029`.
+- All 25 staging readiness checks and all 12 protected Stage 5 dashboard
+  contract checks pass.
+- The signed-in live page shows KLAC and TSM exit warnings, expands evidence,
+  and links each warning to the paper portfolio.
+
+Current boundaries:
+
+- Position warnings are research and paper-portfolio signals, not completed
+  simulated sells or real-money orders.
+- Real trading and brokerage access remain disabled.
+
 ## July 15, 2026 - Atlas now audits sector-gate effects
 
 New capabilities:

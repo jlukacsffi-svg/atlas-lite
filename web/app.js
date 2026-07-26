@@ -7,6 +7,8 @@ let pendingPaperFill = null;
 let paperTradeHistory = { total_trades: 0, ticker_count: 0, tickers: [] };
 let paperAccountabilityReport = { summary: {}, tickers: [] };
 let paperPositions = [];
+let recommendationWatchlist = [];
+let universeExpanded = false;
 
 const PAGE_METADATA = {
   about: {
@@ -363,15 +365,26 @@ function compareRecommendations(left, right) {
 function renderRecommendationSummary(proposals, watchlist) {
   const rows = proposals || [];
   const autoManaged = rows.some(item => item.auto_manage_enabled);
+  const formalSellTickers = new Set(
+    rows.filter(item => item.side === "sell").map(item => String(item.ticker || ""))
+  );
+  const positionAlerts = paperPositions
+    .filter(item => ["trim", "exit"].includes(String(item.thesis_status?.label || "").toLowerCase()))
+    .filter(item => !formalSellTickers.has(String(item.ticker || "")))
+    .sort((left, right) => {
+      const priority = { exit: 0, trim: 1 };
+      return (priority[left.thesis_status?.label] ?? 2) - (priority[right.thesis_status?.label] ?? 2);
+    });
   const summary = {
     buyPending: rows.filter(item => item.side === "buy" && item.status === "pending").length,
     buyReady: rows.filter(item => item.side === "buy" && item.status === "approved").length,
-    reduce: rows.filter(item => item.side === "sell").length,
+    reduce: rows.filter(item => item.side === "sell").length + positionAlerts.length,
     tracked: (watchlist || []).length,
   };
-  const highlights = rows
-    .slice()
-    .sort(compareRecommendations)
+  const highlights = [
+    ...positionAlerts.map(item => ({ kind: "position", item })),
+    ...rows.slice().sort(compareRecommendations).map(item => ({ kind: "proposal", item })),
+  ]
     .slice(0, 3);
 
   document.getElementById("recommendation-summary").innerHTML = `
@@ -389,7 +402,7 @@ function renderRecommendationSummary(proposals, watchlist) {
       <div class="recommendation-summary-card exit">
         <span class="summary-label">Reduce / exit</span>
         <strong>${summary.reduce}</strong>
-        <small>Paper risk reviews in force</small>
+        <small>Formal proposals plus position warnings</small>
       </div>
       <div class="recommendation-summary-card tracked">
         <span class="summary-label">Tracked list</span>
@@ -398,18 +411,26 @@ function renderRecommendationSummary(proposals, watchlist) {
       </div>
     </div>
     <div class="recommendation-summary-focus">
-      <span class="access-label">Atlas focus right now</span>
+      <span class="access-label">What needs attention now</span>
       <div class="recommendation-focus-list">
-        ${highlights.length ? highlights.map(item => `
-          <div class="recommendation-focus-row">
-            <span class="thesis-badge ${recommendationStageClass(item)}">${escapeHtml(recommendationStageLabel(item))}</span>
+        ${highlights.length ? highlights.map(entry => entry.kind === "position" ? `
+          <div class="recommendation-focus-row urgent">
+            <span class="thesis-badge ${escapeHtml(entry.item.thesis_status?.label || "watch")}">${escapeHtml(entry.item.thesis_status?.label || "review")}</span>
             <div>
-              <b class="row-title">${escapeHtml(item.ticker || "Proposal")}</b>
-              <small class="row-meta">${escapeHtml(primaryRationaleText(item))}</small>
-              ${item.paper_calibration?.judged ? `<small class="row-meta">Paper learning ${recommendationCalibrationAdjustment(item) >= 0 ? "+" : ""}${recommendationCalibrationAdjustment(item).toFixed(0)} from ${recommendationJudgedCount(item)} judged outcome${recommendationJudgedCount(item) === 1 ? "" : "s"}</small>` : ""}
+              <b class="row-title">${escapeHtml(entry.item.ticker || "Holding")} position warning</b>
+              <small class="row-meta">${escapeHtml(entry.item.thesis_status?.summary || "This simulated holding needs review.")}</small>
             </div>
           </div>
-        `).join("") : `<div class="empty">No active Atlas paper recommendations right now.</div>`}
+        ` : `
+          <div class="recommendation-focus-row">
+            <span class="thesis-badge ${recommendationStageClass(entry.item)}">${escapeHtml(recommendationStageLabel(entry.item))}</span>
+            <div>
+              <b class="row-title">${escapeHtml(entry.item.ticker || "Proposal")}</b>
+              <small class="row-meta">${escapeHtml(primaryRationaleText(entry.item))}</small>
+              ${entry.item.paper_calibration?.judged ? `<small class="row-meta">Paper learning ${recommendationCalibrationAdjustment(entry.item) >= 0 ? "+" : ""}${recommendationCalibrationAdjustment(entry.item).toFixed(0)} from ${recommendationJudgedCount(entry.item)} judged outcome${recommendationJudgedCount(entry.item) === 1 ? "" : "s"}</small>` : ""}
+            </div>
+          </div>
+        `).join("") : `<div class="empty">No active recommendations or position warnings right now.</div>`}
       </div>
     </div>
   `;
@@ -1012,6 +1033,21 @@ function proposalControlTitle(item) {
   return `${escapeHtml(item.side).toUpperCase()} ${Number(item.shares).toFixed(2)} ${escapeHtml(item.ticker)}`;
 }
 
+function renderRecommendationEvidence(item, tradePressureProfile, benchmarkTrustProfile) {
+  return `
+    <details class="evidence-disclosure">
+      <summary>View evidence</summary>
+      <div class="evidence-content">
+        ${renderPaperCalibration(item.paper_calibration)}
+        ${tradePressureProfile ? `<small class="row-meta">Adaptive trade pressure: ${escapeHtml(String(tradePressureProfile.value || "--"))} daily trades - ${escapeHtml(tradePressureProfile.status || "watching")}</small>` : ""}
+        ${benchmarkTrustProfile ? `<small class="row-meta">Adaptive benchmark trust: ${escapeHtml(String(benchmarkTrustProfile.value || "AUTO"))} - ${escapeHtml(benchmarkTrustProfile.status || "watching")}</small>` : ""}
+        ${item.side === "sell" ? renderSellTrigger(item) : ""}
+        ${renderRationale(item.rationale, item)}
+        ${renderObjections(item.objections, item)}
+      </div>
+    </details>`;
+}
+
 function renderRecommendations(proposals, watchlist) {
   const adaptiveProfiles = ownerControls?.paper_strategy_policy?.adaptive_profiles || [];
   const tradePressureProfile = adaptiveProfiles.find(item => item.id === "trade_pressure") || null;
@@ -1022,6 +1058,14 @@ function renderRecommendations(proposals, watchlist) {
   const sellProposals = (proposals || [])
     .filter(item => item.side === "sell")
     .sort(compareRecommendations);
+  const formalSellTickers = new Set(sellProposals.map(item => String(item.ticker || "")));
+  const positionAlerts = paperPositions
+    .filter(item => ["trim", "exit"].includes(String(item.thesis_status?.label || "").toLowerCase()))
+    .filter(item => !formalSellTickers.has(String(item.ticker || "")))
+    .sort((left, right) => {
+      const priority = { exit: 0, trim: 1 };
+      return (priority[left.thesis_status?.label] ?? 2) - (priority[right.thesis_status?.label] ?? 2);
+    });
   const buyHtml = buyProposals.map(item => `
     <article class="recommendation-row ${item.status === "approved" ? "approved-rec" : ""}">
       <span class="tag ${item.status === "approved" ? "ready-tag" : "buy-tag"}">${escapeHtml(recommendationStageLabel(item))}</span>
@@ -1035,11 +1079,7 @@ function renderRecommendations(proposals, watchlist) {
           : (item.status === "approved"
             ? "Status: approved by owner and ready for Simulate fill."
             : "Status: Atlas recommends this idea, but it still needs owner approval.")}</small>
-        ${renderPaperCalibration(item.paper_calibration)}
-        ${tradePressureProfile ? `<small class="row-meta">Adaptive trade pressure: ${escapeHtml(String(tradePressureProfile.value || "--"))} daily trades · ${escapeHtml(tradePressureProfile.status || "watching")}</small>` : ""}
-        ${benchmarkTrustProfile ? `<small class="row-meta">Adaptive benchmark trust: ${escapeHtml(String(benchmarkTrustProfile.value || "AUTO"))} · ${escapeHtml(benchmarkTrustProfile.status || "watching")}</small>` : ""}
-        ${renderRationale(item.rationale, item)}
-        ${renderObjections(item.objections, item)}
+        ${renderRecommendationEvidence(item, tradePressureProfile, benchmarkTrustProfile)}
         <small class="row-meta">${item.auto_manage_enabled
           ? (item.status === "approved"
             ? "Next step: Atlas will record the paper fill automatically when the next autonomous cycle has a usable market price."
@@ -1054,7 +1094,7 @@ function renderRecommendations(proposals, watchlist) {
     const target = document.getElementById(id);
     if (target) target.innerHTML = buyHtml;
   });
-  const sellHtml = sellProposals.map(item => `
+  const proposalSellHtml = sellProposals.map(item => `
     <article class="recommendation-row exit-rec ${item.status === "approved" ? "approved-rec" : ""}">
       <span class="tag exit-tag">${escapeHtml(recommendationStageLabel(item))}</span>
       <div>
@@ -1064,12 +1104,7 @@ function renderRecommendations(proposals, watchlist) {
           ? `Status: Atlas wants to ${escapeHtml(proposalActionLabel(item))} simulated exposure in this holding and will handle the paper workflow automatically.`
           : `Status: Atlas wants to ${escapeHtml(proposalActionLabel(item))} simulated exposure in this holding.`}</small>
         ${proposalImpact(item)}
-        ${renderPaperCalibration(item.paper_calibration)}
-        ${tradePressureProfile ? `<small class="row-meta">Adaptive trade pressure: ${escapeHtml(String(tradePressureProfile.value || "--"))} daily trades · ${escapeHtml(tradePressureProfile.status || "watching")}</small>` : ""}
-        ${benchmarkTrustProfile ? `<small class="row-meta">Adaptive benchmark trust: ${escapeHtml(String(benchmarkTrustProfile.value || "AUTO"))} · ${escapeHtml(benchmarkTrustProfile.status || "watching")}</small>` : ""}
-        ${renderSellTrigger(item)}
-        ${renderRationale(item.rationale, item)}
-        ${renderObjections(item.objections, item)}
+        ${renderRecommendationEvidence(item, tradePressureProfile, benchmarkTrustProfile)}
         <small class="row-meta">${item.auto_manage_enabled
           ? (item.status === "approved"
             ? `Next step: Atlas will record this simulated ${proposalActionLabel(item)} automatically on the next autonomous cycle.`
@@ -1079,20 +1114,40 @@ function renderRecommendations(proposals, watchlist) {
             : `Next step: approve or reject this simulated ${proposalActionLabel(item)} proposal in Controls.`)}</small>
       </div>
     </article>
-  `).join("") || `<div class="empty">No current paper exit or trim recommendations. Atlas will surface one here if an open simulated position weakens.</div>`;
+  `).join("");
+  const positionAlertHtml = positionAlerts.map(item => {
+    const thesis = item.thesis_status || {};
+    return `
+      <article class="recommendation-row exit-rec position-alert">
+        <span class="thesis-badge ${escapeHtml(thesis.label || "watch")}">${escapeHtml(thesis.label || "review")}</span>
+        <div>
+          <b class="row-title">${escapeHtml(item.ticker || "Holding")} needs ${escapeHtml(thesis.label || "risk")} review</b>
+          <small class="row-meta">${escapeHtml(thesis.summary || "This simulated holding has weakened and needs review.")}</small>
+          <small class="row-meta ${changeClass(item.unrealized_gain_loss)}">Open simulated result: ${money.format(Number(item.unrealized_gain_loss) || 0)}</small>
+          ${renderDecisionDriver(item.decision_driver)}
+          <small class="row-meta">This is a position warning, not a completed simulated sale or a real-money order.</small>
+          <div class="position-alert-actions">
+            <button class="secondary-button" type="button" data-paper-target="${escapeHtml(item.anchor_id || "")}">Review holding</button>
+          </div>
+          <details class="evidence-disclosure">
+            <summary>View evidence</summary>
+            <div class="evidence-content">
+              ${renderNewsSummary(item.news_summary)}
+              ${item.research_memory?.summary ? `<small class="row-meta">Research memory: ${escapeHtml(item.research_memory.summary)}</small>` : ""}
+              ${(item.decision_journal || []).length ? `<div class="why-now"><span>What changed</span><ul>${item.decision_journal.slice(0, 4).map(line => `<li>${escapeHtml(line)}</li>`).join("")}</ul></div>` : ""}
+            </div>
+          </details>
+        </div>
+      </article>`;
+  }).join("");
+  const sellHtml = proposalSellHtml + positionAlertHtml ||
+    `<div class="empty">No current paper exit or trim recommendations. Atlas will surface one here if an open simulated position weakens.</div>`;
   ["recommended-exits", "overview-recommended-exits"].forEach(id => {
     const target = document.getElementById(id);
     if (target) target.innerHTML = sellHtml;
   });
 
   if (watchlist === null) return;
-  const fullRows = (watchlist || []).slice(0, 80).map(item => `
-    <div class="watchlist-item ${item.category === "Core" ? "core" : item.category === "Watchlist" ? "watchlist" : "tracked"}">
-      <b>${escapeHtml(item.ticker)}</b>
-      <span>${escapeHtml(item.category || "Tracked")}</span>
-      <small>${escapeHtml(item.sector || "Unclassified")}${item.score === null || item.score === undefined ? "" : ` - score ${Number(item.score).toFixed(1)}`}</small>
-    </div>
-  `).join("") || `<div class="empty">No tracked securities are available in the latest run.</div>`;
   const previewRows = (watchlist || []).slice(0, 12).map(item => `
     <div class="watchlist-item compact">
       <b>${escapeHtml(item.ticker)}</b>
@@ -1101,8 +1156,45 @@ function renderRecommendations(proposals, watchlist) {
   `).join("") || `<div class="empty">No tracked securities available.</div>`;
   const fullTarget = document.getElementById("current-watchlist");
   const previewTarget = document.getElementById("overview-current-list");
-  if (fullTarget) fullTarget.innerHTML = fullRows;
+  recommendationWatchlist = Array.isArray(watchlist) ? watchlist : [];
+  if (fullTarget) renderUniverseList();
   if (previewTarget) previewTarget.innerHTML = previewRows;
+}
+
+function renderUniverseList() {
+  const target = document.getElementById("current-watchlist");
+  if (!target) return;
+  const search = String(document.getElementById("universe-search")?.value || "").trim().toLowerCase();
+  const category = String(document.getElementById("universe-category")?.value || "all");
+  const filtered = recommendationWatchlist
+    .filter(item => category === "all" || item.category === category)
+    .filter(item => {
+      if (!search) return true;
+      return [item.ticker, item.sector, item.category]
+        .some(value => String(value || "").toLowerCase().includes(search));
+    })
+    .sort((left, right) => {
+      const scoreGap = Number(right.score ?? -1) - Number(left.score ?? -1);
+      return scoreGap || String(left.ticker || "").localeCompare(String(right.ticker || ""));
+    });
+  const visible = universeExpanded || search ? filtered : filtered.slice(0, 24);
+  target.innerHTML = visible.map(item => `
+    <div class="watchlist-item ${item.category === "Core" ? "core" : item.category === "Watchlist" ? "watchlist" : "tracked"}">
+      <b>${escapeHtml(item.ticker)}</b>
+      <span>${escapeHtml(item.category || "Tracked")}</span>
+      <small>${escapeHtml(item.sector || "Unclassified")}${item.score === null || item.score === undefined ? "" : ` - score ${Number(item.score).toFixed(1)}`}</small>
+    </div>
+  `).join("") || `<div class="empty">No tracked securities match these filters.</div>`;
+
+  const count = document.getElementById("universe-result-count");
+  if (count) {
+    count.textContent = `Showing ${visible.length} of ${filtered.length} matching securities (${recommendationWatchlist.length} tracked)`;
+  }
+  const toggle = document.getElementById("universe-toggle");
+  if (toggle) {
+    toggle.hidden = Boolean(search) || filtered.length <= 24;
+    toggle.textContent = universeExpanded ? "Show top scores" : "Show all";
+  }
 }
 
 function renderRationale(rationale, item = {}) {
@@ -2424,6 +2516,18 @@ document.getElementById("overview").addEventListener("click", event => {
   if (jumpButton) {
     jumpToPaperTarget(jumpButton.dataset.paperTarget);
   }
+});
+document.getElementById("recommendations").addEventListener("click", event => {
+  const jumpButton = event.target.closest("[data-paper-target]");
+  if (jumpButton) {
+    jumpToPaperTarget(jumpButton.dataset.paperTarget);
+  }
+});
+document.getElementById("universe-search").addEventListener("input", renderUniverseList);
+document.getElementById("universe-category").addEventListener("change", renderUniverseList);
+document.getElementById("universe-toggle").addEventListener("click", () => {
+  universeExpanded = !universeExpanded;
+  renderUniverseList();
 });
 document.getElementById("controls").addEventListener("click", event => {
   const jumpButton = event.target.closest("[data-controls-target]");
