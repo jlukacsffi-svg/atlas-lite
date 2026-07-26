@@ -3,6 +3,44 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Review signals now have an effectiveness scorecard
+
+New capabilities:
+
+- Separate confirmed weakness from false alarms in the forward-only defensive
+  review study.
+- Count persistent weakness and completed losses as confirmations.
+- Count recoveries and completed gains as false alarms.
+- Measure confirmation rate, false-alarm rate, completed outcomes, and overall
+  evidence progress.
+- Enforce three minimum gates before the signal can become eligible for owner
+  review: 10 resolved signals, 5 completed outcomes, and at least 65% weakness
+  confirmation.
+- Show the metrics and each gate directly below the prospective tracker.
+
+Validated result:
+
+- The live scorecard correctly reports `Waiting for first snapshot`, zero
+  resolved signals, and 0% evidence progress.
+- Passing all gates permits owner review only. It cannot change paper policy
+  or authorize real trading.
+- The full local suite passes with 411 tests.
+- Cloud Run revision `atlas-dashboard-stg-00150-zsw` is live on image
+  `20260726-review-effectiveness-verified`.
+- The deployed image digest is
+  `sha256:481d73f2d860e43bc172c47fdf12332c1482574e514c0ffe3ff5eed9b5116c71`.
+- All 25 staging readiness checks and all 16 protected Stage 5 dashboard
+  contract checks pass.
+- Desktop and mobile Chrome walkthroughs show no overlap or application errors.
+
+Current boundaries:
+
+- No effectiveness conclusion exists before forward outcomes accumulate.
+- Persistent weakness is an observation, not proof that an immediate sale
+  would improve returns.
+- Owner-review eligibility does not automatically change any threshold.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Earlier review signals now have forward-only tracking
 
 New capabilities:

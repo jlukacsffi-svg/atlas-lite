@@ -1132,6 +1132,11 @@ class PaperTradingAccount:
         prospective_review_tracker = (
             self.prospective_defensive_review_tracker(self.ledger())
         )
+        prospective_review_effectiveness = (
+            self.prospective_review_effectiveness(
+                prospective_review_tracker
+            )
+        )
         return {
             "available": True,
             "status": status,
@@ -1149,6 +1154,9 @@ class PaperTradingAccount:
             "completed_position_diagnostics": completed_position_diagnostics,
             "shadow_trigger_analysis": shadow_trigger_analysis,
             "prospective_review_tracker": prospective_review_tracker,
+            "prospective_review_effectiveness": (
+                prospective_review_effectiveness
+            ),
         }
 
     def proposal_feedback(self, latest_prices=None):
@@ -4403,6 +4411,147 @@ class PaperTradingAccount:
                     **signal,
                 }
             )
+
+    @staticmethod
+    def prospective_review_effectiveness(tracker):
+        """Score forward review signals only after conservative evidence gates."""
+        signals = list(tracker.get("signals") or [])
+        counts = tracker.get("counts") or {}
+        confirmed_weakness = int(
+            counts.get("persistent_weakness") or 0
+        ) + int(counts.get("completed_loss") or 0)
+        false_alarms = int(counts.get("recovered") or 0) + int(
+            counts.get("completed_gain") or 0
+        )
+        resolved = confirmed_weakness + false_alarms
+        completed = int(counts.get("completed_loss") or 0) + int(
+            counts.get("completed_gain") or 0
+        )
+        confirmation_rate = (
+            round((confirmed_weakness / resolved) * 100.0, 1)
+            if resolved
+            else None
+        )
+        false_alarm_rate = (
+            round((false_alarms / resolved) * 100.0, 1)
+            if resolved
+            else None
+        )
+        minimum_resolved = 10
+        minimum_completed = 5
+        resolved_progress = min(
+            100.0,
+            round((resolved / minimum_resolved) * 100.0, 1),
+        )
+        completed_progress = min(
+            100.0,
+            round((completed / minimum_completed) * 100.0, 1),
+        )
+        evidence_progress = round(
+            (resolved_progress + completed_progress) / 2.0,
+            1,
+        )
+        gates = [
+            {
+                "id": "resolved_signals",
+                "label": "Resolved signals",
+                "passed": resolved >= minimum_resolved,
+                "current": resolved,
+                "target": minimum_resolved,
+                "progress_pct": resolved_progress,
+            },
+            {
+                "id": "completed_outcomes",
+                "label": "Completed outcomes",
+                "passed": completed >= minimum_completed,
+                "current": completed,
+                "target": minimum_completed,
+                "progress_pct": completed_progress,
+            },
+            {
+                "id": "confirmation_quality",
+                "label": "Weakness confirmation",
+                "passed": (
+                    resolved >= minimum_resolved
+                    and confirmation_rate is not None
+                    and confirmation_rate >= 65.0
+                ),
+                "current": confirmation_rate,
+                "target": 65.0,
+                "progress_pct": (
+                    min(
+                        100.0,
+                        round((confirmation_rate / 65.0) * 100.0, 1),
+                    )
+                    if confirmation_rate is not None
+                    else 0.0
+                ),
+            },
+        ]
+        ready = all(gate["passed"] for gate in gates)
+        if not tracker.get("activated"):
+            status = "waiting_activation"
+            status_label = "Waiting for first snapshot"
+            headline = "The forward study has not started yet."
+            next_action = (
+                "Let the next scheduled paper snapshot establish the study "
+                "boundary."
+            )
+        elif resolved == 0:
+            status = "collecting"
+            status_label = "Collecting evidence"
+            headline = "No review signals have reached an outcome yet."
+            next_action = (
+                "Keep the scheduled paper cycle running until signals persist, "
+                "recover, or complete."
+            )
+        elif ready:
+            status = "owner_review_eligible"
+            status_label = "Eligible for owner review"
+            headline = (
+                "The forward sample has cleared the minimum evidence gates."
+            )
+            next_action = (
+                "Review the signal with the owner before considering any paper "
+                "policy change."
+            )
+        else:
+            status = "early_sample"
+            status_label = "Early sample"
+            headline = (
+                f"{resolved} resolved signal"
+                f"{'' if resolved == 1 else 's'} are not enough for a policy "
+                "decision."
+            )
+            next_action = (
+                "Continue collecting outcomes; do not change the paper policy."
+            )
+        return {
+            "available": True,
+            "activated": bool(tracker.get("activated")),
+            "mode": "evidence_only",
+            "policy_changed": False,
+            "ready_for_owner_review": ready,
+            "status": status,
+            "status_label": status_label,
+            "headline": headline,
+            "detail": (
+                "Confirmed weakness combines persistent signals and completed "
+                "losses. False alarms combine recoveries and completed gains."
+            ),
+            "signal_count": len(signals),
+            "resolved_signals": resolved,
+            "confirmed_weakness": confirmed_weakness,
+            "false_alarms": false_alarms,
+            "completed_outcomes": completed,
+            "confirmation_rate_pct": confirmation_rate,
+            "false_alarm_rate_pct": false_alarm_rate,
+            "evidence_progress_pct": evidence_progress,
+            "minimum_resolved_signals": minimum_resolved,
+            "minimum_completed_outcomes": minimum_completed,
+            "gates": gates,
+            "next_action": next_action,
+        }
 
     def trade_statistics(self):
         events = self.ledger()

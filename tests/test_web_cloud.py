@@ -475,7 +475,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Strategy tilt";\n'
                 '"Completed position diagnosis";\n'
                 '"Defensive trigger shadow test";\n'
-                '"Prospective review tracker";\n',
+                '"Prospective review tracker";\n'
+                '"Review signal effectiveness";\n',
                 encoding="utf-8",
             )
             data_service = type(
@@ -513,6 +514,21 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "transition_count": 0,
                                     "counts": {"total": 0},
                                     "signals": [],
+                                },
+                                "prospective_review_effectiveness": {
+                                    "available": True,
+                                    "activated": False,
+                                    "policy_changed": False,
+                                    "ready_for_owner_review": False,
+                                    "status": "waiting_activation",
+                                    "resolved_signals": 0,
+                                    "completed_outcomes": 0,
+                                    "gates": [
+                                        {
+                                            "id": "resolved_signals",
+                                            "passed": False,
+                                        }
+                                    ],
                                 },
                             },
                             "feedback_summary": {
@@ -604,6 +620,16 @@ class CloudWebApplicationTests(unittest.TestCase):
         )
         self.assertFalse(
             response["json"]["checks"]["prospective_review_tracker"]["activated"]
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "prospective_review_effectiveness"
+            ]["ok"]
+        )
+        self.assertFalse(
+            response["json"]["checks"][
+                "prospective_review_effectiveness"
+            ]["ready_for_owner_review"]
         )
         self.assertIn(
             "snapshot_count",

@@ -482,6 +482,9 @@ class AtlasCloudApplication:
         prospective_review_tracker = (
             validation.get("prospective_review_tracker") or {}
         )
+        prospective_review_effectiveness = (
+            validation.get("prospective_review_effectiveness") or {}
+        )
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -576,6 +579,41 @@ class AtlasCloudApplication:
                     ),
                     "transition_count": int(
                         prospective_review_tracker.get("transition_count") or 0
+                    ),
+                },
+                "prospective_review_effectiveness": {
+                    "ok": bool(
+                        prospective_review_effectiveness.get("available")
+                    )
+                    and prospective_review_effectiveness.get(
+                        "policy_changed"
+                    )
+                    is False
+                    and bool(
+                        prospective_review_effectiveness.get("gates")
+                    )
+                    and self._ui_contains("Review signal effectiveness"),
+                    "detail": (
+                        "Dashboard applies minimum forward-sample gates before "
+                        "a defensive review signal can reach owner review."
+                    ),
+                    "status": prospective_review_effectiveness.get("status"),
+                    "ready_for_owner_review": bool(
+                        prospective_review_effectiveness.get(
+                            "ready_for_owner_review"
+                        )
+                    ),
+                    "resolved_signals": int(
+                        prospective_review_effectiveness.get(
+                            "resolved_signals"
+                        )
+                        or 0
+                    ),
+                    "completed_outcomes": int(
+                        prospective_review_effectiveness.get(
+                            "completed_outcomes"
+                        )
+                        or 0
                     ),
                 },
                 "persistence_learning": {

@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 79%.
+Estimated overall Atlas program completion: 80%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -400,9 +400,12 @@ the overall company program.
   tracking. The next scheduled snapshot establishes a clean study boundary;
   later signals are classified as new, persistent, recovered, or completed
   without changing paper policy.
-- Next: accumulate prospective review outcomes and add a compact effectiveness
-  scorecard once enough signals have reached recovery or completed-position
-  outcomes. Keep the signal review-only until the larger forward sample shows
-  durable value.
+- Completed: prospective review effectiveness now has a visible scorecard and
+  conservative gates. Atlas requires 10 resolved signals, 5 completed
+  outcomes, and at least 65% weakness confirmation before owner review.
+- Next: surface new prospective review transitions in the executive briefing
+  so the owner can see new, persistent, recovered, and completed signals
+  without hunting through the detailed Paper Portfolio. Continue accumulating
+  forward outcomes in parallel.
 - Parallel owner task: complete cross-device owner login and non-owner account
   denial before multi-user work begins.

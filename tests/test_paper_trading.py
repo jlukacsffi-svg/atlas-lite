@@ -1368,6 +1368,11 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertFalse(
             summary["prospective_review_tracker"]["policy_changed"]
         )
+        self.assertFalse(
+            summary["prospective_review_effectiveness"][
+                "ready_for_owner_review"
+            ]
+        )
         readiness = summary["capital_readiness"]
         self.assertFalse(readiness["ready_for_owner_review"])
         self.assertEqual(readiness["status"], "paper_only")
@@ -1971,6 +1976,63 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(len(markers), 1)
         self.assertEqual(markers[0]["mode"], "review_only")
         self.assertFalse(markers[0]["policy_changed"])
+
+    def test_prospective_review_effectiveness_requires_forward_sample(self):
+        scorecard = (
+            PaperTradingAccount.prospective_review_effectiveness(
+                {
+                    "activated": True,
+                    "signals": [],
+                    "counts": {
+                        "persistent_weakness": 0,
+                        "completed_loss": 0,
+                        "recovered": 0,
+                        "completed_gain": 0,
+                    },
+                }
+            )
+        )
+
+        self.assertEqual(scorecard["status"], "collecting")
+        self.assertEqual(scorecard["resolved_signals"], 0)
+        self.assertIsNone(scorecard["confirmation_rate_pct"])
+        self.assertFalse(scorecard["ready_for_owner_review"])
+        self.assertFalse(scorecard["policy_changed"])
+        self.assertEqual(scorecard["minimum_resolved_signals"], 10)
+        self.assertEqual(scorecard["minimum_completed_outcomes"], 5)
+
+    def test_prospective_review_effectiveness_can_clear_owner_review_gates(self):
+        signals = (
+            [{"status": "persistent_weakness"} for _ in range(4)]
+            + [{"status": "completed_loss"} for _ in range(5)]
+            + [{"status": "recovered"} for _ in range(2)]
+            + [{"status": "completed_gain"}]
+        )
+        scorecard = (
+            PaperTradingAccount.prospective_review_effectiveness(
+                {
+                    "activated": True,
+                    "signals": signals,
+                    "counts": {
+                        "persistent_weakness": 4,
+                        "completed_loss": 5,
+                        "recovered": 2,
+                        "completed_gain": 1,
+                    },
+                }
+            )
+        )
+
+        self.assertEqual(scorecard["resolved_signals"], 12)
+        self.assertEqual(scorecard["confirmed_weakness"], 9)
+        self.assertEqual(scorecard["false_alarms"], 3)
+        self.assertEqual(scorecard["completed_outcomes"], 6)
+        self.assertEqual(scorecard["confirmation_rate_pct"], 75.0)
+        self.assertEqual(scorecard["false_alarm_rate_pct"], 25.0)
+        self.assertTrue(scorecard["ready_for_owner_review"])
+        self.assertEqual(scorecard["status"], "owner_review_eligible")
+        self.assertTrue(all(gate["passed"] for gate in scorecard["gates"]))
+        self.assertFalse(scorecard["policy_changed"])
 
     def test_performance_report_includes_news_event_context(self):
         with tempfile.TemporaryDirectory() as temp_dir:

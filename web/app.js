@@ -1696,6 +1696,11 @@ function renderPaperWorkspaceSummary(paper) {
     ? prospectiveTracker.signals
     : [];
   const prospectiveCounts = prospectiveTracker.counts || {};
+  const prospectiveEffectiveness =
+    validation.prospective_review_effectiveness || {};
+  const effectivenessGates = Array.isArray(prospectiveEffectiveness.gates)
+    ? prospectiveEffectiveness.gates
+    : [];
   const latestEvidenceSnapshot = evidencePipeline.latest_snapshot_at
     ? new Date(evidencePipeline.latest_snapshot_at).toLocaleString()
     : "No snapshot recorded";
@@ -1931,6 +1936,45 @@ function renderPaperWorkspaceSummary(paper) {
           `}
         </div>
         <small class="paper-evidence-note">This tracker cannot place or force a simulated trade. A recovered signal only means price later moved above its trigger price.</small>
+      </section>
+    ` : ""}
+    ${prospectiveEffectiveness.available ? `
+      <section class="paper-effectiveness-scorecard">
+        <div class="paper-evidence-heading">
+          <div>
+            <span class="access-label">Review signal effectiveness</span>
+            <b>${escapeHtml(prospectiveEffectiveness.headline || "Atlas is collecting forward evidence.")}</b>
+            <small>${escapeHtml(prospectiveEffectiveness.detail || "The scorecard separates confirmed weakness from false alarms.")}</small>
+          </div>
+          <span class="paper-effectiveness-status ${escapeHtml(prospectiveEffectiveness.status || "collecting")}">${escapeHtml(prospectiveEffectiveness.status_label || "Collecting evidence")}</span>
+        </div>
+        <div class="paper-effectiveness-metrics">
+          <div><span>Resolved signals</span><strong>${Number(prospectiveEffectiveness.resolved_signals || 0)}</strong></div>
+          <div><span>Confirmed weakness</span><strong>${Number(prospectiveEffectiveness.confirmed_weakness || 0)}</strong></div>
+          <div><span>False alarms</span><strong>${Number(prospectiveEffectiveness.false_alarms || 0)}</strong></div>
+          <div><span>Confirmation rate</span><strong>${prospectiveEffectiveness.confirmation_rate_pct == null ? "--" : `${Number(prospectiveEffectiveness.confirmation_rate_pct).toFixed(1)}%`}</strong></div>
+          <div><span>Evidence progress</span><strong>${Number(prospectiveEffectiveness.evidence_progress_pct || 0).toFixed(1)}%</strong></div>
+        </div>
+        <div class="paper-effectiveness-gates">
+          ${effectivenessGates.map(gate => {
+            const progress = Math.max(0, Math.min(100, Number(gate.progress_pct || 0)));
+            const current = gate.current == null ? "--" : Number(gate.current).toFixed(gate.id === "confirmation_quality" ? 1 : 0);
+            const target = Number(gate.target || 0).toFixed(gate.id === "confirmation_quality" ? 1 : 0);
+            return `
+              <div class="paper-effectiveness-gate ${gate.passed ? "passed" : ""}">
+                <div>
+                  <b>${escapeHtml(gate.label || "Evidence gate")}</b>
+                  <small>${current}${gate.id === "confirmation_quality" && gate.current != null ? "%" : ""} now · target ${target}${gate.id === "confirmation_quality" ? "%" : ""}</small>
+                </div>
+                <div class="paper-evidence-progress">
+                  <span>${progress.toFixed(1)}%</span>
+                  <div class="progress-track"><i style="width:${progress}%"></i></div>
+                </div>
+              </div>
+            `;
+          }).join("")}
+        </div>
+        <small class="paper-evidence-note">${escapeHtml(prospectiveEffectiveness.next_action || "Keep collecting forward outcomes.")} Passing these gates permits owner review only; it does not change paper or real-trading authority.</small>
       </section>
     ` : ""}
     <section class="paper-evidence-roadmap">

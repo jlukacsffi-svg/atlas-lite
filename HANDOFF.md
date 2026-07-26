@@ -61,6 +61,20 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The forward defensive-review study now has an effectiveness scorecard that
+  separates confirmed weakness from recoveries and other false alarms.
+- Atlas requires 10 resolved signals, 5 completed outcomes, and at least 65%
+  weakness confirmation before the signal can become eligible for owner
+  review.
+- The scorecard currently shows `Waiting for first snapshot`, zero resolved
+  signals, and 0% evidence progress. This is the correct forward-only state.
+- Passing the gates permits owner review only and cannot change paper or
+  real-trading authority.
+- Cloud Run revision `atlas-dashboard-stg-00150-zsw` is live on image
+  `20260726-review-effectiveness-verified`; the full 411-test suite, all 25
+  readiness checks, and all 16 protected dashboard checks pass.
+- The deployed image digest is
+  `sha256:481d73f2d860e43bc172c47fdf12332c1482574e514c0ffe3ff5eed9b5116c71`.
 - Atlas now has an append-only prospective tracker for the earlier defensive
   review signal. It starts from the next scheduled snapshot rather than
   retroactively relabeling earlier history.
