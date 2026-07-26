@@ -1687,6 +1687,10 @@ function renderPaperWorkspaceSummary(paper) {
   const completedCycles = Array.isArray(completedDiagnostics.cycles)
     ? completedDiagnostics.cycles
     : [];
+  const shadowAnalysis = validation.shadow_trigger_analysis || {};
+  const shadowCandidates = Array.isArray(shadowAnalysis.candidates)
+    ? shadowAnalysis.candidates
+    : [];
   const latestEvidenceSnapshot = evidencePipeline.latest_snapshot_at
     ? new Date(evidencePipeline.latest_snapshot_at).toLocaleString()
     : "No snapshot recorded";
@@ -1816,6 +1820,47 @@ function renderPaperWorkspaceSummary(paper) {
           `).join("")}
         </div>
         <small class="paper-evidence-note">${escapeHtml(completedDiagnostics.sample_warning || "This remains early simulated evidence.")}</small>
+      </section>
+    ` : ""}
+    ${shadowAnalysis.available ? `
+      <section class="paper-shadow-analysis">
+        <div class="paper-evidence-heading">
+          <div>
+            <span class="access-label">Defensive trigger shadow test</span>
+            <b>${escapeHtml(shadowAnalysis.headline || "Atlas tested earlier defensive signals without changing policy.")}</b>
+            <small>${escapeHtml(shadowAnalysis.detail || "This is a no-action historical replay.")}</small>
+          </div>
+          <span class="paper-policy-badge">No policy change</span>
+        </div>
+        <div class="paper-shadow-candidates">
+          ${shadowCandidates.map(candidate => {
+            const improvement = Number(candidate.completed_improvement || 0);
+            const decision = String(candidate.decision || "study").toLowerCase();
+            return `
+              <article class="paper-shadow-card ${escapeHtml(decision)}">
+                <div class="paper-shadow-card-heading">
+                  <div>
+                    <span>${escapeHtml(candidate.action || "Shadow test")}</span>
+                    <b>${escapeHtml(candidate.label || "Defensive candidate")}</b>
+                  </div>
+                  <strong>${escapeHtml(candidate.decision_label || "Continue study")}</strong>
+                </div>
+                <p>${escapeHtml(candidate.conclusion || "Atlas needs more simulated evidence.")}</p>
+                <div class="paper-shadow-threshold">
+                  <span>Trigger tested</span>
+                  <b>${signed(Number(candidate.loss_threshold_pct || 0))} position return and ${signed(Number(candidate.lag_threshold_pct || 0))} lag</b>
+                </div>
+                <div class="paper-shadow-metrics">
+                  <div><span>Triggered cycles</span><strong>${Number(candidate.triggered_cycles || 0)}</strong></div>
+                  <div><span>Later recovered</span><strong>${Number(candidate.recovered_cycles || 0)} (${Number(candidate.recovery_rate_pct || 0).toFixed(1)}%)</strong></div>
+                  <div><span>Actual completed result</span><strong class="${changeClass(Number(candidate.actual_completed_gain_loss || 0))}">${money.format(Number(candidate.actual_completed_gain_loss || 0))}</strong></div>
+                  <div><span>Shadow difference</span><strong class="${changeClass(improvement)}">${improvement >= 0 ? "+" : ""}${money.format(improvement)}</strong></div>
+                </div>
+              </article>
+            `;
+          }).join("")}
+        </div>
+        <small class="paper-evidence-note">${escapeHtml(shadowAnalysis.sample_warning || "Keep collecting paper evidence before changing strategy.")} “Recovered” means the observed price later rose above the tested trigger price; it does not guarantee a profitable position.</small>
       </section>
     ` : ""}
     <section class="paper-evidence-roadmap">

@@ -478,6 +478,7 @@ class AtlasCloudApplication:
         completed_diagnostics = (
             validation.get("completed_position_diagnostics") or {}
         )
+        shadow_trigger_analysis = validation.get("shadow_trigger_analysis") or {}
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -525,6 +526,31 @@ class AtlasCloudApplication:
                     ),
                     "fragmented_exits": int(
                         completed_diagnostics.get("fragmented_exits") or 0
+                    ),
+                },
+                "shadow_trigger_analysis": {
+                    "ok": bool(shadow_trigger_analysis.get("available"))
+                    and shadow_trigger_analysis.get("policy_changed") is False
+                    and bool(shadow_trigger_analysis.get("candidates"))
+                    and self._ui_contains("Defensive trigger shadow test"),
+                    "detail": (
+                        "Dashboard exposes no-action defensive-trigger replay "
+                        "results while preserving the current paper policy."
+                    ),
+                    "policy_changed": bool(
+                        shadow_trigger_analysis.get("policy_changed")
+                    ),
+                    "automatic_exit_improvement": float(
+                        shadow_trigger_analysis.get(
+                            "automatic_exit_improvement"
+                        )
+                        or 0
+                    ),
+                    "automatic_exit_recovery_rate_pct": float(
+                        shadow_trigger_analysis.get(
+                            "automatic_exit_recovery_rate_pct"
+                        )
+                        or 0
                     ),
                 },
                 "persistence_learning": {

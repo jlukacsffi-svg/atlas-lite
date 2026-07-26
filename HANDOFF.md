@@ -61,6 +61,24 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Atlas can now replay candidate defensive triggers against its recorded paper
+  snapshots without placing or changing any paper trade.
+- A review-only signal at `-2%` position return and `-3%` benchmark lag fired
+  in 9 observed cycles. It improved the 3 completed-cycle comparison by
+  `$171.10`, but 2 triggered holdings later recovered, so it remains a
+  review-only candidate.
+- An automatic full exit at `-3%` return and `-3%` lag was `$6.50` worse in
+  the completed comparison and 4 of 9 triggered holdings later recovered.
+  Atlas explicitly rejected that automatic rule.
+- The Paper Portfolio presents both candidates with thresholds, recovery
+  counts, completed results, and an explicit `No policy change` badge.
+- Cloud Run revision `atlas-dashboard-stg-00148-t2h` is live on image
+  `20260726-shadow-triggers-verified`; the full 407-test suite, all 25
+  readiness checks, and all 14 protected dashboard checks pass.
+- The deployed image digest is
+  `sha256:b23fa7f4d5798a7195770461801567bd0c0209eecc65295663c725c66687a987`.
+- The historical replay is evidence only. Paper behavior is unchanged, and
+  real trading and brokerage access remain disabled.
 - Atlas now diagnoses every completed paper cycle across entry timing, first
   defensive response, and exit execution.
 - The first live diagnosis shows all 3 completed losses were already down at

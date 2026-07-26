@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 77%.
+Estimated overall Atlas program completion: 78%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -391,8 +391,13 @@ the overall company program.
   defensive response, and exit execution. All 3 completed losses were already
   down at least 3% before Atlas first acted; the live sample averaged `-5.07%`
   over `23.2` days.
-- Next: shadow-test earlier defensive triggers against historical position and
-  benchmark evidence. Do not change live paper thresholds until the comparison
-  shows a repeatable improvement without excessive turnover.
+- Completed: defensive-trigger shadow testing now replays candidate rules
+  without changing paper policy. The review-only `-2%` return / `-3%` lag
+  candidate improved the 3 completed-cycle comparison by `$171.10` but saw
+  2 of 9 later recoveries. The automatic `-3%` / `-3%` exit was `$6.50` worse
+  and saw 4 of 9 recoveries, so Atlas rejected it.
+- Next: collect prospective outcomes for the earlier review signal and show
+  whether each new alert persists, recovers, or leads to a completed loss.
+  Keep it review-only until a much larger sample demonstrates durable value.
 - Parallel owner task: complete cross-device owner login and non-owner account
   denial before multi-user work begins.

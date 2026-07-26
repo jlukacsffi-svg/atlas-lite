@@ -1098,12 +1098,17 @@ class PaperTradingAccount:
                 else "Keep the daily paper cycle running so future decisions receive later comparison snapshots."
             ),
         }
+        paper_trades = [
+            event
+            for event in self.ledger()
+            if event.get("event") == "paper_trade"
+        ]
         completed_position_diagnostics = self.completed_position_diagnostics(
-            [
-                event
-                for event in self.ledger()
-                if event.get("event") == "paper_trade"
-            ]
+            paper_trades
+        )
+        shadow_trigger_analysis = self.shadow_defensive_trigger_analysis(
+            paper_trades,
+            self.performance_history(),
         )
         return {
             "available": True,
@@ -1120,6 +1125,7 @@ class PaperTradingAccount:
             "capital_readiness": capital_readiness,
             "evidence_pipeline": evidence_pipeline,
             "completed_position_diagnostics": completed_position_diagnostics,
+            "shadow_trigger_analysis": shadow_trigger_analysis,
         }
 
     def proposal_feedback(self, latest_prices=None):
@@ -3824,6 +3830,264 @@ class PaperTradingAccount:
                 "patterns as early diagnostic evidence, not a proven strategy conclusion."
             ),
             "cycles": list(reversed(cycles)),
+        }
+
+    @staticmethod
+    def _snapshot_security_price(snapshot, ticker):
+        value = (snapshot.get("security_prices") or {}).get(ticker)
+        if value is not None:
+            return float(value)
+        for position in snapshot.get("positions") or []:
+            if (
+                str(position.get("ticker") or "").strip().upper() == ticker
+                and position.get("price") is not None
+            ):
+                return float(position["price"])
+        return None
+
+    @classmethod
+    def shadow_defensive_trigger_analysis(cls, trades, snapshots):
+        """Compare earlier defensive triggers without changing paper policy."""
+        active = {}
+        cycles = []
+        for event in trades:
+            ticker = str(event.get("ticker") or "").strip().upper()
+            if not ticker:
+                continue
+            side = str(event.get("side") or "").strip().lower()
+            before = float(event.get("position_shares_before") or 0.0)
+            after = float(event.get("position_shares_after") or 0.0)
+            shares = float(event.get("shares") or 0.0)
+            price = float(event.get("price") or 0.0)
+            notional = float(event.get("notional") or round(shares * price, 2))
+            if side == "buy":
+                if ticker not in active or before <= 0.0000001:
+                    active[ticker] = {
+                        "ticker": ticker,
+                        "opened_at": event.get("timestamp"),
+                        "buy_shares": 0.0,
+                        "buy_notional": 0.0,
+                        "realized_gain_loss": 0.0,
+                        "closed": False,
+                    }
+                active[ticker]["buy_shares"] += shares
+                active[ticker]["buy_notional"] += notional
+                continue
+            if side != "sell" or ticker not in active:
+                continue
+            active[ticker]["realized_gain_loss"] += float(
+                event.get("realized_gain_loss") or 0.0
+            )
+            if after <= 0.0000001:
+                active[ticker]["closed"] = True
+                active[ticker]["closed_at"] = event.get("timestamp")
+                cycles.append(active.pop(ticker))
+        cycles.extend(active.values())
+
+        candidates = [
+            {
+                "id": "early_review",
+                "label": "Earlier review signal",
+                "loss_threshold_pct": -2.0,
+                "lag_threshold_pct": -3.0,
+                "action": "Review only",
+            },
+            {
+                "id": "automatic_full_exit",
+                "label": "Earlier automatic full exit",
+                "loss_threshold_pct": -3.0,
+                "lag_threshold_pct": -3.0,
+                "action": "Hypothetical full exit",
+            },
+        ]
+        results = []
+        ordered_snapshots = sorted(
+            snapshots,
+            key=lambda snapshot: str(snapshot.get("timestamp") or ""),
+        )
+        for candidate in candidates:
+            triggered = []
+            for cycle in cycles:
+                entry_price = (
+                    cycle["buy_notional"] / cycle["buy_shares"]
+                    if cycle["buy_shares"]
+                    else None
+                )
+                if not entry_price:
+                    continue
+                cycle_snapshots = []
+                for snapshot in ordered_snapshots:
+                    timestamp = str(snapshot.get("timestamp") or "")
+                    if timestamp < str(cycle.get("opened_at") or ""):
+                        continue
+                    if (
+                        cycle.get("closed")
+                        and timestamp > str(cycle.get("closed_at") or "")
+                    ):
+                        continue
+                    security_price = cls._snapshot_security_price(
+                        snapshot,
+                        cycle["ticker"],
+                    )
+                    if security_price is not None:
+                        cycle_snapshots.append((snapshot, security_price))
+                if not cycle_snapshots:
+                    continue
+                baseline = cycle_snapshots[0][0]
+                trigger = None
+                for snapshot, security_price in cycle_snapshots:
+                    security_return = cls._pct_return(
+                        entry_price,
+                        security_price,
+                    )
+                    benchmark_returns = []
+                    for benchmark in ("SPY", "QQQ"):
+                        benchmark_return = cls._pct_return(
+                            (baseline.get("benchmark_prices") or {}).get(
+                                benchmark
+                            ),
+                            (snapshot.get("benchmark_prices") or {}).get(
+                                benchmark
+                            ),
+                        )
+                        if benchmark_return is not None:
+                            benchmark_returns.append(benchmark_return)
+                    if security_return is None or not benchmark_returns:
+                        continue
+                    benchmark_lag = round(
+                        security_return - max(benchmark_returns),
+                        2,
+                    )
+                    if (
+                        security_return
+                        <= candidate["loss_threshold_pct"]
+                        and benchmark_lag
+                        <= candidate["lag_threshold_pct"]
+                    ):
+                        trigger = {
+                            "timestamp": snapshot.get("timestamp"),
+                            "price": security_price,
+                            "security_return_pct": security_return,
+                            "benchmark_lag_pct": benchmark_lag,
+                        }
+                        break
+                if trigger is None:
+                    continue
+                latest_price = cycle_snapshots[-1][1]
+                recovered_after_trigger = latest_price > trigger["price"]
+                shadow_gain_loss = round(
+                    (cycle["buy_shares"] * trigger["price"])
+                    - cycle["buy_notional"],
+                    2,
+                )
+                triggered.append(
+                    {
+                        "ticker": cycle["ticker"],
+                        "closed": bool(cycle.get("closed")),
+                        "triggered_at": trigger["timestamp"],
+                        "trigger_return_pct": trigger["security_return_pct"],
+                        "benchmark_lag_pct": trigger["benchmark_lag_pct"],
+                        "recovered_after_trigger": recovered_after_trigger,
+                        "shadow_gain_loss": shadow_gain_loss,
+                        "actual_gain_loss": (
+                            round(cycle["realized_gain_loss"], 2)
+                            if cycle.get("closed")
+                            else None
+                        ),
+                    }
+                )
+            completed = [row for row in triggered if row["closed"]]
+            recovered = [
+                row for row in triggered if row["recovered_after_trigger"]
+            ]
+            actual_completed = round(
+                sum(row["actual_gain_loss"] for row in completed),
+                2,
+            )
+            shadow_completed = round(
+                sum(row["shadow_gain_loss"] for row in completed),
+                2,
+            )
+            improvement = round(shadow_completed - actual_completed, 2)
+            recovery_rate = (
+                round((len(recovered) / len(triggered)) * 100.0, 1)
+                if triggered
+                else 0.0
+            )
+            if candidate["id"] == "early_review":
+                decision = "study"
+                decision_label = "Keep as review-only candidate"
+                conclusion = (
+                    "The earlier warning may help Atlas investigate weakness "
+                    "sooner, but recovery risk argues against automatic selling."
+                )
+            else:
+                supported = improvement > 0 and recovery_rate < 25.0
+                decision = "support" if supported else "reject"
+                decision_label = (
+                    "Candidate supported"
+                    if supported
+                    else "Do not adopt"
+                )
+                conclusion = (
+                    "The automatic exit candidate improved completed outcomes "
+                    "without excessive recovery risk."
+                    if supported
+                    else "The automatic exit candidate did not improve the "
+                    "completed sample reliably and would risk selling recoveries."
+                )
+            results.append(
+                {
+                    **candidate,
+                    "decision": decision,
+                    "decision_label": decision_label,
+                    "conclusion": conclusion,
+                    "triggered_cycles": len(triggered),
+                    "completed_cycles": len(completed),
+                    "recovered_cycles": len(recovered),
+                    "recovery_rate_pct": recovery_rate,
+                    "actual_completed_gain_loss": actual_completed,
+                    "shadow_completed_gain_loss": shadow_completed,
+                    "completed_improvement": improvement,
+                    "cycles": triggered,
+                }
+            )
+
+        automatic_exit = next(
+            (
+                result
+                for result in results
+                if result["id"] == "automatic_full_exit"
+            ),
+            {},
+        )
+        return {
+            "available": bool(cycles and snapshots),
+            "mode": "shadow_only",
+            "policy_changed": False,
+            "headline": (
+                "Earlier review deserves more study; earlier automatic exit "
+                "is not supported."
+            ),
+            "decision": "No live strategy change",
+            "detail": (
+                "Atlas replayed earlier loss and benchmark-lag triggers against "
+                "recorded snapshots. The comparison is observational and cannot "
+                "place or alter a paper trade."
+            ),
+            "automatic_exit_improvement": automatic_exit.get(
+                "completed_improvement"
+            ),
+            "automatic_exit_recovery_rate_pct": automatic_exit.get(
+                "recovery_rate_pct"
+            ),
+            "sample_warning": (
+                f"The replay covers {len(cycles)} observed holding cycle"
+                f"{'' if len(cycles) == 1 else 's'}, including "
+                f"{sum(1 for cycle in cycles if cycle.get('closed'))} completed. "
+                "Continue collecting evidence before changing policy."
+            ),
+            "candidates": results,
         }
 
     def trade_statistics(self):

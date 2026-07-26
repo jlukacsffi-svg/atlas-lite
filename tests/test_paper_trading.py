@@ -1773,6 +1773,84 @@ class PaperTradingAccountTests(unittest.TestCase):
             diagnostics["cycles"][0]["execution"]["finding"],
         )
 
+    def test_shadow_defensive_trigger_analysis_rejects_unhelpful_auto_exit(self):
+        trades = [
+            {
+                "event": "paper_trade",
+                "timestamp": "2026-07-01T09:30:00",
+                "ticker": "NVDA",
+                "side": "buy",
+                "shares": 10,
+                "price": 100,
+                "notional": 1000,
+                "position_shares_before": 0,
+                "position_shares_after": 10,
+            },
+            {
+                "event": "paper_trade",
+                "timestamp": "2026-07-01T09:31:00",
+                "ticker": "AMD",
+                "side": "buy",
+                "shares": 10,
+                "price": 100,
+                "notional": 1000,
+                "position_shares_before": 0,
+                "position_shares_after": 10,
+            },
+            {
+                "event": "paper_trade",
+                "timestamp": "2026-07-03T09:30:00",
+                "ticker": "NVDA",
+                "side": "sell",
+                "shares": 10,
+                "price": 98,
+                "notional": 980,
+                "realized_gain_loss": -20,
+                "position_shares_before": 10,
+                "position_shares_after": 0,
+            },
+        ]
+        snapshots = [
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T10:00:00",
+                "security_prices": {"NVDA": 100, "AMD": 100},
+                "benchmark_prices": {"SPY": 100, "QQQ": 100},
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-02T10:00:00",
+                "security_prices": {"NVDA": 96, "AMD": 96},
+                "benchmark_prices": {"SPY": 100, "QQQ": 100},
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-03T09:00:00",
+                "security_prices": {"NVDA": 98, "AMD": 105},
+                "benchmark_prices": {"SPY": 101, "QQQ": 101},
+            },
+        ]
+
+        analysis = PaperTradingAccount.shadow_defensive_trigger_analysis(
+            trades,
+            snapshots,
+        )
+        candidates = {
+            item["id"]: item for item in analysis["candidates"]
+        }
+        automatic = candidates["automatic_full_exit"]
+
+        self.assertTrue(analysis["available"])
+        self.assertFalse(analysis["policy_changed"])
+        self.assertEqual(analysis["decision"], "No live strategy change")
+        self.assertEqual(automatic["decision"], "reject")
+        self.assertEqual(automatic["triggered_cycles"], 2)
+        self.assertEqual(automatic["completed_cycles"], 1)
+        self.assertEqual(automatic["recovered_cycles"], 2)
+        self.assertEqual(automatic["actual_completed_gain_loss"], -20)
+        self.assertEqual(automatic["shadow_completed_gain_loss"], -40)
+        self.assertEqual(automatic["completed_improvement"], -20)
+
     def test_performance_report_includes_news_event_context(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)

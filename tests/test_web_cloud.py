@@ -473,7 +473,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Sector gate audit";\n'
                 '"Sector gate outcomes";\n'
                 '"Strategy tilt";\n'
-                '"Completed position diagnosis";\n',
+                '"Completed position diagnosis";\n'
+                '"Defensive trigger shadow test";\n',
                 encoding="utf-8",
             )
             data_service = type(
@@ -493,6 +494,15 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "late_risk_responses": 3,
                                     "fragmented_exits": 2,
                                     "cycles": [{"ticker": "NVDA"}],
+                                },
+                                "shadow_trigger_analysis": {
+                                    "available": True,
+                                    "policy_changed": False,
+                                    "automatic_exit_improvement": -6.5,
+                                    "automatic_exit_recovery_rate_pct": 44.4,
+                                    "candidates": [
+                                        {"id": "automatic_full_exit"}
+                                    ],
                                 },
                             },
                             "feedback_summary": {
@@ -572,6 +582,12 @@ class CloudWebApplicationTests(unittest.TestCase):
         self.assertEqual(
             response["json"]["checks"]["completed_position_diagnostics"]["sample_size"],
             3,
+        )
+        self.assertTrue(
+            response["json"]["checks"]["shadow_trigger_analysis"]["ok"]
+        )
+        self.assertFalse(
+            response["json"]["checks"]["shadow_trigger_analysis"]["policy_changed"]
         )
         self.assertIn(
             "snapshot_count",

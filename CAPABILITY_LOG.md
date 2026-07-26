@@ -3,6 +3,48 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Defensive rules can be shadow-tested without changing policy
+
+New capabilities:
+
+- Reconstruct open and completed paper holding cycles from the live ledger.
+- Replay candidate loss and benchmark-lag triggers against recorded market
+  snapshots without placing, changing, or cancelling a paper trade.
+- Compare completed-cycle results under the observed policy with hypothetical
+  earlier action.
+- Measure how often a position later recovered above its tested trigger price.
+- Present review-only and automatic-exit candidates side by side in the Paper
+  Portfolio with an explicit `No policy change` decision.
+- Protect the shadow analysis through the cloud verification contract.
+
+Validated result:
+
+- A review-only trigger at a `-2%` position return and `-3%` benchmark lag
+  fired in 9 observed cycles. Two later recovered above the trigger price.
+- Across the 3 completed cycles, that review timing would have improved the
+  hypothetical result by `$171.10`, so Atlas will continue studying it as an
+  alert, not an automatic sale.
+- An automatic full-exit trigger at `-3%` return and `-3%` lag was `$6.50`
+  worse across the completed sample, and 4 of 9 triggered cycles later
+  recovered. Atlas rejected that rule.
+- The full local suite passes with 407 tests.
+- Cloud Run revision `atlas-dashboard-stg-00148-t2h` is live on image
+  `20260726-shadow-triggers-verified`.
+- The deployed image digest is
+  `sha256:b23fa7f4d5798a7195770461801567bd0c0209eecc65295663c725c66687a987`.
+- All 25 staging readiness checks and all 14 protected Stage 5 dashboard
+  contract checks pass.
+- Desktop and mobile Chrome walkthroughs show no overlap or console errors.
+
+Current boundaries:
+
+- The comparison includes only 11 observed holding cycles and 3 completed
+  cycles, so it is not a proven strategy result.
+- Atlas did not change its live paper entry, trim, or exit policy.
+- “Recovered” means price later rose above the tested trigger price; it does
+  not mean the position became profitable.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Completed losses now have a visible root-cause diagnosis
 
 New capabilities:
