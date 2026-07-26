@@ -37,6 +37,40 @@ class PaperTradingAccountTests(unittest.TestCase):
             clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
         )
 
+    def test_feedback_summary_accepts_precomputed_rows(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+
+            def unexpected_feedback(**_kwargs):
+                self.fail("proposal feedback should not be recalculated")
+
+            account.proposal_feedback = unexpected_feedback
+            summary = account.proposal_feedback_summary(rows=[])
+
+        self.assertEqual(summary["total"], 0)
+        self.assertEqual(summary["judged"], 0)
+
+    def test_ledger_cache_reuses_reads_and_invalidates_after_append(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+
+            first = account.ledger()
+            second = account.ledger()
+            account._append_event(
+                {
+                    "event": "test_event",
+                    "timestamp": "2026-06-06T09:31:00",
+                }
+            )
+            third = account.ledger()
+
+        self.assertIs(first, second)
+        self.assertIsNot(second, third)
+        self.assertEqual(len(third), len(first) + 1)
+        self.assertEqual(third[-1]["event"], "test_event")
+
     def execute_approved(
         self,
         account,

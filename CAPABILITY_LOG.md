@@ -3100,3 +3100,34 @@ Current boundaries:
 
 - This is a transparency and governance feature, not a trading integration.
 - Atlas remains simulation-only.
+
+## 2026-07-26 - Owner briefing and reliable live dashboard
+
+New capabilities:
+
+- Start the Overview page with a four-part owner briefing: current Atlas mode,
+  the highest-priority item, simulated performance, and the owner’s next step.
+- Show page-specific titles and help text across Overview, Recommendations,
+  Research, Paper Portfolio, Controls, Access, and About.
+- Preserve a clear paper-simulation label and direct shortcuts to the three
+  most common owner workflows.
+- Reuse one paper-feedback evaluation per dashboard build.
+- Cache the parsed append-only paper ledger by file signature and invalidate it
+  after writes or cloud replacement.
+- Refresh only the current dashboard state bundle from Cloud Storage.
+
+Validated result:
+
+- A current cloud-sized dashboard build improved from 133.8 seconds to 1.7
+  seconds on first load and 1.4 seconds on the next load.
+- The full local automated suite passes with 402 tests.
+- Cloud Run revision `atlas-dashboard-stg-00135-pl7` is live on image
+  `20260726-owner-briefing-live`.
+- The signed-in dashboard reaches `Live` in 2.1 seconds without the former
+  full-payload `504`.
+- Desktop and phone-width visual checks pass with no browser console errors.
+
+Current boundaries:
+
+- The briefing reports research and simulated portfolio activity only.
+- Brokerage access and real-money execution remain disabled.

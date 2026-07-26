@@ -332,8 +332,10 @@ class DashboardDataService:
         status = self.paper_account.status(prices=prices)
         performance = self.paper_account.performance_summary()
         history = self.paper_account.performance_history()
+        feedback_rows = self.paper_account.proposal_feedback(latest_prices=prices)
         feedback_summary = self.paper_account.proposal_feedback_summary(
-            latest_prices=prices
+            latest_prices=prices,
+            rows=feedback_rows,
         )
         trade_pressure_profile = feedback_summary.get("trade_pressure_profile") or {}
         benchmark_preference_profile = (
@@ -434,7 +436,8 @@ class DashboardDataService:
             "portfolio_focus": self._portfolio_focus(positions),
             "position_ladder": self._position_ladder(positions),
             "validation_summary": self.paper_account.stage5_validation_summary(
-                latest_prices=prices
+                latest_prices=prices,
+                feedback_summary=feedback_summary,
             ),
             "operating_mode": self._paper_operating_mode(),
             "proposals": {
@@ -445,7 +448,6 @@ class DashboardDataService:
             },
         }
         if include_details:
-            feedback_rows = self.paper_account.proposal_feedback(latest_prices=prices)
             feedback_summary = dict(feedback_summary)
             feedback_summary["sector_learning_bridge"] = (
                 PaperStrategy.sector_learning_summary_from_feedback(

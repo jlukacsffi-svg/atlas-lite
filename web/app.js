@@ -8,6 +8,44 @@ let paperTradeHistory = { total_trades: 0, ticker_count: 0, tickers: [] };
 let paperAccountabilityReport = { summary: {}, tickers: [] };
 let paperPositions = [];
 
+const PAGE_METADATA = {
+  about: {
+    eyebrow: "Atlas identity",
+    title: "About Atlas",
+    description: "The purpose, current capabilities, operating boundaries, and long-term direction of Atlas Capital Research.",
+  },
+  overview: {
+    eyebrow: "Owner workspace",
+    title: "Executive dashboard",
+    description: "Start here for the current paper-portfolio result, Atlas priorities, recommendations, and any action that needs owner attention.",
+  },
+  recommendations: {
+    eyebrow: "Decision workspace",
+    title: "Recommendations",
+    description: "Review what Atlas recommends buying, trimming, or exiting in the simulated portfolio and the evidence behind each idea.",
+  },
+  research: {
+    eyebrow: "Research workspace",
+    title: "Research intelligence",
+    description: "Inspect Atlas scores, market movers, sector signals, corporate actions, and the active research queue.",
+  },
+  paper: {
+    eyebrow: "Simulation workspace",
+    title: "Paper portfolio",
+    description: "Track simulated holdings, purchases, sales, performance, decision history, and evidence of whether Atlas is improving.",
+  },
+  controls: {
+    eyebrow: "Policy workspace",
+    title: "Controls",
+    description: "Set the boundaries Atlas must follow while managing recommendations and the simulated paper portfolio.",
+  },
+  access: {
+    eyebrow: "Security workspace",
+    title: "Access and security",
+    description: "Review owner access, recovery, privacy, deployment, and production-readiness safeguards.",
+  },
+};
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -199,6 +237,7 @@ function renderDashboard(data) {
   document.getElementById("research-detail").textContent =
     `${data.research?.high_priority || 0} high priority`;
 
+  renderOwnerBriefing(data);
   renderMarketPills(data.market || []);
   renderBreadth(overview);
   renderPerformance(data.history || []);
@@ -248,6 +287,7 @@ function renderDashboardSummary(data) {
   document.getElementById("research-detail").textContent =
     `${data.research?.high_priority || 0} high priority`;
 
+  renderOwnerBriefing(data);
   renderMarketPills(data.market || []);
   renderBreadth(overview);
   renderPerformance(data.history || []);
@@ -375,15 +415,97 @@ function renderRecommendationSummary(proposals, watchlist) {
   `;
 }
 
+function renderOwnerBriefing(data) {
+  const paper = data.paper || {};
+  const focus = paper.portfolio_focus || {};
+  const counts = focus.counts || {};
+  const highlights = focus.highlights || [];
+  const proposals = data.owner_controls?.paper_proposals || [];
+  const currentMode = paper.operating_mode?.current || {};
+  const autoManaged = currentMode.id === "paper_auto_manage";
+  const exitCount = Number(counts.exit || 0) + Number(counts.trim || 0);
+  const pendingBuys = proposals.filter(item => item.side === "buy" && item.status === "pending").length;
+  const readyBuys = proposals.filter(item => item.side === "buy" && item.status === "approved").length;
+  const urgentResearch = Number(data.research?.high_priority || 0);
+  const firstAttention = highlights.find(item =>
+    ["watch", "trim", "exit"].includes(String(item.label || "").toLowerCase())
+  ) || null;
+
+  let attentionTitle = "No urgent portfolio review";
+  let attentionDetail = "Atlas has not flagged a simulated holding for trim or exit.";
+  if (firstAttention) {
+    attentionTitle = `${firstAttention.ticker || "Holding"}: ${firstAttention.label || "review"}`;
+    attentionDetail = firstAttention.summary || "Open the paper portfolio for the latest position review.";
+  } else if (urgentResearch > 0) {
+    attentionTitle = `${urgentResearch} high-priority research item${urgentResearch === 1 ? "" : "s"}`;
+    attentionDetail = "Open Research to inspect the current assignments.";
+  }
+
+  let nextTitle = "No owner action required";
+  let nextDetail = "Atlas will continue collecting evidence in the paper portfolio.";
+  if (!autoManaged && exitCount > 0) {
+    nextTitle = `Review ${exitCount} reduce or exit signal${exitCount === 1 ? "" : "s"}`;
+    nextDetail = "Open Recommendations before acting on any simulated position change.";
+  } else if (!autoManaged && readyBuys > 0) {
+    nextTitle = `Simulate ${readyBuys} approved purchase${readyBuys === 1 ? "" : "s"}`;
+    nextDetail = "Approved ideas still require you to record the simulated fill.";
+  } else if (!autoManaged && pendingBuys > 0) {
+    nextTitle = `Review ${pendingBuys} purchase candidate${pendingBuys === 1 ? "" : "s"}`;
+    nextDetail = "Open Recommendations to accept or reject each paper idea.";
+  } else if (autoManaged) {
+    nextTitle = "Monitor paper results";
+    nextDetail = "Atlas is managing simulation decisions automatically; real-money trading remains disabled.";
+  }
+
+  const operatingTitle = currentMode.label || (autoManaged ? "Automatic paper management" : "Recommendation mode");
+  const operatingDetail = currentMode.description || focus.headline || "Atlas is monitoring the research universe.";
+  const paperReturn = paper.configured ? signed(Number(paper.total_return_pct || 0)) : "--";
+  const paperResultTitle = paper.configured
+    ? `${paperReturn} simulated return`
+    : "Paper account unavailable";
+  const paperResultDetail = paper.configured
+    ? `${money.format(Number(paper.equity || 0))} equity with ${money.format(Number(paper.cash || 0))} in simulated cash.`
+    : "Atlas needs a valid paper ledger before performance can be evaluated.";
+
+  document.getElementById("owner-briefing-grid").innerHTML = `
+    <div class="owner-briefing-item">
+      <span>Atlas is doing</span>
+      <strong>${escapeHtml(operatingTitle)}</strong>
+      <small>${escapeHtml(operatingDetail)}</small>
+    </div>
+    <div class="owner-briefing-item attention ${firstAttention || urgentResearch ? "active" : ""}">
+      <span>Needs attention</span>
+      <strong>${escapeHtml(attentionTitle)}</strong>
+      <small>${escapeHtml(attentionDetail)}</small>
+    </div>
+    <div class="owner-briefing-item result ${Number(paper.total_return_pct || 0) < 0 ? "negative-result" : "positive-result"}">
+      <span>Paper result</span>
+      <strong>${escapeHtml(paperResultTitle)}</strong>
+      <small>${escapeHtml(paperResultDetail)}</small>
+    </div>
+    <div class="owner-briefing-item next-step">
+      <span>Your next step</span>
+      <strong>${escapeHtml(nextTitle)}</strong>
+      <small>${escapeHtml(nextDetail)}</small>
+    </div>
+  `;
+}
+
 function setActivePage(pageId) {
   const requested = pageId || "overview";
-  const target = requested === "market" ? "overview" : requested;
+  const normalized = requested === "market" ? "overview" : requested;
+  const target = PAGE_METADATA[normalized] ? normalized : "overview";
   document.querySelectorAll(".dashboard-page").forEach(page => {
     page.classList.toggle("active-page", page.dataset.page === target);
   });
   document.querySelectorAll(".nav-item").forEach(link => {
     link.classList.toggle("active", link.getAttribute("href") === `#${target}`);
   });
+  const metadata = PAGE_METADATA[target];
+  document.getElementById("page-eyebrow").textContent = metadata.eyebrow;
+  document.getElementById("page-title").textContent = metadata.title;
+  document.getElementById("page-description").textContent = metadata.description;
+  document.title = `${metadata.title} | Atlas Capital Research`;
 }
 
 function jumpToPageTarget(pageId, targetId) {

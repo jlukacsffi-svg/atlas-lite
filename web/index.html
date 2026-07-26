@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-  <link rel="stylesheet" href="/styles.css?v=20260704-research-auto-manage">
+  <link rel="stylesheet" href="/styles.css?v=20260726-owner-briefing">
 </head>
 <body>
   <div class="app-shell">
@@ -44,12 +44,12 @@
     <main>
       <header class="topbar">
         <div>
-          <p class="eyebrow">Owner workspace</p>
+          <p id="page-eyebrow" class="eyebrow">Owner workspace</p>
           <div class="title-with-help">
-            <h1>Executive dashboard</h1>
+            <h1 id="page-title">Executive dashboard</h1>
             <details class="info-popover">
               <summary aria-label="About the executive dashboard">?</summary>
-              <p>This owner-only dashboard summarizes Atlas research, market coverage, simulated paper performance, research tasks, and decision controls. It is for research and simulation only.</p>
+              <p id="page-description">This owner-only dashboard summarizes Atlas research, market coverage, simulated paper performance, research tasks, and decision controls. It is for research and simulation only.</p>
             </details>
           </div>
           <div id="workspace-identity" class="workspace-identity" hidden>
@@ -142,6 +142,38 @@
       </section>
 
       <section id="overview" class="dashboard-page active-page" data-page="overview">
+      <section class="owner-briefing" aria-labelledby="owner-briefing-title">
+        <div class="owner-briefing-heading">
+          <div>
+            <p class="eyebrow">Start here</p>
+            <h2 id="owner-briefing-title">Today&rsquo;s owner briefing</h2>
+          </div>
+          <span class="tag">Paper simulation only</span>
+        </div>
+        <div id="owner-briefing-grid" class="owner-briefing-grid">
+          <div class="owner-briefing-item">
+            <span>Atlas is doing</span>
+            <strong>Loading current operating mode...</strong>
+          </div>
+          <div class="owner-briefing-item attention">
+            <span>Needs attention</span>
+            <strong>Loading portfolio priorities...</strong>
+          </div>
+          <div class="owner-briefing-item">
+            <span>Paper result</span>
+            <strong>Loading simulated performance...</strong>
+          </div>
+          <div class="owner-briefing-item next-step">
+            <span>Your next step</span>
+            <strong>Loading owner workflow...</strong>
+          </div>
+        </div>
+        <nav class="owner-briefing-actions" aria-label="Owner briefing shortcuts">
+          <a class="briefing-link primary" href="#recommendations">Review recommendations</a>
+          <a class="briefing-link" href="#paper">Open paper portfolio</a>
+          <a class="briefing-link" href="#controls">Review controls</a>
+        </nav>
+      </section>
       <div class="kpi-grid" aria-label="Market overview">
         <article class="kpi">
           <span>Simulated equity <details class="info-popover inline-help"><summary aria-label="About simulated equity">?</summary><p>The current value of the Atlas paper portfolio. This is simulated money only, not a brokerage account.</p></details></span>
@@ -792,6 +824,6 @@
       </div>
     </form>
   </dialog>
-  <script src="/app.js?v=20260704-research-auto-manage"></script>
+  <script src="/app.js?v=20260726-owner-briefing"></script>
 </body>
 </html>

@@ -57,6 +57,8 @@ class PaperTradingAccount:
         if policy:
             self.policy.update(policy)
         self.clock = clock or datetime.now
+        self._ledger_cache_signature = None
+        self._ledger_cache = []
 
     def initialize(self, starting_cash, name="Atlas Paper Portfolio"):
         starting_cash = float(starting_cash)
@@ -673,7 +675,7 @@ class PaperTradingAccount:
             },
         }
 
-    def stage5_validation_summary(self, latest_prices=None):
+    def stage5_validation_summary(self, latest_prices=None, feedback_summary=None):
         """Summarize whether Stage 5 paper validation is building proof of quality."""
         performance = self.performance_summary()
         if not performance.get("available"):
@@ -694,7 +696,9 @@ class PaperTradingAccount:
 
         latest = performance["latest"]
         trade_stats = performance.get("trade_statistics") or self.trade_statistics()
-        feedback = self.proposal_feedback_summary(latest_prices=latest_prices)
+        feedback = feedback_summary or self.proposal_feedback_summary(
+            latest_prices=latest_prices
+        )
         snapshots = int(performance.get("snapshots") or 0)
         judged = int(feedback.get("judged") or 0)
         realized_exits = int(trade_stats.get("realized_exits") or 0)
@@ -1099,9 +1103,13 @@ class PaperTradingAccount:
             )
         return sorted(rows, key=lambda item: item["filled_at"], reverse=True)
 
-    def proposal_feedback_summary(self, latest_prices=None):
+    def proposal_feedback_summary(self, latest_prices=None, rows=None):
         """Summarize post-trade learning across simulated buys and sells."""
-        rows = self.proposal_feedback(latest_prices=latest_prices)
+        rows = (
+            self.proposal_feedback(latest_prices=latest_prices)
+            if rows is None
+            else rows
+        )
         verdict_counts = {
             "working": 0,
             "mixed": 0,
@@ -3802,14 +3810,22 @@ class PaperTradingAccount:
 
     def ledger(self):
         if not self.ledger_file.exists():
+            self._ledger_cache_signature = None
+            self._ledger_cache = []
             return []
+        stat = self.ledger_file.stat()
+        signature = (stat.st_mtime_ns, stat.st_size)
+        if signature == self._ledger_cache_signature:
+            return self._ledger_cache
         events = []
         with open(self.ledger_file, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line:
                     events.append(json.loads(line))
-        return events
+        self._ledger_cache_signature = signature
+        self._ledger_cache = events
+        return self._ledger_cache
 
     def _normalize_order(self, side, ticker, shares, price, thesis):
         side = str(side).strip().lower()
@@ -3927,3 +3943,4 @@ class PaperTradingAccount:
         self.ledger_file.parent.mkdir(parents=True, exist_ok=True)
         with open(self.ledger_file, "a", encoding="utf-8") as f:
             f.write(json.dumps(event, sort_keys=True) + "\n")
+        self._ledger_cache_signature = None

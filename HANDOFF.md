@@ -2140,3 +2140,33 @@ Current in-flight stage:
 - Let the enabled daily and weekly paper cycle accumulate evidence against the
   nine discussion gates. Improve decision and exit quality before considering
   any expansion beyond paper simulation.
+
+Latest owner-workspace usability and reliability update:
+
+- The Overview page now opens with a concise owner briefing that answers what
+  Atlas is doing, what needs attention, the current paper result, and whether
+  the owner needs to act.
+- Each navigation page now has its own title and plain-language purpose text.
+- The briefing is responsive and was visually checked at desktop and phone
+  widths.
+- Full dashboard generation now evaluates paper feedback once per request and
+  reuses a file-signature cache for the append-only paper ledger.
+- Cloud refreshes now download only the current account, ledger, task state,
+  and latest market snapshot instead of repeatedly transferring the historical
+  artifact bundle.
+- A cloud-sized local profile improved from 133.8 seconds to 1.7 seconds on the
+  first build and 1.4 seconds on a repeated build.
+- Cloud Run revision `atlas-dashboard-stg-00135-pl7` is live on image
+  `20260726-owner-briefing-live`.
+- The deployed image digest is
+  `sha256:a8caee14a8de84dbb67fabc5974dbd050a9b3bc0b227264f0ff6fe3369a2a248`.
+- The signed-in live dashboard reached `Live` in 2.1 seconds with no error
+  banner or browser console errors.
+- The full local automated suite passes with 402 tests.
+
+Current in-flight stage:
+
+- Continue accumulating Stage 5 paper evidence while simplifying each
+  owner workflow. The next usability work should prioritize decision
+  summaries and progressive disclosure on Recommendations and Paper Portfolio
+  without weakening the detailed audit trail.

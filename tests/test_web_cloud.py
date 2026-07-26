@@ -33,6 +33,16 @@ class StubDataService:
         return {"generated_at": "2026-06-07T08:00:00", "overview": {}}
 
 
+class CloudDashboardEntrypointTests(unittest.TestCase):
+    def test_dashboard_refreshes_only_the_current_startup_bundle(self):
+        root = Path(__file__).resolve().parent.parent
+        source = (root / "cloud_dashboard.py").read_text(encoding="utf-8")
+
+        self.assertGreaterEqual(source.count('sync_from_environment("pull_startup")'), 2)
+        self.assertNotIn("atlas-cloud-full-sync", source)
+        self.assertNotIn('lambda: sync_from_environment("pull")', source)
+
+
 class RefreshingDashboardDataServiceTests(unittest.TestCase):
     def test_refreshes_only_after_interval(self):
         clock = [100.0]

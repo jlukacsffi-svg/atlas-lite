@@ -3,7 +3,6 @@
 
 import os
 import sys
-import threading
 
 from app.cloud_storage import sync_from_environment
 from app.owner_controls import OwnerControlService
@@ -44,18 +43,16 @@ def main():
                 "push",
                 paths=paths,
             ),
-            refresh=lambda: sync_from_environment("pull"),
+            refresh=lambda: sync_from_environment("pull_startup"),
         )
     if settings.mode == "cloud":
         data_service = RefreshingDashboardDataService(
             data_service,
-            lambda: sync_from_environment("pull"),
+            # The dashboard only reads core state plus the latest market snapshot.
+            # Pulling every historical report and release on each refresh makes
+            # owner requests contend with a much larger archive transfer.
+            lambda: sync_from_environment("pull_startup"),
         )
-        threading.Thread(
-            target=lambda: sync_from_environment("pull"),
-            name="atlas-cloud-full-sync",
-            daemon=True,
-        ).start()
     print(f"[web] Atlas {settings.mode} dashboard listening on {host}:{port}")
     serve(
         create_application(
