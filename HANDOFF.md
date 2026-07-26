@@ -61,6 +61,19 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Atlas now diagnoses every completed paper cycle across entry timing, first
+  defensive response, and exit execution.
+- The first live diagnosis shows all 3 completed losses were already down at
+  least 3% before Atlas acted defensively. The sample averaged a `-5.07%` loss
+  over `23.2` days; NVDA had a sharp-decline entry, and MRVL/LRCX had
+  fragmented exits.
+- The Paper Portfolio now shows the shared finding and ticker-level evidence
+  for NVDA, MRVL, and LRCX, with an explicit three-position sample warning.
+- Cloud Run revision `atlas-dashboard-stg-00147-pbl` is live on image
+  `20260726-loss-diagnostics-verified`; the full 406-test suite, all 25
+  readiness checks, and all 13 protected dashboard checks pass.
+- The deployed image digest is
+  `sha256:adfd9363333cd2a5f108f618e9344c3e47efdc7cd15df58ab25a05a47367d43e`.
 - Atlas now permits at most two partial trims within one uninterrupted paper
   holding cycle. A fresh third de-risk signal proposes a full simulated exit
   instead of another fractional remainder; a new entry resets the count.

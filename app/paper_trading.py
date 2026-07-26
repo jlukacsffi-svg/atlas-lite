@@ -1098,6 +1098,13 @@ class PaperTradingAccount:
                 else "Keep the daily paper cycle running so future decisions receive later comparison snapshots."
             ),
         }
+        completed_position_diagnostics = self.completed_position_diagnostics(
+            [
+                event
+                for event in self.ledger()
+                if event.get("event") == "paper_trade"
+            ]
+        )
         return {
             "available": True,
             "status": status,
@@ -1112,6 +1119,7 @@ class PaperTradingAccount:
             "takeaways": takeaways[:8],
             "capital_readiness": capital_readiness,
             "evidence_pipeline": evidence_pipeline,
+            "completed_position_diagnostics": completed_position_diagnostics,
         }
 
     def proposal_feedback(self, latest_prices=None):
@@ -3565,6 +3573,258 @@ class PaperTradingAccount:
                 )
                 active.pop(ticker, None)
         return outcomes
+
+    @staticmethod
+    def _days_between(start, end):
+        if not start or not end:
+            return None
+        try:
+            elapsed = datetime.fromisoformat(str(end)) - datetime.fromisoformat(str(start))
+        except (TypeError, ValueError):
+            return None
+        return round(max(elapsed.total_seconds(), 0.0) / 86400.0, 1)
+
+    @classmethod
+    def completed_position_diagnostics(cls, trades):
+        """Explain entry, response, and execution patterns for closed paper cycles."""
+        active = {}
+        cycles = []
+        for event in trades:
+            ticker = str(event.get("ticker") or "").strip().upper()
+            if not ticker:
+                continue
+            side = str(event.get("side") or "").strip().lower()
+            before = float(event.get("position_shares_before") or 0.0)
+            after = float(event.get("position_shares_after") or 0.0)
+            shares = float(event.get("shares") or 0.0)
+            price = float(event.get("price") or 0.0)
+            notional = float(event.get("notional") or round(shares * price, 2))
+
+            if side == "buy":
+                if ticker not in active or before <= 0.0000001:
+                    thesis = str(event.get("thesis") or "")
+                    move_match = re.search(
+                        r"current move(?: is)?\s*([+-]?\d+(?:\.\d+)?)%",
+                        thesis,
+                        flags=re.IGNORECASE,
+                    ) or re.search(
+                        r"([+-]?\d+(?:\.\d+)?)%\s*current move",
+                        thesis,
+                        flags=re.IGNORECASE,
+                    )
+                    active[ticker] = {
+                        "ticker": ticker,
+                        "opened_at": event.get("timestamp"),
+                        "entry_move_pct": (
+                            float(move_match.group(1)) if move_match else None
+                        ),
+                        "buy_shares": 0.0,
+                        "buy_notional": 0.0,
+                        "sell_shares": 0.0,
+                        "sell_proceeds": 0.0,
+                        "realized_gain_loss": 0.0,
+                        "sells": [],
+                    }
+                cycle = active[ticker]
+                cycle["buy_shares"] += shares
+                cycle["buy_notional"] += notional
+                continue
+
+            if side != "sell" or ticker not in active:
+                continue
+            cycle = active[ticker]
+            cycle["sell_shares"] += shares
+            cycle["sell_proceeds"] += notional
+            cycle["realized_gain_loss"] += float(
+                event.get("realized_gain_loss") or 0.0
+            )
+            cycle["sells"].append(event)
+            if after > 0.0000001:
+                continue
+
+            entry_price = (
+                cycle["buy_notional"] / cycle["buy_shares"]
+                if cycle["buy_shares"]
+                else None
+            )
+            average_exit_price = (
+                cycle["sell_proceeds"] / cycle["sell_shares"]
+                if cycle["sell_shares"]
+                else None
+            )
+            first_sell = cycle["sells"][0]
+            first_sell_price = float(first_sell.get("price") or 0.0)
+            first_action_return = (
+                ((first_sell_price / entry_price) - 1.0) * 100.0
+                if entry_price and first_sell_price
+                else None
+            )
+            realized_return = (
+                (cycle["realized_gain_loss"] / cycle["buy_notional"]) * 100.0
+                if cycle["buy_notional"]
+                else None
+            )
+            entry_move = cycle.get("entry_move_pct")
+            if entry_move is not None and entry_move <= -4.0:
+                entry_finding = (
+                    f"Entered during a sharp {entry_move:+.1f}% daily decline, "
+                    "which increased timing risk."
+                )
+                entry_status = "caution"
+            else:
+                entry_finding = (
+                    "The recorded daily move did not indicate an unusually sharp "
+                    "entry-day dislocation."
+                )
+                entry_status = "neutral"
+            if first_action_return is not None and first_action_return <= -3.0:
+                response_finding = (
+                    "Atlas first acted defensively after the position was already "
+                    f"down {abs(first_action_return):.1f}%."
+                )
+                response_status = "caution"
+            else:
+                response_finding = (
+                    "Atlas began its defensive response before a 3% position loss "
+                    "was visible."
+                )
+                response_status = "neutral"
+            sell_executions = len(cycle["sells"])
+            if sell_executions > 2:
+                execution_finding = (
+                    f"The exit was fragmented across {sell_executions} sell "
+                    "executions, extending the decision path."
+                )
+                execution_status = "caution"
+            else:
+                execution_finding = (
+                    f"The position closed in {sell_executions} sell execution"
+                    f"{'' if sell_executions == 1 else 's'}."
+                )
+                execution_status = "neutral"
+
+            cycles.append(
+                {
+                    "ticker": ticker,
+                    "opened_at": cycle["opened_at"],
+                    "closed_at": event.get("timestamp"),
+                    "holding_days": cls._days_between(
+                        cycle["opened_at"],
+                        event.get("timestamp"),
+                    ),
+                    "days_to_first_risk_action": cls._days_between(
+                        cycle["opened_at"],
+                        first_sell.get("timestamp"),
+                    ),
+                    "entry_price": round(entry_price, 2) if entry_price else None,
+                    "average_exit_price": (
+                        round(average_exit_price, 2)
+                        if average_exit_price
+                        else None
+                    ),
+                    "entry_move_pct": entry_move,
+                    "first_risk_action_return_pct": (
+                        round(first_action_return, 2)
+                        if first_action_return is not None
+                        else None
+                    ),
+                    "realized_return_pct": (
+                        round(realized_return, 2)
+                        if realized_return is not None
+                        else None
+                    ),
+                    "realized_gain_loss": round(
+                        cycle["realized_gain_loss"],
+                        2,
+                    ),
+                    "sell_executions": sell_executions,
+                    "partial_trims": max(sell_executions - 1, 0),
+                    "entry": {
+                        "status": entry_status,
+                        "finding": entry_finding,
+                    },
+                    "risk_response": {
+                        "status": response_status,
+                        "finding": response_finding,
+                    },
+                    "execution": {
+                        "status": execution_status,
+                        "finding": execution_finding,
+                    },
+                }
+            )
+            active.pop(ticker, None)
+
+        losses = [
+            cycle for cycle in cycles if cycle.get("realized_gain_loss", 0.0) < 0
+        ]
+        late_responses = [
+            cycle
+            for cycle in losses
+            if (cycle.get("first_risk_action_return_pct") or 0.0) <= -3.0
+        ]
+        sharp_decline_entries = [
+            cycle
+            for cycle in losses
+            if cycle.get("entry_move_pct") is not None
+            and cycle["entry_move_pct"] <= -4.0
+        ]
+        fragmented_exits = [
+            cycle for cycle in losses if cycle.get("sell_executions", 0) > 2
+        ]
+        average_loss = (
+            sum(cycle["realized_return_pct"] for cycle in losses)
+            / len(losses)
+            if losses
+            else None
+        )
+        average_holding = (
+            sum(cycle["holding_days"] for cycle in cycles)
+            / len(cycles)
+            if cycles
+            else None
+        )
+        if losses and len(late_responses) == len(losses):
+            headline = (
+                "Every completed loss was already down at least 3% before "
+                "Atlas first acted defensively."
+            )
+            primary_finding = (
+                "The strongest shared signal is late risk response, not a single "
+                "sector or security-selection conclusion."
+            )
+        elif losses:
+            headline = (
+                "Completed losses show a mix of entry timing and exit-discipline "
+                "weakness."
+            )
+            primary_finding = (
+                "Atlas needs more completed cycles before one pattern can be "
+                "treated as dominant."
+            )
+        else:
+            headline = "Atlas does not yet have a completed losing position to diagnose."
+            primary_finding = "Continue collecting completed paper-position evidence."
+        return {
+            "available": bool(cycles),
+            "sample_size": len(cycles),
+            "losses": len(losses),
+            "headline": headline,
+            "primary_finding": primary_finding,
+            "average_loss_pct": round(average_loss, 2) if average_loss is not None else None,
+            "average_holding_days": (
+                round(average_holding, 1) if average_holding is not None else None
+            ),
+            "late_risk_responses": len(late_responses),
+            "sharp_decline_entries": len(sharp_decline_entries),
+            "fragmented_exits": len(fragmented_exits),
+            "sample_warning": (
+                f"Only {len(cycles)} completed position"
+                f"{'' if len(cycles) == 1 else 's'} are available. Treat these "
+                "patterns as early diagnostic evidence, not a proven strategy conclusion."
+            ),
+            "cycles": list(reversed(cycles)),
+        }
 
     def trade_statistics(self):
         events = self.ledger()

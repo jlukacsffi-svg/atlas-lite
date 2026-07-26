@@ -475,6 +475,9 @@ class AtlasCloudApplication:
         )
         pending_manual_count = int(proposal_counts.get("pending") or 0)
         evidence_pipeline = validation.get("evidence_pipeline") or {}
+        completed_diagnostics = (
+            validation.get("completed_position_diagnostics") or {}
+        )
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -502,6 +505,26 @@ class AtlasCloudApplication:
                     ),
                     "partial_trims": int(
                         evidence_pipeline.get("partial_trims") or 0
+                    ),
+                },
+                "completed_position_diagnostics": {
+                    "ok": bool(completed_diagnostics.get("available"))
+                    and bool(completed_diagnostics.get("cycles"))
+                    and self._ui_contains("Completed position diagnosis"),
+                    "detail": (
+                        "Dashboard diagnoses entry timing, first defensive "
+                        "response, and exit execution across "
+                        f"{int(completed_diagnostics.get('sample_size') or 0)} "
+                        "completed paper positions."
+                    ),
+                    "sample_size": int(
+                        completed_diagnostics.get("sample_size") or 0
+                    ),
+                    "late_risk_responses": int(
+                        completed_diagnostics.get("late_risk_responses") or 0
+                    ),
+                    "fragmented_exits": int(
+                        completed_diagnostics.get("fragmented_exits") or 0
                     ),
                 },
                 "persistence_learning": {

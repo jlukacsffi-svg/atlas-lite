@@ -1683,6 +1683,10 @@ function renderPaperWorkspaceSummary(paper) {
     ? readiness.next_milestones
     : [];
   const evidencePipeline = validation.evidence_pipeline || {};
+  const completedDiagnostics = validation.completed_position_diagnostics || {};
+  const completedCycles = Array.isArray(completedDiagnostics.cycles)
+    ? completedDiagnostics.cycles
+    : [];
   const latestEvidenceSnapshot = evidencePipeline.latest_snapshot_at
     ? new Date(evidencePipeline.latest_snapshot_at).toLocaleString()
     : "No snapshot recorded";
@@ -1772,6 +1776,48 @@ function renderPaperWorkspaceSummary(paper) {
       </div>
       <small class="paper-evidence-note">${escapeHtml(evidencePipeline.next_action || "Keep the scheduled paper cycle running.")}</small>
     </section>
+    ${completedDiagnostics.available ? `
+      <section class="paper-loss-diagnostic">
+        <div class="paper-evidence-heading">
+          <div>
+            <span class="access-label">Completed position diagnosis</span>
+            <b>${escapeHtml(completedDiagnostics.headline || "Atlas is reviewing completed paper outcomes.")}</b>
+            <small>${escapeHtml(completedDiagnostics.primary_finding || "")}</small>
+          </div>
+          <span>${Number(completedDiagnostics.sample_size || 0)} completed</span>
+        </div>
+        <div class="paper-diagnostic-metrics">
+          <div><span>Late risk response</span><strong>${Number(completedDiagnostics.late_risk_responses || 0)}/${Number(completedDiagnostics.losses || 0)}</strong></div>
+          <div><span>Sharp-decline entries</span><strong>${Number(completedDiagnostics.sharp_decline_entries || 0)}</strong></div>
+          <div><span>Fragmented exits</span><strong>${Number(completedDiagnostics.fragmented_exits || 0)}</strong></div>
+          <div><span>Average completed loss</span><strong class="negative">${signed(Number(completedDiagnostics.average_loss_pct || 0))}</strong></div>
+        </div>
+        <div class="paper-cycle-list">
+          ${completedCycles.map(item => `
+            <article class="paper-cycle-row">
+              <div class="paper-cycle-result">
+                <b>${escapeHtml(item.ticker || "Position")}</b>
+                <strong class="${changeClass(Number(item.realized_gain_loss || 0))}">${money.format(Number(item.realized_gain_loss || 0))}</strong>
+                <small>${signed(Number(item.realized_return_pct || 0))} over ${Number(item.holding_days || 0).toFixed(1)} days</small>
+              </div>
+              <div>
+                <span>Entry</span>
+                <small>${escapeHtml(item.entry?.finding || "Entry evidence unavailable.")}</small>
+              </div>
+              <div>
+                <span>First defensive action</span>
+                <small>${escapeHtml(item.risk_response?.finding || "Risk-response evidence unavailable.")} Day ${Number(item.days_to_first_risk_action || 0).toFixed(1)}.</small>
+              </div>
+              <div>
+                <span>Exit execution</span>
+                <small>${escapeHtml(item.execution?.finding || "Exit evidence unavailable.")}</small>
+              </div>
+            </article>
+          `).join("")}
+        </div>
+        <small class="paper-evidence-note">${escapeHtml(completedDiagnostics.sample_warning || "This remains early simulated evidence.")}</small>
+      </section>
+    ` : ""}
     <section class="paper-evidence-roadmap">
       <div class="paper-evidence-heading">
         <div>

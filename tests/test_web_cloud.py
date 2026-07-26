@@ -472,7 +472,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Sector learning gate";\n'
                 '"Sector gate audit";\n'
                 '"Sector gate outcomes";\n'
-                '"Strategy tilt";\n',
+                '"Strategy tilt";\n'
+                '"Completed position diagnosis";\n',
                 encoding="utf-8",
             )
             data_service = type(
@@ -484,7 +485,16 @@ class CloudWebApplicationTests(unittest.TestCase):
                         "generated_at": "2026-06-07T08:00:00",
                         "workspace": {"deployment": {"revision": "atlas-dashboard-stg-00113-mc8"}},
                         "paper": {
-                            "validation_summary": {"headline": "ready"},
+                            "validation_summary": {
+                                "headline": "ready",
+                                "completed_position_diagnostics": {
+                                    "available": True,
+                                    "sample_size": 3,
+                                    "late_risk_responses": 3,
+                                    "fragmented_exits": 2,
+                                    "cycles": [{"ticker": "NVDA"}],
+                                },
+                            },
                             "feedback_summary": {
                                 "horizon_learning": [{"label": "3-snapshot persistence"}],
                                 "entry_strategy_profile": {
@@ -556,6 +566,13 @@ class CloudWebApplicationTests(unittest.TestCase):
             )
         self.assertEqual(response["status"], "200 OK")
         self.assertTrue(response["json"]["checks"]["stage5_scoreboard"]["ok"])
+        self.assertTrue(
+            response["json"]["checks"]["completed_position_diagnostics"]["ok"]
+        )
+        self.assertEqual(
+            response["json"]["checks"]["completed_position_diagnostics"]["sample_size"],
+            3,
+        )
         self.assertIn(
             "snapshot_count",
             response["json"]["checks"]["stage5_scoreboard"],

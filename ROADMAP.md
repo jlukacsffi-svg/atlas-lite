@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 76%.
+Estimated overall Atlas program completion: 77%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -387,8 +387,12 @@ the overall company program.
   per holding cycle before the next independent signal closes the remainder.
   Historical replay avoids 12 redundant fractional trims, and the active
   guardrail is visible in Controls.
-- Next: diagnose why all three completed paper cycles lost and evaluate entry
-  quality, holding duration, and exit timing before changing another simulated
-  strategy rule.
+- Completed: completed-cycle diagnostics now separate entry timing, first
+  defensive response, and exit execution. All 3 completed losses were already
+  down at least 3% before Atlas first acted; the live sample averaged `-5.07%`
+  over `23.2` days.
+- Next: shadow-test earlier defensive triggers against historical position and
+  benchmark evidence. Do not change live paper thresholds until the comparison
+  shows a repeatable improvement without excessive turnover.
 - Parallel owner task: complete cross-device owner login and non-owner account
   denial before multi-user work begins.

@@ -3,6 +3,46 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Completed losses now have a visible root-cause diagnosis
+
+New capabilities:
+
+- Reconstruct every fully completed paper holding cycle from entry through
+  partial trims and final exit.
+- Measure entry price, average exit price, holding period, time to Atlas's first
+  defensive action, loss already present at that action, and total result.
+- Separate three diagnostic dimensions: entry timing, risk-response timing,
+  and exit execution.
+- Show the shared pattern and each position's evidence directly in the Paper
+  Portfolio workspace.
+- Protect the diagnostic through the cloud verification contract.
+
+Validated result:
+
+- All three completed losses were already down at least 3% before Atlas first
+  acted defensively.
+- The completed sample averaged a `-5.07%` loss over `23.2` days.
+- One position, NVDA, was entered during a sharp `-6.2%` daily decline.
+- Two positions, MRVL and LRCX, used fragmented exits with more than two sell
+  executions.
+- The full local suite passes with 406 tests.
+- Cloud Run revision `atlas-dashboard-stg-00147-pbl` is live on image
+  `20260726-loss-diagnostics-verified`.
+- The deployed image digest is
+  `sha256:adfd9363333cd2a5f108f618e9344c3e47efdc7cd15df58ab25a05a47367d43e`.
+- All 25 staging readiness checks and all 13 protected Stage 5 dashboard
+  contract checks pass.
+- Desktop and mobile Chrome walkthroughs show no overlap or console errors.
+
+Current boundaries:
+
+- Three completed positions are early diagnostic evidence, not a reliable
+  statistical sample.
+- Atlas has not changed entry or exit thresholds from this diagnosis alone.
+- The next step is to shadow-test earlier defensive triggers against historical
+  evidence before changing the simulated strategy.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Repeated paper trims now escalate cleanly
 
 New capabilities:

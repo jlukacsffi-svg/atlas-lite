@@ -1133,6 +1133,64 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   border-radius: 6px;
   background: #f8fcfa;
 }
+.paper-loss-diagnostic {
+  padding: 14px;
+  border: 1px solid #e5c8ae;
+  border-left: 4px solid #b66a2c;
+  border-radius: 6px;
+  background: #fffaf5;
+}
+.paper-loss-diagnostic .paper-evidence-heading small {
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.45;
+}
+.paper-diagnostic-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 12px;
+}
+.paper-diagnostic-metrics > div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding: 9px 10px;
+  border: 1px solid #ead9ca;
+  background: rgba(255, 255, 255, .75);
+}
+.paper-diagnostic-metrics span,
+.paper-cycle-row span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.paper-diagnostic-metrics strong { font-size: 15px; }
+.paper-cycle-list {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+.paper-cycle-row {
+  display: grid;
+  grid-template-columns: minmax(110px, .65fr) repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 10px;
+  border-top: 1px solid #ead9ca;
+}
+.paper-cycle-row > div {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+}
+.paper-cycle-row small {
+  color: var(--muted);
+  font-size: 9px;
+  line-height: 1.45;
+}
+.paper-cycle-result strong { font-size: 14px; }
 .paper-evidence-heading {
   display: flex;
   align-items: flex-start;
@@ -2843,6 +2901,8 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .paper-evidence-row { grid-template-columns: 1fr; }
   .paper-evidence-progress { max-width: 280px; }
   .paper-pipeline-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .paper-diagnostic-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .paper-cycle-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .research-conclusion-grid { grid-template-columns: 1fr; }
   .universe-toolbar { grid-template-columns: 1fr 1fr; }
   .universe-toolbar-action {
@@ -2922,6 +2982,8 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .access-summary:last-child { border-bottom: 0; }
   .paper-summary-grid { grid-template-columns: 1fr; }
   .paper-pipeline-grid { grid-template-columns: 1fr; }
+  .paper-diagnostic-metrics,
+  .paper-cycle-row { grid-template-columns: 1fr; }
   .research-summary-grid { grid-template-columns: 1fr; }
   .research-summary-actions { display: grid; }
   .research-assignment-head { align-items: flex-start; flex-direction: column; }

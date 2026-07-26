@@ -1363,6 +1363,7 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(pipeline["partial_trims"], 1)
         self.assertEqual(pipeline["sell_executions"], 1)
         self.assertEqual(pipeline["latest_snapshot_at"], "2026-06-07T16:00:00")
+        self.assertFalse(summary["completed_position_diagnostics"]["available"])
         readiness = summary["capital_readiness"]
         self.assertFalse(readiness["ready_for_owner_review"])
         self.assertEqual(readiness["status"], "paper_only")
@@ -1693,6 +1694,83 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(
             exit_stats["completed_outcomes"][0]["realized_gain_loss"],
             20.0,
+        )
+
+    def test_completed_position_diagnostics_separates_entry_response_and_execution(self):
+        diagnostics = PaperTradingAccount.completed_position_diagnostics(
+            [
+                {
+                    "event": "paper_trade",
+                    "timestamp": "2026-07-01T09:30:00",
+                    "ticker": "NVDA",
+                    "side": "buy",
+                    "shares": 10,
+                    "price": 100,
+                    "notional": 1000,
+                    "position_shares_before": 0,
+                    "position_shares_after": 10,
+                    "thesis": "Atlas paper entry rule with a -6.20% current move.",
+                },
+                {
+                    "event": "paper_trade",
+                    "timestamp": "2026-07-06T09:30:00",
+                    "ticker": "NVDA",
+                    "side": "sell",
+                    "shares": 5,
+                    "price": 95,
+                    "notional": 475,
+                    "realized_gain_loss": -25,
+                    "position_shares_before": 10,
+                    "position_shares_after": 5,
+                },
+                {
+                    "event": "paper_trade",
+                    "timestamp": "2026-07-07T09:30:00",
+                    "ticker": "NVDA",
+                    "side": "sell",
+                    "shares": 2.5,
+                    "price": 94,
+                    "notional": 235,
+                    "realized_gain_loss": -15,
+                    "position_shares_before": 5,
+                    "position_shares_after": 2.5,
+                },
+                {
+                    "event": "paper_trade",
+                    "timestamp": "2026-07-08T09:30:00",
+                    "ticker": "NVDA",
+                    "side": "sell",
+                    "shares": 2.5,
+                    "price": 93,
+                    "notional": 232.5,
+                    "realized_gain_loss": -17.5,
+                    "position_shares_before": 2.5,
+                    "position_shares_after": 0,
+                },
+            ]
+        )
+
+        self.assertTrue(diagnostics["available"])
+        self.assertEqual(diagnostics["sample_size"], 1)
+        self.assertEqual(diagnostics["late_risk_responses"], 1)
+        self.assertEqual(diagnostics["sharp_decline_entries"], 1)
+        self.assertEqual(diagnostics["fragmented_exits"], 1)
+        self.assertEqual(diagnostics["cycles"][0]["holding_days"], 7.0)
+        self.assertEqual(
+            diagnostics["cycles"][0]["days_to_first_risk_action"],
+            5.0,
+        )
+        self.assertEqual(
+            diagnostics["cycles"][0]["first_risk_action_return_pct"],
+            -5.0,
+        )
+        self.assertIn(
+            "sharp -6.2% daily decline",
+            diagnostics["cycles"][0]["entry"]["finding"],
+        )
+        self.assertIn(
+            "fragmented across 3",
+            diagnostics["cycles"][0]["execution"]["finding"],
         )
 
     def test_performance_report_includes_news_event_context(self):
