@@ -474,7 +474,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Sector gate outcomes";\n'
                 '"Strategy tilt";\n'
                 '"Completed position diagnosis";\n'
-                '"Defensive trigger shadow test";\n',
+                '"Defensive trigger shadow test";\n'
+                '"Prospective review tracker";\n',
                 encoding="utf-8",
             )
             data_service = type(
@@ -503,6 +504,15 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "candidates": [
                                         {"id": "automatic_full_exit"}
                                     ],
+                                },
+                                "prospective_review_tracker": {
+                                    "available": True,
+                                    "activated": False,
+                                    "mode": "review_only",
+                                    "policy_changed": False,
+                                    "transition_count": 0,
+                                    "counts": {"total": 0},
+                                    "signals": [],
                                 },
                             },
                             "feedback_summary": {
@@ -588,6 +598,12 @@ class CloudWebApplicationTests(unittest.TestCase):
         )
         self.assertFalse(
             response["json"]["checks"]["shadow_trigger_analysis"]["policy_changed"]
+        )
+        self.assertTrue(
+            response["json"]["checks"]["prospective_review_tracker"]["ok"]
+        )
+        self.assertFalse(
+            response["json"]["checks"]["prospective_review_tracker"]["activated"]
         )
         self.assertIn(
             "snapshot_count",

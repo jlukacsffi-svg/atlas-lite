@@ -3,6 +3,46 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 26, 2026 - Earlier review signals now have forward-only tracking
+
+New capabilities:
+
+- Establish a one-time, append-only study marker on the next scheduled paper
+  snapshot instead of retroactively labeling old observations.
+- Record a signal transition only when a holding first meets the review rule
+  or its outcome classification changes.
+- Classify each prospective signal as new review, persistent weakness,
+  recovered above trigger, completed loss, or completed gain.
+- Show study activation, thresholds, status counts, and ticker-level outcomes
+  directly in the Paper Portfolio.
+- Protect the prospective tracker through the cloud verification contract.
+
+Validated result:
+
+- The tracker is fixed at review-only mode with a `-2%` position-return and
+  `-3%` benchmark-lag observation threshold.
+- A no-write replay against a temporary copy of the live cloud ledger found
+  that the next equivalent snapshot would open reviews for KLAC, TSM, and
+  CRWD.
+- The replay preserved all 44 paper trades and made no policy change.
+- The full local suite passes with 409 tests.
+- Cloud Run revision `atlas-dashboard-stg-00149-qfd` is live on image
+  `20260726-prospective-reviews-verified`.
+- The deployed image digest is
+  `sha256:da5da5c0bbdb4154b259c276e2482ddf9c12e14fae89d62987e5104a1bed950d`.
+- All 25 staging readiness checks and all 15 protected Stage 5 dashboard
+  contract checks pass.
+- Desktop and mobile Chrome walkthroughs show no overlap or console errors.
+
+Current boundaries:
+
+- The live tracker intentionally shows `Starts next snapshot` until the
+  scheduled paper job establishes the prospective study boundary.
+- A review signal is observational and cannot force a simulated sale.
+- Recovery means price later moved above the trigger price; it does not prove
+  a profitable outcome.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Defensive rules can be shadow-tested without changing policy
 
 New capabilities:

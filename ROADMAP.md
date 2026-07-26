@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 78%.
+Estimated overall Atlas program completion: 79%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -396,8 +396,13 @@ the overall company program.
   candidate improved the 3 completed-cycle comparison by `$171.10` but saw
   2 of 9 later recoveries. The automatic `-3%` / `-3%` exit was `$6.50` worse
   and saw 4 of 9 recoveries, so Atlas rejected it.
-- Next: collect prospective outcomes for the earlier review signal and show
-  whether each new alert persists, recovers, or leads to a completed loss.
-  Keep it review-only until a much larger sample demonstrates durable value.
+- Completed: the earlier review signal now has append-only prospective
+  tracking. The next scheduled snapshot establishes a clean study boundary;
+  later signals are classified as new, persistent, recovered, or completed
+  without changing paper policy.
+- Next: accumulate prospective review outcomes and add a compact effectiveness
+  scorecard once enough signals have reached recovery or completed-position
+  outcomes. Keep the signal review-only until the larger forward sample shows
+  durable value.
 - Parallel owner task: complete cross-device owner login and non-owner account
   denial before multi-user work begins.

@@ -1691,6 +1691,11 @@ function renderPaperWorkspaceSummary(paper) {
   const shadowCandidates = Array.isArray(shadowAnalysis.candidates)
     ? shadowAnalysis.candidates
     : [];
+  const prospectiveTracker = validation.prospective_review_tracker || {};
+  const prospectiveSignals = Array.isArray(prospectiveTracker.signals)
+    ? prospectiveTracker.signals
+    : [];
+  const prospectiveCounts = prospectiveTracker.counts || {};
   const latestEvidenceSnapshot = evidencePipeline.latest_snapshot_at
     ? new Date(evidencePipeline.latest_snapshot_at).toLocaleString()
     : "No snapshot recorded";
@@ -1861,6 +1866,71 @@ function renderPaperWorkspaceSummary(paper) {
           }).join("")}
         </div>
         <small class="paper-evidence-note">${escapeHtml(shadowAnalysis.sample_warning || "Keep collecting paper evidence before changing strategy.")} “Recovered” means the observed price later rose above the tested trigger price; it does not guarantee a profitable position.</small>
+      </section>
+    ` : ""}
+    ${prospectiveTracker.available ? `
+      <section class="paper-prospective-tracker">
+        <div class="paper-evidence-heading">
+          <div>
+            <span class="access-label">Prospective review tracker</span>
+            <b>${escapeHtml(prospectiveTracker.headline || "Atlas is preparing forward-only signal tracking.")}</b>
+            <small>${escapeHtml(prospectiveTracker.detail || "This tracker observes signals without taking action.")}</small>
+          </div>
+          <span class="paper-review-only-badge">Review only</span>
+        </div>
+        <div class="paper-prospective-summary">
+          <div>
+            <span>Study status</span>
+            <strong>${prospectiveTracker.activated ? "Active" : "Starts next snapshot"}</strong>
+          </div>
+          <div>
+            <span>Trigger observed</span>
+            <strong>${signed(Number(prospectiveTracker.loss_threshold_pct || -2))} return + ${signed(Number(prospectiveTracker.lag_threshold_pct || -3))} lag</strong>
+          </div>
+          <div>
+            <span>New reviews</span>
+            <strong>${Number(prospectiveCounts.active || 0)}</strong>
+          </div>
+          <div>
+            <span>Weakness persists</span>
+            <strong>${Number(prospectiveCounts.persistent_weakness || 0)}</strong>
+          </div>
+          <div>
+            <span>Recovered</span>
+            <strong>${Number(prospectiveCounts.recovered || 0)}</strong>
+          </div>
+          <div>
+            <span>Completed losses</span>
+            <strong>${Number(prospectiveCounts.completed_loss || 0)}</strong>
+          </div>
+        </div>
+        <div class="paper-prospective-list">
+          ${prospectiveSignals.map(signal => `
+            <article class="paper-prospective-row ${escapeHtml(signal.status || "active")}">
+              <div>
+                <b>${escapeHtml(signal.ticker || "Holding")}</b>
+                <span>${escapeHtml(signal.status_label || "Review signal")}</span>
+              </div>
+              <div>
+                <span>Triggered</span>
+                <strong>${signed(Number(signal.trigger_return_pct || 0))} return</strong>
+                <small>${signed(Number(signal.trigger_lag_pct || 0))} benchmark lag</small>
+              </div>
+              <div>
+                <span>Latest observation</span>
+                <strong>${signed(Number(signal.latest_return_pct || 0))} return</strong>
+                <small>${Number(signal.snapshots_observed || 0)} snapshot${Number(signal.snapshots_observed || 0) === 1 ? "" : "s"} followed</small>
+              </div>
+            </article>
+          `).join("") || `
+            <div class="empty compact">
+              ${prospectiveTracker.activated
+                ? "No holding has met the prospective review threshold since tracking began."
+                : "The next scheduled paper snapshot will activate this forward-only study."}
+            </div>
+          `}
+        </div>
+        <small class="paper-evidence-note">This tracker cannot place or force a simulated trade. A recovered signal only means price later moved above its trigger price.</small>
       </section>
     ` : ""}
     <section class="paper-evidence-roadmap">

@@ -61,6 +61,23 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Atlas now has an append-only prospective tracker for the earlier defensive
+  review signal. It starts from the next scheduled snapshot rather than
+  retroactively relabeling earlier history.
+- The tracker classifies each signal as new review, persistent weakness,
+  recovered above trigger, completed loss, or completed gain.
+- Signal transitions are recorded only when a review first appears or its
+  classification changes, avoiding duplicate daily ledger noise.
+- A temporary replay of the current cloud ledger identified KLAC, TSM, and
+  CRWD as likely initial review-only signals while preserving all 44 paper
+  trades.
+- Cloud Run revision `atlas-dashboard-stg-00149-qfd` is live on image
+  `20260726-prospective-reviews-verified`; the full 409-test suite, all 25
+  readiness checks, and all 15 protected dashboard checks pass.
+- The deployed image digest is
+  `sha256:da5da5c0bbdb4154b259c276e2482ddf9c12e14fae89d62987e5104a1bed950d`.
+- The live tracker currently displays `Starts next snapshot`. It remains
+  review-only and cannot force a simulated or real trade.
 - Atlas can now replay candidate defensive triggers against its recorded paper
   snapshots without placing or changing any paper trade.
 - A review-only signal at `-2%` position return and `-3%` benchmark lag fired

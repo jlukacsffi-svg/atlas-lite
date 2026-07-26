@@ -20,6 +20,8 @@ from app.paths import data_path
 DEFAULT_PAPER_DIR = data_path("paper_trading")
 DEFAULT_ACCOUNT_FILE = DEFAULT_PAPER_DIR / "account.json"
 DEFAULT_LEDGER_FILE = DEFAULT_PAPER_DIR / "ledger.jsonl"
+DEFENSIVE_REVIEW_LOSS_THRESHOLD_PCT = -2.0
+DEFENSIVE_REVIEW_LAG_THRESHOLD_PCT = -3.0
 
 DEFAULT_POLICY = {
     "minimum_cash_reserve_pct": 10.0,
@@ -611,9 +613,25 @@ class PaperTradingAccount:
                 else 0.0
             )
 
+        timestamp = self.clock().isoformat(timespec="seconds")
+        if not any(
+            item.get("event") == "defensive_review_tracking_started"
+            for item in self.ledger()
+        ):
+            self._append_event(
+                {
+                    "event": "defensive_review_tracking_started",
+                    "timestamp": timestamp,
+                    "mode": "review_only",
+                    "loss_threshold_pct": DEFENSIVE_REVIEW_LOSS_THRESHOLD_PCT,
+                    "lag_threshold_pct": DEFENSIVE_REVIEW_LAG_THRESHOLD_PCT,
+                    "policy_changed": False,
+                }
+            )
+
         event = {
             "event": "performance_snapshot",
-            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "timestamp": timestamp,
             "cash": round(status["cash"], 2),
             "market_value": round(status["market_value"], 2),
             "equity": round(status["equity"], 2),
@@ -648,6 +666,7 @@ class PaperTradingAccount:
             ],
         }
         self._append_event(event)
+        self._sync_prospective_defensive_review_events()
         return event
 
     def performance_history(self):
@@ -1110,6 +1129,9 @@ class PaperTradingAccount:
             paper_trades,
             self.performance_history(),
         )
+        prospective_review_tracker = (
+            self.prospective_defensive_review_tracker(self.ledger())
+        )
         return {
             "available": True,
             "status": status,
@@ -1126,6 +1148,7 @@ class PaperTradingAccount:
             "evidence_pipeline": evidence_pipeline,
             "completed_position_diagnostics": completed_position_diagnostics,
             "shadow_trigger_analysis": shadow_trigger_analysis,
+            "prospective_review_tracker": prospective_review_tracker,
         }
 
     def proposal_feedback(self, latest_prices=None):
@@ -4089,6 +4112,297 @@ class PaperTradingAccount:
             ),
             "candidates": results,
         }
+
+    @classmethod
+    def prospective_defensive_review_tracker(cls, events):
+        """Track review-only defensive signals recorded after study activation."""
+        marker = next(
+            (
+                event
+                for event in events
+                if event.get("event") == "defensive_review_tracking_started"
+            ),
+            None,
+        )
+        transitions = [
+            event
+            for event in events
+            if event.get("event") == "defensive_review_signal"
+        ]
+        if marker is None:
+            return {
+                "available": True,
+                "activated": False,
+                "mode": "review_only",
+                "policy_changed": False,
+                "headline": "Prospective tracking begins with the next scheduled snapshot.",
+                "detail": (
+                    "Atlas will start a clean forward-only study without "
+                    "relabeling earlier paper history."
+                ),
+                "loss_threshold_pct": DEFENSIVE_REVIEW_LOSS_THRESHOLD_PCT,
+                "lag_threshold_pct": DEFENSIVE_REVIEW_LAG_THRESHOLD_PCT,
+                "started_at": None,
+                "transition_count": 0,
+                "counts": {
+                    "total": 0,
+                    "active": 0,
+                    "persistent_weakness": 0,
+                    "recovered": 0,
+                    "completed_loss": 0,
+                    "completed_gain": 0,
+                },
+                "signals": [],
+            }
+
+        trades = [
+            event for event in events if event.get("event") == "paper_trade"
+        ]
+        snapshots = sorted(
+            [
+                event
+                for event in events
+                if event.get("event") == "performance_snapshot"
+            ],
+            key=lambda snapshot: str(snapshot.get("timestamp") or ""),
+        )
+        active = {}
+        cycles = []
+        for trade in trades:
+            ticker = str(trade.get("ticker") or "").strip().upper()
+            side = str(trade.get("side") or "").strip().lower()
+            if not ticker:
+                continue
+            before = float(trade.get("position_shares_before") or 0.0)
+            after = float(trade.get("position_shares_after") or 0.0)
+            shares = float(trade.get("shares") or 0.0)
+            price = float(trade.get("price") or 0.0)
+            notional = float(
+                trade.get("notional") or round(shares * price, 2)
+            )
+            if side == "buy":
+                if ticker not in active or before <= 0.0000001:
+                    opened_at = str(trade.get("timestamp") or "")
+                    active[ticker] = {
+                        "signal_id": "review_"
+                        + re.sub(r"[^a-zA-Z0-9]+", "_", f"{ticker}_{opened_at}")
+                        .strip("_")
+                        .lower(),
+                        "ticker": ticker,
+                        "opened_at": opened_at,
+                        "buy_shares": 0.0,
+                        "buy_notional": 0.0,
+                        "realized_gain_loss": 0.0,
+                        "closed": False,
+                    }
+                active[ticker]["buy_shares"] += shares
+                active[ticker]["buy_notional"] += notional
+                continue
+            if side != "sell" or ticker not in active:
+                continue
+            active[ticker]["realized_gain_loss"] += float(
+                trade.get("realized_gain_loss") or 0.0
+            )
+            if after <= 0.0000001:
+                active[ticker]["closed"] = True
+                active[ticker]["closed_at"] = str(
+                    trade.get("timestamp") or ""
+                )
+                cycles.append(active.pop(ticker))
+        cycles.extend(active.values())
+
+        marker_timestamp = str(marker.get("timestamp") or "")
+        signals = []
+        for cycle in cycles:
+            entry_price = (
+                cycle["buy_notional"] / cycle["buy_shares"]
+                if cycle["buy_shares"]
+                else None
+            )
+            if not entry_price:
+                continue
+            cycle_snapshots = []
+            for snapshot in snapshots:
+                timestamp = str(snapshot.get("timestamp") or "")
+                if timestamp < cycle["opened_at"]:
+                    continue
+                if cycle.get("closed") and timestamp > cycle["closed_at"]:
+                    continue
+                price = cls._snapshot_security_price(
+                    snapshot,
+                    cycle["ticker"],
+                )
+                if price is not None:
+                    cycle_snapshots.append((snapshot, price))
+            if not cycle_snapshots:
+                continue
+            baseline = cycle_snapshots[0][0]
+
+            def observation(snapshot, security_price):
+                security_return = cls._pct_return(
+                    entry_price,
+                    security_price,
+                )
+                benchmark_returns = []
+                for benchmark in ("SPY", "QQQ"):
+                    benchmark_return = cls._pct_return(
+                        (baseline.get("benchmark_prices") or {}).get(
+                            benchmark
+                        ),
+                        (snapshot.get("benchmark_prices") or {}).get(
+                            benchmark
+                        ),
+                    )
+                    if benchmark_return is not None:
+                        benchmark_returns.append(benchmark_return)
+                if security_return is None or not benchmark_returns:
+                    return None
+                return {
+                    "timestamp": snapshot.get("timestamp"),
+                    "price": security_price,
+                    "return_pct": round(security_return, 4),
+                    "lag_pct": round(
+                        security_return - max(benchmark_returns),
+                        2,
+                    ),
+                }
+
+            observed = [
+                value
+                for snapshot, price in cycle_snapshots
+                if str(snapshot.get("timestamp") or "") >= marker_timestamp
+                for value in [observation(snapshot, price)]
+                if value is not None
+            ]
+            trigger_index = next(
+                (
+                    index
+                    for index, value in enumerate(observed)
+                    if value["return_pct"]
+                    <= DEFENSIVE_REVIEW_LOSS_THRESHOLD_PCT
+                    and value["lag_pct"]
+                    <= DEFENSIVE_REVIEW_LAG_THRESHOLD_PCT
+                ),
+                None,
+            )
+            if trigger_index is None:
+                continue
+            trigger = observed[trigger_index]
+            after_trigger = observed[trigger_index:]
+            latest = after_trigger[-1]
+            recovered = any(
+                value["timestamp"] != trigger["timestamp"]
+                and value["price"] > trigger["price"]
+                for value in after_trigger
+            )
+            if cycle.get("closed"):
+                status = (
+                    "completed_loss"
+                    if cycle["realized_gain_loss"] < 0
+                    else "completed_gain"
+                )
+            elif recovered:
+                status = "recovered"
+            elif len(after_trigger) >= 3:
+                status = "persistent_weakness"
+            else:
+                status = "active"
+            status_labels = {
+                "active": "New review",
+                "persistent_weakness": "Weakness persists",
+                "recovered": "Recovered above trigger",
+                "completed_loss": "Completed loss",
+                "completed_gain": "Completed gain",
+            }
+            signals.append(
+                {
+                    "signal_id": cycle["signal_id"],
+                    "ticker": cycle["ticker"],
+                    "status": status,
+                    "status_label": status_labels[status],
+                    "triggered_at": trigger["timestamp"],
+                    "trigger_price": round(trigger["price"], 4),
+                    "trigger_return_pct": trigger["return_pct"],
+                    "trigger_lag_pct": trigger["lag_pct"],
+                    "latest_at": latest["timestamp"],
+                    "latest_price": round(latest["price"], 4),
+                    "latest_return_pct": latest["return_pct"],
+                    "latest_lag_pct": latest["lag_pct"],
+                    "snapshots_observed": len(after_trigger),
+                    "realized_gain_loss": (
+                        round(cycle["realized_gain_loss"], 2)
+                        if cycle.get("closed")
+                        else None
+                    ),
+                }
+            )
+
+        status_order = {
+            "persistent_weakness": 0,
+            "active": 1,
+            "completed_loss": 2,
+            "recovered": 3,
+            "completed_gain": 4,
+        }
+        signals.sort(
+            key=lambda item: (
+                status_order.get(item["status"], 9),
+                str(item.get("triggered_at") or ""),
+            )
+        )
+        counts = {
+            "total": len(signals),
+            "active": 0,
+            "persistent_weakness": 0,
+            "recovered": 0,
+            "completed_loss": 0,
+            "completed_gain": 0,
+        }
+        for signal in signals:
+            counts[signal["status"]] += 1
+        headline = (
+            f"Atlas is following {len(signals)} prospective review signal"
+            f"{'' if len(signals) == 1 else 's'}."
+            if signals
+            else "No prospective review signals have appeared yet."
+        )
+        return {
+            "available": True,
+            "activated": True,
+            "mode": "review_only",
+            "policy_changed": False,
+            "headline": headline,
+            "detail": (
+                "Signals are observations only. Atlas records persistence, "
+                "recovery, and completed outcomes without forcing a sale."
+            ),
+            "loss_threshold_pct": DEFENSIVE_REVIEW_LOSS_THRESHOLD_PCT,
+            "lag_threshold_pct": DEFENSIVE_REVIEW_LAG_THRESHOLD_PCT,
+            "started_at": marker.get("timestamp"),
+            "transition_count": len(transitions),
+            "counts": counts,
+            "signals": signals,
+        }
+
+    def _sync_prospective_defensive_review_events(self):
+        tracker = self.prospective_defensive_review_tracker(self.ledger())
+        prior = {}
+        for event in self.ledger():
+            if event.get("event") == "defensive_review_signal":
+                prior[event.get("signal_id")] = event
+        for signal in tracker.get("signals") or []:
+            previous = prior.get(signal["signal_id"])
+            if previous and previous.get("status") == signal["status"]:
+                continue
+            self._append_event(
+                {
+                    "event": "defensive_review_signal",
+                    "timestamp": signal["latest_at"],
+                    "mode": "review_only",
+                    "policy_changed": False,
+                    **signal,
+                }
+            )
 
     def trade_statistics(self):
         events = self.ledger()

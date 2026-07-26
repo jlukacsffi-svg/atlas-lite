@@ -1364,6 +1364,10 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(pipeline["sell_executions"], 1)
         self.assertEqual(pipeline["latest_snapshot_at"], "2026-06-07T16:00:00")
         self.assertFalse(summary["completed_position_diagnostics"]["available"])
+        self.assertTrue(summary["prospective_review_tracker"]["activated"])
+        self.assertFalse(
+            summary["prospective_review_tracker"]["policy_changed"]
+        )
         readiness = summary["capital_readiness"]
         self.assertFalse(readiness["ready_for_owner_review"])
         self.assertEqual(readiness["status"], "paper_only")
@@ -1850,6 +1854,123 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(automatic["actual_completed_gain_loss"], -20)
         self.assertEqual(automatic["shadow_completed_gain_loss"], -40)
         self.assertEqual(automatic["completed_improvement"], -20)
+
+    def test_prospective_review_tracker_classifies_forward_outcomes(self):
+        events = [
+            {
+                "event": "paper_trade",
+                "timestamp": "2026-07-01T09:30:00",
+                "ticker": "NVDA",
+                "side": "buy",
+                "shares": 10,
+                "price": 100,
+                "notional": 1000,
+                "position_shares_before": 0,
+                "position_shares_after": 10,
+            },
+            {
+                "event": "paper_trade",
+                "timestamp": "2026-07-01T09:31:00",
+                "ticker": "AMD",
+                "side": "buy",
+                "shares": 10,
+                "price": 100,
+                "notional": 1000,
+                "position_shares_before": 0,
+                "position_shares_after": 10,
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T09:45:00",
+                "benchmark_prices": {"SPY": 100, "QQQ": 100},
+                "security_prices": {"NVDA": 100, "AMD": 100},
+            },
+            {
+                "event": "defensive_review_tracking_started",
+                "timestamp": "2026-07-01T10:00:00",
+                "mode": "review_only",
+                "policy_changed": False,
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T10:00:00",
+                "benchmark_prices": {"SPY": 101, "QQQ": 101},
+                "security_prices": {"NVDA": 97, "AMD": 97},
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T10:01:00",
+                "benchmark_prices": {"SPY": 102, "QQQ": 102},
+                "security_prices": {"NVDA": 96, "AMD": 99},
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T10:02:00",
+                "benchmark_prices": {"SPY": 103, "QQQ": 103},
+                "security_prices": {"NVDA": 95, "AMD": 98},
+            },
+            {
+                "event": "paper_trade",
+                "timestamp": "2026-07-01T10:03:00",
+                "ticker": "NVDA",
+                "side": "sell",
+                "shares": 10,
+                "price": 95,
+                "notional": 950,
+                "realized_gain_loss": -50,
+                "position_shares_before": 10,
+                "position_shares_after": 0,
+            },
+        ]
+
+        tracker = PaperTradingAccount.prospective_defensive_review_tracker(
+            events
+        )
+
+        self.assertTrue(tracker["activated"])
+        self.assertFalse(tracker["policy_changed"])
+        self.assertEqual(tracker["counts"]["total"], 2)
+        self.assertEqual(tracker["counts"]["completed_loss"], 1)
+        self.assertEqual(tracker["counts"]["recovered"], 1)
+        by_ticker = {item["ticker"]: item for item in tracker["signals"]}
+        self.assertEqual(by_ticker["NVDA"]["status"], "completed_loss")
+        self.assertEqual(by_ticker["NVDA"]["snapshots_observed"], 3)
+        self.assertEqual(by_ticker["AMD"]["status"], "recovered")
+        self.assertEqual(by_ticker["AMD"]["latest_return_pct"], -2.0)
+
+    def test_performance_snapshot_starts_review_tracking_once(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            times = iter(
+                [
+                    datetime(2026, 7, 1, 9, 0, 0),
+                    datetime(2026, 7, 1, 16, 0, 0),
+                    datetime(2026, 7, 2, 16, 0, 0),
+                ]
+            )
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: next(times),
+            )
+            account.initialize(100000)
+            account.record_performance_snapshot(
+                prices={},
+                benchmark_prices={"SPY": 500, "QQQ": 400},
+            )
+            account.record_performance_snapshot(
+                prices={},
+                benchmark_prices={"SPY": 505, "QQQ": 405},
+            )
+            events = account.ledger()
+
+        markers = [
+            event
+            for event in events
+            if event.get("event") == "defensive_review_tracking_started"
+        ]
+        self.assertEqual(len(markers), 1)
+        self.assertEqual(markers[0]["mode"], "review_only")
+        self.assertFalse(markers[0]["policy_changed"])
 
     def test_performance_report_includes_news_event_context(self):
         with tempfile.TemporaryDirectory() as temp_dir:

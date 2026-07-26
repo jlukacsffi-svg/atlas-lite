@@ -479,6 +479,9 @@ class AtlasCloudApplication:
             validation.get("completed_position_diagnostics") or {}
         )
         shadow_trigger_analysis = validation.get("shadow_trigger_analysis") or {}
+        prospective_review_tracker = (
+            validation.get("prospective_review_tracker") or {}
+        )
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -551,6 +554,28 @@ class AtlasCloudApplication:
                             "automatic_exit_recovery_rate_pct"
                         )
                         or 0
+                    ),
+                },
+                "prospective_review_tracker": {
+                    "ok": bool(prospective_review_tracker.get("available"))
+                    and prospective_review_tracker.get("policy_changed") is False
+                    and prospective_review_tracker.get("mode") == "review_only"
+                    and self._ui_contains("Prospective review tracker"),
+                    "detail": (
+                        "Dashboard exposes forward-only defensive review "
+                        "tracking without granting trade authority."
+                    ),
+                    "activated": bool(
+                        prospective_review_tracker.get("activated")
+                    ),
+                    "signal_count": int(
+                        (prospective_review_tracker.get("counts") or {}).get(
+                            "total"
+                        )
+                        or 0
+                    ),
+                    "transition_count": int(
+                        prospective_review_tracker.get("transition_count") or 0
                     ),
                 },
                 "persistence_learning": {
