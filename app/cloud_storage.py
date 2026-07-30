@@ -38,6 +38,7 @@ ALLOWED_PATTERNS = (
 STARTUP_REQUIRED_PATHS = (
     "paper_trading/account.json",
     "paper_trading/ledger.jsonl",
+    "research_archive/archive_index.json",
     "research_tasks/tasks.json",
 )
 

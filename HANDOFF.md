@@ -61,6 +61,19 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The private Research report archive now has All, Daily, and Weekly filters,
+  a live matching-report count, and a direct current-priority comparison.
+- Daily report cards use `research_archive/archive_index.json` to preserve
+  universe coverage and the contemporaneous Atlas score leader. Weekly cards
+  are clearly labeled as seven-day evidence syntheses.
+- The live archive currently shows six reports: four daily and two weekly.
+  Historical evidence and current evidence remain visibly distinct.
+- Cloud Run revision `atlas-dashboard-stg-00154-k9j`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-report-evidence`.
+- The deployed image digest is
+  `sha256:66c0d61d7a79dc644133d10714dac9cc41d8fb736eb3aa7ac635eca67081714a`.
+- The full 416-test suite, all 26 readiness checks, and all 17 protected
+  dashboard checks pass.
 - The Research page now includes a private Recent Executive Reports library.
   It lists the newest daily and weekly reports with explicit type and date,
   and opens a complete report in a separate owner-authenticated view.

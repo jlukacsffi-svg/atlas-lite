@@ -421,10 +421,18 @@
           <span class="tag">Owner only</span>
         </div>
         <p class="panel-intro">Open a dated briefing to review what Atlas knew and concluded at that point in time.</p>
+        <div class="report-archive-toolbar" aria-label="Executive report filters">
+          <div class="report-filter-group" role="group" aria-label="Filter reports by type">
+            <button class="report-filter active" type="button" data-report-filter="all" aria-pressed="true">All</button>
+            <button class="report-filter" type="button" data-report-filter="daily" aria-pressed="false">Daily</button>
+            <button class="report-filter" type="button" data-report-filter="weekly" aria-pressed="false">Weekly</button>
+          </div>
+          <span id="report-result-count">Loading reports...</span>
+        </div>
         <div id="report-archive" class="report-archive-list"></div>
       </section>
       <section class="content-grid lower-grid">
-        <article class="panel research-summary-panel">
+        <article id="research-priorities-panel" class="panel research-summary-panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Atlas intelligence brief</p>

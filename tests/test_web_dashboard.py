@@ -32,8 +32,28 @@ class WebDashboardTests(unittest.TestCase):
             )
             unsafe = reports / "morning_brief_20260608_070000.html"
             unsafe.write_text("<script>alert('no')</script>", encoding="utf-8")
+            archive_dir = root / "archive"
+            archive_dir.mkdir()
+            (archive_dir / "archive_index.json").write_text(
+                json.dumps(
+                    {
+                        "entries": [
+                            {
+                                "html_report_path": (
+                                    "../reports/morning_brief_20260607_070000.html"
+                                ),
+                                "available_securities": 140,
+                                "score_leaders": [
+                                    {"ticker": "AAA", "total_score": 91.2}
+                                ],
+                            }
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
             service = DashboardDataService(
-                archive_dir=root / "archive",
+                archive_dir=archive_dir,
                 reports_dir=reports,
                 paper_account=PaperTradingAccount(
                     account_file=root / "paper" / "account.json",
@@ -45,6 +65,11 @@ class WebDashboardTests(unittest.TestCase):
             archive = service._reports()
 
             self.assertEqual(archive[0]["type"], "Morning brief")
+            self.assertEqual(archive[0]["coverage"], 140)
+            self.assertEqual(
+                archive[0]["leader"],
+                {"ticker": "AAA", "score": 91.2},
+            )
             self.assertEqual(archive[1]["type"], "Weekly summary")
             self.assertEqual(
                 service.report_document("morning_brief_20260607_070000"),
@@ -1586,7 +1611,13 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("renderResearchWorkspace", script)
         self.assertIn("renderReportArchive", script)
         self.assertIn('id="report-archive"', html)
+        self.assertIn('data-report-filter="daily"', html)
+        self.assertIn('id="report-result-count"', html)
+        self.assertIn('id="research-priorities-panel"', html)
+        self.assertIn("reportArchiveFilter", script)
+        self.assertIn("Compare current priorities", script)
         self.assertIn(".report-archive-list", styles)
+        self.assertIn(".report-filter-group", styles)
         self.assertIn("What Atlas currently concludes", script)
         self.assertIn("Evidence changing now", script)
         self.assertIn("Assigned follow-up", script)

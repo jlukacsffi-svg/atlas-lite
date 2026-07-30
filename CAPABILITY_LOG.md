@@ -3,6 +3,40 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 29, 2026 - Report history is easier to filter and compare
+
+New capabilities:
+
+- Filter the private report archive by all, daily, or weekly reports.
+- Show the number of matching reports immediately as a filter changes.
+- Preserve historical evidence context on daily reports, including universe
+  coverage and the leading Atlas score at generation time.
+- Label weekly reports as seven-day research and paper evidence syntheses.
+- Jump from any archived report to current Atlas priorities for an explicit
+  then-versus-now comparison.
+
+Validated result:
+
+- The live archive shows six reports: four daily and two weekly.
+- Daily evidence labels show 140-security coverage and the contemporaneous
+  LLY score leader for each available report.
+- The current-priority comparison moves to today's conclusion, sector, mover,
+  watch, coverage, and assigned-follow-up evidence.
+- The full local suite passes with 416 tests.
+- Cloud Run revision `atlas-dashboard-stg-00154-k9j`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-report-evidence`.
+- The deployed image digest is
+  `sha256:66c0d61d7a79dc644133d10714dac9cc41d8fb736eb3aa7ac635eca67081714a`.
+- All 26 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass.
+
+Current boundaries:
+
+- Historical evidence is labeled separately from current priorities.
+- Filters and comparison links do not alter research, paper policy, or trade
+  authority.
+- Cloud report email, real trading, and brokerage access remain disabled.
+
 ## July 29, 2026 - Private executive reports are available inside Atlas
 
 New capabilities:

@@ -9,6 +9,8 @@ let paperAccountabilityReport = { summary: {}, tickers: [] };
 let paperPositions = [];
 let recommendationWatchlist = [];
 let universeExpanded = false;
+let reportArchive = [];
+let reportArchiveFilter = "all";
 
 const PAGE_METADATA = {
   about: {
@@ -1658,7 +1660,22 @@ function renderResearchWorkspace(data) {
 }
 
 function renderReportArchive(reports) {
-  document.getElementById("report-archive").innerHTML = reports.map(report => {
+  reportArchive = reports;
+  const visible = reports.filter(report => {
+    if (reportArchiveFilter === "daily") return report.type === "Morning brief";
+    if (reportArchiveFilter === "weekly") return report.type === "Weekly summary";
+    return true;
+  });
+  const count = document.getElementById("report-result-count");
+  if (count) {
+    count.textContent = `Showing ${visible.length} of ${reports.length} reports`;
+  }
+  document.querySelectorAll("[data-report-filter]").forEach(button => {
+    const active = button.dataset.reportFilter === reportArchiveFilter;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  document.getElementById("report-archive").innerHTML = visible.map(report => {
     const generated = report.generated_at
       ? new Date(report.generated_at).toLocaleString([], {
           month: "short",
@@ -1668,6 +1685,11 @@ function renderReportArchive(reports) {
           minute: "2-digit",
         })
       : "Date unavailable";
+    const evidence = report.coverage
+      ? `${Number(report.coverage)} securities${report.leader?.ticker ? ` · Leader ${escapeHtml(report.leader.ticker)} ${Number(report.leader.score || 0).toFixed(1)}` : ""}`
+      : report.type === "Weekly summary"
+        ? "Seven-day research and paper evidence synthesis"
+        : "Historical evidence is preserved in the full report";
     return `
       <article class="report-archive-row">
         <div class="report-archive-mark" aria-hidden="true">${report.type === "Weekly summary" ? "W" : "D"}</div>
@@ -1675,11 +1697,15 @@ function renderReportArchive(reports) {
           <span class="access-label">${escapeHtml(report.type || "Atlas report")}</span>
           <b class="row-title">${escapeHtml(report.title || "Executive report")}</b>
           <small class="row-meta">${escapeHtml(generated)}</small>
+          <small class="report-evidence">${evidence}</small>
         </div>
-        <a class="secondary-button report-open-link" href="${escapeHtml(report.url || "#")}" target="_blank" rel="noopener">Open report</a>
+        <div class="report-archive-actions">
+          <a class="secondary-button report-open-link" href="${escapeHtml(report.url || "#")}" target="_blank" rel="noopener">Open report</a>
+          <button class="report-compare-link" type="button" data-research-target="research-priorities-panel">Compare current priorities</button>
+        </div>
       </article>
     `;
-  }).join("") || `<div class="empty compact">No archived executive reports are available yet. The next scheduled research run will add one here.</div>`;
+  }).join("") || `<div class="empty compact">No ${escapeHtml(reportArchiveFilter === "all" ? "" : reportArchiveFilter)} reports are available in the recent archive.</div>`;
 }
 
 function renderScores(rows) {
@@ -3276,6 +3302,12 @@ document.getElementById("recommendations").addEventListener("click", event => {
   }
 });
 document.getElementById("research").addEventListener("click", event => {
+  const reportFilter = event.target.closest("[data-report-filter]");
+  if (reportFilter) {
+    reportArchiveFilter = reportFilter.dataset.reportFilter || "all";
+    renderReportArchive(reportArchive);
+    return;
+  }
   const jumpButton = event.target.closest("[data-research-target]");
   if (jumpButton) {
     jumpToResearchTarget(jumpButton.dataset.researchTarget);

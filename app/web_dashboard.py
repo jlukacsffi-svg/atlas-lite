@@ -1870,6 +1870,7 @@ class DashboardDataService:
         reports = []
         if not self.reports_dir.exists():
             return reports
+        evidence_by_report = self._report_evidence_index()
         for path in self.reports_dir.glob("*.html"):
             match = REPORT_ID_PATTERN.fullmatch(path.stem)
             if (
@@ -1883,6 +1884,9 @@ class DashboardDataService:
                 "%Y%m%d%H%M%S",
             )
             report_type = match.group(1)
+            evidence = evidence_by_report.get(path.stem, {})
+            leaders = evidence.get("score_leaders") or []
+            leader = leaders[0] if leaders else {}
             reports.append(
                 {
                     "id": path.stem,
@@ -1894,6 +1898,15 @@ class DashboardDataService:
                     ),
                     "generated_at": generated.isoformat(timespec="seconds"),
                     "url": f"/reports/{path.stem}",
+                    "coverage": evidence.get("available_securities"),
+                    "leader": (
+                        {
+                            "ticker": leader.get("ticker"),
+                            "score": leader.get("total_score"),
+                        }
+                        if leader.get("ticker")
+                        else None
+                    ),
                 }
             )
         return sorted(
@@ -1901,6 +1914,20 @@ class DashboardDataService:
             key=lambda item: item["generated_at"],
             reverse=True,
         )[:limit]
+
+    def _report_evidence_index(self):
+        payload = self._read_json(self.archive_dir / "archive_index.json") or {}
+        entries = payload.get("entries")
+        if not isinstance(entries, list):
+            return {}
+        evidence = {}
+        for entry in entries:
+            if not isinstance(entry, dict):
+                continue
+            report_path = Path(str(entry.get("html_report_path") or ""))
+            if REPORT_ID_PATTERN.fullmatch(report_path.stem):
+                evidence[report_path.stem] = entry
+        return evidence
 
     def report_document(self, report_id):
         if not REPORT_ID_PATTERN.fullmatch(str(report_id or "")):

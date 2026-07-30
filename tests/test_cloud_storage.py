@@ -218,6 +218,12 @@ class CloudArtifactSyncTests(unittest.TestCase):
                     "object": "owner-v1/artifacts/research_tasks/tasks.json",
                 },
                 {
+                    "path": "research_archive/archive_index.json",
+                    "size": 2,
+                    "sha256": hashlib.sha256(b"{}").hexdigest(),
+                    "object": "owner-v1/artifacts/research_archive/archive_index.json",
+                },
+                {
                     "path": "reports/morning_brief_20260607_070000.html",
                     "size": 13,
                     "sha256": hashlib.sha256(b"<html></html>").hexdigest(),
@@ -257,6 +263,7 @@ class CloudArtifactSyncTests(unittest.TestCase):
                     "paper_trading/account.json",
                     "paper_trading/ledger.jsonl",
                     "reports/morning_brief_20260607_070000.html",
+                    "research_archive/archive_index.json",
                     "research_archive/snapshot_20260607_010000.json",
                     "research_tasks/tasks.json",
                 ],
