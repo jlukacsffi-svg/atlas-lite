@@ -61,6 +61,19 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Today's owner briefing now shows executive-report freshness, the latest
+  report timestamp and coverage, and a protected `Open latest report`
+  shortcut.
+- A Morning Executive Brief is labeled current for 36 hours. Older or missing
+  daily reporting becomes an explicit owner-facing warning.
+- The live Overview correctly reports the July 29 Morning Executive Brief as
+  current with 140-security coverage, and the shortcut opens the full report.
+- Cloud Run revision `atlas-dashboard-stg-00155-q57`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-report-cadence`.
+- The deployed image digest is
+  `sha256:474d4935d25415e8547d5a97e324a9883c12ada7cee6f4881a591255b3fae6ff`.
+- The full 416-test suite, all 26 readiness checks, and all 17 protected
+  dashboard checks pass.
 - The private Research report archive now has All, Daily, and Weekly filters,
   a live matching-report count, and a direct current-priority comparison.
 - Daily report cards use `research_archive/archive_index.json` to preserve

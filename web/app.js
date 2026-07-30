@@ -540,6 +540,8 @@ function renderOwnerBriefing(data) {
     </div>
   `;
 
+  renderOwnerReportStatus(Array.isArray(data.reports) ? data.reports : []);
+
   const signalDigest = document.getElementById("owner-signal-digest");
   signalDigest.hidden = !prospectiveTracker.available;
   signalDigest.innerHTML = !prospectiveTracker.available ? "" : recentTransitions.length ? `
@@ -571,6 +573,60 @@ function renderOwnerBriefing(data) {
       <a href="#paper">Open tracker</a>
     </div>
   `;
+}
+
+function renderOwnerReportStatus(reports) {
+  const status = document.getElementById("owner-report-status");
+  const link = document.getElementById("owner-latest-report-link");
+  const latestDaily = reports.find(report => report.type === "Morning brief");
+  const latest = latestDaily || reports[0] || null;
+  if (!latest) {
+    status.className = "owner-report-status missing";
+    status.innerHTML = `
+      <div>
+        <span>Research delivery</span>
+        <strong>No executive report is available</strong>
+        <small>Open Research after the next scheduled run to confirm reporting resumed.</small>
+      </div>
+      <b>Missing</b>
+    `;
+    link.href = "#research";
+    link.removeAttribute("target");
+    link.removeAttribute("rel");
+    link.textContent = "Open report library";
+    return;
+  }
+
+  const generated = new Date(latest.generated_at);
+  const ageHours = Number.isNaN(generated.getTime())
+    ? Number.POSITIVE_INFINITY
+    : Math.max(0, (Date.now() - generated.getTime()) / 3600000);
+  const current = Boolean(latestDaily) && ageHours <= 36;
+  const generatedLabel = Number.isFinite(ageHours)
+    ? generated.toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "date unavailable";
+  const coverage = latest.coverage
+    ? ` · ${Number(latest.coverage)} securities`
+    : "";
+  status.className = `owner-report-status ${current ? "current" : "delayed"}`;
+  status.innerHTML = `
+    <div>
+      <span>Research delivery</span>
+      <strong>${current ? "Latest briefing is current" : "Daily briefing needs a freshness check"}</strong>
+      <small>${escapeHtml(latest.title || "Executive report")} · ${escapeHtml(generatedLabel)}${coverage}</small>
+    </div>
+    <b>${current ? "Current" : "Review"}</b>
+  `;
+  link.href = latest.url || "#research";
+  link.target = "_blank";
+  link.rel = "noopener";
+  link.textContent = "Open latest report";
 }
 
 function setActivePage(pageId) {

@@ -343,6 +343,48 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   background: #f5f8ff;
   box-shadow: inset 0 3px 0 var(--blue);
 }
+.owner-report-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 16px;
+  border-top: 1px solid var(--line);
+  background: #f7faf9;
+}
+.owner-report-status > div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.owner-report-status span {
+  color: var(--muted);
+  font-size: 9px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.owner-report-status strong { font-size: 12px; }
+.owner-report-status small {
+  color: var(--muted);
+  font-size: 10px;
+}
+.owner-report-status > b {
+  padding: 5px 8px;
+  border: 1px solid #add4c2;
+  border-radius: 4px;
+  background: #e8f6ef;
+  color: var(--green);
+  font-size: 9px;
+  text-transform: uppercase;
+}
+.owner-report-status.delayed,
+.owner-report-status.missing { background: #fff9ef; }
+.owner-report-status.delayed > b,
+.owner-report-status.missing > b {
+  border-color: #e8c98b;
+  background: #fff1d3;
+  color: #7a4f00;
+}
 .owner-signal-digest {
   padding: 12px 20px;
   border-top: 1px solid var(--line);

@@ -3,6 +3,41 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 29, 2026 - Overview shows executive-report freshness
+
+New capabilities:
+
+- Show the latest Morning Executive Brief status directly in Today's owner
+  briefing on Overview.
+- Label a daily report as current when it was generated within the prior 36
+  hours.
+- Warn when the daily report needs a freshness check or no report is
+  available.
+- Show the report date and universe coverage, with a direct protected link to
+  the latest report.
+
+Validated result:
+
+- The live Overview reports `Latest briefing is current`.
+- The status identifies the July 29 Morning Executive Brief and 140-security
+  coverage.
+- The `Open latest report` shortcut opens the authenticated July 29 report.
+- The full local suite passes with 416 tests.
+- Cloud Run revision `atlas-dashboard-stg-00155-q57`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-report-cadence`.
+- The deployed image digest is
+  `sha256:474d4935d25415e8547d5a97e324a9883c12ada7cee6f4881a591255b3fae6ff`.
+- All 26 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass.
+
+Current boundaries:
+
+- Freshness is an owner-facing operational signal, not a guarantee about
+  market conditions or recommendation quality.
+- The report link remains owner-authenticated.
+- Report status cannot change paper policy or trading authority.
+- Cloud report email, real trading, and brokerage access remain disabled.
+
 ## July 29, 2026 - Report history is easier to filter and compare
 
 New capabilities:
