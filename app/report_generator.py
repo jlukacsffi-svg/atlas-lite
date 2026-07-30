@@ -97,6 +97,9 @@ class ReportGenerator:
         # Paper Trading Performance
         report.append(self._generate_paper_performance())
 
+        # Forward Defensive Review Evidence
+        report.append(self._generate_paper_review_evidence())
+
         # Scoring Summary
         report.append(self._generate_scoring_summary())
 
@@ -939,6 +942,55 @@ class ReportGenerator:
                     f"{flags.replace('|', '/')} | "
                     f"{review.get('thesis', 'N/A').replace('|', '/')} |"
                 )
+        return "\n".join(section) + "\n"
+
+    def _generate_paper_review_evidence(self):
+        """Summarize recent forward-only defensive review transitions."""
+        section = ["## Defensive Review Evidence\n"]
+        tracker = self.paper_summary.get("prospective_review_tracker")
+
+        if not tracker or not tracker.get("available"):
+            section.append(
+                "No forward defensive-review study is available for this run.\n"
+            )
+            return "\n".join(section) + "\n"
+
+        section.append(
+            "Review-only paper evidence. These signals do not change policy, "
+            "execute a simulated sale, or authorize real trading.\n"
+        )
+        if not tracker.get("activated"):
+            section.append(
+                "The forward study starts with the next scheduled paper snapshot.\n"
+            )
+            return "\n".join(section) + "\n"
+
+        transitions = list(tracker.get("recent_transitions") or [])
+        if not transitions:
+            section.append(
+                "No defensive-review status changed across the three most recent "
+                "paper snapshots.\n"
+            )
+            return "\n".join(section) + "\n"
+
+        section.extend(
+            [
+                "| Ticker | Latest Status | Position Return | Benchmark Lag | Observations |",
+                "|--------|---------------|-----------------|---------------|--------------|",
+            ]
+        )
+        for transition in transitions:
+            section.append(
+                f"| {transition.get('ticker', 'N/A')} | "
+                f"{transition.get('status_label', 'Review update')} | "
+                f"{self._format_optional_percent(transition.get('latest_return_pct'))} | "
+                f"{self._format_optional_percent(transition.get('latest_lag_pct'))} | "
+                f"{int(transition.get('snapshots_observed') or 0)} |"
+            )
+        section.append(
+            "\nAtlas shows only the latest state for each signal to avoid repeating "
+            "the same review history."
+        )
         return "\n".join(section) + "\n"
 
     def _generate_scoring_summary(self):

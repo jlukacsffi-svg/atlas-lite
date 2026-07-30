@@ -6,6 +6,7 @@ import html
 import re
 from pathlib import Path
 
+from app.paper_trading import PaperTradingAccount
 from app.research_memory import DEFAULT_ARCHIVE_DIR
 from app.paths import data_path
 
@@ -16,9 +17,15 @@ DEFAULT_REPORTS_DIR = data_path("reports")
 class WeeklySummaryGenerator:
     """Generate a weekly rollup from the local research archive index."""
 
-    def __init__(self, archive_dir=DEFAULT_ARCHIVE_DIR, reports_dir=DEFAULT_REPORTS_DIR):
+    def __init__(
+        self,
+        archive_dir=DEFAULT_ARCHIVE_DIR,
+        reports_dir=DEFAULT_REPORTS_DIR,
+        paper_account=None,
+    ):
         self.archive_dir = Path(archive_dir)
         self.reports_dir = Path(reports_dir)
+        self.paper_account = paper_account or PaperTradingAccount()
         self.timestamp = datetime.now()
         self.last_html_path = None
 
@@ -50,10 +57,12 @@ class WeeklySummaryGenerator:
 
         if not entries:
             report.append("## Summary\n\nNo archive entries are available for this period.\n")
+            report.append(self._generate_paper_review_evidence(days=days))
             report.append(f"\n---\n\n*Weekly summary generated on {self.timestamp.strftime('%Y-%m-%d %H:%M:%S')}*\n")
             return "\n".join(report)
 
         report.append(self._generate_weekly_overview(entries))
+        report.append(self._generate_paper_review_evidence(days=days))
         report.append(self._generate_weekly_narrative(entries))
         report.append(self._generate_key_changes(entries))
         report.append(self._generate_sector_trends(entries))
@@ -146,6 +155,96 @@ class WeeklySummaryGenerator:
         lines.append(f"- **Universe version**: {latest.get('universe_version', 'N/A')}")
         lines.append(f"- **Average available securities**: {avg_available:.1f}")
         lines.append("")
+        return "\n".join(lines) + "\n"
+
+    def _generate_paper_review_evidence(self, days=7):
+        lines = ["## Paper Defensive Review Evidence\n"]
+        if not self.paper_account.ledger_file.exists():
+            lines.append(
+                "No simulated paper ledger is available for this weekly report.\n"
+            )
+            return "\n".join(lines) + "\n"
+
+        events = self.paper_account.ledger()
+        tracker = self.paper_account.prospective_defensive_review_tracker(events)
+        lines.append(
+            "Review-only observations from the simulated portfolio. This section "
+            "cannot change paper policy or authorize real trading.\n"
+        )
+        if not tracker.get("activated"):
+            lines.append(
+                "The forward study starts with the next scheduled paper snapshot.\n"
+            )
+            return "\n".join(lines) + "\n"
+
+        cutoff = self.timestamp - timedelta(days=days)
+        latest_by_signal = {}
+        for event in events:
+            if event.get("event") != "defensive_review_signal":
+                continue
+            observed_at = self._parse_datetime(event.get("timestamp"))
+            if not observed_at or observed_at < cutoff:
+                continue
+            signal_id = str(event.get("signal_id") or "")
+            if signal_id:
+                latest_by_signal[signal_id] = event
+
+        priority = {
+            "completed_loss": 0,
+            "persistent_weakness": 1,
+            "active": 2,
+            "recovered": 3,
+            "completed_gain": 4,
+        }
+        transitions = sorted(
+            latest_by_signal.values(),
+            key=lambda item: (
+                priority.get(item.get("status"), 9),
+                str(item.get("timestamp") or ""),
+            ),
+        )[:8]
+        if not transitions:
+            lines.append(
+                f"No defensive-review status changed during the last {days} days.\n"
+            )
+            return "\n".join(lines) + "\n"
+
+        counts = Counter(item.get("status") for item in transitions)
+        lines.append(
+            "- **Latest material states**: "
+            + ", ".join(
+                f"{count} {label}"
+                for status, label in (
+                    ("completed_loss", "completed loss"),
+                    ("persistent_weakness", "persistent weakness"),
+                    ("active", "new review"),
+                    ("recovered", "recovery"),
+                    ("completed_gain", "completed gain"),
+                )
+                for count in [counts.get(status, 0)]
+                if count
+            )
+        )
+        lines.extend(
+            [
+                "",
+                "| Ticker | Latest Status | Position Return | Benchmark Lag | Observations |",
+                "|--------|---------------|-----------------|---------------|--------------|",
+            ]
+        )
+        for transition in transitions:
+            return_pct = transition.get("latest_return_pct")
+            lag_pct = transition.get("latest_lag_pct")
+            lines.append(
+                f"| {transition.get('ticker', 'N/A')} | "
+                f"{transition.get('status_label', 'Review update')} | "
+                f"{return_pct:+.2f}% | {lag_pct:+.2f}% | "
+                f"{int(transition.get('snapshots_observed') or 0)} |"
+            )
+        lines.append(
+            "\nOnly the latest state for each signal is shown; repeated unchanged "
+            "observations are omitted."
+        )
         return "\n".join(lines) + "\n"
 
     def _generate_weekly_narrative(self, entries):

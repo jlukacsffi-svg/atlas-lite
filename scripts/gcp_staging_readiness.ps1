@@ -128,8 +128,18 @@ $serviceReady = @($service.status.conditions | Where-Object {
 }).Count -eq 1
 $serviceMax = [string]$service.metadata.annotations.'run.googleapis.com/maxScale'
 $serviceMin = [string]$service.metadata.annotations.'run.googleapis.com/minScale'
+$dashboardImage = [string]$container.image
+$dailyImage = [string](
+    $dailyJob.spec.template.spec.template.spec.containers[0].image
+)
+$weeklyImage = [string](
+    $weeklyJob.spec.template.spec.template.spec.containers[0].image
+)
 
 Add-Check 'Dashboard ready' $serviceReady ([string]$service.status.latestReadyRevisionName)
+Add-Check 'Runtime image alignment' `
+    ($dashboardImage -eq $dailyImage -and $dashboardImage -eq $weeklyImage) `
+    "dashboard=$dashboardImage; daily=$dailyImage; weekly=$weeklyImage"
 Add-Check 'Dashboard maximum instances' ($serviceMax -eq '1') "max=$serviceMax"
 Add-Check 'Dashboard scales to zero' ($serviceMin -in @('', '0')) "min=$(if ($serviceMin) { $serviceMin } else { '0 (default)' })"
 Add-Check 'Dashboard service account' `

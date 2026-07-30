@@ -77,6 +77,68 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("| NVDA | Maintain | +2.50% | 89.7 |", section)
         self.assertIn("Simulated performance only", section)
 
+    def test_defensive_review_section_renders_recent_transition_digest(self):
+        generator = ReportGenerator(
+            {},
+            {},
+            paper_summary={
+                "prospective_review_tracker": {
+                    "available": True,
+                    "activated": True,
+                    "recent_transitions": [
+                        {
+                            "ticker": "TSM",
+                            "status": "persistent_weakness",
+                            "status_label": "Weakness persists",
+                            "latest_return_pct": -4.25,
+                            "latest_lag_pct": -5.75,
+                            "snapshots_observed": 3,
+                        },
+                        {
+                            "ticker": "AMD",
+                            "status": "recovered",
+                            "status_label": "Recovered above trigger",
+                            "latest_return_pct": -1.25,
+                            "latest_lag_pct": -2.0,
+                            "snapshots_observed": 4,
+                        },
+                    ],
+                }
+            },
+        )
+
+        section = generator._generate_paper_review_evidence()
+
+        self.assertIn("## Defensive Review Evidence", section)
+        self.assertIn(
+            "| TSM | Weakness persists | -4.25% | -5.75% | 3 |",
+            section,
+        )
+        self.assertIn(
+            "| AMD | Recovered above trigger | -1.25% | -2.00% | 4 |",
+            section,
+        )
+        self.assertIn("do not change policy", section)
+        self.assertIn("only the latest state", section)
+
+    def test_defensive_review_section_explains_forward_start(self):
+        generator = ReportGenerator(
+            {},
+            {},
+            paper_summary={
+                "prospective_review_tracker": {
+                    "available": True,
+                    "activated": False,
+                    "recent_transitions": [],
+                }
+            },
+        )
+
+        section = generator._generate_paper_review_evidence()
+
+        self.assertIn("starts with the next scheduled paper snapshot", section)
+        self.assertNotIn("| Ticker |", section)
+
 
 if __name__ == "__main__":
     unittest.main()

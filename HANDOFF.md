@@ -61,6 +61,27 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Daily and weekly executive reports now include forward defensive-review
+  evidence. Daily reporting uses the three most recent paper snapshots;
+  weekly reporting deduplicates and prioritizes the latest material state for
+  each signal across seven days.
+- Staging readiness now requires the dashboard, daily job, and weekly job to
+  use one aligned container image. This caught that the scheduled jobs were
+  still on an older image and had not activated the prospective tracker.
+- The existing jobs were updated without changing schedules, cloud email
+  policy, instance limits, or resource count. The next scheduled daily run
+  will establish the clean forward-only study marker.
+- Cloud Run revision `atlas-dashboard-stg-00152-czh`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` now use image `20260729-review-reporting-verified`.
+- The deployed image digest is
+  `sha256:aea76a82be166cd57fd26d153526ce8c24ca2f30e30d559d28fa727bf5ac911d`.
+- The full 414-test suite, all 26 readiness checks, and all 17 protected
+  dashboard checks pass. A 140-security isolated report smoke run also
+  completed with email disabled.
+- The live Stage 5 ledger has 139 snapshots, 52 judged decisions, and 9
+  completed positions. The July 29 simulated return is `-3.32%`.
+- These report sections remain review-only. Paper authority is unchanged, and
+  real trading and brokerage access remain disabled.
 - Recent prospective defensive-review changes now appear directly in Today's
   owner briefing on Overview, so the owner does not need to search the
   detailed Paper Portfolio for a material status change.

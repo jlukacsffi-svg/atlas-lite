@@ -4,6 +4,7 @@ import unittest
 from datetime import datetime
 from pathlib import Path
 
+from app.paper_trading import PaperTradingAccount
 from app.weekly_summary import WeeklySummaryGenerator
 
 
@@ -186,6 +187,82 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
             summary = generator.generate_summary(days=7)
 
         self.assertIn("No archive entries are available", summary)
+
+    def test_weekly_summary_deduplicates_recent_paper_review_transitions(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            archive_dir = root / "archive"
+            archive_dir.mkdir()
+            self.write_index(archive_dir)
+            paper_account = PaperTradingAccount(
+                account_file=root / "paper" / "account.json",
+                ledger_file=root / "paper" / "ledger.jsonl",
+            )
+            paper_account.initialize(100000)
+            paper_account._append_event(
+                {
+                    "event": "defensive_review_tracking_started",
+                    "timestamp": "2026-06-01T08:00:00",
+                    "mode": "review_only",
+                    "policy_changed": False,
+                }
+            )
+            paper_account._append_event(
+                {
+                    "event": "defensive_review_signal",
+                    "signal_id": "review_tsm",
+                    "ticker": "TSM",
+                    "status": "active",
+                    "status_label": "New review",
+                    "timestamp": "2026-06-02T08:00:00",
+                    "latest_return_pct": -2.5,
+                    "latest_lag_pct": -3.5,
+                    "snapshots_observed": 1,
+                }
+            )
+            paper_account._append_event(
+                {
+                    "event": "defensive_review_signal",
+                    "signal_id": "review_tsm",
+                    "ticker": "TSM",
+                    "status": "persistent_weakness",
+                    "status_label": "Weakness persists",
+                    "timestamp": "2026-06-04T07:30:00",
+                    "latest_return_pct": -4.25,
+                    "latest_lag_pct": -5.75,
+                    "snapshots_observed": 3,
+                }
+            )
+            paper_account._append_event(
+                {
+                    "event": "defensive_review_signal",
+                    "signal_id": "review_old",
+                    "ticker": "OLD",
+                    "status": "completed_loss",
+                    "status_label": "Completed loss",
+                    "timestamp": "2026-05-01T08:00:00",
+                    "latest_return_pct": -8.0,
+                    "latest_lag_pct": -9.0,
+                    "snapshots_observed": 5,
+                }
+            )
+            generator = WeeklySummaryGenerator(
+                archive_dir=archive_dir,
+                paper_account=paper_account,
+            )
+            generator.timestamp = datetime(2026, 6, 4, 8, 0, 0)
+
+            summary = generator.generate_summary(days=7)
+
+        self.assertIn("## Paper Defensive Review Evidence", summary)
+        self.assertIn("1 persistent weakness", summary)
+        self.assertIn(
+            "| TSM | Weakness persists | -4.25% | -5.75% | 3 |",
+            summary,
+        )
+        self.assertNotIn("| TSM | New review |", summary)
+        self.assertNotIn("OLD", summary)
+        self.assertIn("cannot change paper policy", summary)
 
 
 if __name__ == "__main__":

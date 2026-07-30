@@ -331,7 +331,7 @@ Current Web Phase 3 result:
   priority is adding clearer simulated exit and trim recommendations when a
   thesis weakens or paper performance lags.
 
-Estimated overall Atlas program completion: 81%.
+Estimated overall Atlas program completion: 82%.
 
 This estimate measures progress toward the complete Atlas Capital Research
 vision, including validated autonomous research, secure production operations,
@@ -379,7 +379,8 @@ the overall company program.
   foundational proof gaps and actions.
 - Completed: Paper Portfolio now shows the active evidence pipeline and the
   protected cloud verifier reports authoritative snapshot, judgment, and exit
-  counts. The live ledger has 133 snapshots and 42 judged decisions.
+  counts. The live ledger has 139 snapshots, 52 judged decisions, and 9
+  completed positions.
 - Completed: completed-position accounting now separates 30 partial trims from
   3 fully closed positions and bases realized win rate on complete position
   cycles. Stage 5 evidence maturity is 58.4%, with 2 of 9 gates passing.
@@ -406,8 +407,12 @@ the overall company program.
 - Completed: recent prospective review transitions now appear in Today's owner
   briefing. The digest prioritizes material changes, shows only the latest
   state per signal, and remains quiet until the forward study starts.
-- Next: include material prospective-review transitions in the daily and
-  weekly executive reports while preserving the current cloud no-email policy.
-  Continue accumulating forward outcomes in parallel.
+- Completed: material prospective-review transitions are now included in the
+  daily and weekly executive reports. Dashboard and scheduled-job image
+  alignment is also enforced by staging readiness.
+- Next: verify that the next scheduled daily run establishes the prospective
+  study marker and publishes the first aligned daily report. Then add a secure
+  report archive view to the Research page so generated Markdown and HTML
+  intelligence can be reviewed inside Atlas instead of only as files.
 - Parallel owner task: complete cross-device owner login and non-owner account
   denial before multi-user work begins.

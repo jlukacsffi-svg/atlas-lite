@@ -3,6 +3,47 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 29, 2026 - Defensive review evidence is included in executive reports
+
+New capabilities:
+
+- Add a concise Defensive Review Evidence section to the daily Morning
+  Executive Brief.
+- Add a seven-day Paper Defensive Review Evidence section to the weekly
+  research summary.
+- Deduplicate repeated signal history and show only the latest state for each
+  affected ticker.
+- Prioritize completed losses and persistent weakness ahead of new reviews,
+  recoveries, and completed gains.
+- Detect and fail staging readiness when the dashboard, daily job, and weekly
+  job are running different container images.
+
+Validated result:
+
+- The daily report uses the three most recent paper snapshots, while the
+  weekly report uses the latest material state from the prior seven days.
+- A 140-security isolated live-data run generated Markdown and HTML reports
+  successfully with email disabled.
+- The full local suite passes with 414 tests.
+- Cloud Run revision `atlas-dashboard-stg-00152-czh` is live, and the existing
+  daily and weekly jobs now use the same image:
+  `20260729-review-reporting-verified`.
+- The deployed image digest is
+  `sha256:aea76a82be166cd57fd26d153526ce8c24ca2f30e30d559d28fa727bf5ac911d`.
+- All 26 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass.
+- The live ledger has 139 snapshots, 52 judged decisions, and 9 completed
+  positions.
+
+Current boundaries:
+
+- Cloud report email remains disabled.
+- The report sections are evidence summaries only and cannot change paper
+  policy, execute a simulated sale, or authorize real trading.
+- The first aligned scheduled snapshot will establish the forward-only study
+  marker; Atlas did not force an extra paper cycle to create it.
+- Real trading and brokerage access remain disabled.
+
 ## July 26, 2026 - Review-signal changes now appear in the owner briefing
 
 New capabilities:

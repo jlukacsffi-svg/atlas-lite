@@ -130,6 +130,9 @@ class GoogleCloudScriptTests(unittest.TestCase):
             bootstrap,
         )
         self.assertIn("Dashboard owner artifact storage", readiness)
+        self.assertIn("Runtime image alignment", readiness)
+        self.assertIn("$dashboardImage -eq $dailyImage", readiness)
+        self.assertIn("$dashboardImage -eq $weeklyImage", readiness)
         self.assertIn(
             "roles/storage.objectUser",
             readiness,

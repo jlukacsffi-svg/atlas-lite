@@ -250,6 +250,11 @@ def main():
                 )
                 paper_summary = paper_account.performance_summary()
                 paper_summary["configured"] = True
+                paper_summary["prospective_review_tracker"] = (
+                    paper_account.prospective_defensive_review_tracker(
+                        paper_account.ledger()
+                    )
+                )
                 paper_summary["pending_proposals"] = paper_account.proposals(
                     status="pending"
                 )
