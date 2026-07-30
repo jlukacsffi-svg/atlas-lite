@@ -277,7 +277,7 @@ function renderDashboard(data) {
   renderPortfolioFocus(paper.portfolio_focus || {});
   renderPositionLadder(paper.position_ladder || []);
   renderValidationSummary(paper.validation_summary || {});
-  renderRoadmap(paper.validation_summary || {});
+  renderRoadmap(data);
   renderPositions(paper.positions || []);
   renderPaperActivity(paper.activity || []);
   renderTradeHistory(paper.trade_history || { total_trades: 0, ticker_count: 0, tickers: [] });
@@ -286,6 +286,7 @@ function renderDashboard(data) {
   renderPaperFeedbackSummary(paper.feedback_summary || {});
   renderCapitalRotationScoreboard(paper.capital_rotation_scoreboard || {});
   renderPaperFeedback(paper.feedback || []);
+  renderEntryEvidenceGate(data.overview || {});
   renderRecommendationSummary(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderRecommendations(data.owner_controls?.paper_proposals || [], data.watchlist || []);
   renderTasks(data.research?.tasks || []);
@@ -325,7 +326,8 @@ function renderDashboardSummary(data) {
   renderPortfolioFocus(paper.portfolio_focus || {});
   renderPositionLadder(paper.position_ladder || []);
   renderValidationSummary(paper.validation_summary || {});
-  renderRoadmap(paper.validation_summary || {});
+  renderRoadmap(data);
+  renderEntryEvidenceGate(data.overview || {});
   renderPositions(paper.positions || []);
   renderPaperOperatingMode(paper.operating_mode || {});
   renderWorkspace(data.workspace || null);
@@ -463,6 +465,34 @@ function renderRecommendationSummary(proposals, watchlist) {
       </div>
     </div>
   `;
+}
+
+function renderEntryEvidenceGate(overview) {
+  const quality = overview.daily_change_quality || {};
+  const limited = quality.status === "limited";
+  const status = limited ? "paused" : "clear";
+  const badge = limited ? "Waiting for valid refresh" : "Evidence clear";
+  const title = limited
+    ? "New simulated buys are automatically paused"
+    : "Paper entry screening is active";
+  const detail = limited
+    ? `${quality.detail || "Valid daily movement evidence is unavailable."} Independent score, thesis, trend, and news-risk exits remain active.`
+    : "Valid prior-close comparisons are available. Atlas may screen and advance paper entries within the active policy limits.";
+  const html = `
+    <div class="entry-evidence-icon" aria-hidden="true">${limited ? "!" : "✓"}</div>
+    <div>
+      <span class="entry-evidence-label">Paper entry evidence</span>
+      <strong>${escapeHtml(title)}</strong>
+      <p>${escapeHtml(detail)}</p>
+    </div>
+    <span class="entry-evidence-badge ${status}">${escapeHtml(badge)}</span>
+  `;
+  ["paper-entry-evidence", "roadmap-entry-evidence"].forEach(id => {
+    const node = document.getElementById(id);
+    if (!node) return;
+    node.className = `entry-evidence-gate ${id === "roadmap-entry-evidence" ? "roadmap-entry-evidence " : ""}${status}`;
+    node.innerHTML = html;
+  });
 }
 
 function renderOwnerBriefing(data) {
@@ -2988,7 +3018,8 @@ function renderValidationSummary(summary) {
   });
 }
 
-function renderRoadmap(summary) {
+function renderRoadmap(data) {
+  const summary = data.paper?.validation_summary || {};
   const pipeline = summary.evidence_pipeline || {};
   const readiness = summary.capital_readiness || {};
   const passed = Number(readiness.passed || 0);

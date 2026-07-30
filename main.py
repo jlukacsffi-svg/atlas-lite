@@ -238,6 +238,7 @@ def main():
                 )
                 autonomous_cycle = paper_account.run_autonomous_cycle(
                     latest_prices=prices,
+                    market_data=market_data,
                 )
                 # Refresh the performance snapshot after any autonomous actions so
                 # the saved report reflects the actual post-trade paper book.

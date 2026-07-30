@@ -61,6 +61,9 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Atlas now displays a live paper-entry evidence gate on Recommendations and
+  Roadmap. Limited or suspicious all-zero daily movement pauses pending and
+  approved simulated buys, while independent risk exits remain active.
 - The dashboard now includes a dedicated graphical Roadmap page with separate
   investment-autonomy and secure-web lanes, live Stage 5 evidence counts, next
   gates, and the current authority boundary.

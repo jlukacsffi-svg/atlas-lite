@@ -6,6 +6,7 @@ from pathlib import Path
 import re
 import uuid
 
+from app.data_quality import daily_movement_summary
 from app.decision_driver import infer_decision_driver
 from app.paper_monitor import (
     DEFAULT_PROJECTION_ADD_SECTOR_BREADTH_PCT,
@@ -160,7 +161,12 @@ class PaperTradingAccount:
     def auto_manage_enabled(self):
         return bool(self.effective_policy().get("auto_manage_enabled"))
 
-    def run_autonomous_cycle(self, latest_prices, source="paper_auto_manage_v1"):
+    def run_autonomous_cycle(
+        self,
+        latest_prices,
+        source="paper_auto_manage_v1",
+        market_data=None,
+    ):
         if not self.auto_manage_enabled():
             return {
                 "enabled": False,
@@ -174,6 +180,12 @@ class PaperTradingAccount:
         rejected = []
         executed = []
         skipped = []
+        entry_evidence = (
+            daily_movement_summary(market_data)
+            if market_data is not None
+            else {"status": "not_checked"}
+        )
+        entries_paused = entry_evidence["status"] == "limited"
 
         pending = sorted(
             self.proposals(status="pending"),
@@ -184,6 +196,14 @@ class PaperTradingAccount:
         )
         for proposal in pending:
             proposal_id = proposal["proposal_id"]
+            if proposal.get("side") == "buy" and entries_paused:
+                skipped.append(
+                    {
+                        "proposal_id": proposal_id,
+                        "reason": "limited_daily_movement_evidence",
+                    }
+                )
+                continue
             review = self.latest_proposal_risk_review(proposal_id)
             if not review:
                 skipped.append(
@@ -221,6 +241,14 @@ class PaperTradingAccount:
         )
         for proposal in ready:
             proposal_id = proposal["proposal_id"]
+            if proposal.get("side") == "buy" and entries_paused:
+                skipped.append(
+                    {
+                        "proposal_id": proposal_id,
+                        "reason": "limited_daily_movement_evidence",
+                    }
+                )
+                continue
             ticker = str(proposal.get("ticker") or "").strip().upper()
             price = latest_prices.get(ticker)
             if price is None:
@@ -258,6 +286,7 @@ class PaperTradingAccount:
             "rejected": rejected,
             "executed": executed,
             "skipped": skipped,
+            "entry_evidence": entry_evidence,
         }
 
     def preview_order(self, side, ticker, shares, price, thesis):

@@ -3,6 +3,38 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 29, 2026 - Paper entry evidence gate is visible and enforced
+
+New capabilities:
+
+- Show the live paper-entry evidence state on Recommendations and Roadmap.
+- Clearly state when valid prior-close evidence permits normal paper-entry
+  screening.
+- Automatically pause both pending and previously approved simulated buys
+  when the latest market snapshot has limited or suspicious all-zero movement.
+- Keep independent trim and exit protections active while new entries are
+  paused.
+
+Validated result:
+
+- Focused tests prove limited evidence cannot approve or execute a paper buy.
+- A risk-reviewed simulated sell can still execute under the same limited
+  snapshot.
+- The full local suite passes with 431 tests.
+- Desktop and 390-pixel mobile layouts are readable without horizontal
+  overflow.
+- Cloud Run revision `atlas-dashboard-stg-00159-rq6`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-entry-evidence-gate`.
+- The deployed image digest is
+  `sha256:b81bd0f0d10baf45a6859d09826eeb9797b42931262fe5e8fd75ef006613ae9d`.
+- All 26 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass. Neither scheduled job was manually executed.
+
+Current boundaries:
+
+- This gate applies to simulated paper trading only.
+- It does not grant brokerage access or real-money trading authority.
+
 ## July 29, 2026 - Graphical development roadmap is available
 
 New capabilities:

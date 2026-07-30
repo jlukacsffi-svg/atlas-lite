@@ -9,7 +9,7 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 
-from app.data_quality import has_reliable_daily_change
+from app.data_quality import daily_movement_summary, has_reliable_daily_change
 from app.decision_driver import infer_decision_driver
 from app.paper_strategy import PaperStrategy
 from app.paper_trading import PaperTradingAccount
@@ -255,48 +255,12 @@ class DashboardDataService:
             for data in available.values()
             if (data.get("percent_change") or 0) < 0
         )
-        explicit_limited = sum(
-            1
-            for data in available.values()
-            if data.get("daily_change_quality") == "limited"
-        )
-        nonzero_moves = sum(
-            1
-            for data in available.values()
-            if abs(float(data.get("percent_change") or 0)) > 0.0001
-        )
-        suspicious_all_zero = len(available) >= 5 and nonzero_moves == 0
-        daily_change_status = (
-            "limited"
-            if explicit_limited or suspicious_all_zero
-            else "complete"
-        )
-        if suspicious_all_zero:
-            daily_change_detail = (
-                "The latest snapshot has prices but no usable daily movement. "
-                "Movers and market breadth are limited until the next refresh."
-            )
-        elif explicit_limited:
-            daily_change_detail = (
-                f"{explicit_limited} securities do not have a valid prior-close "
-                "comparison."
-            )
-        else:
-            daily_change_detail = (
-                "Daily movement uses valid prior-close comparisons for the "
-                "available securities."
-            )
         return {
             "tracked": len(securities),
             "available": len(available),
             "advancing": positive,
             "declining": negative,
-            "daily_change_quality": {
-                "status": daily_change_status,
-                "limited": len(available) if suspicious_all_zero else explicit_limited,
-                "suspicious_all_zero": suspicious_all_zero,
-                "detail": daily_change_detail,
-            },
+            "daily_change_quality": daily_movement_summary(available),
         }
 
     def _movers(self, available):

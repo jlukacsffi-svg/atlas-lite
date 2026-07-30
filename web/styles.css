@@ -739,6 +739,62 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   display: grid;
   gap: 18px;
 }
+.entry-evidence-gate {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 18px;
+  padding: 13px 14px;
+  border: 1px solid #b9d9ca;
+  border-left: 4px solid var(--green);
+  background: #f3fbf7;
+}
+.entry-evidence-gate.paused {
+  border-color: #e6c681;
+  border-left-color: var(--gold);
+  background: #fff9eb;
+}
+.entry-evidence-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  color: #fff;
+  background: var(--green);
+  font-size: 15px;
+  font-weight: 900;
+}
+.entry-evidence-gate.paused .entry-evidence-icon { background: var(--gold); }
+.entry-evidence-label {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.entry-evidence-gate strong { display: block; font-size: 14px; }
+.entry-evidence-gate p {
+  margin: 3px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+.entry-evidence-badge {
+  padding: 5px 7px;
+  border-radius: 3px;
+  color: #0e6048;
+  background: #dff3e9;
+  font-size: 10px;
+  font-weight: 800;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+.entry-evidence-badge.paused {
+  color: #76500d;
+  background: #f8e5b9;
+}
 .decision-desk-panel,
 .universe-panel {
   grid-column: 1 / -1;
@@ -3278,6 +3334,10 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .roadmap-live-evidence span { margin: 5px 0 2px; font-size: 11px; font-weight: 800; }
 .roadmap-live-evidence small { color: var(--muted); font-size: 10px; }
 .roadmap-stage-progress { grid-column: 1 / -1; }
+.roadmap-entry-evidence {
+  grid-column: 1 / -1;
+  margin: 0;
+}
 .roadmap-stage-progress strong { display: block; margin: 5px 0 8px; font-size: 12px; }
 .roadmap-stage-progress .roadmap-progress span { background: var(--blue); }
 .roadmap-lanes {
@@ -3484,6 +3544,14 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .roadmap-next-grid { grid-template-columns: 1fr; }
   .roadmap-next-grid article { border-right: 0; border-bottom: 1px solid var(--line); }
   .roadmap-next-grid article:last-child { border-bottom: 0; }
+  .entry-evidence-gate {
+    grid-template-columns: 28px minmax(0, 1fr);
+    align-items: start;
+  }
+  .entry-evidence-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
   .content-grid, .lower-grid { grid-template-columns: 1fr; }
   .sector-panel { grid-column: auto; }
   .donut-wrap { grid-template-columns: 130px 1fr; }

@@ -46,6 +46,7 @@ class OwnerControlService:
         autonomous_cycle = self._run_autonomous_cycle_if_enabled(
             latest_prices,
             auto_manage_enabled,
+            securities,
         )
         self._persist_autonomous_updates(
             autonomous_research_cycle,
@@ -246,12 +247,18 @@ class OwnerControlService:
         except ValueError:
             return False
 
-    def _run_autonomous_cycle_if_enabled(self, latest_prices, auto_manage_enabled):
+    def _run_autonomous_cycle_if_enabled(
+        self,
+        latest_prices,
+        auto_manage_enabled,
+        market_data,
+    ):
         if not auto_manage_enabled or not self.paper_account.account_file.exists():
             return {"enabled": False}
         cycle = self.paper_account.run_autonomous_cycle(
             latest_prices=latest_prices,
             source="owner_controls_auto_manage",
+            market_data=market_data,
         )
         self.paper_account.save_performance_report()
         return cycle

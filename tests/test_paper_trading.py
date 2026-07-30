@@ -425,6 +425,101 @@ class PaperTradingAccountTests(unittest.TestCase):
             self.assertEqual(result["executed"], [])
             self.assertEqual(account.proposal_status(proposal["proposal_id"]), "rejected")
 
+    def test_auto_managed_cycle_pauses_pending_and_approved_buys_on_limited_evidence(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(
+                temp_dir,
+                policy={"maximum_position_pct": 50.0},
+            )
+            account.initialize(100000)
+            account.update_policy({"auto_manage_enabled": True}, source="test")
+            pending = account.create_proposal(
+                "buy", "NVDA", 10, 100, "Pending entry."
+            )
+            account.record_proposal_risk_review(
+                pending["proposal_id"],
+                verdict="clear",
+                flags=[],
+                source="test",
+            )
+            approved = account.create_proposal(
+                "buy", "AMD", 10, 100, "Approved entry."
+            )
+            account.record_proposal_risk_review(
+                approved["proposal_id"],
+                verdict="clear",
+                flags=[],
+                source="test",
+            )
+            account.decide_proposal(approved["proposal_id"], "approve")
+            market_data = {
+                ticker: {
+                    "status": "available",
+                    "price": 100,
+                    "percent_change": 0,
+                    "daily_change_quality": "complete",
+                }
+                for ticker in ("NVDA", "AMD", "SPY", "QQQ", "MSFT")
+            }
+
+            result = account.run_autonomous_cycle(
+                {"NVDA": 101, "AMD": 99},
+                source="test_auto",
+                market_data=market_data,
+            )
+
+            self.assertEqual(result["entry_evidence"]["status"], "limited")
+            self.assertEqual(result["approved"], [])
+            self.assertEqual(result["executed"], [])
+            self.assertEqual(len(result["skipped"]), 2)
+            self.assertEqual(account.proposal_status(pending["proposal_id"]), "pending")
+            self.assertEqual(account.proposal_status(approved["proposal_id"]), "approved")
+            self.assertEqual(account.load()["positions"], {})
+
+    def test_auto_managed_cycle_keeps_risk_exit_active_on_limited_evidence(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            account.initialize(100000)
+            buy = account.create_proposal("buy", "NVDA", 10, 100, "Initial entry.")
+            account.record_proposal_risk_review(
+                buy["proposal_id"],
+                verdict="clear",
+                flags=[],
+                source="test",
+            )
+            account.decide_proposal(buy["proposal_id"], "approve")
+            account.execute_order(
+                "buy", "NVDA", 10, 100, "Initial entry.", proposal_id=buy["proposal_id"]
+            )
+            account.update_policy({"auto_manage_enabled": True}, source="test")
+            sell = account.create_proposal("sell", "NVDA", 10, 95, "Risk exit.")
+            account.record_proposal_risk_review(
+                sell["proposal_id"],
+                verdict="clear",
+                flags=[],
+                source="test",
+            )
+            market_data = {
+                ticker: {
+                    "status": "available",
+                    "price": 95,
+                    "percent_change": 0,
+                    "daily_change_quality": "complete",
+                }
+                for ticker in ("NVDA", "AMD", "SPY", "QQQ", "MSFT")
+            }
+
+            result = account.run_autonomous_cycle(
+                {"NVDA": 95},
+                source="test_auto",
+                market_data=market_data,
+            )
+
+            self.assertEqual(result["entry_evidence"]["status"], "limited")
+            self.assertEqual(result["approved"], [sell["proposal_id"]])
+            self.assertEqual(len(result["executed"]), 1)
+            self.assertNotIn("NVDA", account.load()["positions"])
+
     def test_update_policy_accepts_strategy_tuning_fields(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)
