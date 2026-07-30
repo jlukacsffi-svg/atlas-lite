@@ -17,6 +17,8 @@ MANIFEST_VERSION = "1.0"
 DEFAULT_PREFIX = "owner-v1"
 MAX_FILE_BYTES = 10 * 1024 * 1024
 MAX_BUNDLE_BYTES = 100 * 1024 * 1024
+MAX_STARTUP_REPORTS = 12
+MAX_STARTUP_REPORT_BYTES = 2 * 1024 * 1024
 
 ALLOWED_PATTERNS = (
     "research_archive/snapshot_*.json",
@@ -148,6 +150,7 @@ class CloudArtifactSync:
         entries = list(manifest["files"])
         startup = []
         latest_snapshot = None
+        recent_reports = []
         for entry in entries:
             path = str(entry.get("path") or "")
             if path.startswith("research_archive/snapshot_"):
@@ -155,8 +158,26 @@ class CloudArtifactSync:
                     latest_snapshot = entry
             if path in STARTUP_REQUIRED_PATHS:
                 startup.append(entry)
+            if (
+                path.startswith("reports/morning_brief_")
+                or path.startswith("reports/weekly_summary_")
+            ) and self._report_sort_key(path).startswith("20"):
+                recent_reports.append(entry)
         if latest_snapshot is not None:
             startup.append(latest_snapshot)
+        report_bytes = 0
+        for entry in sorted(
+            recent_reports,
+            key=lambda item: self._report_sort_key(item.get("path")),
+            reverse=True,
+        ):
+            size = int(entry.get("size") or 0)
+            if len([item for item in startup if str(item.get("path", "")).startswith("reports/")]) >= MAX_STARTUP_REPORTS:
+                break
+            if report_bytes + size > MAX_STARTUP_REPORT_BYTES:
+                continue
+            startup.append(entry)
+            report_bytes += size
         deduped = []
         seen = set()
         for entry in startup:
@@ -166,6 +187,14 @@ class CloudArtifactSync:
             seen.add(path)
             deduped.append(entry)
         return self._download_entries(deduped)
+
+    @staticmethod
+    def _report_sort_key(path):
+        name = PurePosixPath(str(path or "")).name
+        parts = name.rsplit(".", 1)[0].split("_")
+        if len(parts) >= 3 and parts[-2].isdigit() and parts[-1].isdigit():
+            return f"{parts[-2]}{parts[-1]}:{name}"
+        return f"00000000000000:{name}"
 
     def _download_entries(self, entries):
         downloaded = []

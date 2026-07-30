@@ -32,6 +32,11 @@ class StubDataService:
     def build(self):
         return {"generated_at": "2026-06-07T08:00:00", "overview": {}}
 
+    def report_document(self, report_id):
+        if report_id == "morning_brief_20260607_070000":
+            return b"<!doctype html><title>Atlas report</title>"
+        return None
+
 
 class CloudDashboardEntrypointTests(unittest.TestCase):
     def test_dashboard_refreshes_only_the_current_startup_bundle(self):
@@ -443,6 +448,39 @@ class CloudWebApplicationTests(unittest.TestCase):
         response = call_wsgi(self._oauth_app(), path="/api/dashboard")
         self.assertEqual(response["status"], "401 Unauthorized")
         self.assertEqual(response["json"], {"error": "authentication_required"})
+
+    def test_private_report_requires_owner_session_and_uses_isolated_policy(self):
+        app = self._oauth_app()
+        unauthenticated = call_wsgi(
+            app,
+            path="/reports/morning_brief_20260607_070000",
+        )
+        session = app._sign_payload(
+            {
+                "email": "owner@example.com",
+                "sub": "owner-123",
+                "exp": 1300,
+            }
+        )
+        authenticated = call_wsgi(
+            app,
+            path="/reports/morning_brief_20260607_070000",
+            headers={"Cookie": f"{SESSION_COOKIE}={session}"},
+        )
+        traversal = call_wsgi(
+            app,
+            path="/reports/..%2F.env",
+            headers={"Cookie": f"{SESSION_COOKIE}={session}"},
+        )
+
+        self.assertEqual(unauthenticated["status"], "302 Found")
+        self.assertEqual(authenticated["status"], "200 OK")
+        self.assertIn(b"Atlas report", authenticated["body"])
+        self.assertIn(
+            "default-src 'none'",
+            authenticated["headers"]["Content-Security-Policy"],
+        )
+        self.assertEqual(traversal["status"], "404 Not Found")
 
     def test_verification_endpoint_requires_token(self):
         response = call_wsgi(

@@ -5,6 +5,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import re
+from datetime import datetime
 from urllib.parse import urlparse
 
 from app.decision_driver import infer_decision_driver
@@ -17,6 +19,16 @@ from app.tenant_store import SCHEMA_VERSION
 
 WEB_DIR = project_path("web")
 DEFAULT_ARCHIVE_DIR = data_path("research_archive")
+DEFAULT_REPORTS_DIR = data_path("reports")
+REPORT_ID_PATTERN = re.compile(
+    r"^(morning_brief|weekly_summary)_(\d{8})_(\d{6})$"
+)
+UNSAFE_REPORT_HTML = re.compile(
+    r"<\s*(script|iframe|object|embed|form)\b|"
+    r"<\s*meta\b[^>]*http-equiv|"
+    r"\son[a-z]+\s*=|javascript\s*:",
+    re.IGNORECASE,
+)
 
 STATIC_FILES = {
     "/": ("index.html", "text/html; charset=utf-8"),
@@ -32,10 +44,12 @@ class DashboardDataService:
     def __init__(
         self,
         archive_dir=DEFAULT_ARCHIVE_DIR,
+        reports_dir=DEFAULT_REPORTS_DIR,
         paper_account=None,
         research_queue=None,
     ):
         self.archive_dir = Path(archive_dir)
+        self.reports_dir = Path(reports_dir)
         self.paper_account = paper_account or PaperTradingAccount()
         self.research_queue = research_queue or ResearchTaskQueue()
 
@@ -58,6 +72,7 @@ class DashboardDataService:
             "corporate_actions": self._corporate_actions(available),
             "paper": self._paper(available, include_details=True),
             "research": self._research(),
+            "reports": self._reports(),
             "history": self._history(),
             "access": self._access(),
             "workspace": self._workspace(),
@@ -77,6 +92,7 @@ class DashboardDataService:
             "overview": self._overview(securities, available),
             "paper": self._paper(available, include_details=False),
             "research": self._research(include_tasks=False),
+            "reports": self._reports(),
             "history": self._history(),
             "workspace": self._workspace(),
         }
@@ -1849,6 +1865,58 @@ class DashboardDataService:
                 for task in self.research_queue._sorted_tasks(tasks)[:6]
             ]
         return payload
+
+    def _reports(self, limit=12):
+        reports = []
+        if not self.reports_dir.exists():
+            return reports
+        for path in self.reports_dir.glob("*.html"):
+            match = REPORT_ID_PATTERN.fullmatch(path.stem)
+            if (
+                not match
+                or path.is_symlink()
+                or self.report_document(path.stem) is None
+            ):
+                continue
+            generated = datetime.strptime(
+                f"{match.group(2)}{match.group(3)}",
+                "%Y%m%d%H%M%S",
+            )
+            report_type = match.group(1)
+            reports.append(
+                {
+                    "id": path.stem,
+                    "type": "Morning brief" if report_type == "morning_brief" else "Weekly summary",
+                    "title": (
+                        "Morning Executive Brief"
+                        if report_type == "morning_brief"
+                        else "Weekly Research Summary"
+                    ),
+                    "generated_at": generated.isoformat(timespec="seconds"),
+                    "url": f"/reports/{path.stem}",
+                }
+            )
+        return sorted(
+            reports,
+            key=lambda item: item["generated_at"],
+            reverse=True,
+        )[:limit]
+
+    def report_document(self, report_id):
+        if not REPORT_ID_PATTERN.fullmatch(str(report_id or "")):
+            return None
+        path = (self.reports_dir / f"{report_id}.html").resolve()
+        try:
+            path.relative_to(self.reports_dir.resolve())
+        except ValueError:
+            return None
+        if not path.is_file() or path.is_symlink():
+            return None
+        body = path.read_bytes()
+        text = body.decode("utf-8", errors="strict")
+        if UNSAFE_REPORT_HTML.search(text):
+            return None
+        return body
 
     def _history(self):
         if not self.paper_account.account_file.exists():

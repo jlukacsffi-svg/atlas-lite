@@ -3,6 +3,42 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 29, 2026 - Private executive reports are available inside Atlas
+
+New capabilities:
+
+- Show recent daily and weekly executive reports directly on the Research
+  page with clear report type, date, and owner-only status.
+- Open a complete report in a separate protected browser view without
+  downloading files manually.
+- Keep cloud startup transfer bounded to the 12 newest generated HTML reports
+  and a 2 MB report allowance.
+- Reject unknown report names, path traversal, active HTML content, and access
+  without the authenticated owner session.
+
+Validated result:
+
+- The live Research page displays six available reports, including the latest
+  July 29 Morning Executive Brief and July 26 Weekly Research Summary.
+- The protected July 29 report opens successfully with its executive summary,
+  research agenda, market data, catalysts, opportunities, and risks.
+- The full local suite passes with 416 tests.
+- Cloud Run revision `atlas-dashboard-stg-00153-6hl`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-report-archive`.
+- The deployed image digest is
+  `sha256:c7e93e0e577aba71c8b32437e3742a735d45e0f270b60c0cb313beae8760f362`.
+- All 26 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass.
+
+Current boundaries:
+
+- Reports remain private to the allowlisted owner account.
+- Only generated Atlas HTML reports are served; active content is refused.
+- Report review cannot alter paper policy, execute simulated orders, or grant
+  real-money authority.
+- Cloud report email remains disabled, and real trading and brokerage access
+  remain disabled.
+
 ## July 29, 2026 - Defensive review evidence is included in executive reports
 
 New capabilities:

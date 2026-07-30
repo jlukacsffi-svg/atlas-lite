@@ -361,6 +361,9 @@ class AtlasCloudApplication:
                 "200 OK",
                 data,
             )
+        if path.startswith("/reports/"):
+            report_id = path.removeprefix("/reports/")
+            return self._report_response(start_response, report_id)
         static_file = STATIC_FILES.get(path)
         if static_file:
             filename, content_type = static_file
@@ -982,6 +985,41 @@ class AtlasCloudApplication:
         )
         return [body]
 
+    def _report_response(self, start_response, report_id):
+        body = self.data_service.report_document(report_id)
+        if body is None:
+            return self._json_response(
+                start_response,
+                "404 Not Found",
+                {"error": "not_found"},
+            )
+        headers = [
+            ("Content-Type", "text/html; charset=utf-8"),
+            ("Content-Length", str(len(body))),
+            ("Cache-Control", "no-store"),
+            ("X-Content-Type-Options", "nosniff"),
+            ("X-Frame-Options", "DENY"),
+            ("Referrer-Policy", "no-referrer"),
+            ("Cross-Origin-Opener-Policy", "same-origin"),
+            ("Cross-Origin-Resource-Policy", "same-origin"),
+            (
+                "Permissions-Policy",
+                "camera=(), microphone=(), geolocation=(), payment=()",
+            ),
+            (
+                "Content-Security-Policy",
+                "default-src 'none'; style-src 'unsafe-inline'; "
+                "frame-ancestors 'none'; base-uri 'none'; form-action 'none'",
+            ),
+            ("Content-Disposition", "inline"),
+        ]
+        if self.settings.mode == "cloud":
+            headers.append(
+                ("Strict-Transport-Security", "max-age=31536000; includeSubDomains")
+            )
+        start_response("200 OK", headers)
+        return [body]
+
     def _security_headers(self, content_type, content_length):
         headers = [
             ("Content-Type", content_type),
@@ -1042,6 +1080,10 @@ class RefreshingDashboardDataService:
         self._refresh_if_due()
         return self.data_service._latest_snapshot()
 
+    def report_document(self, report_id):
+        self._refresh_if_due()
+        return self.data_service.report_document(report_id)
+
     def _refresh_if_due(self):
         now = self.clock()
         if now - self.last_attempt < self.interval_seconds:
@@ -1075,6 +1117,7 @@ def data_service_from_environment():
     )
     return DashboardDataService(
         archive_dir=data_root / "research_archive",
+        reports_dir=data_root / "reports",
         paper_account=PaperTradingAccount(
             account_file=data_root / "paper_trading" / "account.json",
             ledger_file=data_root / "paper_trading" / "ledger.jsonl",

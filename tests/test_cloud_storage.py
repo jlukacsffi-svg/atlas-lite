@@ -218,10 +218,10 @@ class CloudArtifactSyncTests(unittest.TestCase):
                     "object": "owner-v1/artifacts/research_tasks/tasks.json",
                 },
                 {
-                    "path": "reports/daily.html",
+                    "path": "reports/morning_brief_20260607_070000.html",
                     "size": 13,
                     "sha256": hashlib.sha256(b"<html></html>").hexdigest(),
-                    "object": "owner-v1/artifacts/reports/daily.html",
+                    "object": "owner-v1/artifacts/reports/morning_brief_20260607_070000.html",
                 },
             ],
         }
@@ -234,7 +234,7 @@ class CloudArtifactSyncTests(unittest.TestCase):
             body = b"{}"
             if entry["path"].endswith("ledger.jsonl") or entry["path"].endswith("tasks.json"):
                 body = b"[]"
-            if entry["path"].endswith("daily.html"):
+            if entry["path"].endswith(".html"):
                 body = b"<html></html>"
             client.objects[entry["object"]] = {
                 "body": body,
@@ -256,11 +256,18 @@ class CloudArtifactSyncTests(unittest.TestCase):
                 [
                     "paper_trading/account.json",
                     "paper_trading/ledger.jsonl",
+                    "reports/morning_brief_20260607_070000.html",
                     "research_archive/snapshot_20260607_010000.json",
                     "research_tasks/tasks.json",
                 ],
             )
-            self.assertFalse((Path(target_dir) / "reports" / "daily.html").exists())
+            self.assertTrue(
+                (
+                    Path(target_dir)
+                    / "reports"
+                    / "morning_brief_20260607_070000.html"
+                ).exists()
+            )
 
     def test_pull_rejects_checksum_mismatch_without_replacing_local_file(self):
         client = FakeStorageClient()

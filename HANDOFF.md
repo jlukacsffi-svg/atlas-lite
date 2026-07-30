@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-07-26
+Last updated: 2026-07-29
 
 ## Current Roadmap Position
 
@@ -61,6 +61,24 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The Research page now includes a private Recent Executive Reports library.
+  It lists the newest daily and weekly reports with explicit type and date,
+  and opens a complete report in a separate owner-authenticated view.
+- Cloud startup synchronization is bounded to the 12 newest generated HTML
+  reports and a 2 MB report allowance. Strict report identifiers, resolved
+  path checks, active-content rejection, owner authentication, and an isolated
+  report Content Security Policy protect the archive.
+- The live archive exposes six available reports and the July 29 Morning
+  Executive Brief opens successfully in Chrome.
+- Cloud Run revision `atlas-dashboard-stg-00153-6hl`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-report-archive`.
+- The deployed image digest is
+  `sha256:c7e93e0e577aba71c8b32437e3742a735d45e0f270b60c0cb313beae8760f362`.
+- The full 416-test suite, all 26 readiness checks, and all 17 protected
+  dashboard checks pass.
+- This is a private reporting capability only. Paper authority is unchanged,
+  cloud email remains disabled, and real trading and brokerage access remain
+  disabled.
 - Daily and weekly executive reports now include forward defensive-review
   evidence. Daily reporting uses the three most recent paper snapshots;
   weekly reporting deduplicates and prioritizes the latest material state for

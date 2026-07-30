@@ -19,6 +19,42 @@ from app.web_dashboard import (
 
 
 class WebDashboardTests(unittest.TestCase):
+    def test_report_archive_lists_generated_reports_and_rejects_active_content(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            reports = root / "reports"
+            reports.mkdir()
+            safe = reports / "morning_brief_20260607_070000.html"
+            safe.write_text("<!doctype html><title>Morning brief</title>", encoding="utf-8")
+            (reports / "weekly_summary_20260606_180000.html").write_text(
+                "<!doctype html><title>Weekly summary</title>",
+                encoding="utf-8",
+            )
+            unsafe = reports / "morning_brief_20260608_070000.html"
+            unsafe.write_text("<script>alert('no')</script>", encoding="utf-8")
+            service = DashboardDataService(
+                archive_dir=root / "archive",
+                reports_dir=reports,
+                paper_account=PaperTradingAccount(
+                    account_file=root / "paper" / "account.json",
+                    ledger_file=root / "paper" / "ledger.jsonl",
+                ),
+                research_queue=ResearchTaskQueue(root / "tasks" / "tasks.json"),
+            )
+
+            archive = service._reports()
+
+            self.assertEqual(archive[0]["type"], "Morning brief")
+            self.assertEqual(archive[1]["type"], "Weekly summary")
+            self.assertEqual(
+                service.report_document("morning_brief_20260607_070000"),
+                safe.read_bytes(),
+            )
+            self.assertIsNone(
+                service.report_document("morning_brief_20260608_070000")
+            )
+            self.assertIsNone(service.report_document("../.env"))
+
     def test_dashboard_builds_read_model_from_local_artifacts(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -121,6 +157,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertEqual(data["paper"]["feedback"], [])
         self.assertEqual(data["paper"]["proposals"]["approved"], 1)
         self.assertEqual(data["research"]["open"], 1)
+        self.assertIn("reports", data)
+        self.assertIn("reports", summary)
         self.assertIsNotNone(data["research"]["tasks"][0]["created_at"])
         self.assertNotIn("activity", summary["paper"])
         self.assertNotIn("feedback", summary["paper"])
@@ -1546,6 +1584,9 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Open corporate-action detail", html)
         self.assertIn("Open full assignment queue", html)
         self.assertIn("renderResearchWorkspace", script)
+        self.assertIn("renderReportArchive", script)
+        self.assertIn('id="report-archive"', html)
+        self.assertIn(".report-archive-list", styles)
         self.assertIn("What Atlas currently concludes", script)
         self.assertIn("Evidence changing now", script)
         self.assertIn("Assigned follow-up", script)

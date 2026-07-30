@@ -48,9 +48,8 @@ def main():
     if settings.mode == "cloud":
         data_service = RefreshingDashboardDataService(
             data_service,
-            # The dashboard only reads core state plus the latest market snapshot.
-            # Pulling every historical report and release on each refresh makes
-            # owner requests contend with a much larger archive transfer.
+            # Keep refreshes bounded to core state, the latest market snapshot,
+            # and a small recent-report window for the owner archive.
             lambda: sync_from_environment("pull_startup"),
         )
     print(f"[web] Atlas {settings.mode} dashboard listening on {host}:{port}")

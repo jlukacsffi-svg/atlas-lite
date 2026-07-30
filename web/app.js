@@ -1560,6 +1560,7 @@ function renderResearchWorkspace(data) {
   const mover = movers[0] || null;
   const strongestSector = sectors[0] || null;
   const weakestSector = sectors.length ? sectors[sectors.length - 1] : null;
+  renderReportArchive(Array.isArray(data.reports) ? data.reports : []);
 
   document.getElementById("research-workspace-summary").innerHTML = `
     <div class="research-summary-grid">
@@ -1654,6 +1655,31 @@ function renderResearchWorkspace(data) {
       <button class="secondary-button" type="button" data-research-target="research-actions-panel">View corporate actions</button>
     </div>
   `;
+}
+
+function renderReportArchive(reports) {
+  document.getElementById("report-archive").innerHTML = reports.map(report => {
+    const generated = report.generated_at
+      ? new Date(report.generated_at).toLocaleString([], {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+        })
+      : "Date unavailable";
+    return `
+      <article class="report-archive-row">
+        <div class="report-archive-mark" aria-hidden="true">${report.type === "Weekly summary" ? "W" : "D"}</div>
+        <div>
+          <span class="access-label">${escapeHtml(report.type || "Atlas report")}</span>
+          <b class="row-title">${escapeHtml(report.title || "Executive report")}</b>
+          <small class="row-meta">${escapeHtml(generated)}</small>
+        </div>
+        <a class="secondary-button report-open-link" href="${escapeHtml(report.url || "#")}" target="_blank" rel="noopener">Open report</a>
+      </article>
+    `;
+  }).join("") || `<div class="empty compact">No archived executive reports are available yet. The next scheduled research run will add one here.</div>`;
 }
 
 function renderScores(rows) {
