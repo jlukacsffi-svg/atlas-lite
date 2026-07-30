@@ -283,14 +283,7 @@ class DashboardDataService:
 
     def _score_leaders(self, available):
         rows = [
-            {
-                "ticker": ticker,
-                "company_name": data.get("company_name", ticker),
-                "sector": data.get("sector", "Unclassified"),
-                "category": data.get("category", "Watchlist"),
-                "score": data.get("total_score"),
-                "percent_change": data.get("percent_change"),
-            }
+            self._score_model(ticker, data)
             for ticker, data in available.items()
             if data.get("total_score") is not None
             and data.get("sector") != "Benchmark ETF"
@@ -299,14 +292,7 @@ class DashboardDataService:
 
     def _watchlist(self, available):
         rows = [
-            {
-                "ticker": ticker,
-                "company_name": data.get("company_name", ticker),
-                "sector": data.get("sector", "Unclassified"),
-                "category": data.get("category", "Watchlist"),
-                "score": data.get("total_score"),
-                "percent_change": data.get("percent_change"),
-            }
+            self._score_model(ticker, data)
             for ticker, data in available.items()
         ]
         return sorted(
@@ -317,6 +303,28 @@ class DashboardDataService:
                 str(item.get("ticker") or ""),
             ),
         )
+
+    @staticmethod
+    def _score_model(ticker, data):
+        profile = data.get("profile") or {}
+        scores = data.get("scores") or {}
+        return {
+            "ticker": ticker,
+            "company_name": data.get("company_name", ticker),
+            "sector": data.get("sector", "Unclassified"),
+            "category": data.get("category", "Watchlist"),
+            "score": data.get("total_score"),
+            "percent_change": data.get("percent_change"),
+            "scores": {
+                name: scores.get(name)
+                for name in ("growth", "quality", "moat", "momentum", "risk")
+            },
+            "thesis": profile.get("thesis") or data.get("notes"),
+            "key_driver": profile.get("key_driver"),
+            "key_risk": profile.get("key_risk"),
+            "score_source": data.get("score_source"),
+            "score_horizon": "Research priority; not a return forecast",
+        }
 
     def _sectors(self, available):
         grouped = defaultdict(list)

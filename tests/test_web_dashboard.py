@@ -150,6 +150,18 @@ class WebDashboardTests(unittest.TestCase):
                                 "price": 100,
                                 "percent_change": 5,
                                 "total_score": 90,
+                                "scores": {
+                                    "growth": 92,
+                                    "quality": 88,
+                                    "moat": 85,
+                                    "momentum": 81,
+                                    "risk": 67,
+                                },
+                                "profile": {
+                                    "thesis": "Durable recurring growth.",
+                                    "key_driver": "Enterprise adoption.",
+                                    "key_risk": "Premium valuation.",
+                                },
                                 "momentum_metrics": {
                                     "trend_quality_score": 78.5,
                                     "trend_regime": "leadership",
@@ -221,7 +233,16 @@ class WebDashboardTests(unittest.TestCase):
         self.assertEqual(data["overview"]["advancing"], 1)
         self.assertEqual(data["movers"][0]["ticker"], "AAA")
         self.assertEqual(data["score_leaders"][0]["score"], 90)
+        self.assertEqual(data["score_leaders"][0]["scores"]["growth"], 92)
+        self.assertEqual(data["score_leaders"][0]["thesis"], "Durable recurring growth.")
+        self.assertEqual(data["score_leaders"][0]["key_driver"], "Enterprise adoption.")
+        self.assertEqual(data["score_leaders"][0]["key_risk"], "Premium valuation.")
+        self.assertEqual(
+            data["score_leaders"][0]["score_horizon"],
+            "Research priority; not a return forecast",
+        )
         self.assertEqual(data["watchlist"][0]["ticker"], "AAA")
+        self.assertEqual(data["watchlist"][0]["scores"]["quality"], 88)
         self.assertTrue(data["paper"]["configured"])
         self.assertIn("validation_summary", data["paper"])
         self.assertIn("validation_summary", summary["paper"])
@@ -1230,8 +1251,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn('id="workspace-status"', html)
         self.assertIn('id="data-freshness"', html)
         self.assertIn('id="sign-out"', html)
-        self.assertIn('/styles.css?v=20260729-roadmap', html)
-        self.assertIn('/app.js?v=20260729-roadmap', html)
+        self.assertIn('/styles.css?v=20260729-command-center', html)
+        self.assertIn('/app.js?v=20260729-command-center', html)
         self.assertIn("Defensive trigger shadow test", script)
         self.assertIn("No policy change", script)
         self.assertIn(".paper-shadow-analysis", styles)
@@ -1262,7 +1283,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Real-capital discussion gate", script)
         self.assertIn("ready_for_owner_review", script)
         self.assertIn("overview-validation-summary", html)
-        self.assertIn("Today&rsquo;s owner briefing", html)
+        self.assertIn("Decision command center", html)
         self.assertIn('id="owner-briefing-grid"', html)
         self.assertIn('id="owner-report-status"', html)
         self.assertIn('id="owner-latest-report-link"', html)
@@ -1730,6 +1751,16 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn(".recommendation-row", styles)
         self.assertIn(".recommendation-summary-grid", styles)
         self.assertIn(".recommendation-summary-card", styles)
+        self.assertIn("Decision command center", html)
+        self.assertIn("One readiness signal", html)
+        self.assertIn('data-recommendation-view="actions"', html)
+        self.assertIn('data-recommendation-view="universe"', html)
+        self.assertIn("renderScoreDrivers", script)
+        self.assertIn("setRecommendationView", script)
+        self.assertIn(".owner-readiness-card", styles)
+        self.assertIn(".recommendation-view-switcher", styles)
+        self.assertIn(".score-driver-grid", styles)
+        self.assertIn(".atlas-score-badge", styles)
         self.assertIn(".row-meta.paper-calibration.supportive", styles)
         self.assertIn(".row-meta.paper-calibration.caution", styles)
         self.assertIn(".ready-tag", styles)

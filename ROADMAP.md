@@ -15,6 +15,24 @@ Atlas should earn autonomy one layer at a time.
 
 The near-term mission is not to trade. The near-term mission is to become a dependable research, scoring, reporting, and portfolio-intelligence system.
 
+## Current Owner-Interface Milestone
+
+Complete at the first decision-command-center level.
+
+Atlas now:
+
+- Opens with one readiness signal, one recommended next step, and a compact
+  paper-portfolio summary.
+- Separates recommendations into action queue, buy ideas, risk actions, and
+  the broader research list.
+- Explains each Atlas Score through Growth, Quality, Moat, Momentum, and Risk
+  drivers, plus the company thesis, primary driver, and key risk.
+- Groups navigation around Decide, Understand, and Manage workflows.
+- Preserves clear paper-only and real-money authority boundaries.
+
+Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
+the active investment-capability gate.
+
 ## Stage 1: Reliable Daily Briefing
 
 Complete.

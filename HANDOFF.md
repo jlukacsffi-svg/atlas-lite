@@ -61,6 +61,14 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Atlas now opens with a decision-first command center built around one
+  readiness signal, today's recommended action, and current paper-portfolio
+  context. Recommendations can be filtered into action queue, buy ideas, risk
+  actions, and the full research list.
+- Atlas Scores are now explainable in the dashboard: Growth, Quality, Moat,
+  Momentum, and Risk drivers appear with the company thesis, primary driver,
+  and key risk. Scores are explicitly labeled as research priority rather than
+  return forecasts.
 - Atlas now displays a live paper-entry evidence gate on Recommendations and
   Roadmap. Limited or suspicious all-zero daily movement pauses pending and
   approved simulated buys, while independent risk exits remain active.
@@ -603,7 +611,7 @@ Recommended next Stage 3/5 task now:
   inputs layered on top of the new regime engine so Atlas can recognize sector
   leadership changes and deteriorating winners sooner.
 
-Estimated overall Atlas program completion: 84%.
+Estimated overall Atlas program completion: 85%.
 
 ## Useful Files
 

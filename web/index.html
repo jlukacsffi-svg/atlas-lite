@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-    <link rel="stylesheet" href="/styles.css?v=20260729-roadmap">
+    <link rel="stylesheet" href="/styles.css?v=20260729-command-center">
 </head>
 <body>
   <div class="app-shell">
@@ -27,13 +27,16 @@
         <span><strong>Atlas</strong><small>Capital Research</small></span>
       </a>
       <nav aria-label="Primary navigation">
+        <span class="nav-group-label">Decide</span>
         <a class="nav-item active" href="#overview">Overview</a>
         <a class="nav-item" href="#recommendations">Recommendations</a>
+        <a class="nav-item" href="#paper">Portfolio</a>
+        <span class="nav-group-label">Understand</span>
         <a class="nav-item" href="#research">Research</a>
-        <a class="nav-item" href="#paper">Paper Portfolio</a>
+        <a class="nav-item" href="#roadmap">Roadmap</a>
+        <span class="nav-group-label">Manage</span>
         <a class="nav-item" href="#controls">Controls</a>
         <a class="nav-item" href="#access">Access</a>
-        <a class="nav-item" href="#roadmap">Roadmap</a>
       </nav>
       <div class="sidebar-status">
         <span class="status-dot"></span>
@@ -146,27 +149,16 @@
       <section class="owner-briefing" aria-labelledby="owner-briefing-title">
         <div class="owner-briefing-heading">
           <div>
-            <p class="eyebrow">Start here</p>
-            <h2 id="owner-briefing-title">Today&rsquo;s owner briefing</h2>
+            <p class="eyebrow">Decision command center</p>
+            <h2 id="owner-briefing-title">Atlas today</h2>
+            <p class="section-intro">One readiness signal, one recommended next step, and the paper portfolio context behind it.</p>
           </div>
           <span class="tag">Paper simulation only</span>
         </div>
         <div id="owner-briefing-grid" class="owner-briefing-grid">
-          <div class="owner-briefing-item">
-            <span>Atlas is doing</span>
-            <strong>Loading current operating mode...</strong>
-          </div>
-          <div class="owner-briefing-item attention">
-            <span>Needs attention</span>
-            <strong>Loading portfolio priorities...</strong>
-          </div>
-          <div class="owner-briefing-item">
-            <span>Paper result</span>
-            <strong>Loading simulated performance...</strong>
-          </div>
-          <div class="owner-briefing-item next-step">
-            <span>Your next step</span>
-            <strong>Loading owner workflow...</strong>
+          <div class="owner-command-loading">
+            <strong>Building today&rsquo;s decision view...</strong>
+            <small>Atlas is loading readiness, recommendations, and paper results.</small>
           </div>
         </div>
         <div id="owner-report-status" class="owner-report-status">
@@ -177,10 +169,9 @@
         </div>
         <div id="owner-signal-digest" class="owner-signal-digest" hidden></div>
         <nav class="owner-briefing-actions" aria-label="Owner briefing shortcuts">
-          <a class="briefing-link primary" href="#recommendations">Review recommendations</a>
+          <a class="briefing-link primary" href="#recommendations">Open recommendations</a>
           <a id="owner-latest-report-link" class="briefing-link" href="#research">Open latest report</a>
-          <a class="briefing-link" href="#paper">Open paper portfolio</a>
-          <a class="briefing-link" href="#controls">Review controls</a>
+          <a class="briefing-link" href="#paper">Review portfolio</a>
         </nav>
       </section>
       <section id="market-data-warning" class="market-data-warning" role="status" hidden>
@@ -332,8 +323,14 @@
       </section>
 
       <section id="recommendations" class="dashboard-page" data-page="recommendations">
+        <div class="recommendation-view-switcher" role="group" aria-label="Recommendation page view">
+          <button class="recommendation-view-button active" type="button" data-recommendation-view="actions">Action queue</button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="buys">Buy ideas</button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="exits">Risk actions</button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="universe">Research list</button>
+        </div>
         <section class="content-grid">
-          <article class="panel recommendation-summary-panel decision-desk-panel">
+          <article class="panel recommendation-summary-panel decision-desk-panel" data-recommendation-section="actions">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Decision framing</p>
@@ -350,7 +347,7 @@
             <div id="paper-entry-evidence" class="entry-evidence-gate" role="status"></div>
             <div id="recommendation-summary" class="recommendation-summary"></div>
           </article>
-          <article class="panel recommendation-panel">
+          <article class="panel recommendation-panel" data-recommendation-section="buys">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Actionable simulation ideas</p>
@@ -366,7 +363,7 @@
             </div>
             <div id="recommended-buys" class="recommendation-list"></div>
           </article>
-          <article class="panel exit-panel">
+          <article class="panel exit-panel" data-recommendation-section="exits">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Position risk review</p>
@@ -382,7 +379,7 @@
             </div>
             <div id="recommended-exits" class="recommendation-list"></div>
           </article>
-          <article class="panel current-list-panel universe-panel">
+          <article class="panel current-list-panel universe-panel" data-recommendation-section="universe">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Research universe</p>
@@ -415,7 +412,7 @@
                 <button id="universe-toggle" class="secondary-button" type="button">Show all</button>
               </div>
             </div>
-            <p class="universe-note">Atlas scores indicate research priority, not a purchase recommendation. The highest scores are shown first.</p>
+            <p class="universe-note">Atlas scores indicate research priority, not a purchase recommendation. Open a score explanation to see the five drivers and the company thesis.</p>
             <div id="current-watchlist" class="watchlist-grid"></div>
           </article>
         </section>
@@ -944,9 +941,9 @@
           </div>
           <div class="roadmap-overall">
             <span>Estimated overall completion</span>
-            <strong>84%</strong>
-            <div class="roadmap-progress" aria-label="84 percent complete">
-              <span style="width:84%"></span>
+            <strong>85%</strong>
+            <div class="roadmap-progress" aria-label="85 percent complete">
+              <span style="width:85%"></span>
             </div>
             <small>The owner-only research and paper platform is further along than the full company vision.</small>
           </div>
@@ -1115,6 +1112,6 @@
       </div>
     </form>
   </dialog>
-    <script src="/app.js?v=20260729-roadmap"></script>
+    <script src="/app.js?v=20260729-command-center"></script>
 </body>
 </html>

@@ -9,6 +9,7 @@ let paperAccountabilityReport = { summary: {}, tickers: [] };
 let paperPositions = [];
 let recommendationWatchlist = [];
 let universeExpanded = false;
+let recommendationView = "actions";
 let reportArchive = [];
 let reportArchiveFilter = "all";
 
@@ -164,6 +165,53 @@ function signed(value, suffix = "%") {
 
 function changeClass(value) {
   return Number(value) >= 0 ? "positive" : "negative";
+}
+
+function clampScore(value) {
+  return Math.max(0, Math.min(100, Number(value) || 0));
+}
+
+function atlasScoreLabel(value) {
+  const score = Number(value);
+  if (score >= 85) return "High priority";
+  if (score >= 75) return "Strong";
+  if (score >= 65) return "Watch";
+  return "Developing";
+}
+
+function atlasScoreTone(value) {
+  const score = Number(value);
+  if (score >= 85) return "high";
+  if (score >= 75) return "strong";
+  if (score >= 65) return "watch";
+  return "developing";
+}
+
+function renderScoreDrivers(item) {
+  const scores = item.scores || {};
+  const drivers = [
+    ["Growth", scores.growth],
+    ["Quality", scores.quality],
+    ["Moat", scores.moat],
+    ["Momentum", scores.momentum],
+    ["Risk", scores.risk],
+  ];
+  return `
+    <div class="score-driver-grid">
+      ${drivers.map(([label, value]) => `
+        <div class="score-driver ${label === "Risk" ? "risk" : ""}">
+          <span><b>${label}</b><small>${value === null || value === undefined ? "--" : Number(value).toFixed(0)}</small></span>
+          <i><em style="width:${clampScore(value)}%"></em></i>
+        </div>
+      `).join("")}
+    </div>
+    <div class="score-explanation-copy">
+      ${item.thesis ? `<p><b>Thesis:</b> ${escapeHtml(item.thesis)}</p>` : ""}
+      ${item.key_driver ? `<p><b>Key driver:</b> ${escapeHtml(item.key_driver)}</p>` : ""}
+      ${item.key_risk ? `<p><b>Key risk:</b> ${escapeHtml(item.key_risk)}</p>` : ""}
+      <small>${escapeHtml(item.score_horizon || "Research priority; not a return forecast")}</small>
+    </div>
+  `;
 }
 
 function benchmarkLabel(ticker) {
@@ -510,6 +558,19 @@ function renderOwnerBriefing(data) {
   const proposals = data.owner_controls?.paper_proposals || [];
   const currentMode = paper.operating_mode?.current || {};
   const autoManaged = currentMode.id === "paper_auto_manage";
+  const readiness = paper.validation_summary?.capital_readiness || {};
+  const evidencePipeline = paper.validation_summary?.evidence_pipeline || {};
+  const readinessScore = Math.round(clampScore(readiness.progress_pct));
+  const judgedDecisions = Number(
+    evidencePipeline.judged_decisions || paper.validation_summary?.judged_trades || 0
+  );
+  const completedPositions = Number(
+    evidencePipeline.completed_positions || paper.validation_summary?.realized_exits || 0
+  );
+  const passedGates = Number(readiness.passed || 0);
+  const totalGates = Number(readiness.total || 0);
+  const dailyQuality = data.overview?.daily_change_quality || {};
+  const entriesPaused = dailyQuality.status === "limited";
   const exitCount = Number(counts.exit || 0) + Number(counts.trim || 0);
   const pendingBuys = proposals.filter(item => item.side === "buy" && item.status === "pending").length;
   const readyBuys = proposals.filter(item => item.side === "buy" && item.status === "approved").length;
@@ -543,6 +604,10 @@ function renderOwnerBriefing(data) {
     nextTitle = "Monitor paper results";
     nextDetail = "Atlas is managing simulation decisions automatically; real-money trading remains disabled.";
   }
+  if (entriesPaused) {
+    nextTitle = "Wait for a valid market refresh";
+    nextDetail = "Atlas has paused new simulated buys. Independent trim and exit protections remain active.";
+  }
 
   const operatingTitle = currentMode.label || (autoManaged ? "Automatic paper management" : "Recommendation mode");
   const operatingDetail = currentMode.description || focus.headline || "Atlas is monitoring the research universe.";
@@ -553,28 +618,73 @@ function renderOwnerBriefing(data) {
   const paperResultDetail = paper.configured
     ? `${money.format(Number(paper.equity || 0))} equity with ${money.format(Number(paper.cash || 0))} in simulated cash.`
     : "Atlas needs a valid paper ledger before performance can be evaluated.";
+  const positions = Array.isArray(paper.positions) ? paper.positions : [];
+  const excessReturns = paper.excess_return_pct || {};
+  const benchmarkEntries = Object.entries(excessReturns)
+    .filter(([, value]) => value !== null && value !== undefined);
+  const strongestEdge = benchmarkEntries.length
+    ? benchmarkEntries.sort((left, right) => Number(right[1]) - Number(left[1]))[0]
+    : null;
+  const benchmarkEdgeLabel = strongestEdge
+    ? `${signed(Number(strongestEdge[1]))} vs ${benchmarkLabel(strongestEdge[0])}`
+    : "Building comparison history";
+  const decisionState = entriesPaused
+    ? "Entries paused"
+    : exitCount > 0
+      ? "Risk action"
+      : pendingBuys + readyBuys > 0
+        ? "Buy review"
+        : "Monitoring";
+  const decisionTone = entriesPaused ? "paused" : exitCount > 0 ? "risk" : "clear";
 
   document.getElementById("owner-briefing-grid").innerHTML = `
-    <div class="owner-briefing-item">
-      <span>Atlas is doing</span>
-      <strong>${escapeHtml(operatingTitle)}</strong>
-      <small>${escapeHtml(operatingDetail)}</small>
-    </div>
-    <div class="owner-briefing-item attention ${firstAttention || urgentResearch ? "active" : ""}">
-      <span>Needs attention</span>
+    <section class="owner-readiness-card">
+      <div class="readiness-ring" style="--readiness-angle:${readinessScore * 3.6}deg">
+        <div><strong>${readinessScore}</strong><span>/100</span></div>
+      </div>
+      <div class="owner-readiness-copy">
+        <span class="command-label">Atlas readiness</span>
+        <h3>${escapeHtml(readiness.status_label || "Stage 5 evidence building")}</h3>
+        <p>This measures paper-validation maturity, not expected investment return.</p>
+        <div class="readiness-facts">
+          <span><b>${judgedDecisions}</b> judged decisions</span>
+          <span><b>${completedPositions}</b> completed positions</span>
+          <span><b>${totalGates ? `${passedGates}/${totalGates}` : "--"}</b> gates passing</span>
+        </div>
+      </div>
+    </section>
+    <section class="owner-decision-card ${decisionTone}">
+      <div class="owner-decision-heading">
+        <span class="command-label">Today&rsquo;s call</span>
+        <b>${escapeHtml(decisionState)}</b>
+      </div>
+      <h3>${escapeHtml(nextTitle)}</h3>
+      <p>${escapeHtml(nextDetail)}</p>
+      <div class="decision-context">
+        <span>Operating mode</span>
+        <strong>${escapeHtml(operatingTitle)}</strong>
+        <small>${escapeHtml(operatingDetail)}</small>
+      </div>
+      <a href="#recommendations">${exitCount + pendingBuys + readyBuys ? "Review the action queue" : "Open recommendations"}</a>
+    </section>
+    <section class="owner-portfolio-card">
+      <span class="command-label">Paper portfolio now</span>
+      <div class="portfolio-glance-primary">
+        <strong class="${changeClass(Number(paper.total_return_pct || 0))}">${escapeHtml(paperResultTitle)}</strong>
+        <small>${escapeHtml(benchmarkEdgeLabel)}</small>
+      </div>
+      <dl>
+        <div><dt>Equity</dt><dd>${paper.configured ? money.format(Number(paper.equity || 0)) : "--"}</dd></div>
+        <div><dt>Cash</dt><dd>${paper.configured ? money.format(Number(paper.cash || 0)) : "--"}</dd></div>
+        <div><dt>Open positions</dt><dd>${positions.length}</dd></div>
+        <div><dt>Need attention</dt><dd class="${exitCount ? "negative" : "positive"}">${exitCount}</dd></div>
+      </dl>
+    </section>
+    <section class="owner-attention-strip ${firstAttention || urgentResearch ? "active" : ""}">
+      <span class="command-label">Watch now</span>
       <strong>${escapeHtml(attentionTitle)}</strong>
       <small>${escapeHtml(attentionDetail)}</small>
-    </div>
-    <div class="owner-briefing-item result ${Number(paper.total_return_pct || 0) < 0 ? "negative-result" : "positive-result"}">
-      <span>Paper result</span>
-      <strong>${escapeHtml(paperResultTitle)}</strong>
-      <small>${escapeHtml(paperResultDetail)}</small>
-    </div>
-    <div class="owner-briefing-item next-step">
-      <span>Your next step</span>
-      <strong>${escapeHtml(nextTitle)}</strong>
-      <small>${escapeHtml(nextDetail)}</small>
-    </div>
+    </section>
   `;
 
   renderOwnerReportStatus(Array.isArray(data.reports) ? data.reports : []);
@@ -1522,11 +1632,24 @@ function renderUniverseList() {
     });
   const visible = universeExpanded || search ? filtered : filtered.slice(0, 24);
   target.innerHTML = visible.map(item => `
-    <div class="watchlist-item ${item.category === "Core" ? "core" : item.category === "Watchlist" ? "watchlist" : "tracked"}">
-      <b>${escapeHtml(item.ticker)}</b>
-      <span>${escapeHtml(item.category || "Tracked")}</span>
-      <small>${escapeHtml(item.sector || "Unclassified")}${item.score === null || item.score === undefined ? "" : ` - score ${Number(item.score).toFixed(1)}`}</small>
-    </div>
+    <article class="watchlist-item score-universe-item ${item.category === "Core" ? "core" : item.category === "Watchlist" ? "watchlist" : "tracked"}">
+      <div class="score-universe-heading">
+        <div>
+          <b>${escapeHtml(item.ticker)}</b>
+          <span>${escapeHtml(item.category || "Tracked")}</span>
+        </div>
+        ${item.score === null || item.score === undefined ? "" : `
+          <strong class="atlas-score-badge ${atlasScoreTone(item.score)}">${Number(item.score).toFixed(0)}</strong>
+        `}
+      </div>
+      <small>${escapeHtml(item.company_name || item.ticker)} &middot; ${escapeHtml(item.sector || "Unclassified")}</small>
+      ${item.score === null || item.score === undefined ? "" : `
+        <details class="score-explanation">
+          <summary>${atlasScoreLabel(item.score)} &middot; Explain score</summary>
+          ${renderScoreDrivers(item)}
+        </details>
+      `}
+    </article>
   `).join("") || `<div class="empty">No tracked securities match these filters.</div>`;
 
   const count = document.getElementById("universe-result-count");
@@ -1820,12 +1943,36 @@ function renderReportArchive(reports) {
 
 function renderScores(rows) {
   document.getElementById("score-leaders").innerHTML = rows.map((item, index) => `
-    <div class="rank-row">
+    <article class="rank-row score-rank-row">
       <span class="rank-number">${index + 1}</span>
       <span><b class="row-title">${item.ticker}</b><small class="row-meta">${item.sector} · ${item.category}</small></span>
-      <strong class="score">${Number(item.score).toFixed(1)}</strong>
-    </div>
+      <div class="score-rank-value">
+        <strong class="atlas-score-badge ${atlasScoreTone(item.score)}">${Number(item.score).toFixed(0)}</strong>
+        <small>${atlasScoreLabel(item.score)}</small>
+      </div>
+      <details class="score-explanation">
+        <summary>Why this score</summary>
+        ${renderScoreDrivers(item)}
+      </details>
+    </article>
   `).join("") || `<div class="empty">No score data available.</div>`;
+}
+
+function setRecommendationView(view) {
+  recommendationView = ["actions", "buys", "exits", "universe"].includes(view)
+    ? view
+    : "actions";
+  document.querySelectorAll("[data-recommendation-view]").forEach(button => {
+    const active = button.dataset.recommendationView === recommendationView;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+  document.querySelectorAll("[data-recommendation-section]").forEach(section => {
+    const sectionName = section.dataset.recommendationSection;
+    section.hidden = recommendationView === "actions"
+      ? sectionName === "universe"
+      : sectionName !== recommendationView;
+  });
 }
 
 function renderMovers(rows) {
@@ -3433,6 +3580,11 @@ document.getElementById("overview").addEventListener("click", event => {
   }
 });
 document.getElementById("recommendations").addEventListener("click", event => {
+  const viewButton = event.target.closest("[data-recommendation-view]");
+  if (viewButton) {
+    setRecommendationView(viewButton.dataset.recommendationView);
+    return;
+  }
   const jumpButton = event.target.closest("[data-paper-target]");
   if (jumpButton) {
     jumpToPaperTarget(jumpButton.dataset.paperTarget);
@@ -3543,6 +3695,7 @@ document.getElementById("position-detail-dialog").addEventListener("cancel", eve
 });
 renderEnvironment();
 initializeHelpPopovers();
+setRecommendationView("actions");
 setActivePage(window.location.hash.replace("#", "") || "overview");
 hydrateDashboardFromCache();
 loadDashboard();
