@@ -61,6 +61,12 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The cleaner command-center release is live on Cloud Run revision
+  `atlas-dashboard-stg-00161-lbq`. The dashboard, daily job, and weekly job
+  use image `20260729-command-center-2` with digest
+  `sha256:82ccad4bf998599aa5afed957919422423e0c37a7959045188b98451c578e758`.
+  All 431 local tests, 26 staging checks, and 17 protected dashboard checks
+  pass. The jobs were aligned without manually executing them.
 - Atlas now opens with a decision-first command center built around one
   readiness signal, today's recommended action, and current paper-portfolio
   context. Recommendations can be filtered into action queue, buy ideas, risk

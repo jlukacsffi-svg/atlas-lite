@@ -3,6 +3,38 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 29, 2026 - Decision command center and explainable scores are live
+
+New capabilities:
+
+- Open Atlas to a cleaner owner command center centered on readiness, today's
+  call, paper-portfolio context, and the one issue that needs attention.
+- Navigate grouped Decide, Understand, and Manage workflows.
+- Filter Recommendations into action queue, buy ideas, risk actions, and the
+  full 140-security research list.
+- Expand an Atlas Score to see Growth, Quality, Moat, Momentum, and Risk
+  drivers alongside the company thesis, key driver, and key risk.
+- Treat scores explicitly as research priority, not predicted returns or an
+  automatic purchase recommendation.
+
+Validated result:
+
+- The full local suite passes with 431 tests.
+- Desktop and 390-pixel mobile layouts have no horizontal overflow.
+- Live score explanations use a readable two-column decision list.
+- Cloud Run revision `atlas-dashboard-stg-00161-lbq`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-command-center-2`.
+- The deployed image digest is
+  `sha256:82ccad4bf998599aa5afed957919422423e0c37a7959045188b98451c578e758`.
+- All 26 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass. Neither scheduled job was manually executed.
+
+Current boundaries:
+
+- Overall program completion is estimated at 85%.
+- Stage 5 paper evidence remains the active investment-capability gate.
+- Brokerage access and real-money trading remain disabled.
+
 ## July 29, 2026 - Paper entry evidence gate is visible and enforced
 
 New capabilities:
