@@ -9,6 +9,7 @@ import re
 from datetime import datetime
 from urllib.parse import urlparse
 
+from app.data_quality import has_reliable_daily_change
 from app.decision_driver import infer_decision_driver
 from app.paper_strategy import PaperStrategy
 from app.paper_trading import PaperTradingAccount
@@ -308,7 +309,7 @@ class DashboardDataService:
                 "percent_change": data.get("percent_change"),
             }
             for ticker, data in available.items()
-            if data.get("percent_change") is not None
+            if has_reliable_daily_change(data)
         ]
         return sorted(
             rows,

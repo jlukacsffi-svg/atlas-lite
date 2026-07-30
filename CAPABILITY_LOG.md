@@ -3,6 +3,59 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 29, 2026 - Graphical development roadmap is available
+
+New capabilities:
+
+- Open a dedicated Roadmap page from the primary Atlas navigation.
+- See the eight-stage investment-autonomy timeline and five-phase secure web
+  product timeline together.
+- Distinguish completed, current, blocked, and future milestones visually.
+- See live Stage 5 snapshot, judged-decision, completed-position, evidence-gate,
+  and evidence-maturity values from the active paper ledger.
+- See the next three development gates and the current real-money authority
+  boundary without leaving the dashboard.
+
+Validated result:
+
+- The live Roadmap shows 139 snapshots, 52 judged decisions, 9 completed
+  positions, 3 of 9 passing gates, and 64.7% Stage 5 evidence maturity.
+- Desktop and 390-pixel mobile layouts are readable without overlap.
+- The full local suite passes with 429 tests.
+- Cloud Run revision `atlas-dashboard-stg-00158-g8d`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-roadmap-quality-gate`.
+- The deployed image digest is
+  `sha256:7e5b21845480cdf6aaacb318df25a6b9bd82db22650ad060f64574580fe92c7d`.
+- All 26 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass. Neither scheduled job was manually executed.
+
+Current boundaries:
+
+- The 84% figure is an estimate of software and organizational development,
+  not a promise of investment performance or elapsed-time forecast.
+- Stage 5 remains a paper-only validation period.
+- Brokerage access and real-money trading remain disabled.
+
+## July 29, 2026 - Limited daily movement fails closed downstream
+
+New capabilities:
+
+- Use one shared quality contract for reports, research memory, task
+  generation, dashboard movers, paper strategy, and position monitoring.
+- Prevent new simulated buys when daily movement is explicitly limited or
+  unavailable.
+- Withhold mover, leadership, pressure, opportunity, and movement-risk
+  conclusions when valid prior-close evidence is unavailable.
+- Continue score-, trend-, thesis-, and news-based risk review even when daily
+  movement is limited.
+
+Validated result:
+
+- Focused strategy, monitoring, reporting, memory, task, and dashboard tests
+  pass as part of the 429-test full suite.
+- A limited movement record cannot create a new paper buy, while an
+  independently weak Atlas score can still produce a paper exit proposal.
+
 ## July 29, 2026 - Daily movement quality is explicit
 
 New capabilities:

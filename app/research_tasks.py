@@ -6,6 +6,7 @@ import hashlib
 import json
 from pathlib import Path
 
+from app.data_quality import has_reliable_daily_change
 from app.scoring import ScoringEngine
 from app.paths import data_path
 
@@ -606,7 +607,7 @@ class ResearchTaskQueue:
                 key=lambda item: abs(float(item[1].get("percent_change") or 0)),
                 reverse=True,
             )[:5]
-            if data.get("percent_change") is not None
+            if has_reliable_daily_change(data)
         ]
 
         score_leaders = []

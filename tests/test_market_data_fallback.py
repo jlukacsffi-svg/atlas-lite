@@ -4,6 +4,7 @@ import json
 import unittest
 
 from app.market_data import MarketDataFetcher, YAHOO_CHART_URL
+from app.data_quality import has_reliable_daily_change
 from app.report_generator import ReportGenerator
 
 
@@ -107,6 +108,40 @@ class YahooFallbackDailyChangeTests(unittest.TestCase):
 
         self.assertIn("Daily Change Coverage**: 1/2", report)
         self.assertIn("Daily Change Warning**: 1", report)
+
+    def test_shared_quality_check_accepts_legacy_and_rejects_limited_records(self):
+        self.assertTrue(has_reliable_daily_change({"percent_change": 1.0}))
+        self.assertTrue(
+            has_reliable_daily_change(
+                {"percent_change": 1.0, "daily_change_quality": "complete"}
+            )
+        )
+        self.assertFalse(
+            has_reliable_daily_change(
+                {"percent_change": 0.0, "daily_change_quality": "limited"}
+            )
+        )
+
+    def test_report_withholds_movement_conclusions_when_change_is_limited(self):
+        limited = {
+            "status": "available",
+            "price": 105.0,
+            "previous_close": 105.0,
+            "change": 0.0,
+            "percent_change": 0.0,
+            "daily_change_quality": "limited",
+        }
+        generator = ReportGenerator({"AAA": limited}, {"SPY": limited})
+
+        self.assertIn("Top movers are withheld", generator._generate_top_movers())
+        self.assertIn(
+            "Movement-based opportunities are withheld",
+            generator._generate_opportunities(),
+        )
+        self.assertIn(
+            "leadership and pressure rankings are withheld",
+            generator._generate_executive_summary(),
+        )
 
 
 if __name__ == "__main__":

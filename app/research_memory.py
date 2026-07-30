@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 
+from app.data_quality import has_reliable_daily_change
 from app.scoring import ScoringEngine
 from app.paths import data_path
 
@@ -152,7 +153,7 @@ class ResearchMemory:
             (ticker, data)
             for ticker, data in securities.items()
             if data.get("status") == "available"
-            and data.get("percent_change") is not None
+            and has_reliable_daily_change(data)
         ]
         top_movers = [
             {

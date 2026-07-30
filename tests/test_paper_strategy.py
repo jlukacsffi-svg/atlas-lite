@@ -190,6 +190,49 @@ class PaperStrategyTests(unittest.TestCase):
 
         self.assertEqual(created, [])
 
+    def test_limited_daily_change_never_creates_new_buy(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            strategy = PaperStrategy()
+            security = market_security(99, change=4.0)
+            security["daily_change_quality"] = "limited"
+            benchmark = {
+                **market_security(99, change=2.0),
+                "sector": "Benchmark ETF",
+                "daily_change_quality": "limited",
+            }
+
+            created = strategy.generate(
+                account,
+                {"AAA": security, "SPY": benchmark},
+            )
+
+        self.assertEqual(created, [])
+
+    def test_limited_daily_change_does_not_hide_score_based_exit(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            proposal = account.create_proposal("buy", "AAA", 10, 100, "Entry.")
+            account.record_proposal_risk_review(
+                proposal["proposal_id"], "clear", [], source="test"
+            )
+            account.decide_proposal(proposal["proposal_id"], "approve")
+            account.execute_order(
+                "buy",
+                "AAA",
+                10,
+                100,
+                "Entry.",
+                proposal_id=proposal["proposal_id"],
+            )
+            security = market_security(55, price=90)
+            security["daily_change_quality"] = "limited"
+
+            created = PaperStrategy().generate(account, {"AAA": security})
+
+        self.assertEqual(len(created), 1)
+        self.assertEqual(created[0]["side"], "sell")
+
     def test_prefers_sector_diversity_before_doubling_up(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)

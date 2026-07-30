@@ -61,6 +61,22 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The dashboard now includes a dedicated graphical Roadmap page with separate
+  investment-autonomy and secure-web lanes, live Stage 5 evidence counts, next
+  gates, and the current authority boundary.
+- The live Roadmap reports 139 snapshots, 52 judged decisions, 9 completed
+  positions, 3 of 9 passing gates, and 64.7% Stage 5 evidence maturity. Desktop
+  and mobile layouts pass visual review.
+- Explicitly limited daily movement now fails closed across reports, mover
+  rankings, research tasks, paper entries, benchmark context, sector breadth,
+  and position projections. New simulated buys require valid daily movement;
+  independent score-, trend-, thesis-, and news-based risk review remains
+  active.
+- Cloud Run revision `atlas-dashboard-stg-00158-g8d`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-roadmap-quality-gate`, digest
+  `sha256:7e5b21845480cdf6aaacb318df25a6b9bd82db22650ad060f64574580fe92c7d`.
+- The full 429-test suite, all 26 readiness checks, and all 17 protected
+  dashboard checks pass. The scheduled jobs were aligned without execution.
 - Yahoo fallback now requests five days of close history and uses the latest
   two valid closes, with a metadata prior-close fallback for partial responses.
 - Every fallback record carries explicit daily-movement quality and source

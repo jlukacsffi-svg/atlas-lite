@@ -48,6 +48,11 @@ const PAGE_METADATA = {
     title: "Access and security",
     description: "Review owner access, recovery, privacy, deployment, and production-readiness safeguards.",
   },
+  roadmap: {
+    eyebrow: "Development workspace",
+    title: "Atlas roadmap",
+    description: "See the completed foundations, current validation stage, next gates, and owner-controlled path toward secure accounts and future trading autonomy.",
+  },
 };
 
 function escapeHtml(value) {
@@ -272,6 +277,7 @@ function renderDashboard(data) {
   renderPortfolioFocus(paper.portfolio_focus || {});
   renderPositionLadder(paper.position_ladder || []);
   renderValidationSummary(paper.validation_summary || {});
+  renderRoadmap(paper.validation_summary || {});
   renderPositions(paper.positions || []);
   renderPaperActivity(paper.activity || []);
   renderTradeHistory(paper.trade_history || { total_trades: 0, ticker_count: 0, tickers: [] });
@@ -319,6 +325,7 @@ function renderDashboardSummary(data) {
   renderPortfolioFocus(paper.portfolio_focus || {});
   renderPositionLadder(paper.position_ladder || []);
   renderValidationSummary(paper.validation_summary || {});
+  renderRoadmap(paper.validation_summary || {});
   renderPositions(paper.positions || []);
   renderPaperOperatingMode(paper.operating_mode || {});
   renderWorkspace(data.workspace || null);
@@ -2979,6 +2986,32 @@ function renderValidationSummary(summary) {
     const target = document.getElementById(id);
     if (target) target.innerHTML = html;
   });
+}
+
+function renderRoadmap(summary) {
+  const pipeline = summary.evidence_pipeline || {};
+  const readiness = summary.capital_readiness || {};
+  const passed = Number(readiness.passed || 0);
+  const total = Number(readiness.total || 0);
+  const progress = Math.max(0, Math.min(100, Number(readiness.progress_pct) || 0));
+  const values = {
+    "roadmap-snapshots": Number(pipeline.snapshot_count || summary.snapshots || 0),
+    "roadmap-judged": Number(pipeline.judged_decisions || summary.judged_trades || 0),
+    "roadmap-completed": Number(pipeline.completed_positions || summary.realized_exits || 0),
+    "roadmap-gates": total ? `${passed}/${total}` : "--",
+  };
+  Object.entries(values).forEach(([id, value]) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = String(value);
+  });
+  const label = document.getElementById("roadmap-stage5-label");
+  if (label) {
+    label.textContent = total
+      ? `${progress.toFixed(1)}% · ${passed} of ${total} gates passing`
+      : "Building evidence";
+  }
+  const bar = document.getElementById("roadmap-stage5-progress");
+  if (bar) bar.style.width = `${progress}%`;
 }
 
 function renderPaperActivity(rows) {

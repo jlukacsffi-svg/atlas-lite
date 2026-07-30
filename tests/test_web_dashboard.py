@@ -46,6 +46,27 @@ class WebDashboardTests(unittest.TestCase):
             overview["daily_change_quality"]["suspicious_all_zero"]
         )
 
+    def test_movers_exclude_explicitly_limited_daily_changes(self):
+        rows = DashboardDataService._movers(
+            None,
+            {
+                "AAA": {
+                    "status": "available",
+                    "price": 100,
+                    "percent_change": 8.0,
+                    "daily_change_quality": "limited",
+                },
+                "BBB": {
+                    "status": "available",
+                    "price": 100,
+                    "percent_change": 2.0,
+                    "daily_change_quality": "complete",
+                },
+            },
+        )
+
+        self.assertEqual([row["ticker"] for row in rows], ["BBB"])
+
     def test_report_archive_lists_generated_reports_and_rejects_active_content(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
@@ -1209,8 +1230,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn('id="workspace-status"', html)
         self.assertIn('id="data-freshness"', html)
         self.assertIn('id="sign-out"', html)
-        self.assertIn('/styles.css?v=20260726-owner-signal-digest', html)
-        self.assertIn('/app.js?v=20260726-owner-signal-digest', html)
+        self.assertIn('/styles.css?v=20260729-roadmap', html)
+        self.assertIn('/app.js?v=20260729-roadmap', html)
         self.assertIn("Defensive trigger shadow test", script)
         self.assertIn("No policy change", script)
         self.assertIn(".paper-shadow-analysis", styles)
@@ -1259,6 +1280,18 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("scheduleClose", script)
         self.assertIn('event.key !== "Escape"', script)
         self.assertIn('id="access"', html)
+        self.assertIn('href="#roadmap"', html)
+        self.assertIn('id="roadmap"', html)
+        self.assertIn('data-page="roadmap"', html)
+        self.assertIn("Autonomy roadmap", html)
+        self.assertIn("Web platform roadmap", html)
+        self.assertIn("Estimated overall completion", html)
+        self.assertIn("Current authority boundary", html)
+        self.assertIn('id="roadmap-snapshots"', html)
+        self.assertIn('id="roadmap-stage5-progress"', html)
+        self.assertIn("renderRoadmap", script)
+        self.assertIn(".roadmap-timeline", styles)
+        self.assertIn(".roadmap-live-evidence", styles)
         self.assertIn('id="recommendations"', html)
         self.assertIn('data-page="recommendations"', html)
         self.assertIn("Recommended for purchase", html)

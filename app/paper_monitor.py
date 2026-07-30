@@ -1,5 +1,6 @@
 """Daily thesis monitoring for open Atlas paper positions."""
 
+from app.data_quality import has_reliable_daily_change
 from app.scoring import ScoringEngine
 
 DEFAULT_PROJECTION_TRIM_EXCESS_PCT = -2.5
@@ -559,7 +560,10 @@ class PaperPositionMonitor:
     def _sector_breadth(market_data):
         by_sector = {}
         for data in market_data.values():
-            if data.get("status") != "available":
+            if (
+                data.get("status") != "available"
+                or not has_reliable_daily_change(data)
+            ):
                 continue
             sector = str(data.get("sector") or "Unclassified")
             if sector == "Benchmark ETF":
@@ -581,7 +585,10 @@ class PaperPositionMonitor:
         benchmarks = []
         for label in ("SPY", "QQQ", "IWM", "RSP"):
             data = market_data.get(label, {})
-            if data.get("status") != "available":
+            if (
+                data.get("status") != "available"
+                or not has_reliable_daily_change(data)
+            ):
                 continue
             benchmarks.append((label, float(data.get("percent_change") or 0.0)))
         if not benchmarks:
@@ -605,10 +612,19 @@ class PaperPositionMonitor:
         trend_regime = str(metrics.get("trend_regime") or "unknown").strip().lower()
         trend_quality = self._as_float(metrics.get("trend_quality_score"), 50.0)
         news_label = str(news_signal.get("signal_label") or "neutral").strip().lower()
-        current_change = self._as_float(data.get("percent_change"), 0.0)
+        daily_change_reliable = has_reliable_daily_change(data)
+        current_change = (
+            self._as_float(data.get("percent_change"), 0.0)
+            if daily_change_reliable
+            else 0.0
+        )
         daily_excess = None
         strongest_benchmark = ""
-        if benchmark_day and benchmark_day.get("strongest_change_pct") is not None:
+        if (
+            daily_change_reliable
+            and benchmark_day
+            and benchmark_day.get("strongest_change_pct") is not None
+        ):
             daily_excess = round(
                 current_change - float(benchmark_day["strongest_change_pct"]),
                 4,

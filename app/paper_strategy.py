@@ -2,6 +2,7 @@
 
 import math
 
+from app.data_quality import has_reliable_daily_change
 from app.scoring import ScoringEngine
 
 
@@ -197,8 +198,14 @@ class PaperStrategy:
                 + float(sector_learning.get("adjustment") or 0.0),
                 4,
             )
+            daily_change_reliable = has_reliable_daily_change(data)
+            daily_change = (
+                float(data.get("percent_change") or 0.0)
+                if daily_change_reliable
+                else 0.0
+            )
             benchmark_excess_pct = round(
-                float(data.get("percent_change") or 0)
+                daily_change
                 - benchmark_context["reference_change"],
                 4,
             )
@@ -214,7 +221,7 @@ class PaperStrategy:
             trend_regime_score = self._trend_regime_score(data)
             follow_through_score = self._follow_through_score(
                 score=score,
-                percent_change=float(data.get("percent_change") or 0.0),
+                percent_change=daily_change,
                 benchmark_excess_pct=benchmark_excess_pct,
                 sector_relative_strength_pct=sector_relative_strength_pct,
                 sector_breadth_pct=sector_breadth_pct,
@@ -230,7 +237,8 @@ class PaperStrategy:
                 "scores": dict(scores),
                 "category": data.get("category", "Watchlist"),
                 "sector": sector,
-                "percent_change": float(data.get("percent_change") or 0),
+                "percent_change": daily_change,
+                "daily_change_reliable": daily_change_reliable,
                 "benchmark_reference": benchmark_context["reference_label"],
                 "benchmark_reference_change": benchmark_context["reference_change"],
                 "market_regime": benchmark_context["market_regime"],
@@ -321,13 +329,31 @@ class PaperStrategy:
         qqq = market_data.get("QQQ", {})
         iwm = market_data.get("IWM", {})
         rsp = market_data.get("RSP", {})
-        spy_change = float(spy.get("percent_change") or 0.0)
-        qqq_change = float(qqq.get("percent_change") or 0.0)
+        spy_change = (
+            float(spy.get("percent_change") or 0.0)
+            if has_reliable_daily_change(spy)
+            else 0.0
+        )
+        qqq_change = (
+            float(qqq.get("percent_change") or 0.0)
+            if has_reliable_daily_change(qqq)
+            else 0.0
+        )
+        iwm_change = (
+            float(iwm.get("percent_change") or 0.0)
+            if has_reliable_daily_change(iwm)
+            else 0.0
+        )
+        rsp_change = (
+            float(rsp.get("percent_change") or 0.0)
+            if has_reliable_daily_change(rsp)
+            else 0.0
+        )
         breadth_change = (
             spy_change
             + qqq_change
-            + float(iwm.get("percent_change") or 0.0)
-            + float(rsp.get("percent_change") or 0.0)
+            + iwm_change
+            + rsp_change
         ) / 4.0
         positive_states = {"uptrend", "extended_uptrend", "improving"}
         weak_states = {"mixed", "downtrend", "unknown"}
@@ -376,7 +402,10 @@ class PaperStrategy:
         by_sector = {}
         breadth = {}
         for _ticker, data in market_data.items():
-            if data.get("status") != "available":
+            if (
+                data.get("status") != "available"
+                or not has_reliable_daily_change(data)
+            ):
                 continue
             sector = str(data.get("sector") or "Unclassified")
             if sector == "Benchmark ETF":
@@ -417,7 +446,10 @@ class PaperStrategy:
         benchmark_changes = []
         for ticker in ("SPY", "QQQ", "IWM", "RSP"):
             data = market_data.get(ticker, {})
-            if data.get("status") != "available":
+            if (
+                data.get("status") != "available"
+                or not has_reliable_daily_change(data)
+            ):
                 continue
             benchmark_changes.append(float(data.get("percent_change") or 0.0))
         if not benchmark_changes:
@@ -536,6 +568,8 @@ class PaperStrategy:
         }
 
     def _can_open_buy(self, row):
+        if not row.get("daily_change_reliable", True):
+            return False
         if row["category"] == "Avoid" or row["score"] < self.minimum_buy_score:
             return False
         if row["percent_change"] <= self.minimum_daily_move_pct:

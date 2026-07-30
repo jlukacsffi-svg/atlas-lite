@@ -4,6 +4,7 @@ from datetime import datetime
 import html
 import re
 
+from app.data_quality import has_reliable_daily_change
 from app.news_data import NewsFetcher
 from app.corporate_actions import describe_splits, normalize_prior_price
 from app.research_tasks import ResearchTaskQueue
@@ -410,6 +411,14 @@ class ReportGenerator:
             if data.get('status') == 'available'
         }
 
+    def _reliable_movement_data(self):
+        return {
+            ticker: data
+            for ticker, data in self.market_data.items()
+            if data.get('status') == 'available'
+            and has_reliable_daily_change(data)
+        }
+
     def _generate_executive_summary(self):
         """Generate a concise, rule-based executive summary"""
         section = ["## Executive Summary\n"]
@@ -420,8 +429,18 @@ class ReportGenerator:
             section.append("- Review data connectivity and fallback diagnostics before using today's report.")
             return "\n".join(section) + "\n"
 
-        spy_pct = self.market_summary.get('SPY', {}).get('percent_change')
-        qqq_pct = self.market_summary.get('QQQ', {}).get('percent_change')
+        spy_data = self.market_summary.get('SPY', {})
+        qqq_data = self.market_summary.get('QQQ', {})
+        spy_pct = (
+            spy_data.get('percent_change')
+            if has_reliable_daily_change(spy_data)
+            else None
+        )
+        qqq_pct = (
+            qqq_data.get('percent_change')
+            if has_reliable_daily_change(qqq_data)
+            else None
+        )
         index_changes = [
             pct for pct in (spy_pct, qqq_pct)
             if pct is not None
@@ -435,16 +454,19 @@ class ReportGenerator:
         else:
             market_tone = "mixed to stable"
 
+        movement_data = self._reliable_movement_data()
         sorted_by_change = sorted(
-            available_data.items(),
+            movement_data.items(),
             key=lambda x: x[1].get('percent_change', 0),
             reverse=True,
         )
-        top_gainer, top_gainer_data = sorted_by_change[0]
-        top_loser, top_loser_data = sorted_by_change[-1]
+        top_gainer = top_gainer_data = top_loser = top_loser_data = None
+        if sorted_by_change:
+            top_gainer, top_gainer_data = sorted_by_change[0]
+            top_loser, top_loser_data = sorted_by_change[-1]
 
         significant_movers = [
-            (ticker, data) for ticker, data in available_data.items()
+            (ticker, data) for ticker, data in movement_data.items()
             if abs(data.get('percent_change', 0)) > 2
         ]
         gainers = [
@@ -460,14 +482,20 @@ class ReportGenerator:
             f"- **Market tone**: {market_tone}; SPY {self._format_value(spy_pct, '{:+.2f}%')} "
             f"and QQQ {self._format_value(qqq_pct, '{:+.2f}%')}."
         )
-        section.append(
-            f"- **Leadership**: {top_gainer} led the watchlist at "
-            f"{top_gainer_data.get('percent_change', 0):+.2f}%."
-        )
-        section.append(
-            f"- **Pressure point**: {top_loser} was the weakest name at "
-            f"{top_loser_data.get('percent_change', 0):+.2f}%."
-        )
+        if top_gainer_data and top_loser_data:
+            section.append(
+                f"- **Leadership**: {top_gainer} led the watchlist at "
+                f"{top_gainer_data.get('percent_change', 0):+.2f}%."
+            )
+            section.append(
+                f"- **Pressure point**: {top_loser} was the weakest name at "
+                f"{top_loser_data.get('percent_change', 0):+.2f}%."
+            )
+        else:
+            section.append(
+                "- **Daily movement**: leadership and pressure rankings are "
+                "withheld because valid prior-close comparisons are unavailable."
+            )
 
         if significant_movers:
             section.append(
@@ -665,9 +693,17 @@ class ReportGenerator:
             
             for idx, data in self.market_summary.items():
                 price = data['price']
-                change = data['change']
-                pct = data['percent_change']
-                status = data.get('status')
+                change = data['change'] if has_reliable_daily_change(data) else None
+                pct = (
+                    data['percent_change']
+                    if has_reliable_daily_change(data)
+                    else None
+                )
+                status = (
+                    data.get('status')
+                    if has_reliable_daily_change(data)
+                    else 'limited'
+                )
                 direction = "📈" if status == 'available' and change >= 0 else "📉" if status == 'available' else ""
                 section.append(
                     f"| {idx} | {self._format_value(price, '${:.2f}') if price is not None else 'N/A'} | "
@@ -711,9 +747,21 @@ class ReportGenerator:
             for ticker in sorted(self.market_data.keys()):
                 data = self.market_data[ticker]
                 price = data.get('price')
-                change = data.get('change')
-                pct = data.get('percent_change')
-                status = data.get('status')
+                change = (
+                    data.get('change')
+                    if has_reliable_daily_change(data)
+                    else None
+                )
+                pct = (
+                    data.get('percent_change')
+                    if has_reliable_daily_change(data)
+                    else None
+                )
+                status = (
+                    data.get('status')
+                    if has_reliable_daily_change(data)
+                    else 'limited'
+                )
                 company_name = data.get('company_name', ticker)
                 sector = data.get('sector', 'Unclassified')
                 category = data.get('category', 'Watchlist')
@@ -822,13 +870,13 @@ class ReportGenerator:
     def _generate_top_movers(self):
         """Generate top movers section"""
         section = ["## Top Movers\n"]
-        available_data = {
-            ticker: data for ticker, data in self.market_data.items()
-            if data.get('status') == 'available'
-        }
+        available_data = self._reliable_movement_data()
         
         if not available_data:
-            section.append("Unable to determine top movers at this time.\n")
+            section.append(
+                "Top movers are withheld because valid prior-close "
+                "comparisons are unavailable.\n"
+            )
             return "\n".join(section) + "\n"
         
         sorted_data = sorted(
@@ -1081,7 +1129,7 @@ class ReportGenerator:
             day_moves = [
                 row[1].get('percent_change')
                 for row in rows
-                if row[1].get('percent_change') is not None
+                if has_reliable_daily_change(row[1])
             ]
             avg_day_move = sum(day_moves) / len(day_moves) if day_moves else None
             leader = max(rows, key=lambda row: row[2])
@@ -1140,7 +1188,11 @@ class ReportGenerator:
         signals = []
         priority_score = total_score
 
-        percent_change = data.get('percent_change')
+        percent_change = (
+            data.get('percent_change')
+            if has_reliable_daily_change(data)
+            else None
+        )
         if percent_change is not None and abs(percent_change) >= 2:
             move_bonus = min(8, abs(percent_change))
             priority_score += move_bonus
@@ -1198,7 +1250,11 @@ class ReportGenerator:
 
         for ticker, data, total_score, priority_score, signals in self._priority_rows():
             category = data.get('category', 'Watchlist')
-            percent_change = data.get('percent_change') or 0
+            percent_change = (
+                data.get('percent_change') or 0
+                if has_reliable_daily_change(data)
+                else 0
+            )
             recommendation = None
             evidence = []
 
@@ -1503,10 +1559,7 @@ class ReportGenerator:
         return "\n".join(section) + "\n"
 
     def _get_significant_movers(self, threshold=2, limit=6):
-        available_data = {
-            ticker: data for ticker, data in self.market_data.items()
-            if data.get('status') == 'available'
-        }
+        available_data = self._reliable_movement_data()
 
         movers = [
             (ticker, data) for ticker, data in available_data.items()
@@ -1636,13 +1689,13 @@ class ReportGenerator:
     def _generate_opportunities(self):
         """Generate potential opportunities section"""
         section = ["## Potential Opportunities\n"]
-        available_data = {
-            ticker: data for ticker, data in self.market_data.items()
-            if data.get('status') == 'available'
-        }
+        available_data = self._reliable_movement_data()
         
         if not available_data:
-            section.append("Unable to identify opportunities at this time.\n")
+            section.append(
+                "Movement-based opportunities are withheld because valid "
+                "prior-close comparisons are unavailable.\n"
+            )
             return "\n".join(section) + "\n"
         
         opportunities = [
@@ -1666,10 +1719,7 @@ class ReportGenerator:
         """Generate risks to watch section"""
         section = ["## Risks To Watch\n"]
         
-        available_data = {
-            ticker: data for ticker, data in self.market_data.items()
-            if data.get('status') == 'available'
-        }
+        available_data = self._reliable_movement_data()
         risks = []
         
         if available_data:
