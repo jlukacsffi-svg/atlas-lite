@@ -3719,6 +3719,16 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   min-height: 0;
   padding: 12px;
 }
+.watchlist-grid.score-universe-layout {
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+.score-universe-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 8px;
+}
 .score-universe-heading {
   display: flex;
   align-items: flex-start;
@@ -3936,6 +3946,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
     white-space: normal;
   }
   .score-driver-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .score-universe-row { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {

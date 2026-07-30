@@ -1631,7 +1631,7 @@ function renderUniverseList() {
       return scoreGap || String(left.ticker || "").localeCompare(String(right.ticker || ""));
     });
   const visible = universeExpanded || search ? filtered : filtered.slice(0, 24);
-  target.innerHTML = visible.map(item => `
+  const cards = visible.map(item => `
     <article class="watchlist-item score-universe-item ${item.category === "Core" ? "core" : item.category === "Watchlist" ? "watchlist" : "tracked"}">
       <div class="score-universe-heading">
         <div>
@@ -1650,7 +1650,15 @@ function renderUniverseList() {
         </details>
       `}
     </article>
-  `).join("") || `<div class="empty">No tracked securities match these filters.</div>`;
+  `);
+  target.classList.toggle("score-universe-layout", cards.length > 0);
+  target.innerHTML = cards.length
+    ? Array.from({ length: Math.ceil(cards.length / 2) }, (_, index) => `
+        <div class="score-universe-row">
+          ${cards.slice(index * 2, (index * 2) + 2).join("")}
+        </div>
+      `).join("")
+    : `<div class="empty">No tracked securities match these filters.</div>`;
 
   const count = document.getElementById("universe-result-count");
   if (count) {
