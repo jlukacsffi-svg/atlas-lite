@@ -625,10 +625,28 @@ class ReportGenerator:
         yfinance_count = sum(1 for data in self.market_data.values() if data.get('source') == 'yfinance')
         yahoo_count = sum(1 for data in self.market_data.values() if data.get('source') == 'yahoo_fallback')
         placeholder_count = sum(1 for data in self.market_data.values() if data.get('source') == 'placeholder')
+        limited_change_count = sum(
+            1
+            for data in self.market_data.values()
+            if data.get('status') == 'available'
+            and data.get('daily_change_quality') == 'limited'
+        )
+        complete_change_count = max(0, available - limited_change_count)
         
         section.append(f"- **Tickers Requested**: {total}")
         section.append(f"- **Real Data**: {available} ({yfinance_count} from yfinance, {yahoo_count} from Yahoo fallback)")
-        section.append(f"- **Placeholder Data**: {unavailable}\n")
+        section.append(f"- **Placeholder Data**: {unavailable}")
+        section.append(
+            f"- **Daily Change Coverage**: {complete_change_count}/{available} "
+            "available securities have a valid prior-close comparison"
+        )
+        if limited_change_count:
+            section.append(
+                f"- **Daily Change Warning**: {limited_change_count} available "
+                "securities have prices but limited daily-change evidence\n"
+            )
+        else:
+            section.append("")
         
         return "\n".join(section) + "\n"
     

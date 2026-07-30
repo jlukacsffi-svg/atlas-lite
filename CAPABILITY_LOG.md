@@ -3,6 +3,38 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## July 29, 2026 - Daily movement quality is explicit
+
+New capabilities:
+
+- Retrieve up to five days of Yahoo close history so weekends and partial
+  responses still provide a valid prior-close comparison.
+- Fall back to Yahoo metadata when only one daily close is available.
+- Label daily movement as complete or limited in stored research evidence.
+- Disclose valid daily-change coverage in the Morning Executive Brief.
+- Warn on Overview when a snapshot has prices but no trustworthy daily
+  movement, and suppress the misleading zero-percent breadth display.
+
+Validated result:
+
+- A live four-security Yahoo fallback check returned valid nonzero daily moves
+  for SPY, QQQ, NVDA, and AMD.
+- The full local suite passes with 424 tests.
+- Cloud Run revision `atlas-dashboard-stg-00157-24j`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-daily-change-warning`.
+- The deployed image digest is
+  `sha256:b0bc30cad9d898b63c6a3895305db9890d152baf74a593771d5ddc8fc0feb4c5`.
+- All 26 staging readiness checks and all 17 protected Stage 5 dashboard
+  contract checks pass. Neither scheduled job was manually executed.
+
+Current boundaries:
+
+- The existing July 29 snapshot was generated before this correction and is
+  visibly marked as limited until the next scheduled daily refresh.
+- Daily movement is market evidence, not a prediction or a real-money trading
+  instruction.
+- Real trading, brokerage access, and cloud report email remain disabled.
+
 ## July 29, 2026 - Overview shows executive-report freshness
 
 New capabilities:

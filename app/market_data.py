@@ -4,6 +4,7 @@ import contextlib
 import io
 import json
 import logging
+import math
 import os
 import time
 import urllib.request
@@ -22,7 +23,7 @@ LOG_DIR = data_path("logs")
 LOG_FILE = LOG_DIR / "atlas_diagnostics.log"
 YAHOO_CHART_URL = (
     "https://query1.finance.yahoo.com/v8/finance/chart/{ticker}"
-    "?range=2d&interval=1d&includePrePost=false"
+    "?range=5d&interval=1d&includePrePost=false"
 )
 YFINANCE_TIMEOUT_SECONDS = 1
 YFINANCE_INFO_TIMEOUT_SECONDS = 1
@@ -130,6 +131,8 @@ class MarketDataFetcher:
             'previous_close': None,
             'change': 0.0,
             'percent_change': 0.0,
+            'daily_change_quality': 'unavailable',
+            'daily_change_source': None,
             'status': status,
             'source': 'placeholder',
         }
@@ -139,6 +142,8 @@ class MarketDataFetcher:
             'price': None,
             'change': 0.0,
             'percent_change': 0.0,
+            'daily_change_quality': 'unavailable',
+            'daily_change_source': None,
             'status': status,
             'source': 'placeholder',
         }
@@ -245,21 +250,40 @@ class MarketDataFetcher:
             self.logger.warning("No close prices in Yahoo response for %s", ticker)
             return None
 
-        # Find last valid close and previous valid close
-        last_close = None
-        prev_close = None
-        for value in reversed(closes):
-            if value is not None:
-                if last_close is None:
-                    last_close = value
-                elif prev_close is None:
-                    prev_close = value
-                    break
+        valid_closes = []
+        for value in closes:
+            try:
+                price = float(value)
+            except (TypeError, ValueError):
+                continue
+            if math.isfinite(price) and price > 0:
+                valid_closes.append(price)
 
-        if last_close is None:
+        if not valid_closes:
             self.logger.warning("No valid close price in Yahoo response for %s", ticker)
             return None
 
+        last_close = valid_closes[-1]
+        if len(valid_closes) >= 2:
+            prev_close = valid_closes[-2]
+            daily_change_quality = 'complete'
+            daily_change_source = 'daily_history'
+        else:
+            prev_close = None
+            for key in ('chartPreviousClose', 'previousClose'):
+                try:
+                    candidate = float(meta.get(key))
+                except (TypeError, ValueError):
+                    continue
+                if math.isfinite(candidate) and candidate > 0:
+                    prev_close = candidate
+                    break
+            daily_change_quality = 'complete' if prev_close is not None else 'limited'
+            daily_change_source = (
+                'meta_previous_close'
+                if prev_close is not None
+                else 'single_close_no_prior'
+            )
         if prev_close is None:
             prev_close = last_close
 
@@ -298,6 +322,8 @@ class MarketDataFetcher:
             'previous_close': round(prev_close, 2),
             'change': round(change, 2),
             'percent_change': round(percent_change, 2),
+            'daily_change_quality': daily_change_quality,
+            'daily_change_source': daily_change_source,
             'volume': int(last_volume) if last_volume is not None else None,
             'open': round(last_open, 2) if last_open is not None else None,
             'high': round(last_high, 2) if last_high is not None else None,
@@ -330,6 +356,12 @@ class MarketDataFetcher:
             previous_close = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
             price_change = current_price - previous_close
             percent_change = (price_change / previous_close * 100) if previous_close != 0 else 0
+            daily_change_quality = 'complete' if len(hist) > 1 else 'limited'
+            daily_change_source = (
+                'daily_history'
+                if len(hist) > 1
+                else 'single_close_no_prior'
+            )
 
             # Try to get company name from yfinance info
             company_name = ticker
@@ -349,6 +381,8 @@ class MarketDataFetcher:
                 'previous_close': round(previous_close, 2),
                 'change': round(price_change, 2),
                 'percent_change': round(percent_change, 2),
+                'daily_change_quality': daily_change_quality,
+                'daily_change_source': daily_change_source,
                 'company_name': company_name,
                 'status': 'available',
                 'source': 'yfinance',
@@ -397,11 +431,19 @@ class MarketDataFetcher:
             previous_close = hist['Close'].iloc[-2] if len(hist) > 1 else current_price
             price_change = current_price - previous_close
             percent_change = (price_change / previous_close * 100) if previous_close != 0 else 0
+            daily_change_quality = 'complete' if len(hist) > 1 else 'limited'
+            daily_change_source = (
+                'daily_history'
+                if len(hist) > 1
+                else 'single_close_no_prior'
+            )
 
             return {
                 'price': round(current_price, 2),
                 'change': round(price_change, 2),
                 'percent_change': round(percent_change, 2),
+                'daily_change_quality': daily_change_quality,
+                'daily_change_source': daily_change_source,
                 'status': 'available',
             }
         except Exception as exc:

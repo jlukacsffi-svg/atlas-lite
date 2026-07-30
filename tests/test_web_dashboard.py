@@ -19,6 +19,33 @@ from app.web_dashboard import (
 
 
 class WebDashboardTests(unittest.TestCase):
+    def test_overview_marks_all_zero_daily_movement_as_limited(self):
+        available = {
+            f"T{i}": {"status": "available", "percent_change": 0}
+            for i in range(5)
+        }
+
+        overview = DashboardDataService._overview(None, available, available)
+
+        self.assertEqual(overview["daily_change_quality"]["status"], "limited")
+        self.assertTrue(
+            overview["daily_change_quality"]["suspicious_all_zero"]
+        )
+        self.assertEqual(overview["daily_change_quality"]["limited"], 5)
+
+    def test_overview_accepts_legacy_snapshot_with_real_daily_movement(self):
+        available = {
+            "AAA": {"status": "available", "percent_change": 1.2},
+            "BBB": {"status": "available", "percent_change": -0.4},
+        }
+
+        overview = DashboardDataService._overview(None, available, available)
+
+        self.assertEqual(overview["daily_change_quality"]["status"], "complete")
+        self.assertFalse(
+            overview["daily_change_quality"]["suspicious_all_zero"]
+        )
+
     def test_report_archive_lists_generated_reports_and_rejects_active_content(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

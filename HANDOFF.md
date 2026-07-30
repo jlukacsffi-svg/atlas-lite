@@ -61,6 +61,21 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Yahoo fallback now requests five days of close history and uses the latest
+  two valid closes, with a metadata prior-close fallback for partial responses.
+- Every fallback record carries explicit daily-movement quality and source
+  evidence. Reports disclose how many available securities have valid
+  prior-close comparisons.
+- Overview warns when prices are present but daily movement evidence is
+  limited, and the breadth graphic no longer presents an all-zero snapshot as
+  a flat market.
+- A live SPY, QQQ, NVDA, and AMD fallback check produced complete, nonzero
+  daily comparisons. The full 424-test suite passes.
+- Cloud Run revision `atlas-dashboard-stg-00157-24j`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260729-daily-change-warning`, digest
+  `sha256:b0bc30cad9d898b63c6a3895305db9890d152baf74a593771d5ddc8fc0feb4c5`.
+- All 26 readiness checks and all 17 protected dashboard checks pass. The
+  scheduled jobs were aligned without executing them.
 - Today's owner briefing now shows executive-report freshness, the latest
   report timestamp and coverage, and a protected `Open latest report`
   shortcut.
@@ -569,7 +584,7 @@ Recommended next Stage 3/5 task now:
   inputs layered on top of the new regime engine so Atlas can recognize sector
   leadership changes and deteriorating winners sooner.
 
-Estimated overall Atlas program completion: 67%.
+Estimated overall Atlas program completion: 84%.
 
 ## Useful Files
 

@@ -19,6 +19,8 @@ SNAPSHOT_FIELDS = [
     "previous_close",
     "change",
     "percent_change",
+    "daily_change_quality",
+    "daily_change_source",
     "volume",
     "status",
     "source",

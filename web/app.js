@@ -253,7 +253,7 @@ function renderDashboard(data) {
 
   const overview = data.overview || {};
   document.getElementById("coverage").textContent = `${overview.available || 0}/${overview.tracked || 0}`;
-  document.getElementById("breadth").textContent = `${overview.advancing || 0} up, ${overview.declining || 0} down`;
+  renderMarketDataQuality(overview);
   document.getElementById("research-count").textContent = String(data.research?.open || 0);
   document.getElementById("research-detail").textContent =
     `${data.research?.high_priority || 0} high priority`;
@@ -305,7 +305,7 @@ function renderDashboardSummary(data) {
 
   const overview = data.overview || {};
   document.getElementById("coverage").textContent = `${overview.available || 0}/${overview.tracked || 0}`;
-  document.getElementById("breadth").textContent = `${overview.advancing || 0} up, ${overview.declining || 0} down`;
+  renderMarketDataQuality(overview);
   document.getElementById("research-count").textContent = String(data.research?.open || 0);
   document.getElementById("research-detail").textContent =
     `${data.research?.high_priority || 0} high priority`;
@@ -1558,14 +1558,31 @@ function renderMarketPills(rows) {
   `).join("");
 }
 
+function renderMarketDataQuality(overview) {
+  const quality = overview.daily_change_quality || {};
+  const limited = quality.status === "limited";
+  const warning = document.getElementById("market-data-warning");
+  warning.hidden = !limited;
+  document.getElementById("market-data-warning-detail").textContent =
+    quality.detail || "Atlas is waiting for a valid prior-close comparison.";
+  document.getElementById("breadth").textContent = limited
+    ? "Daily movement unavailable"
+    : `${overview.advancing || 0} up, ${overview.declining || 0} down`;
+}
+
 function renderBreadth(overview) {
   const up = overview.advancing || 0;
   const down = overview.declining || 0;
+  const limited = overview.daily_change_quality?.status === "limited";
   const total = Math.max(up + down, 1);
   const degrees = (up / total) * 360;
   const donut = document.getElementById("breadth-donut");
-  donut.style.background = `conic-gradient(var(--green) 0deg ${degrees}deg, var(--red) ${degrees}deg 360deg)`;
-  document.getElementById("breadth-center").textContent = `${Math.round((up / total) * 100)}%`;
+  donut.style.background = limited
+    ? "conic-gradient(var(--line-strong) 0deg 360deg)"
+    : `conic-gradient(var(--green) 0deg ${degrees}deg, var(--red) ${degrees}deg 360deg)`;
+  document.getElementById("breadth-center").textContent = limited
+    ? "--"
+    : `${Math.round((up / total) * 100)}%`;
   document.getElementById("advancing").textContent = number.format(up);
   document.getElementById("declining").textContent = number.format(down);
 }
