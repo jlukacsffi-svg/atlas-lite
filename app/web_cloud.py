@@ -584,6 +584,61 @@ class AtlasCloudApplication:
                         prospective_review_tracker.get("transition_count") or 0
                     ),
                 },
+                "prospective_review_priority_queue": {
+                    "ok": prospective_review_tracker.get(
+                        "review_priority_mode"
+                    )
+                    == "evidence_only"
+                    and prospective_review_tracker.get(
+                        "review_priority_policy_changed"
+                    )
+                    is False
+                    and isinstance(
+                        prospective_review_tracker.get("review_queue"),
+                        list,
+                    )
+                    and isinstance(
+                        prospective_review_tracker.get(
+                            "review_priority_counts"
+                        ),
+                        dict,
+                    )
+                    and self._ui_contains("Needs attention")
+                    and self._ui_contains("Why this priority"),
+                    "detail": (
+                        "Dashboard ranks evidence-only owner attention with "
+                        "transparent reasons and no trade authority."
+                    ),
+                    "mode": prospective_review_tracker.get(
+                        "review_priority_mode"
+                    ),
+                    "policy_changed": bool(
+                        prospective_review_tracker.get(
+                            "review_priority_policy_changed"
+                        )
+                    ),
+                    "open_signal_count": len(
+                        prospective_review_tracker.get("review_queue") or []
+                    ),
+                    "attention_count": int(
+                        (
+                            prospective_review_tracker.get(
+                                "review_priority_counts"
+                            )
+                            or {}
+                        ).get("urgent")
+                        or 0
+                    )
+                    + int(
+                        (
+                            prospective_review_tracker.get(
+                                "review_priority_counts"
+                            )
+                            or {}
+                        ).get("monitor")
+                        or 0
+                    ),
+                },
                 "prospective_review_effectiveness": {
                     "ok": bool(
                         prospective_review_effectiveness.get("available")

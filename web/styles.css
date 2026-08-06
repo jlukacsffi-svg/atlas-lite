@@ -1504,7 +1504,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 }
 .paper-prospective-row {
   display: grid;
-  grid-template-columns: minmax(130px, .7fr) repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(145px, .75fr) repeat(2, minmax(0, .85fr)) minmax(210px, 1.4fr);
   gap: 12px;
   padding: 10px;
   border-left: 3px solid var(--blue);
@@ -1525,6 +1525,41 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .paper-prospective-row small {
   color: var(--muted);
   font-size: 9px;
+}
+.paper-review-priority {
+  justify-self: start;
+  padding: 3px 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 9px !important;
+  text-transform: uppercase;
+}
+.paper-review-priority.urgent {
+  border-color: #e2a49d;
+  background: #fff0ee;
+  color: #9d3128;
+}
+.paper-review-priority.monitor {
+  border-color: #e7c37a;
+  background: #fff8e6;
+  color: #865b08;
+}
+.paper-review-priority.watch {
+  border-color: #a8c6e8;
+  background: #edf6ff;
+  color: #285f98;
+}
+.paper-review-priority.low {
+  border-color: #abd5c4;
+  background: #ebf7f1;
+  color: var(--teal-dark);
+}
+.paper-review-priority.recorded {
+  border-color: #d7dce3;
+  background: #f5f6f8;
+  color: #64748b;
 }
 .paper-effectiveness-scorecard {
   padding: 14px;

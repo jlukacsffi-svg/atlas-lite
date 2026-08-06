@@ -4150,6 +4150,85 @@ class PaperTradingAccount:
             "candidates": results,
         }
 
+    @staticmethod
+    def _prospective_review_priority(
+        status,
+        latest_relative_move,
+        currently_above_trigger,
+        recovery_durability_pct,
+        relapse_count,
+    ):
+        """Rank owner review attention without granting trade authority."""
+        if status in {"completed_loss", "completed_gain"}:
+            return {
+                "review_priority": "recorded",
+                "review_priority_label": "Outcome recorded",
+                "review_priority_score": 0,
+                "review_priority_rationale": [
+                    "The paper position is closed and remains in the evidence archive."
+                ],
+                "requires_owner_attention": False,
+            }
+
+        score = {
+            "persistent_weakness": 80,
+            "active": 65,
+            "recovered": 45,
+        }.get(status, 35)
+        rationale = []
+        if status == "persistent_weakness":
+            rationale.append("Weakness has persisted across at least three snapshots.")
+        elif status == "active":
+            rationale.append("The warning is new and needs more observations.")
+        else:
+            rationale.append("Price has moved above the warning trigger at least once.")
+
+        if latest_relative_move is not None and latest_relative_move <= -2.0:
+            score += 10
+            rationale.append("The holding trails the stronger benchmark by at least 2 points.")
+        elif latest_relative_move is not None and latest_relative_move >= 2.0:
+            score -= 10
+            rationale.append("The holding is ahead of the stronger benchmark by at least 2 points.")
+
+        if currently_above_trigger:
+            score -= 10
+            rationale.append("The latest price remains above the warning trigger.")
+        else:
+            score += 10
+            rationale.append("The latest price is at or below the warning trigger.")
+
+        relapses = max(0, int(relapse_count or 0))
+        if relapses:
+            score += min(relapses * 5, 10)
+            rationale.append(
+                f"Recovery has relapsed {relapses} time{'' if relapses == 1 else 's'}."
+            )
+
+        if recovery_durability_pct is not None:
+            if recovery_durability_pct >= 75.0:
+                score -= 10
+                rationale.append("At least 75% of recovery observations stayed above trigger.")
+            elif recovery_durability_pct < 50.0:
+                score += 10
+                rationale.append("Fewer than half of recovery observations stayed above trigger.")
+
+        score = max(0, min(100, int(round(score))))
+        if score >= 80:
+            priority, label = "urgent", "Review now"
+        elif score >= 60:
+            priority, label = "monitor", "Monitor closely"
+        elif score >= 35:
+            priority, label = "watch", "Watch"
+        else:
+            priority, label = "low", "Low priority"
+        return {
+            "review_priority": priority,
+            "review_priority_label": label,
+            "review_priority_score": score,
+            "review_priority_rationale": rationale,
+            "requires_owner_attention": priority in {"urgent", "monitor"},
+        }
+
     @classmethod
     def prospective_defensive_review_tracker(cls, events):
         """Track review-only defensive signals recorded after study activation."""
@@ -4183,6 +4262,16 @@ class PaperTradingAccount:
                 "transition_count": 0,
                 "recent_transition_count": 0,
                 "recent_transitions": [],
+                "review_priority_mode": "evidence_only",
+                "review_priority_policy_changed": False,
+                "review_queue": [],
+                "review_priority_counts": {
+                    "urgent": 0,
+                    "monitor": 0,
+                    "watch": 0,
+                    "low": 0,
+                    "recorded": 0,
+                },
                 "counts": {
                     "total": 0,
                     "active": 0,
@@ -4487,6 +4576,13 @@ class PaperTradingAccount:
                 "completed_loss": "Completed loss",
                 "completed_gain": "Completed gain",
             }
+            review_priority = cls._prospective_review_priority(
+                status,
+                latest_relative_move,
+                currently_above_trigger,
+                recovery_durability_pct,
+                relapse_count,
+            )
             signals.append(
                 {
                     "signal_id": cycle["signal_id"],
@@ -4597,6 +4693,7 @@ class PaperTradingAccount:
                         if cycle.get("closed")
                         else None
                     ),
+                    **review_priority,
                 }
             )
 
@@ -4623,6 +4720,46 @@ class PaperTradingAccount:
         }
         for signal in signals:
             counts[signal["status"]] += 1
+        review_priority_counts = {
+            "urgent": 0,
+            "monitor": 0,
+            "watch": 0,
+            "low": 0,
+            "recorded": 0,
+        }
+        for signal in signals:
+            priority = signal.get("review_priority") or "low"
+            review_priority_counts[priority] += 1
+        review_queue = sorted(
+            [
+                {
+                    "signal_id": signal.get("signal_id"),
+                    "ticker": signal.get("ticker"),
+                    "status": signal.get("status"),
+                    "status_label": signal.get("status_label"),
+                    "review_priority": signal.get("review_priority"),
+                    "review_priority_label": signal.get(
+                        "review_priority_label"
+                    ),
+                    "review_priority_score": signal.get(
+                        "review_priority_score"
+                    ),
+                    "review_priority_rationale": signal.get(
+                        "review_priority_rationale"
+                    )
+                    or [],
+                    "requires_owner_attention": bool(
+                        signal.get("requires_owner_attention")
+                    ),
+                }
+                for signal in signals
+                if signal.get("review_priority") != "recorded"
+            ],
+            key=lambda item: (
+                -int(item.get("review_priority_score") or 0),
+                str(item.get("ticker") or ""),
+            ),
+        )
         latest_snapshot_timestamps = {
             str(snapshot.get("timestamp") or "")
             for snapshot in snapshots[-3:]
@@ -4686,6 +4823,10 @@ class PaperTradingAccount:
             "transition_count": len(transitions),
             "recent_transition_count": len(recent_transitions),
             "recent_transitions": recent_transitions,
+            "review_priority_mode": "evidence_only",
+            "review_priority_policy_changed": False,
+            "review_queue": review_queue,
+            "review_priority_counts": review_priority_counts,
             "counts": counts,
             "signals": signals,
         }

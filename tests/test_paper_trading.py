@@ -2243,6 +2243,21 @@ class PaperTradingAccountTests(unittest.TestCase):
             ],
             100.0,
         )
+        nvda_signal = next(
+            signal for signal in tracker["signals"] if signal["ticker"] == "NVDA"
+        )
+        amd_signal = next(
+            signal for signal in tracker["signals"] if signal["ticker"] == "AMD"
+        )
+        self.assertEqual(nvda_signal["review_priority"], "recorded")
+        self.assertEqual(nvda_signal["review_priority_score"], 0)
+        self.assertFalse(nvda_signal["requires_owner_attention"])
+        self.assertEqual(amd_signal["review_priority"], "low")
+        self.assertEqual(amd_signal["review_priority_score"], 25)
+        self.assertEqual([item["ticker"] for item in tracker["review_queue"]], ["AMD"])
+        self.assertEqual(tracker["review_priority_counts"]["recorded"], 1)
+        self.assertEqual(tracker["review_priority_mode"], "evidence_only")
+        self.assertFalse(tracker["review_priority_policy_changed"])
 
     def test_prospective_review_tracker_counts_recovery_relapses(self):
         events = [
@@ -2315,6 +2330,11 @@ class PaperTradingAccountTests(unittest.TestCase):
             signal["recovery_quality_label"],
             "Recovered again after relapse",
         )
+        self.assertEqual(signal["review_priority"], "watch")
+        self.assertEqual(signal["review_priority_label"], "Watch")
+        self.assertEqual(signal["review_priority_score"], 40)
+        self.assertFalse(signal["requires_owner_attention"])
+        self.assertIn("relapsed 1 time", " ".join(signal["review_priority_rationale"]))
 
     def test_performance_snapshot_starts_review_tracking_once(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -514,6 +514,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Completed position diagnosis";\n'
                 '"Defensive trigger shadow test";\n'
                 '"Prospective review tracker";\n'
+                '"Needs attention";\n'
+                '"Why this priority";\n'
                 '"Review signal effectiveness";\n'
                 '"What happened after each warning";\n'
                 '"Benchmark-adjusted separation";\n'
@@ -561,6 +563,16 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "transition_count": 0,
                                     "recent_transition_count": 0,
                                     "recent_transitions": [],
+                                    "review_priority_mode": "evidence_only",
+                                    "review_priority_policy_changed": False,
+                                    "review_queue": [],
+                                    "review_priority_counts": {
+                                        "urgent": 0,
+                                        "monitor": 0,
+                                        "watch": 0,
+                                        "low": 0,
+                                        "recorded": 0,
+                                    },
                                     "counts": {"total": 0},
                                     "signals": [],
                                 },
@@ -678,6 +690,22 @@ class CloudWebApplicationTests(unittest.TestCase):
         )
         self.assertFalse(
             response["json"]["checks"]["prospective_review_tracker"]["activated"]
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "prospective_review_priority_queue"
+            ]["ok"]
+        )
+        self.assertEqual(
+            response["json"]["checks"][
+                "prospective_review_priority_queue"
+            ]["mode"],
+            "evidence_only",
+        )
+        self.assertFalse(
+            response["json"]["checks"][
+                "prospective_review_priority_queue"
+            ]["policy_changed"]
         )
         self.assertTrue(
             response["json"]["checks"][

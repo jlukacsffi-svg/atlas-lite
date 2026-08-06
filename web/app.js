@@ -2052,6 +2052,8 @@ function renderPaperWorkspaceSummary(paper) {
     ? prospectiveTracker.signals
     : [];
   const prospectiveCounts = prospectiveTracker.counts || {};
+  const prospectivePriorityCounts =
+    prospectiveTracker.review_priority_counts || {};
   const prospectiveEffectiveness =
     validation.prospective_review_effectiveness || {};
   const effectivenessGates = Array.isArray(prospectiveEffectiveness.gates)
@@ -2256,20 +2258,20 @@ function renderPaperWorkspaceSummary(paper) {
             <strong>${signed(Number(prospectiveTracker.loss_threshold_pct || -2))} return + ${signed(Number(prospectiveTracker.lag_threshold_pct || -3))} lag</strong>
           </div>
           <div>
+            <span>Needs attention</span>
+            <strong>${Number(prospectivePriorityCounts.urgent || 0) + Number(prospectivePriorityCounts.monitor || 0)}</strong>
+          </div>
+          <div>
             <span>New reviews</span>
             <strong>${Number(prospectiveCounts.active || 0)}</strong>
           </div>
           <div>
-            <span>Weakness persists</span>
+            <span>Persistent weakness</span>
             <strong>${Number(prospectiveCounts.persistent_weakness || 0)}</strong>
           </div>
           <div>
             <span>Recovered</span>
             <strong>${Number(prospectiveCounts.recovered || 0)}</strong>
-          </div>
-          <div>
-            <span>Completed losses</span>
-            <strong>${Number(prospectiveCounts.completed_loss || 0)}</strong>
           </div>
         </div>
         <div class="paper-prospective-list">
@@ -2278,6 +2280,7 @@ function renderPaperWorkspaceSummary(paper) {
               <div>
                 <b>${escapeHtml(signal.ticker || "Holding")}</b>
                 <span>${escapeHtml(signal.status_label || "Review signal")}</span>
+                <strong class="paper-review-priority ${escapeHtml(signal.review_priority || "low")}">${escapeHtml(signal.review_priority_label || "Low priority")} · ${Number(signal.review_priority_score || 0)}/100</strong>
               </div>
               <div>
                 <span>Triggered</span>
@@ -2289,6 +2292,10 @@ function renderPaperWorkspaceSummary(paper) {
                 <strong>${signed(Number(signal.latest_return_pct || 0))} return</strong>
                 <small>${Number(signal.snapshots_observed || 0)} snapshot${Number(signal.snapshots_observed || 0) === 1 ? "" : "s"} followed</small>
               </div>
+              <div>
+                <span>Why this priority</span>
+                <small>${escapeHtml((Array.isArray(signal.review_priority_rationale) ? signal.review_priority_rationale : []).join(" ") || "Atlas needs more observations to rank this review.")}</small>
+              </div>
             </article>
           `).join("") || `
             <div class="empty compact">
@@ -2298,7 +2305,7 @@ function renderPaperWorkspaceSummary(paper) {
             </div>
           `}
         </div>
-        <small class="paper-evidence-note">This tracker cannot place or force a simulated trade. A recovered signal only means price later moved above its trigger price.</small>
+        <small class="paper-evidence-note">Priority ranks owner attention only. It cannot place or force a simulated trade, and it does not change paper policy. A recovered signal only means price later moved above its trigger price.</small>
       </section>
     ` : ""}
     ${prospectiveEffectiveness.available ? `

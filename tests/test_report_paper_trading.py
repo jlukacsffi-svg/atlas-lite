@@ -85,6 +85,18 @@ class ReportPaperTradingTests(unittest.TestCase):
                 "prospective_review_tracker": {
                     "available": True,
                     "activated": True,
+                    "review_queue": [
+                        {
+                            "ticker": "TSM",
+                            "status_label": "Weakness persists",
+                            "review_priority_label": "Review now",
+                            "review_priority_score": 100,
+                            "review_priority_rationale": [
+                                "Weakness persisted.",
+                                "The holding trails its benchmark.",
+                            ],
+                        }
+                    ],
                     "recent_transitions": [
                         {
                             "ticker": "TSM",
@@ -168,6 +180,9 @@ class ReportPaperTradingTests(unittest.TestCase):
         section = generator._generate_paper_review_evidence()
 
         self.assertIn("## Defensive Review Evidence", section)
+        self.assertIn("### Owner Review Priority", section)
+        self.assertIn("| Review now (100/100) | TSM | Weakness persists |", section)
+        self.assertIn("Priority ranks owner attention only", section)
         self.assertIn(
             "| TSM | Weakness persists | -4.25% | -5.75% | 3 |",
             section,

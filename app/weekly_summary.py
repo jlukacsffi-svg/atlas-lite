@@ -177,6 +177,35 @@ class WeeklySummaryGenerator:
             )
             return "\n".join(lines) + "\n"
 
+        review_queue = list(tracker.get("review_queue") or [])
+        lines.extend(["", "### Owner Review Priority\n"])
+        if review_queue:
+            lines.extend(
+                [
+                    "| Priority | Ticker | Signal Status | Evidence |",
+                    "|----------|--------|---------------|----------|",
+                ]
+            )
+            for item in review_queue:
+                rationale = " ".join(
+                    item.get("review_priority_rationale") or []
+                ).replace("|", "/")
+                lines.append(
+                    f"| {item.get('review_priority_label', 'Watch')} "
+                    f"({int(item.get('review_priority_score') or 0)}/100) | "
+                    f"{item.get('ticker', 'N/A')} | "
+                    f"{item.get('status_label', 'Review signal')} | "
+                    f"{rationale or 'More observations are needed.'} |"
+                )
+        else:
+            lines.append(
+                "No open defensive signal currently requires ranking."
+            )
+        lines.append(
+            "\nPriority ranks owner attention only; it cannot place a trade "
+            "or change paper policy. Completed signals remain in the outcome archive."
+        )
+
         effectiveness = self.paper_account.prospective_review_effectiveness(
             tracker
         )
