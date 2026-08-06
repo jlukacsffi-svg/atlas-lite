@@ -61,6 +61,24 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Escalation duration and resolution evidence is live on Cloud Run revision
+  `atlas-dashboard-stg-00168-x5s`. The dashboard, daily job, and weekly job use
+  image `20260805-escalation-outcomes`, digest
+  `sha256:92b2c9b0460c01a05274bbac7c33c443538cde4c66732212cf1dd1dbd2149744`.
+  All 434 local tests, 26 staging checks, and 24 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- Atlas opens an episode only when a warning meaningfully crosses into
+  Monitor closely or Review now. It measures elapsed days, scheduled
+  observations, peak priority, and whether the episode de-escalated or ended
+  with a completed paper gain or loss.
+- Current cloud evidence has no elevated episodes yet. Portfolio and reports
+  say Atlas is building history rather than presenting a premature result.
+- Episode evidence remains observational and cannot time a simulated exit,
+  change strategy thresholds, or authorize real trading.
+- Next development focus: build an elevated-warning outcome scorecard once
+  resolved episodes exist, comparing episode behavior with paper outcomes
+  before any owner-facing policy proposal.
 - Meaningful priority escalation tracking is live on Cloud Run revision
   `atlas-dashboard-stg-00167-m8j`. The dashboard, daily job, and weekly job use
   image `20260805-priority-escalations`, digest
@@ -77,8 +95,6 @@ Most recent Stage 5 refinement:
   same latest-snapshot rule.
 - Escalation records remain review-only and disconnected from paper-order
   execution.
-- Next development focus: measure how long elevated warnings remain open and
-  how they resolve, while the scheduled forward sample continues growing.
 - Evidence-informed review priority is live on Cloud Run revision
   `atlas-dashboard-stg-00166-cqm`. The dashboard, daily job, and weekly job use
   image `20260805-review-priority`, digest

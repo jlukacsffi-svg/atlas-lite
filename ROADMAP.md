@@ -34,6 +34,9 @@ Atlas now:
   plain-language explanation for every score.
 - Retains priority-band changes in the paper audit ledger while alerting the
   owner only when a warning newly crosses into elevated attention.
+- Measures each elevated warning episode from first meaningful escalation
+  through de-escalation or paper-position completion, including elapsed days,
+  scheduled observations, peak priority, and resolution.
 
 Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
 the active investment-capability gate.

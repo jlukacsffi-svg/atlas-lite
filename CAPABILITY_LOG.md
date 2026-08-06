@@ -3,6 +3,45 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 5, 2026 - Elevated warning duration and resolutions are measured
+
+New capabilities:
+
+- Start an evidence episode when a paper warning meaningfully crosses into
+  Monitor closely or Review now.
+- Keep the episode open across later elevated observations, retain its peak
+  priority, and count scheduled snapshots and elapsed days.
+- Close the episode when attention falls below Monitor closely or the paper
+  position completes, recording de-escalated, completed gain, or completed
+  loss as the resolution.
+- Show the same episode evidence in Portfolio, daily reports, and weekly
+  reports.
+
+Validated result:
+
+- The current cloud evidence has no elevated episodes yet, so the interface
+  clearly states that Atlas is building history instead of implying a result.
+- Synthetic regression coverage proves peak-priority, duration, observation,
+  open-episode, and resolved-episode calculations.
+- The full local suite passes with 434 tests.
+- Desktop and 390-pixel mobile layouts pass visual review.
+- Cloud Run revision `atlas-dashboard-stg-00168-x5s`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260805-escalation-outcomes`.
+- The deployed image digest is
+  `sha256:92b2c9b0460c01a05274bbac7c33c443538cde4c66732212cf1dd1dbd2149744`.
+- All 26 staging readiness checks and all 24 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules remain enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Episode evidence is observational only; duration cannot time or force a
+  simulated sale.
+- The evidence cannot alter strategy thresholds or authorize real trading.
+- No policy conclusion is permitted until enough forward elevated episodes
+  have resolved.
+- Overall program completion remains estimated at 85%.
+
 ## August 5, 2026 - Meaningful priority escalations are isolated
 
 New capabilities:
