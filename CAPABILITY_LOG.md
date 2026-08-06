@@ -3,6 +3,41 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 5, 2026 - Recovery durability and relapses are measured
+
+New capabilities:
+
+- Measure the percentage of post-warning observations that remain above the
+  trigger price.
+- Count relapses after an initial recovery and track current and longest
+  above-trigger streaks.
+- Distinguish sustained recovery, recovery after relapse, relapse below
+  trigger, and no observed recovery.
+- Show recovery quality in Portfolio, daily reports, and weekly reports.
+
+Validated result:
+
+- LLY shows 57.1% recovery durability, one relapse, and a current state below
+  trigger.
+- CRWD shows 92.3% recovery durability, zero relapses, and remains above
+  trigger.
+- The durability gap between the current recovery and confirmed-loss outcomes
+  is 35.2 points.
+- The full local suite passes with 432 tests.
+- Desktop and 390-pixel mobile layouts pass visual review.
+- Cloud Run revision `atlas-dashboard-stg-00165-zt7`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260805-warning-durability`.
+- The deployed image digest is
+  `sha256:91abf4f65536a4f586f3cfea459cc9f510740a55033340d15e27f26c173015b2`.
+- All 26 staging readiness checks and all 21 protected Stage 5 dashboard
+  contract checks pass. Neither scheduled job was manually executed.
+
+Current boundaries:
+
+- Recovery quality is observational evidence, not an instruction to trade.
+- The two-signal sample cannot change policy or grant execution authority.
+- Overall program completion remains estimated at 85%.
+
 ## August 5, 2026 - Warning duration and recovery timing are visible
 
 New capabilities:

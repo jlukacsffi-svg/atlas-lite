@@ -175,10 +175,13 @@ Current validation focus:
   each trigger. Both current signals first moved above trigger after two
   additional snapshots, about one day; LLY later failed, proving that an early
   bounce must not be treated as resolution.
+- Atlas now measures recovery durability and relapse frequency. LLY stayed
+  above trigger for 57.1% of later observations before one relapse; CRWD stayed
+  above for 92.3%, has no relapses, and remains above trigger.
 - This is an early sample only. Atlas must continue accumulating resolved and
   completed outcomes before any paper policy can be promoted for owner review.
-- Next: continue the forward study, measure recovery durability and relapse
-  frequency, and keep all defensive signals review-only.
+- Next: continue the scheduled forward study and add evidence-informed review
+  priority without granting execution authority or changing paper policy.
 
 ## Stage 6: Human-Approved Trading
 

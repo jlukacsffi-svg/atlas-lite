@@ -61,6 +61,19 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Recovery durability is live on Cloud Run revision
+  `atlas-dashboard-stg-00165-zt7`. The dashboard, daily job, and weekly job use
+  image `20260805-warning-durability`, digest
+  `sha256:91abf4f65536a4f586f3cfea459cc9f510740a55033340d15e27f26c173015b2`.
+  All 432 local tests, 26 staging checks, and 21 protected dashboard checks
+  pass. The jobs were aligned without manually executing them.
+- Atlas now measures time above trigger, relapse frequency, and current and
+  longest recovery streaks. LLY has 57.1% durability with one relapse and is
+  below trigger; CRWD has 92.3% durability, no relapses, and remains above.
+- Recovery quality appears in Portfolio, daily reports, and weekly reports and
+  remains observational evidence only.
+- Next development focus: add evidence-informed review priority while the
+  scheduled forward sample continues growing, without changing paper policy.
 - Warning timing is live on Cloud Run revision
   `atlas-dashboard-stg-00164-txh`. The dashboard, daily job, and weekly job use
   image `20260805-warning-timing`, digest
