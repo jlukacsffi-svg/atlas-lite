@@ -61,6 +61,21 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Benchmark-relative warning attribution is live on Cloud Run revision
+  `atlas-dashboard-stg-00163-tqv`. The dashboard, daily job, and weekly job use
+  image `20260805-warning-benchmarks`, digest
+  `sha256:d7fa26bfb4d3a9333ef3c723889def73f06e5021b6341fe8e7c5ddcc096ab1b3`.
+  All 431 local tests, 26 staging checks, and 19 protected dashboard checks
+  pass. The jobs were aligned without manually executing them.
+- Atlas now compares each post-warning stock move with the stronger SPY or QQQ
+  move over the same period. The live evidence shows LLY 2.48 points behind
+  SPY and CRWD 10.36 points ahead of QQQ, for 12.84 points of adjusted
+  separation.
+- Benchmark attribution appears in Portfolio, daily reports, and weekly
+  reports, with an explicit statement that comparison does not establish
+  causation or grant trade authority.
+- Next development focus: measure warning duration and time to recovery while
+  scheduled observations continue expanding the forward sample.
 - Forward warning outcomes are live on Cloud Run revision
   `atlas-dashboard-stg-00162-v7s`. The dashboard, daily job, and weekly job use
   image `20260805-warning-outcomes`, digest

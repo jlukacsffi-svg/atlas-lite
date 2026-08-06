@@ -168,10 +168,13 @@ Current validation focus:
   count.
 - The first two resolved signals include one confirmed weakness and one
   recovery, with a 17.53-point separation between their post-warning paths.
+- Atlas now adjusts those paths against the stronger SPY or QQQ move over the
+  same period. The first benchmark-adjusted separation is 12.84 points: LLY
+  lagged SPY by 2.48 points, while CRWD outpaced QQQ by 10.36 points.
 - This is an early sample only. Atlas must continue accumulating resolved and
   completed outcomes before any paper policy can be promoted for owner review.
-- Next: continue the forward study, improve benchmark-relative attribution as
-  the sample grows, and keep all defensive signals review-only.
+- Next: continue the forward study, measure warning duration and time to
+  recovery as the sample grows, and keep all defensive signals review-only.
 
 ## Stage 6: Human-Approved Trading
 

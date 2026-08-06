@@ -3,6 +3,37 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 5, 2026 - Warning outcomes include benchmark attribution
+
+New capabilities:
+
+- Compare every post-warning stock path with the stronger SPY or QQQ move over
+  the identical observation period.
+- Show the stronger benchmark, its move, the stock's relative result, and a
+  plain-language interpretation for each resolved warning.
+- Report a benchmark-adjusted separation between confirmed weakness and
+  recoveries in the Portfolio workspace and generated reports.
+- State explicitly that benchmark comparison does not establish causation.
+
+Validated result:
+
+- The live sample shows LLY 2.48 points behind SPY and CRWD 10.36 points ahead
+  of QQQ, producing a 12.84-point benchmark-adjusted separation.
+- The full local suite passes with 431 tests.
+- Desktop and 390-pixel mobile layouts pass visual review.
+- Cloud Run revision `atlas-dashboard-stg-00163-tqv`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260805-warning-benchmarks`.
+- The deployed image digest is
+  `sha256:d7fa26bfb4d3a9333ef3c723889def73f06e5021b6341fe8e7c5ddcc096ab1b3`.
+- All 26 staging readiness checks and all 19 protected Stage 5 dashboard
+  contract checks pass. Neither scheduled job was manually executed.
+
+Current boundaries:
+
+- Benchmark attribution is evidence, not a prediction or causal claim.
+- Two resolved warnings remain an early sample and cannot change policy.
+- Overall program completion remains estimated at 85%.
+
 ## August 5, 2026 - Forward warning outcomes are visible
 
 New capabilities:
