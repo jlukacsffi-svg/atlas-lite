@@ -3,6 +3,45 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 5, 2026 - Meaningful priority escalations are isolated
+
+New capabilities:
+
+- Record initial priority, escalation, de-escalation, and status-change events
+  in the paper audit ledger.
+- Omit routine score movement when a warning remains inside the same priority
+  band, preventing repetitive audit and interface noise.
+- Alert the owner only when an existing warning moves upward into Monitor
+  closely or Review now.
+- Show the same latest-snapshot escalation watch on Overview, Portfolio, daily
+  reports, and weekly reports.
+
+Validated result:
+
+- The current cloud evidence has no elevated warnings and no new escalation;
+  the interface displays a clear state instead of repeating older changes.
+- A regression test proves that Watch to Monitor closely creates one meaningful
+  escalation, while later score drift inside Monitor closely creates no event.
+- The full local suite passes with 433 tests.
+- Desktop and 390-pixel mobile layouts pass visual review without browser
+  warnings.
+- Cloud Run revision `atlas-dashboard-stg-00167-m8j`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260805-priority-escalations`.
+- The deployed image digest is
+  `sha256:fdeb3fef5a95976001ac64b59e21a274a0ac0390acb7e663b810dce05dfceb9f`.
+- All 26 staging readiness checks and all 23 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules remain enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Escalations request owner attention only; they cannot place or force a paper
+  trade.
+- Escalations do not alter strategy thresholds or authorize real trading.
+- Existing signals receive a quiet baseline priority on their next snapshot,
+  avoiding false migration alerts.
+- Overall program completion remains estimated at 85%.
+
 ## August 5, 2026 - Defensive warnings are ranked for owner review
 
 New capabilities:

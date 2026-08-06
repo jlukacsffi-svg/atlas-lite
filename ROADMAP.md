@@ -32,6 +32,8 @@ Atlas now:
 - Ranks forward defensive warnings by owner-review priority using status,
   benchmark-relative movement, recovery durability, and relapses, with a
   plain-language explanation for every score.
+- Retains priority-band changes in the paper audit ledger while alerting the
+  owner only when a warning newly crosses into elevated attention.
 
 Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
 the active investment-capability gate.

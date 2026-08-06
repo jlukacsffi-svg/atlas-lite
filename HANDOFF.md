@@ -61,6 +61,24 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Meaningful priority escalation tracking is live on Cloud Run revision
+  `atlas-dashboard-stg-00167-m8j`. The dashboard, daily job, and weekly job use
+  image `20260805-priority-escalations`, digest
+  `sha256:fdeb3fef5a95976001ac64b59e21a274a0ac0390acb7e663b810dce05dfceb9f`.
+  All 433 local tests, 26 staging checks, and 23 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- Atlas records priority-band history but alerts the owner only when an
+  existing warning crosses upward into Monitor closely or Review now. Score
+  drift within a band, initial migration classification, recoveries, and
+  archived outcomes do not generate escalation noise.
+- The current evidence has zero elevated warnings and no new escalation, so
+  Overview and Portfolio show a clear state. Daily and weekly reports use the
+  same latest-snapshot rule.
+- Escalation records remain review-only and disconnected from paper-order
+  execution.
+- Next development focus: measure how long elevated warnings remain open and
+  how they resolve, while the scheduled forward sample continues growing.
 - Evidence-informed review priority is live on Cloud Run revision
   `atlas-dashboard-stg-00166-cqm`. The dashboard, daily job, and weekly job use
   image `20260805-review-priority`, digest
@@ -75,8 +93,6 @@ Most recent Stage 5 refinement:
   priority at 15/100, and no current warning needs elevated owner attention.
 - The queue appears in Portfolio, daily reports, and weekly reports. It ranks
   review attention only and remains disconnected from paper-order execution.
-- Next development focus: record priority changes and surface only meaningful
-  escalations, while the scheduled forward sample continues growing.
 - Recovery durability is live on Cloud Run revision
   `atlas-dashboard-stg-00165-zt7`. The dashboard, daily job, and weekly job use
   image `20260805-warning-durability`, digest
