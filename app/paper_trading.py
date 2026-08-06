@@ -4422,6 +4422,52 @@ class PaperTradingAccount:
                 else None
             )
             recovered = first_recovery is not None
+            recovery_window = after_trigger[1:]
+            above_trigger_flags = [
+                value["price"] > trigger["price"]
+                for value in recovery_window
+            ]
+            above_trigger_count = sum(above_trigger_flags)
+            recovery_durability_pct = (
+                round(
+                    (above_trigger_count / len(recovery_window)) * 100.0,
+                    1,
+                )
+                if recovery_window
+                else None
+            )
+            relapse_count = 0
+            first_relapse = None
+            longest_recovery_streak = 0
+            current_recovery_streak = 0
+            was_above_trigger = False
+            for value in recovery_window:
+                is_above_trigger = value["price"] > trigger["price"]
+                if is_above_trigger:
+                    current_recovery_streak += 1
+                    longest_recovery_streak = max(
+                        longest_recovery_streak,
+                        current_recovery_streak,
+                    )
+                    was_above_trigger = True
+                    continue
+                if was_above_trigger:
+                    relapse_count += 1
+                    if first_relapse is None:
+                        first_relapse = value
+                current_recovery_streak = 0
+                was_above_trigger = False
+            currently_above_trigger = bool(
+                recovery_window and above_trigger_flags[-1]
+            )
+            if not recovered:
+                recovery_quality_label = "No recovery observed"
+            elif currently_above_trigger and relapse_count == 0:
+                recovery_quality_label = "Recovery remains above trigger"
+            elif currently_above_trigger:
+                recovery_quality_label = "Recovered again after relapse"
+            else:
+                recovery_quality_label = "Relapsed below trigger"
             if cycle.get("closed"):
                 status = (
                     "completed_loss"
@@ -4516,6 +4562,35 @@ class PaperTradingAccount:
                         if first_recovery
                         else None
                     ),
+                    "recovery_observations": len(recovery_window),
+                    "above_trigger_observations": above_trigger_count,
+                    "recovery_durability_pct": recovery_durability_pct,
+                    "relapse_count": relapse_count,
+                    "first_relapsed_at": (
+                        first_relapse.get("timestamp")
+                        if first_relapse
+                        else None
+                    ),
+                    "days_to_first_relapse": cls._days_between(
+                        (
+                            first_recovery.get("timestamp")
+                            if first_recovery
+                            else None
+                        ),
+                        (
+                            first_relapse.get("timestamp")
+                            if first_relapse
+                            else None
+                        ),
+                    ),
+                    "longest_recovery_streak_snapshots": (
+                        longest_recovery_streak
+                    ),
+                    "current_recovery_streak_snapshots": (
+                        current_recovery_streak
+                    ),
+                    "currently_above_trigger": currently_above_trigger,
+                    "recovery_quality_label": recovery_quality_label,
                     "snapshots_observed": len(after_trigger),
                     "realized_gain_loss": (
                         round(cycle["realized_gain_loss"], 2)
@@ -4718,6 +4793,38 @@ class PaperTradingAccount:
                     "first_recovered_at": signal.get(
                         "first_recovered_at"
                     ),
+                    "recovery_observations": int(
+                        signal.get("recovery_observations") or 0
+                    ),
+                    "above_trigger_observations": int(
+                        signal.get("above_trigger_observations") or 0
+                    ),
+                    "recovery_durability_pct": signal.get(
+                        "recovery_durability_pct"
+                    ),
+                    "relapse_count": int(
+                        signal.get("relapse_count") or 0
+                    ),
+                    "first_relapsed_at": signal.get(
+                        "first_relapsed_at"
+                    ),
+                    "days_to_first_relapse": signal.get(
+                        "days_to_first_relapse"
+                    ),
+                    "longest_recovery_streak_snapshots": int(
+                        signal.get("longest_recovery_streak_snapshots")
+                        or 0
+                    ),
+                    "current_recovery_streak_snapshots": int(
+                        signal.get("current_recovery_streak_snapshots")
+                        or 0
+                    ),
+                    "currently_above_trigger": bool(
+                        signal.get("currently_above_trigger")
+                    ),
+                    "recovery_quality_label": signal.get(
+                        "recovery_quality_label"
+                    ),
                     "snapshots_observed": int(
                         signal.get("snapshots_observed") or 0
                     ),
@@ -4790,6 +4897,24 @@ class PaperTradingAccount:
             false_alarm_rows,
             "days_to_first_recovery",
         )
+        confirmed_avg_recovery_durability = average_metric(
+            confirmed_rows,
+            "recovery_durability_pct",
+        )
+        false_alarm_avg_recovery_durability = average_metric(
+            false_alarm_rows,
+            "recovery_durability_pct",
+        )
+        recovery_durability_separation = (
+            round(
+                false_alarm_avg_recovery_durability
+                - confirmed_avg_recovery_durability,
+                1,
+            )
+            if confirmed_avg_recovery_durability is not None
+            and false_alarm_avg_recovery_durability is not None
+            else None
+        )
         outcome_comparison = {
             "confirmed_avg_post_trigger_move_pct": confirmed_avg_move,
             "confirmed_avg_worst_post_trigger_move_pct": average_metric(
@@ -4822,6 +4947,21 @@ class PaperTradingAccount:
             ),
             "false_alarm_avg_days_to_recovery": (
                 false_alarm_avg_recovery_days
+            ),
+            "confirmed_avg_recovery_durability_pct": (
+                confirmed_avg_recovery_durability
+            ),
+            "false_alarm_avg_recovery_durability_pct": (
+                false_alarm_avg_recovery_durability
+            ),
+            "recovery_durability_separation_pct": (
+                recovery_durability_separation
+            ),
+            "confirmed_total_relapses": sum(
+                row["relapse_count"] for row in confirmed_rows
+            ),
+            "false_alarm_total_relapses": sum(
+                row["relapse_count"] for row in false_alarm_rows
             ),
         }
         minimum_resolved = 10

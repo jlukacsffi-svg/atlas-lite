@@ -117,6 +117,11 @@ class ReportPaperTradingTests(unittest.TestCase):
                         "confirmed_avg_warning_span_days": 2.0,
                         "false_alarm_avg_snapshots_to_recovery": 2.0,
                         "false_alarm_avg_days_to_recovery": 1.0,
+                        "confirmed_avg_recovery_durability_pct": 50.0,
+                        "false_alarm_avg_recovery_durability_pct": 90.0,
+                        "recovery_durability_separation_pct": 40.0,
+                        "confirmed_total_relapses": 1,
+                        "false_alarm_total_relapses": 0,
                     },
                     "outcomes": [
                         {
@@ -132,6 +137,9 @@ class ReportPaperTradingTests(unittest.TestCase):
                             "warning_span_days": 2.0,
                             "snapshots_to_first_recovery": None,
                             "days_to_first_recovery": None,
+                            "recovery_durability_pct": 50.0,
+                            "relapse_count": 1,
+                            "recovery_quality_label": "Relapsed below trigger",
                             "snapshots_observed": 3,
                         },
                         {
@@ -147,6 +155,9 @@ class ReportPaperTradingTests(unittest.TestCase):
                             "warning_span_days": 3.0,
                             "snapshots_to_first_recovery": 2,
                             "days_to_first_recovery": 1.0,
+                            "recovery_durability_pct": 90.0,
+                            "relapse_count": 0,
+                            "recovery_quality_label": "Recovery remains above trigger",
                             "snapshots_observed": 4,
                         },
                     ],
@@ -173,6 +184,10 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("**Confirmed-outcome observation span**: 3.0 snapshots / 2.0 days", section)
         self.assertIn("**Recovery first appeared**: 2.0 snapshots / 1.0 days", section)
         self.assertIn(
+            "**Recovery durability separation**: +40.0 points (1 confirmed-outcome relapses / 0 recovery relapses)",
+            section,
+        )
+        self.assertIn(
             "| TSM | Warning confirmed | -3.50% | -4.00% | +0.00% | 3 |",
             section,
         )
@@ -192,14 +207,15 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("does not claim causation", section)
         self.assertIn("#### Warning Timing", section)
         self.assertIn(
-            "| TSM | 3 snapshots / 2.0 days | Not observed | Warning confirmed |",
+            "| TSM | 3 snapshots / 2.0 days | Not observed | 50.0% above trigger / 1 relapses | Warning confirmed |",
             section,
         )
         self.assertIn(
-            "| AMD | 4 snapshots / 3.0 days | 2 snapshots / 1.0 days | Recovery / false alarm |",
+            "| AMD | 4 snapshots / 3.0 days | 2 snapshots / 1.0 days | 90.0% above trigger / 0 relapses | Recovery / false alarm |",
             section,
         )
         self.assertIn("can be temporary", section)
+        self.assertIn("sustained recovery and relapse frequency", section)
         self.assertIn("not hypothetical fills", section)
 
     def test_defensive_review_section_explains_forward_start(self):

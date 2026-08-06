@@ -2098,6 +2098,12 @@ class PaperTradingAccountTests(unittest.TestCase):
         )
         self.assertIsNone(by_ticker["NVDA"]["days_to_first_recovery"])
         self.assertEqual(by_ticker["NVDA"]["warning_span_days"], 0.0)
+        self.assertEqual(by_ticker["NVDA"]["recovery_durability_pct"], 0.0)
+        self.assertEqual(by_ticker["NVDA"]["relapse_count"], 0)
+        self.assertEqual(
+            by_ticker["NVDA"]["recovery_quality_label"],
+            "No recovery observed",
+        )
         self.assertEqual(by_ticker["AMD"]["status"], "recovered")
         self.assertEqual(by_ticker["AMD"]["latest_return_pct"], -2.0)
         self.assertEqual(
@@ -2128,6 +2134,21 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(
             by_ticker["AMD"]["first_recovered_at"],
             "2026-07-01T10:01:00",
+        )
+        self.assertEqual(by_ticker["AMD"]["recovery_durability_pct"], 100.0)
+        self.assertEqual(by_ticker["AMD"]["relapse_count"], 0)
+        self.assertEqual(
+            by_ticker["AMD"]["longest_recovery_streak_snapshots"],
+            2,
+        )
+        self.assertEqual(
+            by_ticker["AMD"]["current_recovery_streak_snapshots"],
+            2,
+        )
+        self.assertTrue(by_ticker["AMD"]["currently_above_trigger"])
+        self.assertEqual(
+            by_ticker["AMD"]["recovery_quality_label"],
+            "Recovery remains above trigger",
         )
         self.assertEqual(tracker["transition_count"], 3)
         self.assertEqual(tracker["recent_transition_count"], 2)
@@ -2204,6 +2225,96 @@ class PaperTradingAccountTests(unittest.TestCase):
             ],
             1.0,
         )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "confirmed_avg_recovery_durability_pct"
+            ],
+            0.0,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "false_alarm_avg_recovery_durability_pct"
+            ],
+            100.0,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "recovery_durability_separation_pct"
+            ],
+            100.0,
+        )
+
+    def test_prospective_review_tracker_counts_recovery_relapses(self):
+        events = [
+            {
+                "event": "paper_trade",
+                "timestamp": "2026-07-01T09:30:00",
+                "ticker": "MSFT",
+                "side": "buy",
+                "shares": 10,
+                "price": 100,
+                "notional": 1000,
+                "position_shares_before": 0,
+                "position_shares_after": 10,
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T09:45:00",
+                "benchmark_prices": {"SPY": 100, "QQQ": 100},
+                "security_prices": {"MSFT": 100},
+            },
+            {
+                "event": "defensive_review_tracking_started",
+                "timestamp": "2026-07-01T10:00:00",
+                "mode": "review_only",
+                "policy_changed": False,
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T10:00:00",
+                "benchmark_prices": {"SPY": 101, "QQQ": 101},
+                "security_prices": {"MSFT": 97},
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T10:01:00",
+                "benchmark_prices": {"SPY": 102, "QQQ": 102},
+                "security_prices": {"MSFT": 99},
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T10:02:00",
+                "benchmark_prices": {"SPY": 103, "QQQ": 103},
+                "security_prices": {"MSFT": 96},
+            },
+            {
+                "event": "performance_snapshot",
+                "timestamp": "2026-07-01T10:03:00",
+                "benchmark_prices": {"SPY": 104, "QQQ": 104},
+                "security_prices": {"MSFT": 100},
+            },
+        ]
+
+        tracker = PaperTradingAccount.prospective_defensive_review_tracker(
+            events
+        )
+        signal = tracker["signals"][0]
+
+        self.assertEqual(signal["status"], "recovered")
+        self.assertEqual(signal["recovery_durability_pct"], 66.7)
+        self.assertEqual(signal["relapse_count"], 1)
+        self.assertEqual(
+            signal["first_relapsed_at"],
+            "2026-07-01T10:02:00",
+        )
+        self.assertEqual(signal["days_to_first_relapse"], 0.0)
+        self.assertEqual(signal["longest_recovery_streak_snapshots"], 1)
+        self.assertEqual(signal["current_recovery_streak_snapshots"], 1)
+        self.assertTrue(signal["currently_above_trigger"])
+        self.assertEqual(
+            signal["recovery_quality_label"],
+            "Recovered again after relapse",
+        )
 
     def test_performance_snapshot_starts_review_tracking_once(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -2276,6 +2387,11 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertIsNone(
             scorecard["outcome_comparison"][
                 "false_alarm_avg_snapshots_to_recovery"
+            ]
+        )
+        self.assertIsNone(
+            scorecard["outcome_comparison"][
+                "recovery_durability_separation_pct"
             ]
         )
 

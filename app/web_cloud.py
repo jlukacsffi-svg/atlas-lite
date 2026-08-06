@@ -722,6 +722,48 @@ class AtlasCloudApplication:
                         or {}
                     ).get("false_alarm_avg_snapshots_to_recovery"),
                 },
+                "prospective_review_recovery_durability": {
+                    "ok": "recovery_durability_separation_pct"
+                    in (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    )
+                    and "confirmed_total_relapses"
+                    in (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    )
+                    and prospective_review_effectiveness.get(
+                        "policy_changed"
+                    )
+                    is False
+                    and self._ui_contains("Recovery durability gap")
+                    and self._ui_contains("Recovery quality"),
+                    "detail": (
+                        "Dashboard measures sustained recovery and relapse "
+                        "frequency without treating one bounce as resolution "
+                        "or changing policy."
+                    ),
+                    "recovery_durability_separation_pct": (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    ).get("recovery_durability_separation_pct"),
+                    "confirmed_total_relapses": int(
+                        (
+                            prospective_review_effectiveness.get(
+                                "outcome_comparison"
+                            )
+                            or {}
+                        ).get("confirmed_total_relapses")
+                        or 0
+                    ),
+                },
                 "owner_review_transition_digest": {
                     "ok": "recent_transitions" in prospective_review_tracker
                     and "recent_transition_count"

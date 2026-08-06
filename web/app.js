@@ -2357,6 +2357,11 @@ function renderPaperWorkspaceSummary(paper) {
                 <strong>${effectivenessComparison.false_alarm_avg_snapshots_to_recovery == null ? "--" : `${Number(effectivenessComparison.false_alarm_avg_snapshots_to_recovery).toFixed(1)} snapshots`}</strong>
                 <small>${effectivenessComparison.false_alarm_avg_days_to_recovery == null ? "No recovery timing yet" : `${Number(effectivenessComparison.false_alarm_avg_days_to_recovery).toFixed(1)} average days after warning`}</small>
               </div>
+              <div>
+                <span>Recovery durability gap</span>
+                <strong>${effectivenessComparison.recovery_durability_separation_pct == null ? "--" : `${Number(effectivenessComparison.recovery_durability_separation_pct).toFixed(1)} pts`}</strong>
+                <small>${effectivenessComparison.false_alarm_avg_recovery_durability_pct == null ? "Waiting for durability evidence" : `${Number(effectivenessComparison.false_alarm_avg_recovery_durability_pct).toFixed(1)}% recovery vs ${Number(effectivenessComparison.confirmed_avg_recovery_durability_pct || 0).toFixed(1)}% confirmed`}</small>
+              </div>
             </div>
             <div class="paper-signal-outcomes">
               ${effectivenessOutcomes.map(outcome => `
@@ -2365,6 +2370,7 @@ function renderPaperWorkspaceSummary(paper) {
                     <b>${escapeHtml(outcome.ticker || "Holding")}</b>
                     <span>${escapeHtml(outcome.classification_label || outcome.status_label || "Review outcome")}</span>
                     <small>${escapeHtml(outcome.benchmark_attribution_label || "Benchmark context unavailable")}</small>
+                    <small>${escapeHtml(outcome.recovery_quality_label || "Recovery quality unavailable")}</small>
                   </div>
                   <dl>
                     <div><dt>Since warning</dt><dd class="${changeClass(Number(outcome.post_trigger_move_pct || 0))}">${signed(outcome.post_trigger_move_pct)}</dd></div>
@@ -2374,11 +2380,12 @@ function renderPaperWorkspaceSummary(paper) {
                     <div><dt>Vs benchmark</dt><dd class="${changeClass(Number(outcome.benchmark_relative_move_pct || 0))}">${signed(outcome.benchmark_relative_move_pct)}</dd></div>
                     <div><dt>Warning span</dt><dd>${Number(outcome.snapshots_observed || 0)} snapshots / ${Number(outcome.warning_span_days || 0).toFixed(1)} days</dd></div>
                     <div><dt>First above trigger</dt><dd>${outcome.snapshots_to_first_recovery == null ? "Not observed" : `${Number(outcome.snapshots_to_first_recovery)} snapshots / ${Number(outcome.days_to_first_recovery || 0).toFixed(1)} days`}</dd></div>
+                    <div><dt>Recovery quality</dt><dd>${outcome.recovery_durability_pct == null ? "--" : `${Number(outcome.recovery_durability_pct).toFixed(1)}% above / ${Number(outcome.relapse_count || 0)} relapse${Number(outcome.relapse_count || 0) === 1 ? "" : "s"}`}</dd></div>
                   </dl>
                 </article>
               `).join("")}
             </div>
-            <small class="paper-signal-disclosure">These are observed price paths after a review signal, not hypothetical fill results. Benchmark context uses the stronger SPY or QQQ move over the same period; it does not claim the benchmark caused the stock move. A first move above the trigger can be temporary and does not resolve the warning. This evidence cannot execute a sale.</small>
+            <small class="paper-signal-disclosure">These are observed price paths after a review signal, not hypothetical fill results. Benchmark context uses the stronger SPY or QQQ move over the same period; it does not claim the benchmark caused the stock move. A first move above the trigger can be temporary and does not resolve the warning. Atlas measures sustained recovery and relapse frequency before drawing a conclusion. This evidence cannot execute a sale.</small>
           </div>
         ` : ""}
         <div class="paper-effectiveness-gates">

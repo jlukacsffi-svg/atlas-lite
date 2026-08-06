@@ -520,6 +520,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Stronger benchmark";\n'
                 '"Confirmed outcome span";\n'
                 '"First above trigger";\n'
+                '"Recovery durability gap";\n'
+                '"Recovery quality";\n'
                 '"Paper evidence updates";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
@@ -575,6 +577,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                                         "benchmark_adjusted_separation_pct": None,
                                         "confirmed_avg_warning_span_snapshots": None,
                                         "false_alarm_avg_snapshots_to_recovery": None,
+                                        "recovery_durability_separation_pct": None,
+                                        "confirmed_total_relapses": 0,
                                     },
                                     "outcomes": [],
                                     "gates": [
@@ -715,6 +719,17 @@ class CloudWebApplicationTests(unittest.TestCase):
             response["json"]["checks"][
                 "prospective_review_timing_evidence"
             ]["confirmed_avg_warning_span_snapshots"]
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "prospective_review_recovery_durability"
+            ]["ok"]
+        )
+        self.assertEqual(
+            response["json"]["checks"][
+                "prospective_review_recovery_durability"
+            ]["confirmed_total_relapses"],
+            0,
         )
         self.assertTrue(
             response["json"]["checks"][

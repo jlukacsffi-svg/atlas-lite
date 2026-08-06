@@ -1094,6 +1094,13 @@ class ReportGenerator:
                     f"{float(comparison['false_alarm_avg_snapshots_to_recovery']):.1f} snapshots / "
                     f"{float(comparison.get('false_alarm_avg_days_to_recovery') or 0):.1f} days"
                 )
+            if comparison.get("recovery_durability_separation_pct") is not None:
+                section.append(
+                    "- **Recovery durability separation**: "
+                    f"{float(comparison['recovery_durability_separation_pct']):+.1f} points "
+                    f"({int(comparison.get('confirmed_total_relapses') or 0)} confirmed-outcome relapses / "
+                    f"{int(comparison.get('false_alarm_total_relapses') or 0)} recovery relapses)"
+                )
             outcomes = list(effectiveness.get("outcomes") or [])
             if outcomes:
                 section.extend(
@@ -1138,8 +1145,8 @@ class ReportGenerator:
                     [
                         "",
                         "#### Warning Timing\n",
-                        "| Ticker | Observed Span | First Above Trigger | Final Classification |",
-                        "|--------|---------------|---------------------|----------------------|",
+                        "| Ticker | Observed Span | First Above Trigger | Recovery Quality | Final Classification |",
+                        "|--------|---------------|---------------------|------------------|----------------------|",
                     ]
                 )
                 for outcome in outcomes:
@@ -1154,6 +1161,8 @@ class ReportGenerator:
                         f"{int(outcome.get('snapshots_observed') or 0)} snapshots / "
                         f"{float(outcome.get('warning_span_days') or 0):.1f} days | "
                         f"{first_above} | "
+                        f"{float(outcome.get('recovery_durability_pct') or 0):.1f}% above trigger / "
+                        f"{int(outcome.get('relapse_count') or 0)} relapses | "
                         f"{outcome.get('classification_label', 'Review outcome')} |"
                     )
             section.append(
@@ -1161,6 +1170,8 @@ class ReportGenerator:
                 "Benchmark attribution compares the same period and does not "
                 "claim causation. A first move above the trigger can be "
                 "temporary and does not resolve the warning. The scorecard "
+                "measures sustained recovery and relapse frequency before "
+                "drawing a conclusion. It "
                 "cannot change policy or "
                 "execute a sale."
             )
