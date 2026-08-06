@@ -2057,6 +2057,13 @@ function renderPaperWorkspaceSummary(paper) {
   const effectivenessGates = Array.isArray(prospectiveEffectiveness.gates)
     ? prospectiveEffectiveness.gates
     : [];
+  const effectivenessComparison =
+    prospectiveEffectiveness.outcome_comparison || {};
+  const effectivenessOutcomes = Array.isArray(
+    prospectiveEffectiveness.outcomes
+  )
+    ? prospectiveEffectiveness.outcomes
+    : [];
   const latestEvidenceSnapshot = evidencePipeline.latest_snapshot_at
     ? new Date(evidencePipeline.latest_snapshot_at).toLocaleString()
     : "No snapshot recorded";
@@ -2311,6 +2318,53 @@ function renderPaperWorkspaceSummary(paper) {
           <div><span>Confirmation rate</span><strong>${prospectiveEffectiveness.confirmation_rate_pct == null ? "--" : `${Number(prospectiveEffectiveness.confirmation_rate_pct).toFixed(1)}%`}</strong></div>
           <div><span>Evidence progress</span><strong>${Number(prospectiveEffectiveness.evidence_progress_pct || 0).toFixed(1)}%</strong></div>
         </div>
+        ${effectivenessOutcomes.length ? `
+          <div class="paper-signal-comparison">
+            <div class="paper-signal-comparison-heading">
+              <div>
+                <span class="access-label">What happened after each warning</span>
+                <b>Confirmed weakness versus recovery risk</b>
+              </div>
+              <small>${effectivenessComparison.outcome_separation_pct == null
+                ? "Waiting for both outcome types"
+                : `${Number(effectivenessComparison.outcome_separation_pct).toFixed(2)} point outcome separation`}</small>
+            </div>
+            <div class="paper-signal-comparison-metrics">
+              <div>
+                <span>Confirmed warnings</span>
+                <strong class="${changeClass(Number(effectivenessComparison.confirmed_avg_post_trigger_move_pct || 0))}">${signed(effectivenessComparison.confirmed_avg_post_trigger_move_pct)}</strong>
+                <small>average move since warning</small>
+              </div>
+              <div>
+                <span>False alarms / recoveries</span>
+                <strong class="${changeClass(Number(effectivenessComparison.false_alarm_avg_post_trigger_move_pct || 0))}">${signed(effectivenessComparison.false_alarm_avg_post_trigger_move_pct)}</strong>
+                <small>average move since warning</small>
+              </div>
+              <div>
+                <span>Signal separation</span>
+                <strong>${effectivenessComparison.outcome_separation_pct == null ? "--" : `${Number(effectivenessComparison.outcome_separation_pct).toFixed(2)} pts`}</strong>
+                <small>recovery outcome minus confirmed weakness</small>
+              </div>
+            </div>
+            <div class="paper-signal-outcomes">
+              ${effectivenessOutcomes.map(outcome => `
+                <article class="paper-signal-outcome ${escapeHtml(outcome.classification || "open")}">
+                  <div>
+                    <b>${escapeHtml(outcome.ticker || "Holding")}</b>
+                    <span>${escapeHtml(outcome.classification_label || outcome.status_label || "Review outcome")}</span>
+                  </div>
+                  <dl>
+                    <div><dt>Since warning</dt><dd class="${changeClass(Number(outcome.post_trigger_move_pct || 0))}">${signed(outcome.post_trigger_move_pct)}</dd></div>
+                    <div><dt>Worst after</dt><dd class="${changeClass(Number(outcome.worst_post_trigger_move_pct || 0))}">${signed(outcome.worst_post_trigger_move_pct)}</dd></div>
+                    <div><dt>Best recovery</dt><dd class="${changeClass(Number(outcome.best_post_trigger_move_pct || 0))}">${signed(outcome.best_post_trigger_move_pct)}</dd></div>
+                    <div><dt>Observed</dt><dd>${Number(outcome.snapshots_observed || 0)} snapshots</dd></div>
+                  </dl>
+                </article>
+              `).join("")}
+            </div>
+            <small class="paper-signal-disclosure">These are observed price paths after a review signal, not hypothetical fill results. They measure warning quality and cannot execute a sale.</small>
+          </div>
+        ` : ""}
         <div class="paper-effectiveness-gates">
           ${effectivenessGates.map(gate => {
             const progress = Math.max(0, Math.min(100, Number(gate.progress_pct || 0)));

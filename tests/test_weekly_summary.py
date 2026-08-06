@@ -255,6 +255,8 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
             summary = generator.generate_summary(days=7)
 
         self.assertIn("## Paper Defensive Review Evidence", summary)
+        self.assertIn("### Current Forward Study", summary)
+        self.assertIn("**Resolved warnings**: 0", summary)
         self.assertIn("1 persistent weakness", summary)
         self.assertIn(
             "| TSM | Weakness persists | -4.25% | -5.75% | 3 |",

@@ -1037,26 +1037,68 @@ class ReportGenerator:
                 "No defensive-review status changed across the three most recent "
                 "paper snapshots.\n"
             )
-            return "\n".join(section) + "\n"
-
-        section.extend(
-            [
-                "| Ticker | Latest Status | Position Return | Benchmark Lag | Observations |",
-                "|--------|---------------|-----------------|---------------|--------------|",
-            ]
-        )
-        for transition in transitions:
-            section.append(
-                f"| {transition.get('ticker', 'N/A')} | "
-                f"{transition.get('status_label', 'Review update')} | "
-                f"{self._format_optional_percent(transition.get('latest_return_pct'))} | "
-                f"{self._format_optional_percent(transition.get('latest_lag_pct'))} | "
-                f"{int(transition.get('snapshots_observed') or 0)} |"
+        else:
+            section.extend(
+                [
+                    "| Ticker | Latest Status | Position Return | Benchmark Lag | Observations |",
+                    "|--------|---------------|-----------------|---------------|--------------|",
+                ]
             )
-        section.append(
-            "\nAtlas shows only the latest state for each signal to avoid repeating "
-            "the same review history."
-        )
+            for transition in transitions:
+                section.append(
+                    f"| {transition.get('ticker', 'N/A')} | "
+                    f"{transition.get('status_label', 'Review update')} | "
+                    f"{self._format_optional_percent(transition.get('latest_return_pct'))} | "
+                    f"{self._format_optional_percent(transition.get('latest_lag_pct'))} | "
+                    f"{int(transition.get('snapshots_observed') or 0)} |"
+                )
+            section.append(
+                "\nAtlas shows only the latest state for each signal to avoid repeating "
+                "the same review history."
+            )
+
+        effectiveness = self.paper_summary.get(
+            "prospective_review_effectiveness"
+        ) or {}
+        if effectiveness.get("available"):
+            comparison = effectiveness.get("outcome_comparison") or {}
+            section.extend(
+                [
+                    "",
+                    "### Forward Study Scorecard\n",
+                    f"- **Resolved warnings**: {int(effectiveness.get('resolved_signals') or 0)}",
+                    f"- **Confirmed weakness**: {int(effectiveness.get('confirmed_weakness') or 0)}",
+                    f"- **Recoveries / false alarms**: {int(effectiveness.get('false_alarms') or 0)}",
+                    f"- **Evidence progress**: {float(effectiveness.get('evidence_progress_pct') or 0):.1f}%",
+                ]
+            )
+            if comparison.get("outcome_separation_pct") is not None:
+                section.append(
+                    "- **Post-warning outcome separation**: "
+                    f"{float(comparison['outcome_separation_pct']):+.2f} points"
+                )
+            outcomes = list(effectiveness.get("outcomes") or [])
+            if outcomes:
+                section.extend(
+                    [
+                        "",
+                        "| Ticker | Classification | Since Warning | Worst After | Best Recovery | Observations |",
+                        "|--------|----------------|---------------|-------------|---------------|--------------|",
+                    ]
+                )
+                for outcome in outcomes:
+                    section.append(
+                        f"| {outcome.get('ticker', 'N/A')} | "
+                        f"{outcome.get('classification_label', 'Review outcome')} | "
+                        f"{self._format_optional_percent(outcome.get('post_trigger_move_pct'))} | "
+                        f"{self._format_optional_percent(outcome.get('worst_post_trigger_move_pct'))} | "
+                        f"{self._format_optional_percent(outcome.get('best_post_trigger_move_pct'))} | "
+                        f"{int(outcome.get('snapshots_observed') or 0)} |"
+                    )
+            section.append(
+                "\nPost-warning paths are observed evidence, not hypothetical fills. "
+                "The scorecard cannot change policy or execute a sale."
+            )
         return "\n".join(section) + "\n"
 
     def _generate_scoring_summary(self):

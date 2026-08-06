@@ -103,7 +103,35 @@ class ReportPaperTradingTests(unittest.TestCase):
                             "snapshots_observed": 4,
                         },
                     ],
-                }
+                },
+                "prospective_review_effectiveness": {
+                    "available": True,
+                    "resolved_signals": 2,
+                    "confirmed_weakness": 1,
+                    "false_alarms": 1,
+                    "evidence_progress_pct": 20.0,
+                    "outcome_comparison": {
+                        "outcome_separation_pct": 12.5,
+                    },
+                    "outcomes": [
+                        {
+                            "ticker": "TSM",
+                            "classification_label": "Warning confirmed",
+                            "post_trigger_move_pct": -3.5,
+                            "worst_post_trigger_move_pct": -4.0,
+                            "best_post_trigger_move_pct": 0.0,
+                            "snapshots_observed": 3,
+                        },
+                        {
+                            "ticker": "AMD",
+                            "classification_label": "Recovery / false alarm",
+                            "post_trigger_move_pct": 9.0,
+                            "worst_post_trigger_move_pct": 0.0,
+                            "best_post_trigger_move_pct": 10.0,
+                            "snapshots_observed": 4,
+                        },
+                    ],
+                },
             },
         )
 
@@ -120,6 +148,17 @@ class ReportPaperTradingTests(unittest.TestCase):
         )
         self.assertIn("do not change policy", section)
         self.assertIn("only the latest state", section)
+        self.assertIn("### Forward Study Scorecard", section)
+        self.assertIn("**Post-warning outcome separation**: +12.50 points", section)
+        self.assertIn(
+            "| TSM | Warning confirmed | -3.50% | -4.00% | +0.00% | 3 |",
+            section,
+        )
+        self.assertIn(
+            "| AMD | Recovery / false alarm | +9.00% | +0.00% | +10.00% | 4 |",
+            section,
+        )
+        self.assertIn("not hypothetical fills", section)
 
     def test_defensive_review_section_explains_forward_start(self):
         generator = ReportGenerator(

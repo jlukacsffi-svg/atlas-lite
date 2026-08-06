@@ -177,6 +177,46 @@ class WeeklySummaryGenerator:
             )
             return "\n".join(lines) + "\n"
 
+        effectiveness = self.paper_account.prospective_review_effectiveness(
+            tracker
+        )
+        comparison = effectiveness.get("outcome_comparison") or {}
+        lines.extend(
+            [
+                "### Current Forward Study\n",
+                f"- **Resolved warnings**: {int(effectiveness.get('resolved_signals') or 0)}",
+                f"- **Confirmed weakness**: {int(effectiveness.get('confirmed_weakness') or 0)}",
+                f"- **Recoveries / false alarms**: {int(effectiveness.get('false_alarms') or 0)}",
+                f"- **Evidence progress**: {float(effectiveness.get('evidence_progress_pct') or 0):.1f}%",
+            ]
+        )
+        if comparison.get("outcome_separation_pct") is not None:
+            lines.append(
+                "- **Post-warning outcome separation**: "
+                f"{float(comparison['outcome_separation_pct']):+.2f} points"
+            )
+        outcomes = list(effectiveness.get("outcomes") or [])
+        if outcomes:
+            lines.extend(
+                [
+                    "",
+                    "| Ticker | Classification | Since Warning | Worst After | Best Recovery | Observations |",
+                    "|--------|----------------|---------------|-------------|---------------|--------------|",
+                ]
+            )
+            for outcome in outcomes:
+                lines.append(
+                    f"| {outcome.get('ticker', 'N/A')} | "
+                    f"{outcome.get('classification_label', 'Review outcome')} | "
+                    f"{self._format_optional_percent(outcome.get('post_trigger_move_pct'))} | "
+                    f"{self._format_optional_percent(outcome.get('worst_post_trigger_move_pct'))} | "
+                    f"{self._format_optional_percent(outcome.get('best_post_trigger_move_pct'))} | "
+                    f"{int(outcome.get('snapshots_observed') or 0)} |"
+                )
+        lines.append(
+            "\nPost-warning paths are observed evidence, not hypothetical fills."
+        )
+
         cutoff = self.timestamp - timedelta(days=days)
         latest_by_signal = {}
         for event in events:
@@ -800,6 +840,12 @@ class WeeklySummaryGenerator:
         escaped = re.sub(r"\*\*([^*]+)\*\*", r"<strong>\1</strong>", escaped)
         escaped = re.sub(r"\*([^*]+)\*", r"<em>\1</em>", escaped)
         return escaped
+
+    @staticmethod
+    def _format_optional_percent(value):
+        if value is None:
+            return "N/A"
+        return f"{float(value):+.2f}%"
 
     def _parse_datetime(self, value):
         if not value:

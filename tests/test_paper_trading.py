@@ -2068,8 +2068,28 @@ class PaperTradingAccountTests(unittest.TestCase):
         by_ticker = {item["ticker"]: item for item in tracker["signals"]}
         self.assertEqual(by_ticker["NVDA"]["status"], "completed_loss")
         self.assertEqual(by_ticker["NVDA"]["snapshots_observed"], 3)
+        self.assertEqual(
+            by_ticker["NVDA"]["post_trigger_move_pct"],
+            -2.0619,
+        )
+        self.assertEqual(
+            by_ticker["NVDA"]["worst_post_trigger_move_pct"],
+            -2.0619,
+        )
+        self.assertEqual(
+            by_ticker["NVDA"]["best_post_trigger_move_pct"],
+            0.0,
+        )
         self.assertEqual(by_ticker["AMD"]["status"], "recovered")
         self.assertEqual(by_ticker["AMD"]["latest_return_pct"], -2.0)
+        self.assertEqual(
+            by_ticker["AMD"]["post_trigger_move_pct"],
+            1.0309,
+        )
+        self.assertEqual(
+            by_ticker["AMD"]["best_post_trigger_move_pct"],
+            2.0619,
+        )
         self.assertEqual(tracker["transition_count"], 3)
         self.assertEqual(tracker["recent_transition_count"], 2)
         self.assertEqual(
@@ -2079,6 +2099,37 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(
             tracker["recent_transitions"][1]["status"],
             "recovered",
+        )
+
+        scorecard = PaperTradingAccount.prospective_review_effectiveness(
+            tracker
+        )
+        outcomes = {
+            item["ticker"]: item for item in scorecard["outcomes"]
+        }
+        self.assertEqual(
+            outcomes["NVDA"]["classification"],
+            "confirmed_weakness",
+        )
+        self.assertEqual(
+            outcomes["AMD"]["classification"],
+            "false_alarm",
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "confirmed_avg_post_trigger_move_pct"
+            ],
+            -2.06,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "false_alarm_avg_post_trigger_move_pct"
+            ],
+            1.03,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"]["outcome_separation_pct"],
+            3.09,
         )
 
     def test_performance_snapshot_starts_review_tracking_once(self):
@@ -2138,6 +2189,12 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertFalse(scorecard["policy_changed"])
         self.assertEqual(scorecard["minimum_resolved_signals"], 10)
         self.assertEqual(scorecard["minimum_completed_outcomes"], 5)
+        self.assertEqual(scorecard["outcomes"], [])
+        self.assertIsNone(
+            scorecard["outcome_comparison"][
+                "outcome_separation_pct"
+            ]
+        )
 
     def test_prospective_review_effectiveness_can_clear_owner_review_gates(self):
         signals = (

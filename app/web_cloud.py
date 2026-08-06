@@ -619,6 +619,42 @@ class AtlasCloudApplication:
                         or 0
                     ),
                 },
+                "prospective_review_outcome_paths": {
+                    "ok": isinstance(
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        ),
+                        dict,
+                    )
+                    and "outcome_separation_pct"
+                    in prospective_review_effectiveness.get(
+                        "outcome_comparison"
+                    )
+                    and isinstance(
+                        prospective_review_effectiveness.get("outcomes"),
+                        list,
+                    )
+                    and prospective_review_effectiveness.get(
+                        "policy_changed"
+                    )
+                    is False
+                    and self._ui_contains(
+                        "What happened after each warning"
+                    ),
+                    "detail": (
+                        "Dashboard compares observed post-warning price paths "
+                        "without treating them as fills or changing policy."
+                    ),
+                    "outcome_count": len(
+                        prospective_review_effectiveness.get("outcomes") or []
+                    ),
+                    "outcome_separation_pct": (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    ).get("outcome_separation_pct"),
+                },
                 "owner_review_transition_digest": {
                     "ok": "recent_transitions" in prospective_review_tracker
                     and "recent_transition_count"

@@ -515,6 +515,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Defensive trigger shadow test";\n'
                 '"Prospective review tracker";\n'
                 '"Review signal effectiveness";\n'
+                '"What happened after each warning";\n'
                 '"Paper evidence updates";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
@@ -565,6 +566,10 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "status": "waiting_activation",
                                     "resolved_signals": 0,
                                     "completed_outcomes": 0,
+                                    "outcome_comparison": {
+                                        "outcome_separation_pct": None,
+                                    },
+                                    "outcomes": [],
                                     "gates": [
                                         {
                                             "id": "resolved_signals",
@@ -672,6 +677,17 @@ class CloudWebApplicationTests(unittest.TestCase):
             response["json"]["checks"][
                 "prospective_review_effectiveness"
             ]["ready_for_owner_review"]
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "prospective_review_outcome_paths"
+            ]["ok"]
+        )
+        self.assertEqual(
+            response["json"]["checks"][
+                "prospective_review_outcome_paths"
+            ]["outcome_count"],
+            0,
         )
         self.assertTrue(
             response["json"]["checks"][

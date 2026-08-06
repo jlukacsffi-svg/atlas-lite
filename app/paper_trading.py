@@ -4329,6 +4329,15 @@ class PaperTradingAccount:
             trigger = observed[trigger_index]
             after_trigger = observed[trigger_index:]
             latest = after_trigger[-1]
+            post_trigger_moves = [
+                cls._pct_return(trigger["price"], value["price"])
+                for value in after_trigger
+            ]
+            post_trigger_moves = [
+                round(value, 4)
+                for value in post_trigger_moves
+                if value is not None
+            ]
             recovered = any(
                 value["timestamp"] != trigger["timestamp"]
                 and value["price"] > trigger["price"]
@@ -4367,6 +4376,21 @@ class PaperTradingAccount:
                     "latest_price": round(latest["price"], 4),
                     "latest_return_pct": latest["return_pct"],
                     "latest_lag_pct": latest["lag_pct"],
+                    "post_trigger_move_pct": (
+                        post_trigger_moves[-1]
+                        if post_trigger_moves
+                        else None
+                    ),
+                    "worst_post_trigger_move_pct": (
+                        min(post_trigger_moves)
+                        if post_trigger_moves
+                        else None
+                    ),
+                    "best_post_trigger_move_pct": (
+                        max(post_trigger_moves)
+                        if post_trigger_moves
+                        else None
+                    ),
                     "snapshots_observed": len(after_trigger),
                     "realized_gain_loss": (
                         round(cycle["realized_gain_loss"], 2)
@@ -4511,6 +4535,85 @@ class PaperTradingAccount:
             if resolved
             else None
         )
+        outcome_rows = []
+        for signal in signals:
+            status = str(signal.get("status") or "")
+            if status in {"persistent_weakness", "completed_loss"}:
+                classification = "confirmed_weakness"
+                classification_label = "Warning confirmed"
+            elif status in {"recovered", "completed_gain"}:
+                classification = "false_alarm"
+                classification_label = "Recovery / false alarm"
+            else:
+                continue
+            outcome_rows.append(
+                {
+                    "signal_id": signal.get("signal_id"),
+                    "ticker": signal.get("ticker"),
+                    "status": status,
+                    "status_label": signal.get("status_label"),
+                    "classification": classification,
+                    "classification_label": classification_label,
+                    "post_trigger_move_pct": signal.get(
+                        "post_trigger_move_pct"
+                    ),
+                    "worst_post_trigger_move_pct": signal.get(
+                        "worst_post_trigger_move_pct"
+                    ),
+                    "best_post_trigger_move_pct": signal.get(
+                        "best_post_trigger_move_pct"
+                    ),
+                    "snapshots_observed": int(
+                        signal.get("snapshots_observed") or 0
+                    ),
+                }
+            )
+
+        def average_metric(rows, field):
+            values = [
+                float(row[field])
+                for row in rows
+                if row.get(field) is not None
+            ]
+            return round(sum(values) / len(values), 2) if values else None
+
+        confirmed_rows = [
+            row
+            for row in outcome_rows
+            if row["classification"] == "confirmed_weakness"
+        ]
+        false_alarm_rows = [
+            row
+            for row in outcome_rows
+            if row["classification"] == "false_alarm"
+        ]
+        confirmed_avg_move = average_metric(
+            confirmed_rows,
+            "post_trigger_move_pct",
+        )
+        false_alarm_avg_move = average_metric(
+            false_alarm_rows,
+            "post_trigger_move_pct",
+        )
+        outcome_separation = (
+            round(false_alarm_avg_move - confirmed_avg_move, 2)
+            if confirmed_avg_move is not None
+            and false_alarm_avg_move is not None
+            else None
+        )
+        outcome_comparison = {
+            "confirmed_avg_post_trigger_move_pct": confirmed_avg_move,
+            "confirmed_avg_worst_post_trigger_move_pct": average_metric(
+                confirmed_rows,
+                "worst_post_trigger_move_pct",
+            ),
+            "false_alarm_avg_post_trigger_move_pct": false_alarm_avg_move,
+            "false_alarm_avg_best_post_trigger_move_pct": average_metric(
+                false_alarm_rows,
+                "best_post_trigger_move_pct",
+            ),
+            "outcome_separation_pct": outcome_separation,
+        }
         minimum_resolved = 10
         minimum_completed = 5
         resolved_progress = min(
@@ -4620,6 +4723,8 @@ class PaperTradingAccount:
             "completed_outcomes": completed,
             "confirmation_rate_pct": confirmation_rate,
             "false_alarm_rate_pct": false_alarm_rate,
+            "outcome_comparison": outcome_comparison,
+            "outcomes": outcome_rows,
             "evidence_progress_pct": evidence_progress,
             "minimum_resolved_signals": minimum_resolved,
             "minimum_completed_outcomes": minimum_completed,
