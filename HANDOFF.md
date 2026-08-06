@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-07-29
+Last updated: 2026-08-05
 
 ## Current Roadmap Position
 
@@ -61,6 +61,23 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Forward warning outcomes are live on Cloud Run revision
+  `atlas-dashboard-stg-00162-v7s`. The dashboard, daily job, and weekly job use
+  image `20260805-warning-outcomes`, digest
+  `sha256:1c9fd418300e96838e407f25ad97d4e69e5b1a65f18cc42ffb39163d9143b7d4`.
+  All 431 local tests, 26 staging checks, and 18 protected dashboard checks
+  pass. The jobs were aligned without manually executing them.
+- Atlas now measures each defensive warning from its trigger price through the
+  latest move, worst excursion, and best recovery. The Portfolio page and
+  generated reports compare confirmed weakness with recoveries or false
+  alarms.
+- The live sample contains two resolved signals: LLY is confirmed weakness at
+  -0.74% since warning, while CRWD is a recovery at +16.79%, producing 17.53
+  points of separation. The result remains an early sample and cannot change
+  policy or execute a sale.
+- Next development focus: let scheduled observations expand this study,
+  strengthen benchmark-relative outcome attribution, and preserve the
+  review-only authority boundary until the minimum gates pass.
 - The cleaner command-center release is live on Cloud Run revision
   `atlas-dashboard-stg-00161-lbq`. The dashboard, daily job, and weekly job
   use image `20260729-command-center-2` with digest

@@ -161,6 +161,18 @@ trim, and exit management, and benchmark-aware reporting against SPY and QQQ.
 Stage 5 remains in validation until enough daily history exists to evaluate
 returns, exits, win rate, turnover quality, and benchmark-relative behavior.
 
+Current validation focus:
+
+- Atlas now measures what happened after each defensive review warning,
+  including the latest move, worst excursion, best recovery, and observation
+  count.
+- The first two resolved signals include one confirmed weakness and one
+  recovery, with a 17.53-point separation between their post-warning paths.
+- This is an early sample only. Atlas must continue accumulating resolved and
+  completed outcomes before any paper policy can be promoted for owner review.
+- Next: continue the forward study, improve benchmark-relative attribution as
+  the sample grows, and keep all defensive signals review-only.
+
 ## Stage 6: Human-Approved Trading
 
 Goal: Atlas recommends trades and prepares orders, but Joe approves execution.

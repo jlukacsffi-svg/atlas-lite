@@ -3,6 +3,36 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 5, 2026 - Forward warning outcomes are visible
+
+New capabilities:
+
+- Measure each defensive review signal from its trigger price through the
+  latest observation, worst subsequent move, and best recovery.
+- Compare confirmed weakness with recoveries or false alarms in the Portfolio
+  workspace and in daily and weekly reports.
+- Show the first live comparison: LLY remained 0.74% below its warning price,
+  while CRWD recovered 16.79%, a 17.53-point outcome separation.
+- Verify the new evidence contract independently in the protected cloud health
+  review without granting trade authority.
+
+Validated result:
+
+- The full local suite passes with 431 tests.
+- Desktop and 390-pixel mobile layouts pass visual review.
+- Cloud Run revision `atlas-dashboard-stg-00162-v7s`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260805-warning-outcomes`.
+- The deployed image digest is
+  `sha256:1c9fd418300e96838e407f25ad97d4e69e5b1a65f18cc42ffb39163d9143b7d4`.
+- All 26 staging readiness checks and all 18 protected Stage 5 dashboard
+  contract checks pass. Neither scheduled job was manually executed.
+
+Current boundaries:
+
+- Two resolved warnings are an early sample, not a policy decision.
+- Signals remain review-only and cannot execute a simulated or real sale.
+- Overall program completion remains estimated at 85%.
+
 ## July 29, 2026 - Decision command center and explainable scores are live
 
 New capabilities:
