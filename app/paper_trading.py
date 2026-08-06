@@ -4262,6 +4262,9 @@ class PaperTradingAccount:
                 "transition_count": 0,
                 "recent_transition_count": 0,
                 "recent_transitions": [],
+                "priority_transition_count": 0,
+                "latest_priority_escalation_count": 0,
+                "latest_priority_escalations": [],
                 "review_priority_mode": "evidence_only",
                 "review_priority_policy_changed": False,
                 "review_queue": [],
@@ -4791,6 +4794,15 @@ class PaperTradingAccount:
                     "snapshots_observed": transition.get(
                         "snapshots_observed"
                     ),
+                    "review_priority": transition.get(
+                        "review_priority"
+                    ),
+                    "review_priority_label": transition.get(
+                        "review_priority_label"
+                    ),
+                    "review_priority_score": transition.get(
+                        "review_priority_score"
+                    ),
                 }
                 for transition in latest_transition_by_signal.values()
                 if str(transition.get("timestamp") or "")
@@ -4801,6 +4813,58 @@ class PaperTradingAccount:
                 str(item.get("timestamp") or ""),
             ),
         )[:4]
+        priority_transitions = [
+            transition
+            for transition in transitions
+            if transition.get("priority_changed")
+        ]
+        latest_snapshot_timestamp = (
+            str(snapshots[-1].get("timestamp") or "")
+            if snapshots
+            else ""
+        )
+        latest_priority_escalations = sorted(
+            [
+                {
+                    "signal_id": transition.get("signal_id"),
+                    "ticker": transition.get("ticker"),
+                    "timestamp": transition.get("timestamp"),
+                    "previous_review_priority": transition.get(
+                        "previous_review_priority"
+                    ),
+                    "previous_review_priority_label": transition.get(
+                        "previous_review_priority_label"
+                    ),
+                    "previous_review_priority_score": transition.get(
+                        "previous_review_priority_score"
+                    ),
+                    "review_priority": transition.get("review_priority"),
+                    "review_priority_label": transition.get(
+                        "review_priority_label"
+                    ),
+                    "review_priority_score": transition.get(
+                        "review_priority_score"
+                    ),
+                    "review_priority_rationale": transition.get(
+                        "review_priority_rationale"
+                    )
+                    or [],
+                    "priority_score_change": transition.get(
+                        "priority_score_change"
+                    ),
+                    "status": transition.get("status"),
+                    "status_label": transition.get("status_label"),
+                }
+                for transition in transitions
+                if transition.get("meaningful_priority_escalation")
+                and str(transition.get("timestamp") or "")
+                == latest_snapshot_timestamp
+            ],
+            key=lambda item: (
+                -int(item.get("review_priority_score") or 0),
+                str(item.get("ticker") or ""),
+            ),
+        )
         headline = (
             f"Atlas is following {len(signals)} prospective review signal"
             f"{'' if len(signals) == 1 else 's'}."
@@ -4823,6 +4887,11 @@ class PaperTradingAccount:
             "transition_count": len(transitions),
             "recent_transition_count": len(recent_transitions),
             "recent_transitions": recent_transitions,
+            "priority_transition_count": len(priority_transitions),
+            "latest_priority_escalation_count": len(
+                latest_priority_escalations
+            ),
+            "latest_priority_escalations": latest_priority_escalations,
             "review_priority_mode": "evidence_only",
             "review_priority_policy_changed": False,
             "review_queue": review_queue,
@@ -4839,14 +4908,72 @@ class PaperTradingAccount:
                 prior[event.get("signal_id")] = event
         for signal in tracker.get("signals") or []:
             previous = prior.get(signal["signal_id"])
-            if previous and previous.get("status") == signal["status"]:
+            previous_status = previous.get("status") if previous else None
+            previous_priority = (
+                previous.get("review_priority") if previous else None
+            )
+            status_changed = previous_status != signal["status"]
+            priority_changed = (
+                previous_priority != signal.get("review_priority")
+            )
+            if previous and not status_changed and not priority_changed:
                 continue
+            priority_rank = {
+                "recorded": -1,
+                "low": 0,
+                "watch": 1,
+                "monitor": 2,
+                "urgent": 3,
+            }
+            previous_rank = priority_rank.get(previous_priority, -1)
+            current_priority = signal.get("review_priority")
+            current_rank = priority_rank.get(current_priority, -1)
+            meaningful_escalation = bool(
+                previous_priority
+                and priority_changed
+                and current_rank > previous_rank
+                and current_priority in {"monitor", "urgent"}
+            )
+            if previous is None:
+                transition_kind = "initial_signal"
+            elif meaningful_escalation:
+                transition_kind = "priority_escalation"
+            elif priority_changed and current_rank < previous_rank:
+                transition_kind = "priority_deescalation"
+            elif priority_changed:
+                transition_kind = "priority_change"
+            else:
+                transition_kind = "status_change"
+            previous_score = (
+                previous.get("review_priority_score") if previous else None
+            )
+            current_score = signal.get("review_priority_score")
             self._append_event(
                 {
                     "event": "defensive_review_signal",
                     "timestamp": signal["latest_at"],
                     "mode": "review_only",
                     "policy_changed": False,
+                    "transition_kind": transition_kind,
+                    "status_changed": status_changed,
+                    "priority_changed": priority_changed,
+                    "meaningful_priority_escalation": (
+                        meaningful_escalation
+                    ),
+                    "previous_status": previous_status,
+                    "previous_review_priority": previous_priority,
+                    "previous_review_priority_label": (
+                        previous.get("review_priority_label")
+                        if previous
+                        else None
+                    ),
+                    "previous_review_priority_score": previous_score,
+                    "priority_score_change": (
+                        int(current_score) - int(previous_score)
+                        if current_score is not None
+                        and previous_score is not None
+                        else None
+                    ),
                     **signal,
                 }
             )

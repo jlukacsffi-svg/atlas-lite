@@ -547,11 +547,12 @@ function renderOwnerBriefing(data) {
   const paper = data.paper || {};
   const prospectiveTracker =
     paper.validation_summary?.prospective_review_tracker || {};
-  const recentTransitions = Array.isArray(
-    prospectiveTracker.recent_transitions
+  const latestPriorityEscalations = Array.isArray(
+    prospectiveTracker.latest_priority_escalations
   )
-    ? prospectiveTracker.recent_transitions
+    ? prospectiveTracker.latest_priority_escalations
     : [];
+  const priorityCounts = prospectiveTracker.review_priority_counts || {};
   const focus = paper.portfolio_focus || {};
   const counts = focus.counts || {};
   const highlights = focus.highlights || [];
@@ -691,31 +692,32 @@ function renderOwnerBriefing(data) {
 
   const signalDigest = document.getElementById("owner-signal-digest");
   signalDigest.hidden = !prospectiveTracker.available;
-  signalDigest.innerHTML = !prospectiveTracker.available ? "" : recentTransitions.length ? `
+  signalDigest.innerHTML = !prospectiveTracker.available ? "" : latestPriorityEscalations.length ? `
     <div class="owner-signal-digest-heading">
       <div>
-        <span>Paper evidence updates</span>
-        <b>${recentTransitions.length} recent review transition${recentTransitions.length === 1 ? "" : "s"}</b>
+        <span>Priority escalation watch</span>
+        <b>${latestPriorityEscalations.length} new elevated-priority change${latestPriorityEscalations.length === 1 ? "" : "s"}</b>
       </div>
       <a href="#paper">Open tracker</a>
     </div>
     <div class="owner-signal-digest-list">
-      ${recentTransitions.map(item => `
-        <div class="owner-signal-digest-item ${escapeHtml(item.status || "active")}">
+      ${latestPriorityEscalations.map(item => `
+        <div class="owner-signal-digest-item ${escapeHtml(item.review_priority || "monitor")}">
           <div>
             <b>${escapeHtml(item.ticker || "Holding")}</b>
-            <span>${escapeHtml(item.status_label || "Review signal")}</span>
+            <span>${escapeHtml(item.review_priority_label || "Monitor closely")}</span>
           </div>
-          <small>${signed(Number(item.latest_return_pct || 0))} return · ${signed(Number(item.latest_lag_pct || 0))} benchmark lag</small>
+          <small>${escapeHtml(item.previous_review_priority_label || "Prior level")} → ${escapeHtml(item.review_priority_label || "Elevated")} · ${Number(item.review_priority_score || 0)}/100</small>
         </div>
       `).join("")}
     </div>
-    <small class="owner-signal-disclosure">Review-only evidence. These transitions do not place or force a simulated trade.</small>
+    <small class="owner-signal-disclosure">Only upward moves into Monitor closely or Review now appear here. Alerts are review-only and cannot place or force a simulated trade.</small>
   ` : `
     <div class="owner-signal-digest-empty">
       <div>
-        <span>Paper evidence updates</span>
-        <b>${prospectiveTracker.activated ? "No new review transitions" : "Forward review study starts with the next snapshot"}</b>
+        <span>Priority escalation watch</span>
+        <b>${prospectiveTracker.activated ? "No new elevated-priority changes" : "Forward review study starts with the next snapshot"}</b>
+        ${prospectiveTracker.activated ? `<small>${Number(priorityCounts.urgent || 0) + Number(priorityCounts.monitor || 0)} open signal${Number(priorityCounts.urgent || 0) + Number(priorityCounts.monitor || 0) === 1 ? "" : "s"} currently need elevated attention.</small>` : ""}
       </div>
       <a href="#paper">Open tracker</a>
     </div>
@@ -2054,6 +2056,11 @@ function renderPaperWorkspaceSummary(paper) {
   const prospectiveCounts = prospectiveTracker.counts || {};
   const prospectivePriorityCounts =
     prospectiveTracker.review_priority_counts || {};
+  const latestPriorityEscalations = Array.isArray(
+    prospectiveTracker.latest_priority_escalations
+  )
+    ? prospectiveTracker.latest_priority_escalations
+    : [];
   const prospectiveEffectiveness =
     validation.prospective_review_effectiveness || {};
   const effectivenessGates = Array.isArray(prospectiveEffectiveness.gates)
@@ -2274,6 +2281,14 @@ function renderPaperWorkspaceSummary(paper) {
             <strong>${Number(prospectiveCounts.recovered || 0)}</strong>
           </div>
         </div>
+        <div class="paper-priority-escalation-strip ${latestPriorityEscalations.length ? "active" : "clear"}">
+          <div>
+            <span>Priority escalation watch</span>
+            <strong>${latestPriorityEscalations.length ? `${latestPriorityEscalations.length} signal${latestPriorityEscalations.length === 1 ? "" : "s"} moved into elevated attention` : "No new elevated-priority changes"}</strong>
+            <small>Only upward crossings into Monitor closely or Review now appear here. Routine score drift is omitted.</small>
+          </div>
+          ${latestPriorityEscalations.length ? `<div class="paper-priority-escalation-list">${latestPriorityEscalations.map(item => `<span><b>${escapeHtml(item.ticker || "Holding")}</b> ${escapeHtml(item.previous_review_priority_label || "Prior level")} → ${escapeHtml(item.review_priority_label || "Elevated")} · ${Number(item.review_priority_score || 0)}/100</span>`).join("")}</div>` : `<span class="paper-priority-escalation-clear">Clear</span>`}
+        </div>
         <div class="paper-prospective-list">
           ${prospectiveSignals.map(signal => `
             <article class="paper-prospective-row ${escapeHtml(signal.status || "active")}">
@@ -2305,7 +2320,7 @@ function renderPaperWorkspaceSummary(paper) {
             </div>
           `}
         </div>
-        <small class="paper-evidence-note">Priority ranks owner attention only. It cannot place or force a simulated trade, and it does not change paper policy. A recovered signal only means price later moved above its trigger price.</small>
+        <small class="paper-evidence-note">Priority ranks owner attention only. Escalation notices cannot place or force a simulated trade, and they do not change paper policy. A recovered signal only means price later moved above its trigger price.</small>
       </section>
     ` : ""}
     ${prospectiveEffectiveness.available ? `

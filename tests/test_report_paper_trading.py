@@ -97,6 +97,14 @@ class ReportPaperTradingTests(unittest.TestCase):
                             ],
                         }
                     ],
+                    "latest_priority_escalations": [
+                        {
+                            "ticker": "TSM",
+                            "previous_review_priority_label": "Watch",
+                            "review_priority_label": "Review now",
+                            "review_priority_score": 100,
+                        }
+                    ],
                     "recent_transitions": [
                         {
                             "ticker": "TSM",
@@ -183,6 +191,9 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("### Owner Review Priority", section)
         self.assertIn("| Review now (100/100) | TSM | Weakness persists |", section)
         self.assertIn("Priority ranks owner attention only", section)
+        self.assertIn("### Priority Escalation Watch", section)
+        self.assertIn("| TSM | Watch | Review now | 100/100 |", section)
+        self.assertIn("Routine score drift", section)
         self.assertIn(
             "| TSM | Weakness persists | -4.25% | -5.75% | 3 |",
             section,

@@ -265,6 +265,9 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
         self.assertNotIn("| TSM | New review |", summary)
         self.assertNotIn("OLD", summary)
         self.assertIn("cannot change paper policy", summary)
+        self.assertIn("### Priority Escalation Watch", summary)
+        self.assertIn("No signal moved into Monitor closely", summary)
+        self.assertIn("Routine score drift", summary)
 
 
 if __name__ == "__main__":

@@ -2042,6 +2042,15 @@ class PaperTradingAccountTests(unittest.TestCase):
                 "latest_return_pct": -2.0,
                 "latest_lag_pct": -5.0,
                 "snapshots_observed": 3,
+                "priority_changed": True,
+                "meaningful_priority_escalation": True,
+                "previous_review_priority": "low",
+                "previous_review_priority_label": "Low priority",
+                "previous_review_priority_score": 25,
+                "review_priority": "monitor",
+                "review_priority_label": "Monitor closely",
+                "review_priority_score": 65,
+                "priority_score_change": 40,
             },
             {
                 "event": "defensive_review_signal",
@@ -2159,6 +2168,18 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(
             tracker["recent_transitions"][1]["status"],
             "recovered",
+        )
+        self.assertEqual(tracker["priority_transition_count"], 1)
+        self.assertEqual(tracker["latest_priority_escalation_count"], 1)
+        self.assertEqual(
+            tracker["latest_priority_escalations"][0]["ticker"],
+            "AMD",
+        )
+        self.assertEqual(
+            tracker["latest_priority_escalations"][0][
+                "previous_review_priority_label"
+            ],
+            "Low priority",
         )
 
         scorecard = PaperTradingAccount.prospective_review_effectiveness(
@@ -2369,6 +2390,73 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(len(markers), 1)
         self.assertEqual(markers[0]["mode"], "review_only")
         self.assertFalse(markers[0]["policy_changed"])
+
+    def test_review_priority_sync_records_only_band_changes_and_escalations(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+            )
+            account.initialize(100000)
+            states = [
+                {
+                    "ticker": "MSFT",
+                    "signal_id": "review_msft",
+                    "status": "recovered",
+                    "status_label": "Recovered above trigger",
+                    "latest_at": "2026-07-01T10:00:00",
+                    "review_priority": "watch",
+                    "review_priority_label": "Watch",
+                    "review_priority_score": 40,
+                    "review_priority_rationale": ["Recovery relapsed once."],
+                },
+                {
+                    "ticker": "MSFT",
+                    "signal_id": "review_msft",
+                    "status": "persistent_weakness",
+                    "status_label": "Weakness persists",
+                    "latest_at": "2026-07-02T10:00:00",
+                    "review_priority": "monitor",
+                    "review_priority_label": "Monitor closely",
+                    "review_priority_score": 70,
+                    "review_priority_rationale": ["Weakness persisted."],
+                },
+                {
+                    "ticker": "MSFT",
+                    "signal_id": "review_msft",
+                    "status": "persistent_weakness",
+                    "status_label": "Weakness persists",
+                    "latest_at": "2026-07-03T10:00:00",
+                    "review_priority": "monitor",
+                    "review_priority_label": "Monitor closely",
+                    "review_priority_score": 75,
+                    "review_priority_rationale": ["Weakness persisted."],
+                },
+            ]
+            account.prospective_defensive_review_tracker = lambda events: {
+                "signals": [states.pop(0)]
+            }
+
+            account._sync_prospective_defensive_review_events()
+            account._sync_prospective_defensive_review_events()
+            account._sync_prospective_defensive_review_events()
+            transitions = [
+                event
+                for event in account.ledger()
+                if event.get("event") == "defensive_review_signal"
+            ]
+
+        self.assertEqual(len(transitions), 2)
+        self.assertEqual(transitions[0]["transition_kind"], "initial_signal")
+        self.assertFalse(transitions[0]["meaningful_priority_escalation"])
+        self.assertEqual(
+            transitions[1]["transition_kind"],
+            "priority_escalation",
+        )
+        self.assertTrue(transitions[1]["meaningful_priority_escalation"])
+        self.assertEqual(transitions[1]["previous_review_priority"], "watch")
+        self.assertEqual(transitions[1]["review_priority"], "monitor")
+        self.assertEqual(transitions[1]["priority_score_change"], 30)
 
     def test_prospective_review_effectiveness_requires_forward_sample(self):
         scorecard = (

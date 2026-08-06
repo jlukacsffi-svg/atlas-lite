@@ -639,6 +639,45 @@ class AtlasCloudApplication:
                         or 0
                     ),
                 },
+                "prospective_review_priority_escalations": {
+                    "ok": isinstance(
+                        prospective_review_tracker.get(
+                            "latest_priority_escalations"
+                        ),
+                        list,
+                    )
+                    and "latest_priority_escalation_count"
+                    in prospective_review_tracker
+                    and "priority_transition_count"
+                    in prospective_review_tracker
+                    and prospective_review_tracker.get(
+                        "review_priority_policy_changed"
+                    )
+                    is False
+                    and self._ui_contains("Priority escalation watch")
+                    and self._ui_contains("Routine score drift"),
+                    "detail": (
+                        "Dashboard surfaces only new upward priority crossings "
+                        "into elevated owner attention with no trade authority."
+                    ),
+                    "latest_escalation_count": int(
+                        prospective_review_tracker.get(
+                            "latest_priority_escalation_count"
+                        )
+                        or 0
+                    ),
+                    "priority_transition_count": int(
+                        prospective_review_tracker.get(
+                            "priority_transition_count"
+                        )
+                        or 0
+                    ),
+                    "policy_changed": bool(
+                        prospective_review_tracker.get(
+                            "review_priority_policy_changed"
+                        )
+                    ),
+                },
                 "prospective_review_effectiveness": {
                     "ok": bool(
                         prospective_review_effectiveness.get("available")
@@ -823,7 +862,7 @@ class AtlasCloudApplication:
                     "ok": "recent_transitions" in prospective_review_tracker
                     and "recent_transition_count"
                     in prospective_review_tracker
-                    and self._ui_contains("Paper evidence updates")
+                    and self._ui_contains("Priority escalation watch")
                     and self._ui_contains("owner-signal-digest"),
                     "detail": (
                         "Overview can surface recent defensive review "

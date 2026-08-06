@@ -1060,6 +1060,34 @@ class ReportGenerator:
             "or change paper policy. Completed signals remain in the outcome archive."
         )
 
+        escalations = list(
+            tracker.get("latest_priority_escalations") or []
+        )
+        section.extend(["", "### Priority Escalation Watch\n"])
+        if escalations:
+            section.extend(
+                [
+                    "| Ticker | Previous Level | New Level | Score |",
+                    "|--------|----------------|-----------|-------|",
+                ]
+            )
+            for item in escalations:
+                section.append(
+                    f"| {item.get('ticker', 'N/A')} | "
+                    f"{item.get('previous_review_priority_label', 'Prior level')} | "
+                    f"{item.get('review_priority_label', 'Elevated')} | "
+                    f"{int(item.get('review_priority_score') or 0)}/100 |"
+                )
+        else:
+            section.append(
+                "No signal moved into Monitor closely or Review now in the "
+                "latest paper snapshot."
+            )
+        section.append(
+            "\nRoutine score drift and lower-priority changes are omitted from "
+            "this alert. Escalations remain review-only."
+        )
+
         transitions = list(tracker.get("recent_transitions") or [])
         if not transitions:
             section.append(

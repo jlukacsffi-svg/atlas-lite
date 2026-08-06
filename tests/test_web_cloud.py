@@ -516,6 +516,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Prospective review tracker";\n'
                 '"Needs attention";\n'
                 '"Why this priority";\n'
+                '"Priority escalation watch";\n'
+                '"Routine score drift";\n'
                 '"Review signal effectiveness";\n'
                 '"What happened after each warning";\n'
                 '"Benchmark-adjusted separation";\n'
@@ -573,6 +575,9 @@ class CloudWebApplicationTests(unittest.TestCase):
                                         "low": 0,
                                         "recorded": 0,
                                     },
+                                    "priority_transition_count": 0,
+                                    "latest_priority_escalation_count": 0,
+                                    "latest_priority_escalations": [],
                                     "counts": {"total": 0},
                                     "signals": [],
                                 },
@@ -706,6 +711,17 @@ class CloudWebApplicationTests(unittest.TestCase):
             response["json"]["checks"][
                 "prospective_review_priority_queue"
             ]["policy_changed"]
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "prospective_review_priority_escalations"
+            ]["ok"]
+        )
+        self.assertEqual(
+            response["json"]["checks"][
+                "prospective_review_priority_escalations"
+            ]["latest_escalation_count"],
+            0,
         )
         self.assertTrue(
             response["json"]["checks"][
