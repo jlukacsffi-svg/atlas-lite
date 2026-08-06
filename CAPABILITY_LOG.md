@@ -3,6 +3,37 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 5, 2026 - Warning duration and recovery timing are visible
+
+New capabilities:
+
+- Measure each warning's observed span in both snapshots and elapsed days.
+- Record when a stock first moves above its warning trigger without labeling
+  that temporary move as resolution.
+- Compare confirmed-outcome observation spans with the speed at which recovery
+  first appears.
+- Include warning timing in Portfolio, daily reports, and weekly reports.
+
+Validated result:
+
+- LLY's confirmed-loss outcome spans 8 observations over 3 days.
+- Both LLY and CRWD first moved above their triggers after 2 additional
+  snapshots, about 1 day; LLY later failed while CRWD sustained recovery.
+- The full local suite passes with 431 tests.
+- Desktop and 390-pixel mobile layouts pass visual review.
+- Cloud Run revision `atlas-dashboard-stg-00164-txh`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260805-warning-timing`.
+- The deployed image digest is
+  `sha256:7303daac3c5aa7c3c68583ec3a61659a611fd76a881f3e566052c35c2ba6413c`.
+- All 26 staging readiness checks and all 20 protected Stage 5 dashboard
+  contract checks pass. Neither scheduled job was manually executed.
+
+Current boundaries:
+
+- A first move above trigger is timing evidence, not successful resolution.
+- The two-signal sample cannot change policy or grant trade authority.
+- Overall program completion remains estimated at 85%.
+
 ## August 5, 2026 - Warning outcomes include benchmark attribution
 
 New capabilities:

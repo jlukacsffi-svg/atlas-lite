@@ -61,6 +61,20 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Warning timing is live on Cloud Run revision
+  `atlas-dashboard-stg-00164-txh`. The dashboard, daily job, and weekly job use
+  image `20260805-warning-timing`, digest
+  `sha256:7303daac3c5aa7c3c68583ec3a61659a611fd76a881f3e566052c35c2ba6413c`.
+  All 431 local tests, 26 staging checks, and 20 protected dashboard checks
+  pass. The jobs were aligned without manually executing them.
+- Atlas now measures warning spans in snapshots and days, plus the first later
+  move above each trigger. Both current signals first crossed above trigger
+  after 2 snapshots and about 1 day; LLY later failed, while CRWD sustained its
+  recovery.
+- Portfolio, daily reports, and weekly reports explicitly state that an early
+  bounce can be temporary and is not warning resolution.
+- Next development focus: measure recovery durability and relapse frequency
+  while the scheduled forward sample continues growing.
 - Benchmark-relative warning attribution is live on Cloud Run revision
   `atlas-dashboard-stg-00163-tqv`. The dashboard, daily job, and weekly job use
   image `20260805-warning-benchmarks`, digest
