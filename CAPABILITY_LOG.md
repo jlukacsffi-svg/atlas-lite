@@ -3,6 +3,40 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 5, 2026 - Defensive warnings are ranked for owner review
+
+New capabilities:
+
+- Rank each open forward defensive warning from 0 to 100 using its current
+  status, stronger-benchmark-relative result, trigger position, recovery
+  durability, and relapse count.
+- Translate the score into Review now, Monitor closely, Watch, or Low priority
+  and explain every factor that raised or lowered the score.
+- Keep completed positions out of the active queue as recorded outcomes.
+- Show the same owner-review queue in Portfolio, daily reports, and weekly
+  reports.
+
+Validated result:
+
+- The current cloud evidence has no elevated-attention warnings: closed LLY is
+  an Outcome recorded at 0/100, while recovered CRWD is Low priority at 15/100.
+- The full local suite passes with 432 tests.
+- Desktop and 390-pixel mobile layouts pass visual review.
+- Cloud Run revision `atlas-dashboard-stg-00166-cqm`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260805-review-priority`.
+- The deployed image digest is
+  `sha256:3c76f90b73394d8d1ad5647f29e41e5ed2d0e03026ab3336c6878c3d3992f610`.
+- All 26 staging readiness checks and all 22 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules remain enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Priority ranks owner attention only; it cannot place or force a paper trade.
+- The queue cannot alter strategy thresholds or authorize real trading.
+- The two-signal sample cannot support a policy decision.
+- Overall program completion remains estimated at 85%.
+
 ## August 5, 2026 - Recovery durability and relapses are measured
 
 New capabilities:

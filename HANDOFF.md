@@ -61,6 +61,22 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Evidence-informed review priority is live on Cloud Run revision
+  `atlas-dashboard-stg-00166-cqm`. The dashboard, daily job, and weekly job use
+  image `20260805-review-priority`, digest
+  `sha256:3c76f90b73394d8d1ad5647f29e41e5ed2d0e03026ab3336c6878c3d3992f610`.
+  All 432 local tests, 26 staging checks, and 22 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- Atlas now ranks open defensive warnings from 0 to 100 using status,
+  benchmark-relative movement, current trigger position, recovery durability,
+  and relapses. Every score includes plain-language evidence.
+- Closed LLY is archived as Outcome recorded at 0/100. Recovered CRWD is Low
+  priority at 15/100, and no current warning needs elevated owner attention.
+- The queue appears in Portfolio, daily reports, and weekly reports. It ranks
+  review attention only and remains disconnected from paper-order execution.
+- Next development focus: record priority changes and surface only meaningful
+  escalations, while the scheduled forward sample continues growing.
 - Recovery durability is live on Cloud Run revision
   `atlas-dashboard-stg-00165-zt7`. The dashboard, daily job, and weekly job use
   image `20260805-warning-durability`, digest
@@ -72,8 +88,6 @@ Most recent Stage 5 refinement:
   below trigger; CRWD has 92.3% durability, no relapses, and remains above.
 - Recovery quality appears in Portfolio, daily reports, and weekly reports and
   remains observational evidence only.
-- Next development focus: add evidence-informed review priority while the
-  scheduled forward sample continues growing, without changing paper policy.
 - Warning timing is live on Cloud Run revision
   `atlas-dashboard-stg-00164-txh`. The dashboard, daily job, and weekly job use
   image `20260805-warning-timing`, digest

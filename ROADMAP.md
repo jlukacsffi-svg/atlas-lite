@@ -29,6 +29,9 @@ Atlas now:
   drivers, plus the company thesis, primary driver, and key risk.
 - Groups navigation around Decide, Understand, and Manage workflows.
 - Preserves clear paper-only and real-money authority boundaries.
+- Ranks forward defensive warnings by owner-review priority using status,
+  benchmark-relative movement, recovery durability, and relapses, with a
+  plain-language explanation for every score.
 
 Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
 the active investment-capability gate.
