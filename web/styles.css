@@ -1613,6 +1613,27 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 }
 .paper-signal-comparison-metrics strong { font-size: 14px; }
 .paper-signal-comparison-metrics small { color: var(--muted); font-size: 9px; }
+.paper-signal-timing {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.paper-signal-timing > div {
+  display: grid;
+  gap: 3px;
+  padding: 9px;
+  border-top: 2px solid #8ea2af;
+  background: #f3f7f8;
+}
+.paper-signal-timing span {
+  color: var(--muted);
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.paper-signal-timing strong { font-size: 12px; }
+.paper-signal-timing small { color: var(--muted); font-size: 9px; }
 .paper-signal-outcomes { display: grid; gap: 7px; margin-top: 10px; }
 .paper-signal-outcome {
   display: grid;
@@ -4123,6 +4144,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   .paper-prospective-row,
   .paper-effectiveness-metrics,
   .paper-signal-comparison-metrics,
+  .paper-signal-timing,
   .paper-signal-outcome dl,
   .paper-effectiveness-gate { grid-template-columns: 1fr; }
   .research-summary-grid { grid-template-columns: 1fr; }

@@ -4405,11 +4405,23 @@ class PaperTradingAccount:
                 benchmark_attribution_label = "Outpaced stronger benchmark"
             else:
                 benchmark_attribution_label = "Moved near stronger benchmark"
-            recovered = any(
-                value["timestamp"] != trigger["timestamp"]
-                and value["price"] > trigger["price"]
-                for value in after_trigger
+            first_recovery_index = next(
+                (
+                    index
+                    for index, value in enumerate(
+                        after_trigger[1:],
+                        start=1,
+                    )
+                    if value["price"] > trigger["price"]
+                ),
+                None,
             )
+            first_recovery = (
+                after_trigger[first_recovery_index]
+                if first_recovery_index is not None
+                else None
+            )
+            recovered = first_recovery is not None
             if cycle.get("closed"):
                 status = (
                     "completed_loss"
@@ -4485,6 +4497,24 @@ class PaperTradingAccount:
                     ),
                     "benchmark_attribution_label": (
                         benchmark_attribution_label
+                    ),
+                    "warning_span_days": cls._days_between(
+                        trigger.get("timestamp"),
+                        latest.get("timestamp"),
+                    ),
+                    "snapshots_to_first_recovery": first_recovery_index,
+                    "days_to_first_recovery": cls._days_between(
+                        trigger.get("timestamp"),
+                        (
+                            first_recovery.get("timestamp")
+                            if first_recovery
+                            else None
+                        ),
+                    ),
+                    "first_recovered_at": (
+                        first_recovery.get("timestamp")
+                        if first_recovery
+                        else None
                     ),
                     "snapshots_observed": len(after_trigger),
                     "realized_gain_loss": (
@@ -4676,6 +4706,18 @@ class PaperTradingAccount:
                     "benchmark_attribution_label": signal.get(
                         "benchmark_attribution_label"
                     ),
+                    "warning_span_days": signal.get(
+                        "warning_span_days"
+                    ),
+                    "snapshots_to_first_recovery": signal.get(
+                        "snapshots_to_first_recovery"
+                    ),
+                    "days_to_first_recovery": signal.get(
+                        "days_to_first_recovery"
+                    ),
+                    "first_recovered_at": signal.get(
+                        "first_recovered_at"
+                    ),
                     "snapshots_observed": int(
                         signal.get("snapshots_observed") or 0
                     ),
@@ -4732,6 +4774,22 @@ class PaperTradingAccount:
             and false_alarm_avg_relative_move is not None
             else None
         )
+        confirmed_avg_warning_snapshots = average_metric(
+            confirmed_rows,
+            "snapshots_observed",
+        )
+        confirmed_avg_warning_days = average_metric(
+            confirmed_rows,
+            "warning_span_days",
+        )
+        false_alarm_avg_recovery_snapshots = average_metric(
+            false_alarm_rows,
+            "snapshots_to_first_recovery",
+        )
+        false_alarm_avg_recovery_days = average_metric(
+            false_alarm_rows,
+            "days_to_first_recovery",
+        )
         outcome_comparison = {
             "confirmed_avg_post_trigger_move_pct": confirmed_avg_move,
             "confirmed_avg_worst_post_trigger_move_pct": average_metric(
@@ -4752,6 +4810,18 @@ class PaperTradingAccount:
             ),
             "benchmark_adjusted_separation_pct": (
                 benchmark_adjusted_separation
+            ),
+            "confirmed_avg_warning_span_snapshots": (
+                confirmed_avg_warning_snapshots
+            ),
+            "confirmed_avg_warning_span_days": (
+                confirmed_avg_warning_days
+            ),
+            "false_alarm_avg_snapshots_to_recovery": (
+                false_alarm_avg_recovery_snapshots
+            ),
+            "false_alarm_avg_days_to_recovery": (
+                false_alarm_avg_recovery_days
             ),
         }
         minimum_resolved = 10

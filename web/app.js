@@ -2346,6 +2346,18 @@ function renderPaperWorkspaceSummary(paper) {
                 <small>separation after the stronger SPY or QQQ move</small>
               </div>
             </div>
+            <div class="paper-signal-timing">
+              <div>
+                <span>Confirmed outcome span</span>
+                <strong>${effectivenessComparison.confirmed_avg_warning_span_snapshots == null ? "--" : `${Number(effectivenessComparison.confirmed_avg_warning_span_snapshots).toFixed(1)} snapshots`}</strong>
+                <small>${effectivenessComparison.confirmed_avg_warning_span_days == null ? "Waiting for timing evidence" : `${Number(effectivenessComparison.confirmed_avg_warning_span_days).toFixed(1)} average days observed`}</small>
+              </div>
+              <div>
+                <span>Recovery first appeared</span>
+                <strong>${effectivenessComparison.false_alarm_avg_snapshots_to_recovery == null ? "--" : `${Number(effectivenessComparison.false_alarm_avg_snapshots_to_recovery).toFixed(1)} snapshots`}</strong>
+                <small>${effectivenessComparison.false_alarm_avg_days_to_recovery == null ? "No recovery timing yet" : `${Number(effectivenessComparison.false_alarm_avg_days_to_recovery).toFixed(1)} average days after warning`}</small>
+              </div>
+            </div>
             <div class="paper-signal-outcomes">
               ${effectivenessOutcomes.map(outcome => `
                 <article class="paper-signal-outcome ${escapeHtml(outcome.classification || "open")}">
@@ -2360,12 +2372,13 @@ function renderPaperWorkspaceSummary(paper) {
                     <div><dt>Best recovery</dt><dd class="${changeClass(Number(outcome.best_post_trigger_move_pct || 0))}">${signed(outcome.best_post_trigger_move_pct)}</dd></div>
                     <div><dt>Stronger benchmark</dt><dd>${escapeHtml(outcome.comparison_benchmark || "--")} ${signed(outcome.comparison_benchmark_move_pct)}</dd></div>
                     <div><dt>Vs benchmark</dt><dd class="${changeClass(Number(outcome.benchmark_relative_move_pct || 0))}">${signed(outcome.benchmark_relative_move_pct)}</dd></div>
-                    <div><dt>Observed</dt><dd>${Number(outcome.snapshots_observed || 0)} snapshots</dd></div>
+                    <div><dt>Warning span</dt><dd>${Number(outcome.snapshots_observed || 0)} snapshots / ${Number(outcome.warning_span_days || 0).toFixed(1)} days</dd></div>
+                    <div><dt>First above trigger</dt><dd>${outcome.snapshots_to_first_recovery == null ? "Not observed" : `${Number(outcome.snapshots_to_first_recovery)} snapshots / ${Number(outcome.days_to_first_recovery || 0).toFixed(1)} days`}</dd></div>
                   </dl>
                 </article>
               `).join("")}
             </div>
-            <small class="paper-signal-disclosure">These are observed price paths after a review signal, not hypothetical fill results. Benchmark context uses the stronger SPY or QQQ move over the same period; it does not claim the benchmark caused the stock move. This evidence cannot execute a sale.</small>
+            <small class="paper-signal-disclosure">These are observed price paths after a review signal, not hypothetical fill results. Benchmark context uses the stronger SPY or QQQ move over the same period; it does not claim the benchmark caused the stock move. A first move above the trigger can be temporary and does not resolve the warning. This evidence cannot execute a sale.</small>
           </div>
         ` : ""}
         <div class="paper-effectiveness-gates">

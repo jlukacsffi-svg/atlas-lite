@@ -518,6 +518,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"What happened after each warning";\n'
                 '"Benchmark-adjusted separation";\n'
                 '"Stronger benchmark";\n'
+                '"Confirmed outcome span";\n'
+                '"First above trigger";\n'
                 '"Paper evidence updates";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
@@ -571,6 +573,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "outcome_comparison": {
                                         "outcome_separation_pct": None,
                                         "benchmark_adjusted_separation_pct": None,
+                                        "confirmed_avg_warning_span_snapshots": None,
+                                        "false_alarm_avg_snapshots_to_recovery": None,
                                     },
                                     "outcomes": [],
                                     "gates": [
@@ -701,6 +705,16 @@ class CloudWebApplicationTests(unittest.TestCase):
             response["json"]["checks"][
                 "prospective_review_benchmark_attribution"
             ]["benchmark_adjusted_separation_pct"]
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "prospective_review_timing_evidence"
+            ]["ok"]
+        )
+        self.assertIsNone(
+            response["json"]["checks"][
+                "prospective_review_timing_evidence"
+            ]["confirmed_avg_warning_span_snapshots"]
         )
         self.assertTrue(
             response["json"]["checks"][

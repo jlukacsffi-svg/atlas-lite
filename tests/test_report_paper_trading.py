@@ -113,6 +113,10 @@ class ReportPaperTradingTests(unittest.TestCase):
                     "outcome_comparison": {
                         "outcome_separation_pct": 12.5,
                         "benchmark_adjusted_separation_pct": 8.25,
+                        "confirmed_avg_warning_span_snapshots": 3.0,
+                        "confirmed_avg_warning_span_days": 2.0,
+                        "false_alarm_avg_snapshots_to_recovery": 2.0,
+                        "false_alarm_avg_days_to_recovery": 1.0,
                     },
                     "outcomes": [
                         {
@@ -125,6 +129,9 @@ class ReportPaperTradingTests(unittest.TestCase):
                             "comparison_benchmark_move_pct": 2.0,
                             "benchmark_relative_move_pct": -5.5,
                             "benchmark_attribution_label": "Lagged stronger benchmark",
+                            "warning_span_days": 2.0,
+                            "snapshots_to_first_recovery": None,
+                            "days_to_first_recovery": None,
                             "snapshots_observed": 3,
                         },
                         {
@@ -137,6 +144,9 @@ class ReportPaperTradingTests(unittest.TestCase):
                             "comparison_benchmark_move_pct": 4.0,
                             "benchmark_relative_move_pct": 5.0,
                             "benchmark_attribution_label": "Outpaced stronger benchmark",
+                            "warning_span_days": 3.0,
+                            "snapshots_to_first_recovery": 2,
+                            "days_to_first_recovery": 1.0,
                             "snapshots_observed": 4,
                         },
                     ],
@@ -160,6 +170,8 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("### Forward Study Scorecard", section)
         self.assertIn("**Post-warning outcome separation**: +12.50 points", section)
         self.assertIn("**Benchmark-adjusted separation**: +8.25 points", section)
+        self.assertIn("**Confirmed-outcome observation span**: 3.0 snapshots / 2.0 days", section)
+        self.assertIn("**Recovery first appeared**: 2.0 snapshots / 1.0 days", section)
         self.assertIn(
             "| TSM | Warning confirmed | -3.50% | -4.00% | +0.00% | 3 |",
             section,
@@ -178,6 +190,16 @@ class ReportPaperTradingTests(unittest.TestCase):
             section,
         )
         self.assertIn("does not claim causation", section)
+        self.assertIn("#### Warning Timing", section)
+        self.assertIn(
+            "| TSM | 3 snapshots / 2.0 days | Not observed | Warning confirmed |",
+            section,
+        )
+        self.assertIn(
+            "| AMD | 4 snapshots / 3.0 days | 2 snapshots / 1.0 days | Recovery / false alarm |",
+            section,
+        )
+        self.assertIn("can be temporary", section)
         self.assertIn("not hypothetical fills", section)
 
     def test_defensive_review_section_explains_forward_start(self):

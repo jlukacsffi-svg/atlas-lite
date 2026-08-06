@@ -683,6 +683,45 @@ class AtlasCloudApplication:
                         or {}
                     ).get("benchmark_adjusted_separation_pct"),
                 },
+                "prospective_review_timing_evidence": {
+                    "ok": "confirmed_avg_warning_span_snapshots"
+                    in (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    )
+                    and "false_alarm_avg_snapshots_to_recovery"
+                    in (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    )
+                    and prospective_review_effectiveness.get(
+                        "policy_changed"
+                    )
+                    is False
+                    and self._ui_contains("Confirmed outcome span")
+                    and self._ui_contains("First above trigger"),
+                    "detail": (
+                        "Dashboard measures warning observation spans and "
+                        "first moves above trigger without treating a "
+                        "temporary bounce as resolution or changing policy."
+                    ),
+                    "confirmed_avg_warning_span_snapshots": (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    ).get("confirmed_avg_warning_span_snapshots"),
+                    "false_alarm_avg_snapshots_to_recovery": (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    ).get("false_alarm_avg_snapshots_to_recovery"),
+                },
                 "owner_review_transition_digest": {
                     "ok": "recent_transitions" in prospective_review_tracker
                     and "recent_transition_count"

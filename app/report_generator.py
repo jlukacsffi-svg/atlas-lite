@@ -1082,6 +1082,18 @@ class ReportGenerator:
                     "- **Benchmark-adjusted separation**: "
                     f"{float(comparison['benchmark_adjusted_separation_pct']):+.2f} points"
                 )
+            if comparison.get("confirmed_avg_warning_span_snapshots") is not None:
+                section.append(
+                    "- **Confirmed-outcome observation span**: "
+                    f"{float(comparison['confirmed_avg_warning_span_snapshots']):.1f} snapshots / "
+                    f"{float(comparison.get('confirmed_avg_warning_span_days') or 0):.1f} days"
+                )
+            if comparison.get("false_alarm_avg_snapshots_to_recovery") is not None:
+                section.append(
+                    "- **Recovery first appeared**: "
+                    f"{float(comparison['false_alarm_avg_snapshots_to_recovery']):.1f} snapshots / "
+                    f"{float(comparison.get('false_alarm_avg_days_to_recovery') or 0):.1f} days"
+                )
             outcomes = list(effectiveness.get("outcomes") or [])
             if outcomes:
                 section.extend(
@@ -1122,10 +1134,34 @@ class ReportGenerator:
                             f"{self._format_optional_percent(outcome.get('benchmark_relative_move_pct'))} | "
                             f"{outcome.get('benchmark_attribution_label', 'Benchmark context available')} |"
                         )
+                section.extend(
+                    [
+                        "",
+                        "#### Warning Timing\n",
+                        "| Ticker | Observed Span | First Above Trigger | Final Classification |",
+                        "|--------|---------------|---------------------|----------------------|",
+                    ]
+                )
+                for outcome in outcomes:
+                    first_above = (
+                        f"{int(outcome.get('snapshots_to_first_recovery'))} snapshots / "
+                        f"{float(outcome.get('days_to_first_recovery') or 0):.1f} days"
+                        if outcome.get("snapshots_to_first_recovery") is not None
+                        else "Not observed"
+                    )
+                    section.append(
+                        f"| {outcome.get('ticker', 'N/A')} | "
+                        f"{int(outcome.get('snapshots_observed') or 0)} snapshots / "
+                        f"{float(outcome.get('warning_span_days') or 0):.1f} days | "
+                        f"{first_above} | "
+                        f"{outcome.get('classification_label', 'Review outcome')} |"
+                    )
             section.append(
                 "\nPost-warning paths are observed evidence, not hypothetical fills. "
                 "Benchmark attribution compares the same period and does not "
-                "claim causation. The scorecard cannot change policy or "
+                "claim causation. A first move above the trigger can be "
+                "temporary and does not resolve the warning. The scorecard "
+                "cannot change policy or "
                 "execute a sale."
             )
         return "\n".join(section) + "\n"

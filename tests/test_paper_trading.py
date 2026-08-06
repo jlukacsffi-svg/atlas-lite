@@ -2093,6 +2093,11 @@ class PaperTradingAccountTests(unittest.TestCase):
             by_ticker["NVDA"]["benchmark_attribution_label"],
             "Lagged stronger benchmark",
         )
+        self.assertIsNone(
+            by_ticker["NVDA"]["snapshots_to_first_recovery"]
+        )
+        self.assertIsNone(by_ticker["NVDA"]["days_to_first_recovery"])
+        self.assertEqual(by_ticker["NVDA"]["warning_span_days"], 0.0)
         self.assertEqual(by_ticker["AMD"]["status"], "recovered")
         self.assertEqual(by_ticker["AMD"]["latest_return_pct"], -2.0)
         self.assertEqual(
@@ -2114,6 +2119,15 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(
             by_ticker["AMD"]["benchmark_attribution_label"],
             "Moved near stronger benchmark",
+        )
+        self.assertEqual(
+            by_ticker["AMD"]["snapshots_to_first_recovery"],
+            1,
+        )
+        self.assertEqual(by_ticker["AMD"]["days_to_first_recovery"], 0.0)
+        self.assertEqual(
+            by_ticker["AMD"]["first_recovered_at"],
+            "2026-07-01T10:01:00",
         )
         self.assertEqual(tracker["transition_count"], 3)
         self.assertEqual(tracker["recent_transition_count"], 2)
@@ -2177,6 +2191,18 @@ class PaperTradingAccountTests(unittest.TestCase):
                 "benchmark_adjusted_separation_pct"
             ],
             3.09,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "confirmed_avg_warning_span_snapshots"
+            ],
+            3.0,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "false_alarm_avg_snapshots_to_recovery"
+            ],
+            1.0,
         )
 
     def test_performance_snapshot_starts_review_tracking_once(self):
@@ -2245,6 +2271,11 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertIsNone(
             scorecard["outcome_comparison"][
                 "benchmark_adjusted_separation_pct"
+            ]
+        )
+        self.assertIsNone(
+            scorecard["outcome_comparison"][
+                "false_alarm_avg_snapshots_to_recovery"
             ]
         )
 
