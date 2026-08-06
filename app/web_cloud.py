@@ -678,6 +678,78 @@ class AtlasCloudApplication:
                         )
                     ),
                 },
+                "prospective_review_escalation_outcomes": {
+                    "ok": isinstance(
+                        prospective_review_tracker.get(
+                            "escalation_episode_evidence"
+                        ),
+                        dict,
+                    )
+                    and "episode_count"
+                    in (
+                        prospective_review_tracker.get(
+                            "escalation_episode_evidence"
+                        )
+                        or {}
+                    )
+                    and "resolution_counts"
+                    in (
+                        prospective_review_tracker.get(
+                            "escalation_episode_evidence"
+                        )
+                        or {}
+                    )
+                    and (
+                        prospective_review_tracker.get(
+                            "escalation_episode_evidence"
+                        )
+                        or {}
+                    ).get("policy_changed")
+                    is False
+                    and self._ui_contains("Elevated episode evidence")
+                    and self._ui_contains(
+                        "Episode duration is observational evidence"
+                    ),
+                    "detail": (
+                        "Dashboard measures elevated-warning duration, peak "
+                        "priority, and resolution without timing a trade."
+                    ),
+                    "episode_count": int(
+                        (
+                            prospective_review_tracker.get(
+                                "escalation_episode_evidence"
+                            )
+                            or {}
+                        ).get("episode_count")
+                        or 0
+                    ),
+                    "open_episode_count": int(
+                        (
+                            prospective_review_tracker.get(
+                                "escalation_episode_evidence"
+                            )
+                            or {}
+                        ).get("open_episode_count")
+                        or 0
+                    ),
+                    "resolved_episode_count": int(
+                        (
+                            prospective_review_tracker.get(
+                                "escalation_episode_evidence"
+                            )
+                            or {}
+                        ).get("resolved_episode_count")
+                        or 0
+                    ),
+                    "policy_changed": bool(
+                        (
+                            prospective_review_tracker.get(
+                                "escalation_episode_evidence"
+                            )
+                            or {}
+                        ).get("policy_changed")
+                    ),
+                },
                 "prospective_review_effectiveness": {
                     "ok": bool(
                         prospective_review_effectiveness.get("available")

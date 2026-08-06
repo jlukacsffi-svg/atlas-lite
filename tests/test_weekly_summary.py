@@ -268,6 +268,8 @@ class WeeklySummaryGeneratorTests(unittest.TestCase):
         self.assertIn("### Priority Escalation Watch", summary)
         self.assertIn("No signal moved into Monitor closely", summary)
         self.assertIn("Routine score drift", summary)
+        self.assertIn("### Escalation Duration And Resolution", summary)
+        self.assertIn("No elevated warning episode has been recorded", summary)
 
 
 if __name__ == "__main__":

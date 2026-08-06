@@ -4230,6 +4230,214 @@ class PaperTradingAccount:
         }
 
     @classmethod
+    def prospective_priority_escalation_episodes(
+        cls,
+        transitions,
+        snapshots,
+    ):
+        """Measure elevated-review episodes without granting trade authority."""
+        ordered_transitions = sorted(
+            [
+                event
+                for event in transitions
+                if event.get("signal_id") and event.get("timestamp")
+            ],
+            key=lambda event: str(event.get("timestamp") or ""),
+        )
+        snapshot_timestamps = sorted(
+            str(snapshot.get("timestamp") or "")
+            for snapshot in snapshots
+            if snapshot.get("timestamp")
+        )
+        latest_timestamp = snapshot_timestamps[-1] if snapshot_timestamps else None
+        priority_rank = {
+            "recorded": -1,
+            "low": 0,
+            "watch": 1,
+            "monitor": 2,
+            "urgent": 3,
+        }
+        active = {}
+        episodes = []
+
+        def update_peak(episode, event):
+            priority = event.get("review_priority")
+            if priority_rank.get(priority, -1) > priority_rank.get(
+                episode.get("peak_review_priority"),
+                -1,
+            ):
+                episode["peak_review_priority"] = priority
+                episode["peak_review_priority_label"] = event.get(
+                    "review_priority_label"
+                )
+                episode["peak_review_priority_score"] = event.get(
+                    "review_priority_score"
+                )
+
+        def finalize(episode, ended_at, resolution, resolution_label, is_open):
+            duration_days = cls._days_between(
+                episode.get("started_at"),
+                ended_at,
+            )
+            observations = sum(
+                1
+                for timestamp in snapshot_timestamps
+                if timestamp >= str(episode.get("started_at") or "")
+                and (not ended_at or timestamp <= str(ended_at))
+            )
+            return {
+                **episode,
+                "open": is_open,
+                "ended_at": ended_at,
+                "resolved_at": None if is_open else ended_at,
+                "resolution": resolution,
+                "resolution_label": resolution_label,
+                "duration_days": duration_days,
+                "snapshots_open": observations,
+            }
+
+        for event in ordered_transitions:
+            signal_id = str(event.get("signal_id") or "")
+            priority = str(event.get("review_priority") or "")
+            if event.get("meaningful_priority_escalation"):
+                if signal_id in active:
+                    episode = active[signal_id]
+                    update_peak(episode, event)
+                    episode["latest_review_priority"] = priority
+                    episode["latest_review_priority_label"] = event.get(
+                        "review_priority_label"
+                    )
+                    episode["latest_review_priority_score"] = event.get(
+                        "review_priority_score"
+                    )
+                    episode["latest_status"] = event.get("status")
+                    episode["latest_status_label"] = event.get(
+                        "status_label"
+                    )
+                    continue
+                active[signal_id] = {
+                    "episode_id": (
+                        f"{signal_id}_elevated_"
+                        + re.sub(
+                            r"[^a-zA-Z0-9]+",
+                            "_",
+                            str(event.get("timestamp") or ""),
+                        ).strip("_").lower()
+                    ),
+                    "signal_id": signal_id,
+                    "ticker": event.get("ticker"),
+                    "started_at": event.get("timestamp"),
+                    "started_review_priority": priority,
+                    "started_review_priority_label": event.get(
+                        "review_priority_label"
+                    ),
+                    "started_review_priority_score": event.get(
+                        "review_priority_score"
+                    ),
+                    "peak_review_priority": priority,
+                    "peak_review_priority_label": event.get(
+                        "review_priority_label"
+                    ),
+                    "peak_review_priority_score": event.get(
+                        "review_priority_score"
+                    ),
+                    "latest_review_priority": priority,
+                    "latest_review_priority_label": event.get(
+                        "review_priority_label"
+                    ),
+                    "latest_review_priority_score": event.get(
+                        "review_priority_score"
+                    ),
+                    "latest_status": event.get("status"),
+                    "latest_status_label": event.get("status_label"),
+                }
+                continue
+
+            episode = active.get(signal_id)
+            if episode is None:
+                continue
+            update_peak(episode, event)
+            episode["latest_review_priority"] = priority
+            episode["latest_review_priority_label"] = event.get(
+                "review_priority_label"
+            )
+            episode["latest_review_priority_score"] = event.get(
+                "review_priority_score"
+            )
+            episode["latest_status"] = event.get("status")
+            episode["latest_status_label"] = event.get("status_label")
+            status = str(event.get("status") or "")
+            if status == "completed_loss":
+                resolution, label = "completed_loss", "Closed with paper loss"
+            elif status == "completed_gain":
+                resolution, label = "completed_gain", "Closed with paper gain"
+            elif priority_rank.get(priority, -1) < priority_rank["monitor"]:
+                resolution, label = "deescalated", "De-escalated below elevated attention"
+            else:
+                continue
+            episodes.append(
+                finalize(
+                    active.pop(signal_id),
+                    event.get("timestamp"),
+                    resolution,
+                    label,
+                    False,
+                )
+            )
+
+        for episode in active.values():
+            episodes.append(
+                finalize(
+                    episode,
+                    latest_timestamp,
+                    "open",
+                    "Still elevated",
+                    True,
+                )
+            )
+        episodes.sort(
+            key=lambda episode: str(episode.get("started_at") or ""),
+            reverse=True,
+        )
+        open_episodes = [episode for episode in episodes if episode["open"]]
+        resolved_episodes = [
+            episode for episode in episodes if not episode["open"]
+        ]
+        resolved_durations = [
+            float(episode["duration_days"])
+            for episode in resolved_episodes
+            if episode.get("duration_days") is not None
+        ]
+        resolution_counts = {
+            "deescalated": 0,
+            "completed_loss": 0,
+            "completed_gain": 0,
+        }
+        for episode in resolved_episodes:
+            resolution = episode.get("resolution")
+            if resolution in resolution_counts:
+                resolution_counts[resolution] += 1
+        return {
+            "available": True,
+            "mode": "review_only",
+            "policy_changed": False,
+            "episode_count": len(episodes),
+            "open_episode_count": len(open_episodes),
+            "resolved_episode_count": len(resolved_episodes),
+            "average_resolved_duration_days": (
+                round(sum(resolved_durations) / len(resolved_durations), 1)
+                if resolved_durations
+                else None
+            ),
+            "resolution_counts": resolution_counts,
+            "episodes": episodes,
+            "detail": (
+                "Elevated episodes measure elapsed evidence only and cannot "
+                "place or alter a paper trade."
+            ),
+        }
+
+    @classmethod
     def prospective_defensive_review_tracker(cls, events):
         """Track review-only defensive signals recorded after study activation."""
         marker = next(
@@ -4265,6 +4473,25 @@ class PaperTradingAccount:
                 "priority_transition_count": 0,
                 "latest_priority_escalation_count": 0,
                 "latest_priority_escalations": [],
+                "escalation_episode_evidence": {
+                    "available": True,
+                    "mode": "review_only",
+                    "policy_changed": False,
+                    "episode_count": 0,
+                    "open_episode_count": 0,
+                    "resolved_episode_count": 0,
+                    "average_resolved_duration_days": None,
+                    "resolution_counts": {
+                        "deescalated": 0,
+                        "completed_loss": 0,
+                        "completed_gain": 0,
+                    },
+                    "episodes": [],
+                    "detail": (
+                        "Elevated episodes measure elapsed evidence only and "
+                        "cannot place or alter a paper trade."
+                    ),
+                },
                 "review_priority_mode": "evidence_only",
                 "review_priority_policy_changed": False,
                 "review_queue": [],
@@ -4865,6 +5092,12 @@ class PaperTradingAccount:
                 str(item.get("ticker") or ""),
             ),
         )
+        escalation_episode_evidence = (
+            cls.prospective_priority_escalation_episodes(
+                transitions,
+                snapshots,
+            )
+        )
         headline = (
             f"Atlas is following {len(signals)} prospective review signal"
             f"{'' if len(signals) == 1 else 's'}."
@@ -4892,6 +5125,7 @@ class PaperTradingAccount:
                 latest_priority_escalations
             ),
             "latest_priority_escalations": latest_priority_escalations,
+            "escalation_episode_evidence": escalation_episode_evidence,
             "review_priority_mode": "evidence_only",
             "review_priority_policy_changed": False,
             "review_queue": review_queue,

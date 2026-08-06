@@ -234,6 +234,41 @@ class WeeklySummaryGenerator:
             "this alert. Escalations remain review-only."
         )
 
+        episode_evidence = tracker.get(
+            "escalation_episode_evidence"
+        ) or {}
+        episodes = list(episode_evidence.get("episodes") or [])
+        lines.extend(["", "### Escalation Duration And Resolution\n"])
+        if episodes:
+            lines.extend(
+                [
+                    "| Ticker | State | Duration | Observations | Peak Priority |",
+                    "|--------|-------|----------|--------------|---------------|",
+                ]
+            )
+            for item in episodes[:8]:
+                duration = (
+                    f"{float(item.get('duration_days')):.1f} days"
+                    if item.get("duration_days") is not None
+                    else "N/A"
+                )
+                lines.append(
+                    f"| {item.get('ticker', 'N/A')} | "
+                    f"{item.get('resolution_label', 'Elevated episode')} | "
+                    f"{duration} | {int(item.get('snapshots_open') or 0)} | "
+                    f"{item.get('peak_review_priority_label', 'Elevated')} "
+                    f"({int(item.get('peak_review_priority_score') or 0)}/100) |"
+                )
+        else:
+            lines.append(
+                "No elevated warning episode has been recorded yet. The first "
+                "meaningful escalation will start the duration clock."
+            )
+        lines.append(
+            "\nEpisode duration is observational evidence and cannot trigger or "
+            "time a simulated sale."
+        )
+
         effectiveness = self.paper_account.prospective_review_effectiveness(
             tracker
         )

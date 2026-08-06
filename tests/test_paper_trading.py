@@ -2458,6 +2458,82 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(transitions[1]["review_priority"], "monitor")
         self.assertEqual(transitions[1]["priority_score_change"], 30)
 
+    def test_priority_escalation_episodes_measure_duration_peak_and_resolution(self):
+        snapshots = [
+            {"timestamp": f"2026-07-0{day}T10:00:00"}
+            for day in range(1, 8)
+        ]
+        transitions = [
+            {
+                "signal_id": "review_msft",
+                "ticker": "MSFT",
+                "timestamp": "2026-07-01T10:00:00",
+                "meaningful_priority_escalation": True,
+                "review_priority": "monitor",
+                "review_priority_label": "Monitor closely",
+                "review_priority_score": 65,
+                "status": "persistent_weakness",
+                "status_label": "Weakness persists",
+            },
+            {
+                "signal_id": "review_msft",
+                "ticker": "MSFT",
+                "timestamp": "2026-07-02T10:00:00",
+                "meaningful_priority_escalation": True,
+                "review_priority": "urgent",
+                "review_priority_label": "Review now",
+                "review_priority_score": 90,
+                "status": "persistent_weakness",
+                "status_label": "Weakness persists",
+            },
+            {
+                "signal_id": "review_msft",
+                "ticker": "MSFT",
+                "timestamp": "2026-07-04T10:00:00",
+                "priority_changed": True,
+                "review_priority": "watch",
+                "review_priority_label": "Watch",
+                "review_priority_score": 45,
+                "status": "recovered",
+                "status_label": "Recovered above trigger",
+            },
+            {
+                "signal_id": "review_msft",
+                "ticker": "MSFT",
+                "timestamp": "2026-07-05T10:00:00",
+                "meaningful_priority_escalation": True,
+                "review_priority": "monitor",
+                "review_priority_label": "Monitor closely",
+                "review_priority_score": 70,
+                "status": "persistent_weakness",
+                "status_label": "Weakness persists",
+            },
+        ]
+
+        evidence = PaperTradingAccount.prospective_priority_escalation_episodes(
+            transitions,
+            snapshots,
+        )
+
+        self.assertEqual(evidence["episode_count"], 2)
+        self.assertEqual(evidence["open_episode_count"], 1)
+        self.assertEqual(evidence["resolved_episode_count"], 1)
+        self.assertEqual(evidence["average_resolved_duration_days"], 3.0)
+        self.assertEqual(evidence["resolution_counts"]["deescalated"], 1)
+        by_start = {item["started_at"]: item for item in evidence["episodes"]}
+        resolved = by_start["2026-07-01T10:00:00"]
+        self.assertFalse(resolved["open"])
+        self.assertEqual(resolved["resolution"], "deescalated")
+        self.assertEqual(resolved["duration_days"], 3.0)
+        self.assertEqual(resolved["snapshots_open"], 4)
+        self.assertEqual(resolved["peak_review_priority"], "urgent")
+        self.assertEqual(resolved["peak_review_priority_score"], 90)
+        open_episode = by_start["2026-07-05T10:00:00"]
+        self.assertTrue(open_episode["open"])
+        self.assertEqual(open_episode["duration_days"], 2.0)
+        self.assertEqual(open_episode["snapshots_open"], 3)
+        self.assertFalse(evidence["policy_changed"])
+
     def test_prospective_review_effectiveness_requires_forward_sample(self):
         scorecard = (
             PaperTradingAccount.prospective_review_effectiveness(

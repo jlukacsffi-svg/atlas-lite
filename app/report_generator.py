@@ -1088,6 +1088,41 @@ class ReportGenerator:
             "this alert. Escalations remain review-only."
         )
 
+        episode_evidence = tracker.get(
+            "escalation_episode_evidence"
+        ) or {}
+        episodes = list(episode_evidence.get("episodes") or [])
+        section.extend(["", "### Escalation Duration And Resolution\n"])
+        if episodes:
+            section.extend(
+                [
+                    "| Ticker | State | Duration | Observations | Peak Priority |",
+                    "|--------|-------|----------|--------------|---------------|",
+                ]
+            )
+            for item in episodes[:8]:
+                duration = (
+                    f"{float(item.get('duration_days')):.1f} days"
+                    if item.get("duration_days") is not None
+                    else "N/A"
+                )
+                section.append(
+                    f"| {item.get('ticker', 'N/A')} | "
+                    f"{item.get('resolution_label', 'Elevated episode')} | "
+                    f"{duration} | {int(item.get('snapshots_open') or 0)} | "
+                    f"{item.get('peak_review_priority_label', 'Elevated')} "
+                    f"({int(item.get('peak_review_priority_score') or 0)}/100) |"
+                )
+        else:
+            section.append(
+                "No elevated warning episode has been recorded yet. The first "
+                "meaningful escalation will start the duration clock."
+            )
+        section.append(
+            "\nEpisode duration is observational evidence and cannot trigger or "
+            "time a simulated sale."
+        )
+
         transitions = list(tracker.get("recent_transitions") or [])
         if not transitions:
             section.append(

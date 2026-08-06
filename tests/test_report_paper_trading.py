@@ -105,6 +105,22 @@ class ReportPaperTradingTests(unittest.TestCase):
                             "review_priority_score": 100,
                         }
                     ],
+                    "escalation_episode_evidence": {
+                        "episode_count": 1,
+                        "open_episode_count": 0,
+                        "resolved_episode_count": 1,
+                        "average_resolved_duration_days": 2.0,
+                        "episodes": [
+                            {
+                                "ticker": "TSM",
+                                "resolution_label": "De-escalated below elevated attention",
+                                "duration_days": 2.0,
+                                "snapshots_open": 3,
+                                "peak_review_priority_label": "Review now",
+                                "peak_review_priority_score": 100,
+                            }
+                        ],
+                    },
                     "recent_transitions": [
                         {
                             "ticker": "TSM",
@@ -194,6 +210,12 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("### Priority Escalation Watch", section)
         self.assertIn("| TSM | Watch | Review now | 100/100 |", section)
         self.assertIn("Routine score drift", section)
+        self.assertIn("### Escalation Duration And Resolution", section)
+        self.assertIn(
+            "| TSM | De-escalated below elevated attention | 2.0 days | 3 | Review now (100/100) |",
+            section,
+        )
+        self.assertIn("cannot trigger or time a simulated sale", section)
         self.assertIn(
             "| TSM | Weakness persists | -4.25% | -5.75% | 3 |",
             section,

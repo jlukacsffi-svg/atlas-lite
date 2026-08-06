@@ -2061,6 +2061,13 @@ function renderPaperWorkspaceSummary(paper) {
   )
     ? prospectiveTracker.latest_priority_escalations
     : [];
+  const escalationEpisodeEvidence =
+    prospectiveTracker.escalation_episode_evidence || {};
+  const escalationEpisodes = Array.isArray(
+    escalationEpisodeEvidence.episodes
+  )
+    ? escalationEpisodeEvidence.episodes
+    : [];
   const prospectiveEffectiveness =
     validation.prospective_review_effectiveness || {};
   const effectivenessGates = Array.isArray(prospectiveEffectiveness.gates)
@@ -2288,6 +2295,24 @@ function renderPaperWorkspaceSummary(paper) {
             <small>Only upward crossings into Monitor closely or Review now appear here. Routine score drift is omitted.</small>
           </div>
           ${latestPriorityEscalations.length ? `<div class="paper-priority-escalation-list">${latestPriorityEscalations.map(item => `<span><b>${escapeHtml(item.ticker || "Holding")}</b> ${escapeHtml(item.previous_review_priority_label || "Prior level")} → ${escapeHtml(item.review_priority_label || "Elevated")} · ${Number(item.review_priority_score || 0)}/100</span>`).join("")}</div>` : `<span class="paper-priority-escalation-clear">Clear</span>`}
+        </div>
+        <div class="paper-escalation-duration">
+          <div class="paper-escalation-duration-heading">
+            <div>
+              <span>Elevated episode evidence</span>
+              <strong>${escalationEpisodes.length ? `${Number(escalationEpisodeEvidence.open_episode_count || 0)} open · ${Number(escalationEpisodeEvidence.resolved_episode_count || 0)} resolved` : "No elevated warning episodes recorded yet"}</strong>
+              <small>Tracks elapsed days, scheduled observations, peak priority, and resolution after a warning becomes elevated.</small>
+            </div>
+            <span>${escalationEpisodeEvidence.average_resolved_duration_days == null ? "Building history" : `${Number(escalationEpisodeEvidence.average_resolved_duration_days).toFixed(1)} day average resolution`}</span>
+          </div>
+          ${escalationEpisodes.length ? `<div class="paper-escalation-episode-list">${escalationEpisodes.slice(0, 4).map(item => `
+            <div class="paper-escalation-episode-row ${item.open ? "open" : escapeHtml(item.resolution || "resolved")}">
+              <div><b>${escapeHtml(item.ticker || "Holding")}</b><span>${escapeHtml(item.resolution_label || "Elevated episode")}</span></div>
+              <div><span>Duration</span><strong>${item.duration_days == null ? "--" : `${Number(item.duration_days).toFixed(1)} days`}</strong><small>${Number(item.snapshots_open || 0)} scheduled observation${Number(item.snapshots_open || 0) === 1 ? "" : "s"}</small></div>
+              <div><span>Peak priority</span><strong>${escapeHtml(item.peak_review_priority_label || "Elevated")}</strong><small>${Number(item.peak_review_priority_score || 0)}/100</small></div>
+            </div>
+          `).join("")}</div>` : `<small class="paper-escalation-duration-empty">The first meaningful move into Monitor closely or Review now will start this clock.</small>`}
+          <small class="paper-evidence-note">Episode duration is observational evidence. It cannot trigger or time a simulated sale.</small>
         </div>
         <div class="paper-prospective-list">
           ${prospectiveSignals.map(signal => `

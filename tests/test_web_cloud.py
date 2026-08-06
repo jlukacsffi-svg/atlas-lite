@@ -518,6 +518,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Why this priority";\n'
                 '"Priority escalation watch";\n'
                 '"Routine score drift";\n'
+                '"Elevated episode evidence";\n'
+                '"Episode duration is observational evidence";\n'
                 '"Review signal effectiveness";\n'
                 '"What happened after each warning";\n'
                 '"Benchmark-adjusted separation";\n'
@@ -578,6 +580,20 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "priority_transition_count": 0,
                                     "latest_priority_escalation_count": 0,
                                     "latest_priority_escalations": [],
+                                    "escalation_episode_evidence": {
+                                        "available": True,
+                                        "mode": "review_only",
+                                        "policy_changed": False,
+                                        "episode_count": 0,
+                                        "open_episode_count": 0,
+                                        "resolved_episode_count": 0,
+                                        "resolution_counts": {
+                                            "deescalated": 0,
+                                            "completed_loss": 0,
+                                            "completed_gain": 0,
+                                        },
+                                        "episodes": [],
+                                    },
                                     "counts": {"total": 0},
                                     "signals": [],
                                 },
@@ -721,6 +737,17 @@ class CloudWebApplicationTests(unittest.TestCase):
             response["json"]["checks"][
                 "prospective_review_priority_escalations"
             ]["latest_escalation_count"],
+            0,
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "prospective_review_escalation_outcomes"
+            ]["ok"]
+        )
+        self.assertEqual(
+            response["json"]["checks"][
+                "prospective_review_escalation_outcomes"
+            ]["episode_count"],
             0,
         )
         self.assertTrue(
