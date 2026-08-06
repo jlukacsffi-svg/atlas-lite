@@ -2080,6 +2080,19 @@ class PaperTradingAccountTests(unittest.TestCase):
             by_ticker["NVDA"]["best_post_trigger_move_pct"],
             0.0,
         )
+        self.assertEqual(by_ticker["NVDA"]["comparison_benchmark"], "SPY")
+        self.assertEqual(
+            by_ticker["NVDA"]["comparison_benchmark_move_pct"],
+            1.9802,
+        )
+        self.assertEqual(
+            by_ticker["NVDA"]["benchmark_relative_move_pct"],
+            -4.0421,
+        )
+        self.assertEqual(
+            by_ticker["NVDA"]["benchmark_attribution_label"],
+            "Lagged stronger benchmark",
+        )
         self.assertEqual(by_ticker["AMD"]["status"], "recovered")
         self.assertEqual(by_ticker["AMD"]["latest_return_pct"], -2.0)
         self.assertEqual(
@@ -2089,6 +2102,18 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(
             by_ticker["AMD"]["best_post_trigger_move_pct"],
             2.0619,
+        )
+        self.assertEqual(
+            by_ticker["AMD"]["benchmark_relative_move_pct"],
+            -0.9493,
+        )
+        self.assertEqual(
+            by_ticker["AMD"]["best_benchmark_relative_move_pct"],
+            1.0718,
+        )
+        self.assertEqual(
+            by_ticker["AMD"]["benchmark_attribution_label"],
+            "Moved near stronger benchmark",
         )
         self.assertEqual(tracker["transition_count"], 3)
         self.assertEqual(tracker["recent_transition_count"], 2)
@@ -2129,6 +2154,28 @@ class PaperTradingAccountTests(unittest.TestCase):
         )
         self.assertEqual(
             scorecard["outcome_comparison"]["outcome_separation_pct"],
+            3.09,
+        )
+        self.assertEqual(
+            outcomes["NVDA"]["benchmark_relative_move_pct"],
+            -4.0421,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "confirmed_avg_benchmark_relative_move_pct"
+            ],
+            -4.04,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "false_alarm_avg_benchmark_relative_move_pct"
+            ],
+            -0.95,
+        )
+        self.assertEqual(
+            scorecard["outcome_comparison"][
+                "benchmark_adjusted_separation_pct"
+            ],
             3.09,
         )
 
@@ -2193,6 +2240,11 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertIsNone(
             scorecard["outcome_comparison"][
                 "outcome_separation_pct"
+            ]
+        )
+        self.assertIsNone(
+            scorecard["outcome_comparison"][
+                "benchmark_adjusted_separation_pct"
             ]
         )
 

@@ -1077,6 +1077,11 @@ class ReportGenerator:
                     "- **Post-warning outcome separation**: "
                     f"{float(comparison['outcome_separation_pct']):+.2f} points"
                 )
+            if comparison.get("benchmark_adjusted_separation_pct") is not None:
+                section.append(
+                    "- **Benchmark-adjusted separation**: "
+                    f"{float(comparison['benchmark_adjusted_separation_pct']):+.2f} points"
+                )
             outcomes = list(effectiveness.get("outcomes") or [])
             if outcomes:
                 section.extend(
@@ -1095,9 +1100,33 @@ class ReportGenerator:
                         f"{self._format_optional_percent(outcome.get('best_post_trigger_move_pct'))} | "
                         f"{int(outcome.get('snapshots_observed') or 0)} |"
                     )
+                benchmark_outcomes = [
+                    outcome
+                    for outcome in outcomes
+                    if outcome.get("comparison_benchmark")
+                ]
+                if benchmark_outcomes:
+                    section.extend(
+                        [
+                            "",
+                            "#### Benchmark Attribution\n",
+                            "| Ticker | Stronger Benchmark | Benchmark Move | Relative Result | Interpretation |",
+                            "|--------|--------------------|----------------|-----------------|----------------|",
+                        ]
+                    )
+                    for outcome in benchmark_outcomes:
+                        section.append(
+                            f"| {outcome.get('ticker', 'N/A')} | "
+                            f"{outcome.get('comparison_benchmark', 'N/A')} | "
+                            f"{self._format_optional_percent(outcome.get('comparison_benchmark_move_pct'))} | "
+                            f"{self._format_optional_percent(outcome.get('benchmark_relative_move_pct'))} | "
+                            f"{outcome.get('benchmark_attribution_label', 'Benchmark context available')} |"
+                        )
             section.append(
                 "\nPost-warning paths are observed evidence, not hypothetical fills. "
-                "The scorecard cannot change policy or execute a sale."
+                "Benchmark attribution compares the same period and does not "
+                "claim causation. The scorecard cannot change policy or "
+                "execute a sale."
             )
         return "\n".join(section) + "\n"
 

@@ -2341,9 +2341,9 @@ function renderPaperWorkspaceSummary(paper) {
                 <small>average move since warning</small>
               </div>
               <div>
-                <span>Signal separation</span>
-                <strong>${effectivenessComparison.outcome_separation_pct == null ? "--" : `${Number(effectivenessComparison.outcome_separation_pct).toFixed(2)} pts`}</strong>
-                <small>recovery outcome minus confirmed weakness</small>
+                <span>Benchmark-adjusted separation</span>
+                <strong>${effectivenessComparison.benchmark_adjusted_separation_pct == null ? "--" : `${Number(effectivenessComparison.benchmark_adjusted_separation_pct).toFixed(2)} pts`}</strong>
+                <small>separation after the stronger SPY or QQQ move</small>
               </div>
             </div>
             <div class="paper-signal-outcomes">
@@ -2352,17 +2352,20 @@ function renderPaperWorkspaceSummary(paper) {
                   <div>
                     <b>${escapeHtml(outcome.ticker || "Holding")}</b>
                     <span>${escapeHtml(outcome.classification_label || outcome.status_label || "Review outcome")}</span>
+                    <small>${escapeHtml(outcome.benchmark_attribution_label || "Benchmark context unavailable")}</small>
                   </div>
                   <dl>
                     <div><dt>Since warning</dt><dd class="${changeClass(Number(outcome.post_trigger_move_pct || 0))}">${signed(outcome.post_trigger_move_pct)}</dd></div>
                     <div><dt>Worst after</dt><dd class="${changeClass(Number(outcome.worst_post_trigger_move_pct || 0))}">${signed(outcome.worst_post_trigger_move_pct)}</dd></div>
                     <div><dt>Best recovery</dt><dd class="${changeClass(Number(outcome.best_post_trigger_move_pct || 0))}">${signed(outcome.best_post_trigger_move_pct)}</dd></div>
+                    <div><dt>Stronger benchmark</dt><dd>${escapeHtml(outcome.comparison_benchmark || "--")} ${signed(outcome.comparison_benchmark_move_pct)}</dd></div>
+                    <div><dt>Vs benchmark</dt><dd class="${changeClass(Number(outcome.benchmark_relative_move_pct || 0))}">${signed(outcome.benchmark_relative_move_pct)}</dd></div>
                     <div><dt>Observed</dt><dd>${Number(outcome.snapshots_observed || 0)} snapshots</dd></div>
                   </dl>
                 </article>
               `).join("")}
             </div>
-            <small class="paper-signal-disclosure">These are observed price paths after a review signal, not hypothetical fill results. They measure warning quality and cannot execute a sale.</small>
+            <small class="paper-signal-disclosure">These are observed price paths after a review signal, not hypothetical fill results. Benchmark context uses the stronger SPY or QQQ move over the same period; it does not claim the benchmark caused the stock move. This evidence cannot execute a sale.</small>
           </div>
         ` : ""}
         <div class="paper-effectiveness-gates">

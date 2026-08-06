@@ -112,6 +112,7 @@ class ReportPaperTradingTests(unittest.TestCase):
                     "evidence_progress_pct": 20.0,
                     "outcome_comparison": {
                         "outcome_separation_pct": 12.5,
+                        "benchmark_adjusted_separation_pct": 8.25,
                     },
                     "outcomes": [
                         {
@@ -120,6 +121,10 @@ class ReportPaperTradingTests(unittest.TestCase):
                             "post_trigger_move_pct": -3.5,
                             "worst_post_trigger_move_pct": -4.0,
                             "best_post_trigger_move_pct": 0.0,
+                            "comparison_benchmark": "SPY",
+                            "comparison_benchmark_move_pct": 2.0,
+                            "benchmark_relative_move_pct": -5.5,
+                            "benchmark_attribution_label": "Lagged stronger benchmark",
                             "snapshots_observed": 3,
                         },
                         {
@@ -128,6 +133,10 @@ class ReportPaperTradingTests(unittest.TestCase):
                             "post_trigger_move_pct": 9.0,
                             "worst_post_trigger_move_pct": 0.0,
                             "best_post_trigger_move_pct": 10.0,
+                            "comparison_benchmark": "QQQ",
+                            "comparison_benchmark_move_pct": 4.0,
+                            "benchmark_relative_move_pct": 5.0,
+                            "benchmark_attribution_label": "Outpaced stronger benchmark",
                             "snapshots_observed": 4,
                         },
                     ],
@@ -150,6 +159,7 @@ class ReportPaperTradingTests(unittest.TestCase):
         self.assertIn("only the latest state", section)
         self.assertIn("### Forward Study Scorecard", section)
         self.assertIn("**Post-warning outcome separation**: +12.50 points", section)
+        self.assertIn("**Benchmark-adjusted separation**: +8.25 points", section)
         self.assertIn(
             "| TSM | Warning confirmed | -3.50% | -4.00% | +0.00% | 3 |",
             section,
@@ -158,6 +168,16 @@ class ReportPaperTradingTests(unittest.TestCase):
             "| AMD | Recovery / false alarm | +9.00% | +0.00% | +10.00% | 4 |",
             section,
         )
+        self.assertIn("#### Benchmark Attribution", section)
+        self.assertIn(
+            "| TSM | SPY | +2.00% | -5.50% | Lagged stronger benchmark |",
+            section,
+        )
+        self.assertIn(
+            "| AMD | QQQ | +4.00% | +5.00% | Outpaced stronger benchmark |",
+            section,
+        )
+        self.assertIn("does not claim causation", section)
         self.assertIn("not hypothetical fills", section)
 
     def test_defensive_review_section_explains_forward_start(self):

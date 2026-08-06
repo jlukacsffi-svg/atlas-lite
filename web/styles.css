@@ -1628,9 +1628,15 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .paper-signal-outcome > div:first-child { display: grid; gap: 3px; }
 .paper-signal-outcome b { font-size: 12px; }
 .paper-signal-outcome > div > span { color: var(--muted); font-size: 9px; }
+.paper-signal-outcome > div > small {
+  color: #526875;
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
 .paper-signal-outcome dl {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
 }

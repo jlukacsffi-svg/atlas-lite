@@ -516,6 +516,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Prospective review tracker";\n'
                 '"Review signal effectiveness";\n'
                 '"What happened after each warning";\n'
+                '"Benchmark-adjusted separation";\n'
+                '"Stronger benchmark";\n'
                 '"Paper evidence updates";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
@@ -568,6 +570,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "completed_outcomes": 0,
                                     "outcome_comparison": {
                                         "outcome_separation_pct": None,
+                                        "benchmark_adjusted_separation_pct": None,
                                     },
                                     "outcomes": [],
                                     "gates": [
@@ -688,6 +691,16 @@ class CloudWebApplicationTests(unittest.TestCase):
                 "prospective_review_outcome_paths"
             ]["outcome_count"],
             0,
+        )
+        self.assertTrue(
+            response["json"]["checks"][
+                "prospective_review_benchmark_attribution"
+            ]["ok"]
+        )
+        self.assertIsNone(
+            response["json"]["checks"][
+                "prospective_review_benchmark_attribution"
+            ]["benchmark_adjusted_separation_pct"]
         )
         self.assertTrue(
             response["json"]["checks"][

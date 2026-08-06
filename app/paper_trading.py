@@ -4282,23 +4282,30 @@ class PaperTradingAccount:
                     entry_price,
                     security_price,
                 )
+                snapshot_benchmark_prices = {}
                 benchmark_returns = []
                 for benchmark in ("SPY", "QQQ"):
+                    benchmark_price = (
+                        snapshot.get("benchmark_prices") or {}
+                    ).get(benchmark)
                     benchmark_return = cls._pct_return(
                         (baseline.get("benchmark_prices") or {}).get(
                             benchmark
                         ),
-                        (snapshot.get("benchmark_prices") or {}).get(
-                            benchmark
-                        ),
+                        benchmark_price,
                     )
                     if benchmark_return is not None:
                         benchmark_returns.append(benchmark_return)
+                    if benchmark_price is not None:
+                        snapshot_benchmark_prices[benchmark] = float(
+                            benchmark_price
+                        )
                 if security_return is None or not benchmark_returns:
                     return None
                 return {
                     "timestamp": snapshot.get("timestamp"),
                     "price": security_price,
+                    "benchmark_prices": snapshot_benchmark_prices,
                     "return_pct": round(security_return, 4),
                     "lag_pct": round(
                         security_return - max(benchmark_returns),
@@ -4338,6 +4345,66 @@ class PaperTradingAccount:
                 for value in post_trigger_moves
                 if value is not None
             ]
+            benchmark_relative_observations = []
+            for value in after_trigger:
+                benchmark_moves = {}
+                for benchmark in ("SPY", "QQQ"):
+                    benchmark_move = cls._pct_return(
+                        (trigger.get("benchmark_prices") or {}).get(
+                            benchmark
+                        ),
+                        (value.get("benchmark_prices") or {}).get(
+                            benchmark
+                        ),
+                    )
+                    if benchmark_move is not None:
+                        benchmark_moves[benchmark] = round(
+                            benchmark_move,
+                            4,
+                        )
+                security_move = cls._pct_return(
+                    trigger["price"],
+                    value["price"],
+                )
+                if security_move is None or not benchmark_moves:
+                    continue
+                comparison_benchmark = max(
+                    benchmark_moves,
+                    key=benchmark_moves.get,
+                )
+                comparison_move = benchmark_moves[comparison_benchmark]
+                benchmark_relative_observations.append(
+                    {
+                        "timestamp": value.get("timestamp"),
+                        "benchmark_returns_pct": benchmark_moves,
+                        "comparison_benchmark": comparison_benchmark,
+                        "comparison_benchmark_move_pct": comparison_move,
+                        "benchmark_relative_move_pct": round(
+                            security_move - comparison_move,
+                            4,
+                        ),
+                    }
+                )
+            latest_benchmark_relative = (
+                benchmark_relative_observations[-1]
+                if benchmark_relative_observations
+                else {}
+            )
+            benchmark_relative_moves = [
+                value["benchmark_relative_move_pct"]
+                for value in benchmark_relative_observations
+            ]
+            latest_relative_move = latest_benchmark_relative.get(
+                "benchmark_relative_move_pct"
+            )
+            if latest_relative_move is None:
+                benchmark_attribution_label = "Benchmark comparison unavailable"
+            elif latest_relative_move <= -2.0:
+                benchmark_attribution_label = "Lagged stronger benchmark"
+            elif latest_relative_move >= 2.0:
+                benchmark_attribution_label = "Outpaced stronger benchmark"
+            else:
+                benchmark_attribution_label = "Moved near stronger benchmark"
             recovered = any(
                 value["timestamp"] != trigger["timestamp"]
                 and value["price"] > trigger["price"]
@@ -4390,6 +4457,34 @@ class PaperTradingAccount:
                         max(post_trigger_moves)
                         if post_trigger_moves
                         else None
+                    ),
+                    "post_trigger_benchmark_returns_pct": (
+                        latest_benchmark_relative.get(
+                            "benchmark_returns_pct"
+                        )
+                        or {}
+                    ),
+                    "comparison_benchmark": latest_benchmark_relative.get(
+                        "comparison_benchmark"
+                    ),
+                    "comparison_benchmark_move_pct": (
+                        latest_benchmark_relative.get(
+                            "comparison_benchmark_move_pct"
+                        )
+                    ),
+                    "benchmark_relative_move_pct": latest_relative_move,
+                    "worst_benchmark_relative_move_pct": (
+                        min(benchmark_relative_moves)
+                        if benchmark_relative_moves
+                        else None
+                    ),
+                    "best_benchmark_relative_move_pct": (
+                        max(benchmark_relative_moves)
+                        if benchmark_relative_moves
+                        else None
+                    ),
+                    "benchmark_attribution_label": (
+                        benchmark_attribution_label
                     ),
                     "snapshots_observed": len(after_trigger),
                     "realized_gain_loss": (
@@ -4563,6 +4658,24 @@ class PaperTradingAccount:
                     "best_post_trigger_move_pct": signal.get(
                         "best_post_trigger_move_pct"
                     ),
+                    "comparison_benchmark": signal.get(
+                        "comparison_benchmark"
+                    ),
+                    "comparison_benchmark_move_pct": signal.get(
+                        "comparison_benchmark_move_pct"
+                    ),
+                    "benchmark_relative_move_pct": signal.get(
+                        "benchmark_relative_move_pct"
+                    ),
+                    "worst_benchmark_relative_move_pct": signal.get(
+                        "worst_benchmark_relative_move_pct"
+                    ),
+                    "best_benchmark_relative_move_pct": signal.get(
+                        "best_benchmark_relative_move_pct"
+                    ),
+                    "benchmark_attribution_label": signal.get(
+                        "benchmark_attribution_label"
+                    ),
                     "snapshots_observed": int(
                         signal.get("snapshots_observed") or 0
                     ),
@@ -4601,6 +4714,24 @@ class PaperTradingAccount:
             and false_alarm_avg_move is not None
             else None
         )
+        confirmed_avg_relative_move = average_metric(
+            confirmed_rows,
+            "benchmark_relative_move_pct",
+        )
+        false_alarm_avg_relative_move = average_metric(
+            false_alarm_rows,
+            "benchmark_relative_move_pct",
+        )
+        benchmark_adjusted_separation = (
+            round(
+                false_alarm_avg_relative_move
+                - confirmed_avg_relative_move,
+                2,
+            )
+            if confirmed_avg_relative_move is not None
+            and false_alarm_avg_relative_move is not None
+            else None
+        )
         outcome_comparison = {
             "confirmed_avg_post_trigger_move_pct": confirmed_avg_move,
             "confirmed_avg_worst_post_trigger_move_pct": average_metric(
@@ -4613,6 +4744,15 @@ class PaperTradingAccount:
                 "best_post_trigger_move_pct",
             ),
             "outcome_separation_pct": outcome_separation,
+            "confirmed_avg_benchmark_relative_move_pct": (
+                confirmed_avg_relative_move
+            ),
+            "false_alarm_avg_benchmark_relative_move_pct": (
+                false_alarm_avg_relative_move
+            ),
+            "benchmark_adjusted_separation_pct": (
+                benchmark_adjusted_separation
+            ),
         }
         minimum_resolved = 10
         minimum_completed = 5

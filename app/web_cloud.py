@@ -655,6 +655,34 @@ class AtlasCloudApplication:
                         or {}
                     ).get("outcome_separation_pct"),
                 },
+                "prospective_review_benchmark_attribution": {
+                    "ok": "benchmark_adjusted_separation_pct"
+                    in (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    )
+                    and prospective_review_effectiveness.get(
+                        "policy_changed"
+                    )
+                    is False
+                    and self._ui_contains(
+                        "Benchmark-adjusted separation"
+                    )
+                    and self._ui_contains("Stronger benchmark"),
+                    "detail": (
+                        "Dashboard attributes post-warning outcomes against "
+                        "the stronger SPY or QQQ move over the same period "
+                        "without claiming causation or changing policy."
+                    ),
+                    "benchmark_adjusted_separation_pct": (
+                        prospective_review_effectiveness.get(
+                            "outcome_comparison"
+                        )
+                        or {}
+                    ).get("benchmark_adjusted_separation_pct"),
+                },
                 "owner_review_transition_digest": {
                     "ok": "recent_transitions" in prospective_review_tracker
                     and "recent_transition_count"
