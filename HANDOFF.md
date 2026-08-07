@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-08-05
+Last updated: 2026-08-07
 
 ## Current Roadmap Position
 
@@ -60,6 +60,25 @@ identity checks still open before final sign-off:
 - Non-owner Google account denial
 
 Most recent Stage 5 refinement:
+
+- The owner workspace is simplified on Cloud Run revision
+  `atlas-dashboard-stg-00169-6mm`. The dashboard, daily job, and weekly job use
+  image `20260807-simplified-workspace`, digest
+  `sha256:07fb701ecb1fae0c1fa72fd9388ae1908802bc9c7cd999408382c4a842a40928`.
+  All 434 local tests, 26 staging checks, and 24 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- The default owner path is now Today, Ideas, Portfolio, and Reports. Less-used
+  strategy settings, development evidence, security, and product background
+  are under More.
+- Today focuses on the current recommendation, portfolio result, important
+  attention items, performance, and three action summaries. Portfolio opens
+  with value, return, cash, positions, attention, and recent activity.
+- Reports shows six recent items by default. Supporting research and advanced
+  Stage 5 evidence remain available through clearly labeled detail controls.
+- Next development focus: observe the simplified daily workflow while forward
+  paper evidence accumulates, then build the elevated-warning outcome
+  scorecard after enough episodes resolve.
 
 - Escalation duration and resolution evidence is live on Cloud Run revision
   `atlas-dashboard-stg-00168-x5s`. The dashboard, daily job, and weekly job use

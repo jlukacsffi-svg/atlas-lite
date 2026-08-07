@@ -3,6 +3,42 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 7, 2026 - Owner workspace is simplified around daily decisions
+
+New capabilities:
+
+- Open Atlas on a focused Today page that answers what matters now, what Atlas
+  recommends, and how the paper portfolio is doing.
+- Move directly among four primary workflows: Today, Ideas, Portfolio, and
+  Reports. Strategy settings, development evidence, security, and product
+  background remain available under More.
+- Review buy ideas, sell or trim ideas, current positions, and recent paper
+  activity before opening optional diagnostics.
+- See the six most recent reports by default and expand the full archive only
+  when needed.
+- Keep Stage 5 validation, research evidence, paper controls, and portfolio
+  diagnostics in progressive-disclosure sections instead of the daily path.
+
+Validated result:
+
+- The full local suite passes with 434 tests.
+- Desktop and 390-pixel mobile layouts pass visual review without overlap or
+  browser warnings.
+- Cloud Run revision `atlas-dashboard-stg-00169-6mm`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260807-simplified-workspace`.
+- The deployed image digest is
+  `sha256:07fb701ecb1fae0c1fa72fd9388ae1908802bc9c7cd999408382c4a842a40928`.
+- All 26 staging readiness checks and all 24 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules remain enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Interface simplification does not change paper-trading policy or grant real
+  trading authority.
+- Cross-device owner login and non-owner denial remain manual identity checks.
+- Overall program completion remains estimated at 85%.
+
 ## August 5, 2026 - Elevated warning duration and resolutions are measured
 
 New capabilities:

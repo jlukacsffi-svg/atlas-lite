@@ -21,10 +21,16 @@ Complete at the first decision-command-center level.
 
 Atlas now:
 
-- Opens with one readiness signal, one recommended next step, and a compact
-  paper-portfolio summary.
-- Separates recommendations into action queue, buy ideas, risk actions, and
-  the broader research list.
+- Opens on a focused Today page with the current recommendation, portfolio
+  result, attention items, and the most important next actions.
+- Uses four primary workflows: Today, Ideas, Portfolio, and Reports. Less-used
+  strategy, development, security, and product context lives under More.
+- Separates ideas into needs attention, buy, sell or trim, and all tracked
+  stocks.
+- Shows concise portfolio value, return, cash, positions, and recent activity
+  before optional paper-learning evidence and controls.
+- Shows six recent reports by default while keeping the full archive and
+  supporting research available on demand.
 - Explains each Atlas Score through Growth, Quality, Moat, Momentum, and Risk
   drivers, plus the company thesis, primary driver, and key risk.
 - Groups navigation around Decide, Understand, and Manage workflows.
@@ -37,6 +43,8 @@ Atlas now:
 - Measures each elevated warning episode from first meaningful escalation
   through de-escalation or paper-position completion, including elapsed days,
   scheduled observations, peak priority, and resolution.
+- Preserves every protected Stage 5 evidence surface through progressive
+  disclosure while keeping the daily owner path concise.
 
 Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
 the active investment-capability gate.
