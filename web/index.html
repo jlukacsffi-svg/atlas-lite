@@ -4,12 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-    <link rel="stylesheet" href="/styles.css?v=20260805-escalation-outcomes">
+    <link rel="stylesheet" href="/styles.css?v=20260807-simplified-workspace">
 </head>
 <body>
   <div class="app-shell">
     <aside class="sidebar">
-      <a class="brand" href="#about" aria-label="Open Atlas summary page">
+      <a class="brand" href="#overview" aria-label="Open Atlas today page">
         <span class="brand-mark" aria-hidden="true">
           <svg class="atlas-logo" viewBox="0 0 64 64" role="img" aria-label="Atlas logo">
             <defs>
@@ -27,16 +27,17 @@
         <span><strong>Atlas</strong><small>Capital Research</small></span>
       </a>
       <nav aria-label="Primary navigation">
-        <span class="nav-group-label">Decide</span>
-        <a class="nav-item active" href="#overview">Overview</a>
-        <a class="nav-item" href="#recommendations">Recommendations</a>
+        <a class="nav-item active" href="#overview">Today</a>
+        <a class="nav-item" href="#recommendations">Ideas</a>
         <a class="nav-item" href="#paper">Portfolio</a>
-        <span class="nav-group-label">Understand</span>
-        <a class="nav-item" href="#research">Research</a>
-        <a class="nav-item" href="#roadmap">Roadmap</a>
-        <span class="nav-group-label">Manage</span>
-        <a class="nav-item" href="#controls">Controls</a>
-        <a class="nav-item" href="#access">Access</a>
+        <a class="nav-item" href="#research">Reports</a>
+        <details class="nav-more">
+          <summary>More</summary>
+          <a class="nav-item" href="#controls">Strategy settings</a>
+          <a class="nav-item" href="#roadmap">Development</a>
+          <a class="nav-item" href="#access">Security</a>
+          <a class="nav-item" href="#about">About Atlas</a>
+        </details>
       </nav>
       <div class="sidebar-status">
         <span class="status-dot"></span>
@@ -48,12 +49,12 @@
     <main>
       <header class="topbar">
         <div>
-          <p id="page-eyebrow" class="eyebrow">Owner workspace</p>
+          <p id="page-eyebrow" class="eyebrow">Daily decision view</p>
           <div class="title-with-help">
-            <h1 id="page-title">Executive dashboard</h1>
+            <h1 id="page-title">Today</h1>
             <details class="info-popover">
               <summary aria-label="About the executive dashboard">?</summary>
-              <p id="page-description">This owner-only dashboard summarizes Atlas research, market coverage, simulated paper performance, research tasks, and decision controls. It is for research and simulation only.</p>
+              <p id="page-description">See what Atlas recommends now, how the simulated portfolio is performing, and what needs attention.</p>
             </details>
           </div>
           <div id="workspace-identity" class="workspace-identity" hidden>
@@ -149,16 +150,16 @@
       <section class="owner-briefing" aria-labelledby="owner-briefing-title">
         <div class="owner-briefing-heading">
           <div>
-            <p class="eyebrow">Decision command center</p>
-            <h2 id="owner-briefing-title">Atlas today</h2>
-            <p class="section-intro">One readiness signal, one recommended next step, and the paper portfolio context behind it.</p>
+            <p class="eyebrow">Daily brief</p>
+            <h2 id="owner-briefing-title">What matters now</h2>
+            <p class="section-intro">The current action, portfolio result, and most important item to watch.</p>
           </div>
           <span class="tag">Paper simulation only</span>
         </div>
         <div id="owner-briefing-grid" class="owner-briefing-grid">
           <div class="owner-command-loading">
-            <strong>Building today&rsquo;s decision view...</strong>
-            <small>Atlas is loading readiness, recommendations, and paper results.</small>
+            <strong>Preparing today&rsquo;s view...</strong>
+            <small>Atlas is loading the latest decision and portfolio result.</small>
           </div>
         </div>
         <div id="owner-report-status" class="owner-report-status">
@@ -169,9 +170,9 @@
         </div>
         <div id="owner-signal-digest" class="owner-signal-digest" hidden></div>
         <nav class="owner-briefing-actions" aria-label="Owner briefing shortcuts">
-          <a class="briefing-link primary" href="#recommendations">Open recommendations</a>
-          <a id="owner-latest-report-link" class="briefing-link" href="#research">Open latest report</a>
-          <a class="briefing-link" href="#paper">Review portfolio</a>
+          <a class="briefing-link primary" href="#recommendations">Review ideas</a>
+          <a class="briefing-link" href="#paper">Open portfolio</a>
+          <a id="owner-latest-report-link" class="briefing-link" href="#research">Latest report</a>
         </nav>
       </section>
       <section id="market-data-warning" class="market-data-warning" role="status" hidden>
@@ -179,31 +180,15 @@
           <strong>Daily movement evidence is limited</strong>
           <p id="market-data-warning-detail">Atlas is waiting for a valid prior-close comparison.</p>
         </div>
-        <a href="#research">Review data quality</a>
+        <a href="#research">Open report</a>
       </section>
-      <div class="kpi-grid" aria-label="Market overview">
-        <article class="kpi">
-          <span>Simulated equity <details class="info-popover inline-help"><summary aria-label="About simulated equity">?</summary><p>The current value of the Atlas paper portfolio. This is simulated money only, not a brokerage account.</p></details></span>
-          <strong id="equity">--</strong>
-          <small id="return">Paper account</small>
-        </article>
-        <article class="kpi">
-          <span>Cash reserve <details class="info-popover inline-help"><summary aria-label="About cash reserve">?</summary><p>Unused simulated cash remaining in the paper account. Atlas uses this to check whether paper proposals would leave enough reserve.</p></details></span>
-          <strong id="cash">--</strong>
-          <small id="cash-share">Available capital</small>
-        </article>
-        <article class="kpi">
-          <span>Coverage <details class="info-popover inline-help"><summary aria-label="About coverage">?</summary><p>The number of securities with usable market data compared with the full Atlas universe for the latest run.</p></details></span>
-          <strong id="coverage">--</strong>
-          <small id="breadth">Market breadth</small>
-        </article>
-        <article class="kpi">
-          <span>Research queue <details class="info-popover inline-help"><summary aria-label="About research queue">?</summary><p>Open Atlas research assignments that still need analysis, monitoring, or owner review.</p></details></span>
-          <strong id="research-count">--</strong>
-          <small id="research-detail">Open assignments</small>
-        </article>
+      <div class="dashboard-data-hooks" hidden aria-hidden="true">
+        <span id="equity"></span><span id="return"></span><span id="cash"></span><span id="cash-share"></span>
+        <span id="coverage"></span><span id="breadth"></span><span id="research-count"></span><span id="research-detail"></span>
+        <span id="breadth-center"></span><span id="advancing"></span><span id="declining"></span>
+        <div id="breadth-donut"></div><div id="overview-current-list"></div><div id="overview-validation-summary"></div>
       </div>
-      <section class="content-grid">
+      <section class="content-grid overview-performance-grid">
         <article class="panel performance-panel">
           <div class="panel-heading">
             <div>
@@ -229,29 +214,8 @@
           <p class="legend-note">SPY tracks the S&amp;P 500 as a broad U.S. large-cap benchmark. QQQ tracks the Nasdaq-100 and is commonly used as a growth and technology benchmark.</p>
         </article>
 
-        <article class="panel breadth-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Market breadth</p>
-              <div class="title-with-help">
-                <h2>Advancing versus declining</h2>
-                <details class="info-popover">
-                  <summary aria-label="About market breadth">?</summary>
-                  <p>Shows how many tracked securities are up versus down in the latest market snapshot. Broad participation can matter more than one large mover.</p>
-                </details>
-              </div>
-            </div>
-          </div>
-          <div class="donut-wrap">
-            <div id="breadth-donut" class="donut"><span id="breadth-center">--</span></div>
-            <div class="breadth-stats">
-              <div><span class="swatch positive"></span><strong id="advancing">--</strong><small>Advancing</small></div>
-              <div><span class="swatch negative"></span><strong id="declining">--</strong><small>Declining</small></div>
-            </div>
-          </div>
-        </article>
       </section>
-      <section class="content-grid lower-grid">
+      <section class="content-grid overview-action-grid">
         <article class="panel recommendation-panel">
           <div class="panel-heading">
             <div>
@@ -282,67 +246,30 @@
           </div>
           <div id="portfolio-focus" class="portfolio-focus"></div>
         </article>
-        <article class="panel current-list-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Current Atlas list</p>
-              <h2>Tracked securities</h2>
-            </div>
-            <a class="section-link" href="#recommendations">View all</a>
-          </div>
-          <div id="overview-current-list" class="watchlist-grid"></div>
-        </article>
-        <article class="panel validation-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Original roadmap focus</p>
-              <div class="title-with-help">
-                <h2>Stage 5 validation scoreboard</h2>
-                <details class="info-popover">
-                  <summary aria-label="About Stage 5 validation">?</summary>
-                  <p>Stage 5 is the paper-trading validation phase. Atlas is trying to prove decision quality through benchmark-relative returns, judged trade outcomes, exit discipline, and a complete audit trail before any future real-trading discussion.</p>
-                </details>
-              </div>
-            </div>
-            <span class="tag">Paper proof</span>
-          </div>
-          <div id="overview-validation-summary" class="feedback-summary"></div>
-        </article>
-        <article class="panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Owner workflow</p>
-              <h2>How simulation works</h2>
-            </div>
-          </div>
-          <div class="explain-box">
-            <b>Approve</b> accepts the research idea for simulation review. <b>Simulate fill</b> records the approved idea inside the paper portfolio at the latest available price. It never sends a brokerage order.
-          </div>
-        </article>
       </section>
       </section>
 
       <section id="recommendations" class="dashboard-page" data-page="recommendations">
         <div class="recommendation-view-switcher" role="group" aria-label="Recommendation page view">
-          <button class="recommendation-view-button active" type="button" data-recommendation-view="actions">Action queue</button>
-          <button class="recommendation-view-button" type="button" data-recommendation-view="buys">Buy ideas</button>
-          <button class="recommendation-view-button" type="button" data-recommendation-view="exits">Risk actions</button>
-          <button class="recommendation-view-button" type="button" data-recommendation-view="universe">Research list</button>
+          <button class="recommendation-view-button active" type="button" data-recommendation-view="actions">Needs attention</button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="buys">Buy</button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="exits">Sell or trim</button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="universe">All tracked stocks</button>
         </div>
         <section class="content-grid">
           <article class="panel recommendation-summary-panel decision-desk-panel" data-recommendation-section="actions">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Decision framing</p>
+                <p class="eyebrow">Current decisions</p>
                 <div class="title-with-help">
-                  <h2>Recommendation queue</h2>
+                  <h2>What needs attention</h2>
                   <details class="info-popover">
                     <summary aria-label="About recommendation queue">?</summary>
                     <p>This section separates Atlas ideas into what is still under review, what is already approved and ready for simulated fill, and what is being tracked without an active purchase recommendation.</p>
                   </details>
                 </div>
               </div>
-              <span class="tag">Owner workflow</span>
+              <span class="tag">Paper only</span>
             </div>
             <div id="paper-entry-evidence" class="entry-evidence-gate" role="status"></div>
             <div id="recommendation-summary" class="recommendation-summary"></div>
@@ -350,9 +277,9 @@
           <article class="panel recommendation-panel" data-recommendation-section="buys">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Actionable simulation ideas</p>
+                <p class="eyebrow">Atlas buy ideas</p>
                 <div class="title-with-help">
-                  <h2>Recommended for purchase</h2>
+                  <h2>Buy recommendations</h2>
                   <details class="info-popover">
                     <summary aria-label="About purchase recommendations">?</summary>
                     <p>These are Atlas paper-trade proposals awaiting your decision or an approved simulation fill. They are not real-money trade orders.</p>
@@ -366,9 +293,9 @@
           <article class="panel exit-panel" data-recommendation-section="exits">
             <div class="panel-heading">
               <div>
-                <p class="eyebrow">Position risk review</p>
+                <p class="eyebrow">Portfolio changes</p>
                 <div class="title-with-help">
-                  <h2>Recommended for exit / trim</h2>
+                  <h2>Sell or trim recommendations</h2>
                   <details class="info-popover">
                     <summary aria-label="About exit and trim recommendations">?</summary>
                     <p>These are Atlas paper-trade sell proposals created when an open simulated position weakens. They reduce or close simulated holdings only and are not real-money sell orders.</p>
@@ -443,6 +370,7 @@
           <span id="report-result-count">Loading reports...</span>
         </div>
         <div id="report-archive" class="report-archive-list"></div>
+        <button id="report-archive-toggle" class="secondary-button report-archive-toggle" type="button" hidden>Show all reports</button>
       </section>
       <section class="content-grid lower-grid">
         <article id="research-priorities-panel" class="panel research-summary-panel">
@@ -461,6 +389,12 @@
           </div>
           <div id="research-workspace-summary" class="research-workspace-summary"></div>
         </article>
+        <details class="research-more">
+          <summary>
+            <span><b>Supporting research data</b><small>Scores, movers, sectors, corporate actions, and assignments</small></span>
+            <strong>Optional</strong>
+          </summary>
+          <div class="research-more-content">
         <article id="research-scores-panel" class="panel research-detail-panel">
           <div class="panel-heading">
             <div>
@@ -557,6 +491,8 @@
             <div id="tasks" class="task-list"></div>
           </details>
         </article>
+          </div>
+        </details>
       </section>
       </section>
 
@@ -578,6 +514,12 @@
           </div>
           <div id="paper-workspace-summary" class="paper-workspace-summary"></div>
         </article>
+        <details class="portfolio-more">
+          <summary>
+            <span><b>More portfolio analysis</b><small>Thesis status and the full action ladder</small></span>
+            <strong>Optional</strong>
+          </summary>
+          <div class="portfolio-more-content">
         <article class="panel thesis-overview-panel">
           <div class="panel-heading">
             <div>
@@ -616,6 +558,8 @@
             <div id="position-ladder" class="position-ladder"></div>
           </details>
         </article>
+          </div>
+        </details>
         <article id="paper-positions-panel" class="panel paper-positions-panel">
           <div class="panel-heading">
             <div>
@@ -650,6 +594,7 @@
             <summary>Open Stage 5 validation and learning detail</summary>
             <div class="paper-disclosure-content">
               <div class="explain-box">This is the original Stage 5 checkpoint: Atlas should beat or meaningfully inform benchmarks over time with clear accountability before any later autonomy discussion.</div>
+              <div id="paper-evidence-detail" class="paper-evidence-detail"></div>
               <div id="paper-validation-summary" class="feedback-summary"></div>
               <div class="explain-box">Benchmark reference: <b>SPY</b> is the broad S&amp;P 500 ETF yardstick, and <b>QQQ</b> is the Nasdaq-100 growth and technology ETF yardstick.</div>
               <div id="paper-feedback-summary" class="feedback-summary"></div>
@@ -680,7 +625,12 @@
           </div>
           <div id="paper-activity" class="activity-list"></div>
         </article>
-        <article class="panel simulation-help-panel">
+        <details class="portfolio-more simulation-help-panel">
+          <summary>
+            <span><b>How paper simulation works</b><small>Approval, simulated fills, and the real-money boundary</small></span>
+            <strong>Optional</strong>
+          </summary>
+          <article class="panel">
           <div class="panel-heading">
             <div>
               <p class="eyebrow">Simulation workflow</p>
@@ -702,7 +652,8 @@
           <div class="simulation-boundary inline-boundary">
             No brokerage order is sent. No real money is spent. This only updates Atlas paper tracking.
           </div>
-        </article>
+          </article>
+        </details>
       </section>
       <section class="content-grid">
         <article class="panel mode-panel">
@@ -719,7 +670,10 @@
             </div>
             <span class="tag">Paper-only roadmap</span>
           </div>
-          <div id="paper-operating-mode" class="mode-grid"></div>
+          <details class="paper-disclosure">
+            <summary>View or change paper automation mode</summary>
+            <div id="paper-operating-mode" class="mode-grid"></div>
+          </details>
         </article>
       </section>
       </section>
@@ -1112,6 +1066,6 @@
       </div>
     </form>
   </dialog>
-    <script src="/app.js?v=20260805-escalation-outcomes"></script>
+    <script src="/app.js?v=20260807-simplified-workspace"></script>
 </body>
 </html>

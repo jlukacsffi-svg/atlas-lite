@@ -494,7 +494,7 @@ class CloudWebApplicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             web_dir = Path(temp_dir)
             (web_dir / "index.html").write_text(
-                "<h2>Stage 5 validation scoreboard</h2>"
+                "<h2>Open Stage 5 validation and learning detail</h2>"
                 "<p>SPY (S&P 500 ETF benchmark)</p>"
                 "<p>QQQ (Nasdaq-100 ETF benchmark)</p>",
                 encoding="utf-8",
@@ -889,7 +889,7 @@ class CloudWebApplicationTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             web_dir = Path(temp_dir)
             (web_dir / "index.html").write_text(
-                "<h2>Stage 5 validation scoreboard</h2>"
+                "<h2>Open Stage 5 validation and learning detail</h2>"
                 "<p>SPY (S&P 500 ETF benchmark)</p>"
                 "<p>QQQ (Nasdaq-100 ETF benchmark)</p>",
                 encoding="utf-8",

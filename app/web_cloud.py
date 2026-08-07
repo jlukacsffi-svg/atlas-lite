@@ -955,10 +955,10 @@ class AtlasCloudApplication:
                     "detail": "Paper feedback includes persistence checkpoints and learning context.",
                 },
                 "benchmark_labels": {
-                    "ok": self._ui_contains("Stage 5 validation scoreboard")
+                    "ok": self._ui_contains("Open Stage 5 validation and learning detail")
                     and self._ui_contains("SPY (S&P 500 ETF benchmark)")
                     and self._ui_contains("QQQ (Nasdaq-100 ETF benchmark)"),
-                    "detail": "UI assets label SPY and QQQ explicitly and keep the Stage 5 scoreboard contract.",
+                    "detail": "UI assets keep Stage 5 evidence available behind concise detail and label SPY and QQQ explicitly.",
                 },
                 "benchmark_scorecard": {
                     "ok": bool(feedback_summary.get("benchmark_scorecard"))

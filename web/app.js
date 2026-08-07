@@ -12,6 +12,7 @@ let universeExpanded = false;
 let recommendationView = "actions";
 let reportArchive = [];
 let reportArchiveFilter = "all";
+let reportArchiveExpanded = false;
 
 const PAGE_METADATA = {
   about: {
@@ -20,24 +21,24 @@ const PAGE_METADATA = {
     description: "The purpose, current capabilities, operating boundaries, and long-term direction of Atlas Capital Research.",
   },
   overview: {
-    eyebrow: "Owner workspace",
-    title: "Executive dashboard",
-    description: "Start here for the current paper-portfolio result, Atlas priorities, recommendations, and any action that needs owner attention.",
+    eyebrow: "Daily decision view",
+    title: "Today",
+    description: "See what Atlas recommends now, how the simulated portfolio is performing, and what needs attention.",
   },
   recommendations: {
-    eyebrow: "Decision workspace",
-    title: "Recommendations",
-    description: "Review what Atlas recommends buying, trimming, or exiting in the simulated portfolio and the evidence behind each idea.",
+    eyebrow: "Investment ideas",
+    title: "Ideas",
+    description: "Review Atlas buy, sell, and trim recommendations for the simulated portfolio.",
   },
   research: {
-    eyebrow: "Research workspace",
-    title: "Research intelligence",
-    description: "Inspect Atlas scores, market movers, sector signals, corporate actions, and the active research queue.",
+    eyebrow: "Research briefings",
+    title: "Reports",
+    description: "Read the latest Atlas briefing or open supporting research when you need more detail.",
   },
   paper: {
-    eyebrow: "Simulation workspace",
-    title: "Paper portfolio",
-    description: "Track simulated holdings, purchases, sales, performance, decision history, and evidence of whether Atlas is improving.",
+    eyebrow: "Simulated account",
+    title: "Portfolio",
+    description: "See current simulated holdings, performance, recent activity, and positions that need attention.",
   },
   controls: {
     eyebrow: "Policy workspace",
@@ -226,7 +227,6 @@ function setDataFreshness(state, detail = "") {
   node.className = `data-freshness ${normalized}`;
   if (normalized === "live") {
     node.textContent = detail ? `Live · ${detail}` : "Live";
-    return;
   }
   if (normalized === "cached") {
     node.textContent = detail ? `Cached snapshot · ${detail}` : "Cached snapshot";
@@ -458,7 +458,6 @@ function renderRecommendationSummary(proposals, watchlist) {
     buyPending: rows.filter(item => item.side === "buy" && item.status === "pending").length,
     buyReady: rows.filter(item => item.side === "buy" && item.status === "approved").length,
     reduce: rows.filter(item => item.side === "sell").length + positionAlerts.length,
-    tracked: (watchlist || []).length,
   };
   const highlights = [
     ...positionAlerts.map(item => ({ kind: "position", item })),
@@ -467,26 +466,21 @@ function renderRecommendationSummary(proposals, watchlist) {
     .slice(0, 3);
 
   document.getElementById("recommendation-summary").innerHTML = `
-    <div class="recommendation-summary-grid">
+    <div class="recommendation-summary-grid simplified">
       <div class="recommendation-summary-card">
-        <span class="summary-label">${autoManaged ? "Atlas auto-review" : "Buy candidates"}</span>
+        <span class="summary-label">Buy ideas under review</span>
         <strong>${summary.buyPending}</strong>
-        <small>${autoManaged ? "Atlas will review and advance these automatically" : "Need owner approval"}</small>
+        <small>${autoManaged ? "Atlas is reviewing these automatically" : "Waiting for your decision"}</small>
       </div>
       <div class="recommendation-summary-card ready">
-        <span class="summary-label">${autoManaged ? "Auto-execution queued" : "Ready to simulate"}</span>
+        <span class="summary-label">Ready to add</span>
         <strong>${summary.buyReady}</strong>
-        <small>${autoManaged ? "Atlas will record paper fills automatically" : "Approved, waiting for Simulate fill"}</small>
+        <small>${autoManaged ? "Queued for automatic paper entry" : "Approved for the simulated portfolio"}</small>
       </div>
       <div class="recommendation-summary-card exit">
-        <span class="summary-label">Reduce / exit</span>
+        <span class="summary-label">Sell or trim</span>
         <strong>${summary.reduce}</strong>
-        <small>Formal proposals plus position warnings</small>
-      </div>
-      <div class="recommendation-summary-card tracked">
-        <span class="summary-label">Tracked list</span>
-        <strong>${summary.tracked}</strong>
-        <small>Universe names under coverage</small>
+        <small>Positions Atlas recommends reducing</small>
       </div>
     </div>
     <div class="recommendation-summary-focus">
@@ -524,8 +518,8 @@ function renderEntryEvidenceGate(overview) {
     ? "New simulated buys are automatically paused"
     : "Paper entry screening is active";
   const detail = limited
-    ? `${quality.detail || "Valid daily movement evidence is unavailable."} Independent score, thesis, trend, and news-risk exits remain active.`
-    : "Valid prior-close comparisons are available. Atlas may screen and advance paper entries within the active policy limits.";
+    ? "Prices did not provide a trustworthy daily comparison. Atlas will wait before adding positions; sell protections still run."
+    : "Market data passed today's checks. Atlas can consider new paper positions within your limits.";
   const html = `
     <div class="entry-evidence-icon" aria-hidden="true">${limited ? "!" : "✓"}</div>
     <div>
@@ -552,30 +546,17 @@ function renderOwnerBriefing(data) {
   )
     ? prospectiveTracker.latest_priority_escalations
     : [];
-  const priorityCounts = prospectiveTracker.review_priority_counts || {};
   const focus = paper.portfolio_focus || {};
   const counts = focus.counts || {};
   const highlights = focus.highlights || [];
   const proposals = data.owner_controls?.paper_proposals || [];
   const currentMode = paper.operating_mode?.current || {};
   const autoManaged = currentMode.id === "paper_auto_manage";
-  const readiness = paper.validation_summary?.capital_readiness || {};
-  const evidencePipeline = paper.validation_summary?.evidence_pipeline || {};
-  const readinessScore = Math.round(clampScore(readiness.progress_pct));
-  const judgedDecisions = Number(
-    evidencePipeline.judged_decisions || paper.validation_summary?.judged_trades || 0
-  );
-  const completedPositions = Number(
-    evidencePipeline.completed_positions || paper.validation_summary?.realized_exits || 0
-  );
-  const passedGates = Number(readiness.passed || 0);
-  const totalGates = Number(readiness.total || 0);
   const dailyQuality = data.overview?.daily_change_quality || {};
   const entriesPaused = dailyQuality.status === "limited";
   const exitCount = Number(counts.exit || 0) + Number(counts.trim || 0);
   const pendingBuys = proposals.filter(item => item.side === "buy" && item.status === "pending").length;
   const readyBuys = proposals.filter(item => item.side === "buy" && item.status === "approved").length;
-  const urgentResearch = Number(data.research?.high_priority || 0);
   const firstAttention = highlights.find(item =>
     ["watch", "trim", "exit"].includes(String(item.label || "").toLowerCase())
   ) || null;
@@ -585,9 +566,6 @@ function renderOwnerBriefing(data) {
   if (firstAttention) {
     attentionTitle = `${firstAttention.ticker || "Holding"}: ${firstAttention.label || "review"}`;
     attentionDetail = firstAttention.summary || "Open the paper portfolio for the latest position review.";
-  } else if (urgentResearch > 0) {
-    attentionTitle = `${urgentResearch} high-priority research item${urgentResearch === 1 ? "" : "s"}`;
-    attentionDetail = "Open Research to inspect the current assignments.";
   }
 
   let nextTitle = "No owner action required";
@@ -611,7 +589,6 @@ function renderOwnerBriefing(data) {
   }
 
   const operatingTitle = currentMode.label || (autoManaged ? "Automatic paper management" : "Recommendation mode");
-  const operatingDetail = currentMode.description || focus.headline || "Atlas is monitoring the research universe.";
   const paperReturn = paper.configured ? signed(Number(paper.total_return_pct || 0)) : "--";
   const paperResultTitle = paper.configured
     ? `${paperReturn} simulated return`
@@ -639,37 +616,18 @@ function renderOwnerBriefing(data) {
   const decisionTone = entriesPaused ? "paused" : exitCount > 0 ? "risk" : "clear";
 
   document.getElementById("owner-briefing-grid").innerHTML = `
-    <section class="owner-readiness-card">
-      <div class="readiness-ring" style="--readiness-angle:${readinessScore * 3.6}deg">
-        <div><strong>${readinessScore}</strong><span>/100</span></div>
-      </div>
-      <div class="owner-readiness-copy">
-        <span class="command-label">Atlas readiness</span>
-        <h3>${escapeHtml(readiness.status_label || "Stage 5 evidence building")}</h3>
-        <p>This measures paper-validation maturity, not expected investment return.</p>
-        <div class="readiness-facts">
-          <span><b>${judgedDecisions}</b> judged decisions</span>
-          <span><b>${completedPositions}</b> completed positions</span>
-          <span><b>${totalGates ? `${passedGates}/${totalGates}` : "--"}</b> gates passing</span>
-        </div>
-      </div>
-    </section>
     <section class="owner-decision-card ${decisionTone}">
       <div class="owner-decision-heading">
-        <span class="command-label">Today&rsquo;s call</span>
+        <span class="command-label">Atlas recommends</span>
         <b>${escapeHtml(decisionState)}</b>
       </div>
       <h3>${escapeHtml(nextTitle)}</h3>
       <p>${escapeHtml(nextDetail)}</p>
-      <div class="decision-context">
-        <span>Operating mode</span>
-        <strong>${escapeHtml(operatingTitle)}</strong>
-        <small>${escapeHtml(operatingDetail)}</small>
-      </div>
       <a href="#recommendations">${exitCount + pendingBuys + readyBuys ? "Review the action queue" : "Open recommendations"}</a>
+      <small class="owner-mode-line">${escapeHtml(operatingTitle)}. Real-money trading is disabled.</small>
     </section>
     <section class="owner-portfolio-card">
-      <span class="command-label">Paper portfolio now</span>
+      <span class="command-label">Simulated portfolio</span>
       <div class="portfolio-glance-primary">
         <strong class="${changeClass(Number(paper.total_return_pct || 0))}">${escapeHtml(paperResultTitle)}</strong>
         <small>${escapeHtml(benchmarkEdgeLabel)}</small>
@@ -678,11 +636,10 @@ function renderOwnerBriefing(data) {
         <div><dt>Equity</dt><dd>${paper.configured ? money.format(Number(paper.equity || 0)) : "--"}</dd></div>
         <div><dt>Cash</dt><dd>${paper.configured ? money.format(Number(paper.cash || 0)) : "--"}</dd></div>
         <div><dt>Open positions</dt><dd>${positions.length}</dd></div>
-        <div><dt>Need attention</dt><dd class="${exitCount ? "negative" : "positive"}">${exitCount}</dd></div>
       </dl>
     </section>
-    <section class="owner-attention-strip ${firstAttention || urgentResearch ? "active" : ""}">
-      <span class="command-label">Watch now</span>
+    <section class="owner-attention-strip ${firstAttention ? "active" : ""}">
+      <span class="command-label">${firstAttention ? "Watch now" : "Portfolio status"}</span>
       <strong>${escapeHtml(attentionTitle)}</strong>
       <small>${escapeHtml(attentionDetail)}</small>
     </section>
@@ -691,8 +648,8 @@ function renderOwnerBriefing(data) {
   renderOwnerReportStatus(Array.isArray(data.reports) ? data.reports : []);
 
   const signalDigest = document.getElementById("owner-signal-digest");
-  signalDigest.hidden = !prospectiveTracker.available;
-  signalDigest.innerHTML = !prospectiveTracker.available ? "" : latestPriorityEscalations.length ? `
+  signalDigest.hidden = !prospectiveTracker.available || !latestPriorityEscalations.length;
+  signalDigest.innerHTML = signalDigest.hidden ? "" : `
     <div class="owner-signal-digest-heading">
       <div>
         <span>Priority escalation watch</span>
@@ -712,15 +669,6 @@ function renderOwnerBriefing(data) {
       `).join("")}
     </div>
     <small class="owner-signal-disclosure">Only upward moves into Monitor closely or Review now appear here. Alerts are review-only and cannot place or force a simulated trade.</small>
-  ` : `
-    <div class="owner-signal-digest-empty">
-      <div>
-        <span>Priority escalation watch</span>
-        <b>${prospectiveTracker.activated ? "No new elevated-priority changes" : "Forward review study starts with the next snapshot"}</b>
-        ${prospectiveTracker.activated ? `<small>${Number(priorityCounts.urgent || 0) + Number(priorityCounts.monitor || 0)} open signal${Number(priorityCounts.urgent || 0) + Number(priorityCounts.monitor || 0) === 1 ? "" : "s"} currently need elevated attention.</small>` : ""}
-      </div>
-      <a href="#paper">Open tracker</a>
-    </div>
   `;
 }
 
@@ -730,6 +678,7 @@ function renderOwnerReportStatus(reports) {
   const latestDaily = reports.find(report => report.type === "Morning brief");
   const latest = latestDaily || reports[0] || null;
   if (!latest) {
+    status.hidden = false;
     status.className = "owner-report-status missing";
     status.innerHTML = `
       <div>
@@ -751,6 +700,7 @@ function renderOwnerReportStatus(reports) {
     ? Number.POSITIVE_INFINITY
     : Math.max(0, (Date.now() - generated.getTime()) / 3600000);
   const current = Boolean(latestDaily) && ageHours <= 36;
+  status.hidden = current;
   const generatedLabel = Number.isFinite(ageHours)
     ? generated.toLocaleString([], {
         month: "short",
@@ -1909,16 +1859,20 @@ function renderReportArchive(reports) {
     if (reportArchiveFilter === "weekly") return report.type === "Weekly summary";
     return true;
   });
+  const shown = reportArchiveExpanded ? visible : visible.slice(0, 6);
   const count = document.getElementById("report-result-count");
   if (count) {
-    count.textContent = `Showing ${visible.length} of ${reports.length} reports`;
+    count.textContent = `Showing ${shown.length} of ${visible.length} reports`;
   }
+  const toggle = document.getElementById("report-archive-toggle");
+  toggle.hidden = visible.length <= 6;
+  toggle.textContent = reportArchiveExpanded ? "Show recent only" : `Show all ${visible.length}`;
   document.querySelectorAll("[data-report-filter]").forEach(button => {
     const active = button.dataset.reportFilter === reportArchiveFilter;
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   });
-  document.getElementById("report-archive").innerHTML = visible.map(report => {
+  document.getElementById("report-archive").innerHTML = shown.map(report => {
     const generated = report.generated_at
       ? new Date(report.generated_at).toLocaleString([], {
           month: "short",
@@ -2023,6 +1977,71 @@ function renderCorporateActions(rows) {
 }
 
 function renderPaperWorkspaceSummary(paper) {
+  {
+    const simplePositions = Array.isArray(paper.positions) ? paper.positions : [];
+    const simpleActivity = Array.isArray(paper.activity) ? paper.activity : [];
+    const simpleFocus = paper.portfolio_focus || {};
+    const simpleHighlights = Array.isArray(simpleFocus.highlights)
+      ? simpleFocus.highlights.filter(item =>
+          ["watch", "trim", "exit"].includes(String(item.label || "").toLowerCase())
+        ).slice(0, 3)
+      : [];
+    const simpleLatestAction = simpleActivity[0] || null;
+    document.getElementById("paper-workspace-summary").innerHTML = `
+      <div class="paper-summary-grid simplified">
+        <div class="paper-summary-card result">
+          <span class="summary-label">Portfolio value</span>
+          <strong>${paper.configured ? money.format(Number(paper.equity || 0)) : "--"}</strong>
+          <small>Simulated account</small>
+        </div>
+        <div class="paper-summary-card ${changeClass(Number(paper.total_return_pct || 0))}">
+          <span class="summary-label">Total return</span>
+          <strong>${paper.configured ? signed(Number(paper.total_return_pct || 0)) : "--"}</strong>
+          <small>Since paper tracking began</small>
+        </div>
+        <div class="paper-summary-card">
+          <span class="summary-label">Cash</span>
+          <strong>${paper.configured ? money.format(Number(paper.cash || 0)) : "--"}</strong>
+          <small>Available simulated capital</small>
+        </div>
+        <div class="paper-summary-card">
+          <span class="summary-label">Open positions</span>
+          <strong>${simplePositions.length}</strong>
+          <small>${simpleHighlights.length} need attention</small>
+        </div>
+      </div>
+      <div class="paper-priority-grid simplified">
+        <section class="paper-priority-section">
+          <span class="access-label">Needs attention</span>
+          <div class="paper-priority-list">
+            ${simpleHighlights.map(item => `
+              <div class="paper-priority-row">
+                <span class="thesis-badge ${escapeHtml(item.label || "watch")}">${escapeHtml(item.label || "watch")}</span>
+                <div>
+                  <b class="row-title">${escapeHtml(item.ticker || "Holding")}</b>
+                  <small class="row-meta">${escapeHtml(item.summary || "Atlas recommends review.")}</small>
+                </div>
+                <button class="link-button" type="button" data-paper-target="${escapeHtml(item.anchor_id || "")}">Open</button>
+              </div>
+            `).join("") || `<div class="empty compact">No positions need attention.</div>`}
+          </div>
+        </section>
+        <section class="paper-priority-section">
+          <span class="access-label">Latest paper activity</span>
+          ${simpleLatestAction ? `
+            <div class="latest-paper-action">
+              <span class="tag ${simpleLatestAction.side === "sell" ? "exit-tag" : "buy-tag"}">${escapeHtml(String(simpleLatestAction.action_label || simpleLatestAction.side || "trade").replaceAll("_", " "))}</span>
+              <div>
+                <b class="row-title">${escapeHtml(simpleLatestAction.title || `${simpleLatestAction.ticker || "Atlas"} paper action`)}</b>
+                <small class="row-meta">${new Date(simpleLatestAction.timestamp).toLocaleString()} · ${Number(simpleLatestAction.shares || 0).toFixed(2)} shares at ${money.format(Number(simpleLatestAction.fill_price) || 0)}</small>
+                <small class="row-meta">${escapeHtml(conciseText(simpleLatestAction.summary || "Atlas recorded a simulated trade.", 120))}</small>
+              </div>
+            </div>
+          ` : `<div class="empty compact">No simulated trades recorded yet.</div>`}
+        </section>
+      </div>
+    `;
+  }
   const positions = Array.isArray(paper.positions) ? paper.positions : [];
   const activity = Array.isArray(paper.activity) ? paper.activity : [];
   const focus = paper.portfolio_focus || {};
@@ -2084,7 +2103,7 @@ function renderPaperWorkspaceSummary(paper) {
     ? new Date(evidencePipeline.latest_snapshot_at).toLocaleString()
     : "No snapshot recorded";
 
-  document.getElementById("paper-workspace-summary").innerHTML = `
+  document.getElementById("paper-evidence-detail").innerHTML = `
     <div class="paper-summary-grid">
       <div class="paper-summary-card result">
         <span class="summary-label">Simulated equity</span>
@@ -2539,15 +2558,13 @@ function renderPortfolioFocus(focus) {
       </div>
     </div>
     <div class="portfolio-focus-list">
-      <span class="access-label">Needs review first</span>
-      ${highlights.length ? highlights.map(item => `
+      <span class="access-label">Priority holdings</span>
+      ${highlights.length ? highlights.slice(0, 2).map(item => `
         <div class="portfolio-focus-row">
           <span class="thesis-badge ${escapeHtml(item.label || "healthy")}">${escapeHtml(item.label || "healthy")}</span>
           <div>
             <b class="row-title">${escapeHtml(item.ticker || "Holding")}</b>
             <small class="row-meta">${escapeHtml(item.summary || "")}</small>
-            ${renderDecisionDriver(item.decision_driver)}
-            ${renderNewsSummary(item.news_summary)}
             ${item.anchor_id ? `<small class="row-meta"><button type="button" class="inline-jump" data-paper-target="${escapeHtml(item.anchor_id)}">Open holding</button></small>` : ""}
           </div>
           <small class="row-meta ${changeClass(item.unrealized_gain_loss)}">${money.format(Number(item.unrealized_gain_loss) || 0)}</small>
@@ -3726,6 +3743,7 @@ document.getElementById("research").addEventListener("click", event => {
   const reportFilter = event.target.closest("[data-report-filter]");
   if (reportFilter) {
     reportArchiveFilter = reportFilter.dataset.reportFilter || "all";
+    reportArchiveExpanded = false;
     renderReportArchive(reportArchive);
     return;
   }
@@ -3739,6 +3757,10 @@ document.getElementById("universe-category").addEventListener("change", renderUn
 document.getElementById("universe-toggle").addEventListener("click", () => {
   universeExpanded = !universeExpanded;
   renderUniverseList();
+});
+document.getElementById("report-archive-toggle").addEventListener("click", () => {
+  reportArchiveExpanded = !reportArchiveExpanded;
+  renderReportArchive(reportArchive);
 });
 document.getElementById("controls").addEventListener("click", event => {
   const jumpButton = event.target.closest("[data-controls-target]");
