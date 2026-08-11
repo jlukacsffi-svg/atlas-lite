@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-    <link rel="stylesheet" href="/styles.css?v=20260810-latest-action-v2">
+    <link rel="stylesheet" href="/styles.css?v=20260810-compact-performance">
 </head>
 <body>
   <div class="app-shell">
@@ -213,18 +213,31 @@
                   <p>Atlas is the simulated paper portfolio. SPY is an ETF commonly used as a broad S&amp;P 500 market benchmark. QQQ is an ETF commonly used as a Nasdaq-100 growth/technology benchmark.</p>
                 </details>
               </div>
+              <p class="section-intro">See whether the simulated portfolio is ahead of the broad market and growth benchmarks.</p>
             </div>
-            <div id="market-pills" class="market-pills"></div>
           </div>
-          <div class="chart-wrap">
-            <svg id="performance-chart" viewBox="0 0 720 260" role="img" aria-label="Atlas, SPY, and QQQ return history"></svg>
-          </div>
-          <div class="legend">
-            <span><i class="legend-line atlas"></i>Atlas</span>
-            <span><i class="legend-line spy"></i>SPY (S&amp;P 500 ETF benchmark)</span>
-            <span><i class="legend-line qqq"></i>QQQ (Nasdaq-100 ETF benchmark)</span>
-          </div>
-          <p class="legend-note">SPY tracks the S&amp;P 500 as a broad U.S. large-cap benchmark. QQQ tracks the Nasdaq-100 and is commonly used as a growth and technology benchmark.</p>
+          <div id="performance-summary" class="performance-summary" aria-live="polite"></div>
+          <details class="performance-history">
+            <summary>
+              <span>
+                <strong>View performance history</strong>
+                <small>Atlas, SPY, and QQQ since paper tracking began</small>
+              </span>
+              <b>Chart</b>
+            </summary>
+            <div class="performance-history-content">
+              <div id="market-pills" class="market-pills"></div>
+              <div class="chart-wrap">
+                <svg id="performance-chart" viewBox="0 0 720 260" role="img" aria-label="Atlas, SPY, and QQQ return history"></svg>
+              </div>
+              <div class="legend">
+                <span><i class="legend-line atlas"></i>Atlas</span>
+                <span><i class="legend-line spy"></i>SPY (S&amp;P 500 ETF benchmark)</span>
+                <span><i class="legend-line qqq"></i>QQQ (Nasdaq-100 ETF benchmark)</span>
+              </div>
+              <p class="legend-note">SPY tracks the S&amp;P 500 as a broad U.S. large-cap benchmark. QQQ tracks the Nasdaq-100 and is commonly used as a growth and technology benchmark.</p>
+            </div>
+          </details>
         </article>
       </section>
       </section>
@@ -1046,6 +1059,6 @@
       </div>
     </form>
   </dialog>
-    <script src="/app.js?v=20260810-latest-action-v2"></script>
+    <script src="/app.js?v=20260810-compact-performance"></script>
 </body>
 </html>

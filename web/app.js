@@ -1887,6 +1887,7 @@ function renderBreadth(overview) {
 
 function renderPerformance(history) {
   const svg = document.getElementById("performance-chart");
+  const summary = document.getElementById("performance-summary");
   const width = 720;
   const height = 260;
   const pad = { left: 42, right: 18, top: 18, bottom: 30 };
@@ -1909,9 +1910,47 @@ function renderPerformance(history) {
     lines.push(`<text class="chart-axis" x="4" y="${py + 3}">${value.toFixed(1)}%</text>`);
   }
   if (!history.length) {
+    summary.innerHTML = `
+      <div class="performance-empty">
+        <strong>Performance comparison is not available yet</strong>
+        <small>Atlas will compare the paper portfolio with SPY and QQQ after tracking begins.</small>
+      </div>`;
     svg.innerHTML = `${lines.join("")}<text class="chart-axis" x="280" y="130">No performance history</text>`;
     return;
   }
+  const latest = history[history.length - 1];
+  const atlasReturn = Number(latest.atlas_return || 0);
+  const spyReturn = Number(latest.spy_return || 0);
+  const qqqReturn = Number(latest.qqq_return || 0);
+  const strongestBenchmark = spyReturn >= qqqReturn
+    ? { ticker: "SPY", value: spyReturn }
+    : { ticker: "QQQ", value: qqqReturn };
+  const benchmarkGap = atlasReturn - strongestBenchmark.value;
+  const gapIsEven = Math.abs(benchmarkGap) < 0.005;
+  const gapLabel = gapIsEven
+    ? `In line with ${strongestBenchmark.ticker}`
+    : `${benchmarkGap > 0 ? "Ahead of" : "Behind"} ${strongestBenchmark.ticker} by ${Math.abs(benchmarkGap).toFixed(2)} points`;
+  summary.innerHTML = `
+    <div class="performance-result ${gapIsEven ? "neutral" : benchmarkGap > 0 ? "positive" : "negative"}">
+      <span>Current result</span>
+      <strong>${gapLabel}</strong>
+      <small>Compared with the stronger benchmark over the tracked period</small>
+    </div>
+    <div class="performance-metric atlas">
+      <span>Atlas</span>
+      <strong class="${changeClass(atlasReturn)}">${signed(atlasReturn)}</strong>
+      <small>Simulated portfolio</small>
+    </div>
+    <div class="performance-metric spy">
+      <span>SPY</span>
+      <strong class="${changeClass(spyReturn)}">${signed(spyReturn)}</strong>
+      <small>Broad U.S. market</small>
+    </div>
+    <div class="performance-metric qqq">
+      <span>QQQ</span>
+      <strong class="${changeClass(qqqReturn)}">${signed(qqqReturn)}</strong>
+      <small>Growth and technology</small>
+    </div>`;
   series.forEach(item => {
     const points = history.map((row, index) => `${x(index)},${y(Number(row[item.key] || 0))}`).join(" ");
     lines.push(`<polyline class="chart-path ${item.className}" points="${points}"/>`);
