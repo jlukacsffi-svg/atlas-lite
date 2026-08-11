@@ -3,6 +3,38 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 10, 2026 - Today explains Atlas's latest paper action
+
+New capabilities:
+
+- See the latest simulated purchase, trim, or sale directly below the Today
+  decision inbox.
+- Read the ticker, shares, fill price, action time, and a concise reason Atlas
+  acted.
+- See the current open paper result after a buy or the realized paper result
+  after a trim or sale.
+- Jump directly from Today to the full recent-activity history in Portfolio.
+
+Validated result:
+
+- The activity shortcut opens Portfolio at the recent-activity section.
+- Desktop and 390-pixel mobile layouts pass visual review without overflow,
+  duplicate IDs, or browser warnings.
+- The full local suite passes with 434 tests.
+- Cloud Run revision `atlas-dashboard-stg-00171-qjf`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260810-latest-action`.
+- The deployed image digest is
+  `sha256:45092dc5e3b9453c20c90578419b9fe8fdfe7237c08d7484255633d924936292`.
+- All 26 staging readiness checks and all 24 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules remain enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Every displayed action is simulated and comes from the paper audit ledger.
+- The summary cannot create a brokerage order or authorize real trading.
+- Overall program completion remains estimated at 85%.
+
 ## August 10, 2026 - Today becomes a prioritized decision inbox
 
 New capabilities:

@@ -61,6 +61,22 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Latest paper action context is live on Cloud Run revision
+  `atlas-dashboard-stg-00171-qjf`. The dashboard, daily job, and weekly job use
+  image `20260810-latest-action`, digest
+  `sha256:45092dc5e3b9453c20c90578419b9fe8fdfe7237c08d7484255633d924936292`.
+  All 434 local tests, 26 staging checks, and 24 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- Today now identifies the latest simulated buy, trim, or sale; states shares,
+  fill price, time, and why Atlas acted; and shows the open or realized paper
+  result. The activity shortcut opens the full Portfolio history.
+- This closes the owner-visible gap between current recommendations and Atlas's
+  most recent autonomous paper action without adding another large dashboard
+  section.
+- Next development focus: continue simplifying high-value owner workflows as
+  real use reveals friction while Stage 5 evidence accumulates.
+
 - The Today decision inbox is live on Cloud Run revision
   `atlas-dashboard-stg-00170-kg4`. The dashboard, daily job, and weekly job use
   image `20260810-decision-inbox`, digest
