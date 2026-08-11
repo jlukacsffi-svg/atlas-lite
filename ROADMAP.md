@@ -23,6 +23,9 @@ Atlas now:
 
 - Opens on a focused Today page with the current recommendation, portfolio
   result, attention items, and the most important next actions.
+- States the primary recommendation as Action, Why, and Next, then combines
+  current buy, trim, exit, and holding-review items into one prioritized
+  decision inbox.
 - Uses four primary workflows: Today, Ideas, Portfolio, and Reports. Less-used
   strategy, development, security, and product context lives under More.
 - Separates ideas into needs attention, buy, sell or trim, and all tracked
@@ -48,6 +51,10 @@ Atlas now:
 
 Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
 the active investment-capability gate.
+
+Current Stage 5 evidence: 163 snapshots, 63 judged decisions, and 11 completed
+paper positions. The next warning-outcome scorecard remains gated until actual
+elevated warning episodes are recorded and resolved.
 
 ## Stage 1: Reliable Daily Briefing
 

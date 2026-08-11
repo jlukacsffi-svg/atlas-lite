@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-08-07
+Last updated: 2026-08-10
 
 ## Current Roadmap Position
 
@@ -60,6 +60,26 @@ identity checks still open before final sign-off:
 - Non-owner Google account denial
 
 Most recent Stage 5 refinement:
+
+- The Today decision inbox is live on Cloud Run revision
+  `atlas-dashboard-stg-00170-kg4`. The dashboard, daily job, and weekly job use
+  image `20260810-decision-inbox`, digest
+  `sha256:7e4a1a530211bfe4d0d13df99a5f9f5771d5a3e20a2b13aa89da3626a4af922b`.
+  All 434 local tests, 26 staging checks, and 24 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- The primary recommendation now states Action, Why, and Next. One prioritized
+  inbox replaces the three repetitive buy, sell, and portfolio overview cards.
+  Portfolio risk appears first, followed by approved paper entries and new buy
+  reviews; a quiet state appears when no decision needs attention.
+- Current evidence is 163 snapshots, 63 judged decisions, and 11 completed
+  paper positions. The August 9 weekly run and August 9-10 daily runs completed
+  successfully.
+- No elevated warning episode exists yet. Do not build or present the planned
+  outcome scorecard until enough actual episodes resolve.
+- Next development focus: continue simplifying owner workflows where real use
+  reveals friction while scheduled Stage 5 evidence accumulates toward the
+  250-snapshot, 100-judgment, and 30-completed-position targets.
 
 - The owner workspace is simplified on Cloud Run revision
   `atlas-dashboard-stg-00169-6mm`. The dashboard, daily job, and weekly job use

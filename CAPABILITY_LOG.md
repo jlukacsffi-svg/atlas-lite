@@ -3,6 +3,41 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 10, 2026 - Today becomes a prioritized decision inbox
+
+New capabilities:
+
+- Read the primary Atlas recommendation as Action, Why, and Next instead of a
+  general status paragraph.
+- Review one prioritized decision inbox that combines current buy, trim, exit,
+  and holding-review items without repeating them across three overview cards.
+- See up to four current decisions ordered by portfolio risk first, then
+  approved paper entries and new buy reviews.
+- See a quiet no-action state when Atlas is monitoring but does not need owner
+  attention.
+
+Validated result:
+
+- The August 9 weekly run and August 9-10 daily runs completed successfully.
+- Current Stage 5 evidence reached 163 snapshots, 63 judged decisions, and 11
+  completed positions.
+- The full local suite passes with 434 tests, and desktop plus 390-pixel mobile
+  layouts pass visual review without overflow or browser warnings.
+- Cloud Run revision `atlas-dashboard-stg-00170-kg4`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260810-decision-inbox`.
+- The deployed image digest is
+  `sha256:7e4a1a530211bfe4d0d13df99a5f9f5771d5a3e20a2b13aa89da3626a4af922b`.
+- All 26 staging readiness checks and all 24 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules remain enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- The inbox describes paper decisions only and cannot place a real trade.
+- Elevated-warning outcome scoring remains gated because no elevated episode
+  has yet been recorded.
+- Overall program completion remains estimated at 85%.
+
 ## August 7, 2026 - Owner workspace is simplified around daily decisions
 
 New capabilities:
