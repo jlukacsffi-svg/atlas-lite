@@ -61,6 +61,22 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The compact benchmark result is live on Cloud Run revision
+  `atlas-dashboard-stg-00172-dzc`. The dashboard, daily job, and weekly job use
+  image `20260810-compact-performance`, digest
+  `sha256:2faca61343abbb0a8c732ea9e86648810bcd0cc759ca69842a3bb84a5044e822`.
+  All 434 local tests, 26 staging checks, and 24 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- Today now leads with current Atlas, SPY, and QQQ returns plus a direct
+  ahead, behind, or in-line conclusion. The historical chart, prices, legend,
+  and ETF definitions remain available through one disclosure.
+- This removes the largest remaining always-visible chart from Today without
+  removing benchmark accountability or Stage 5 evidence.
+- Next development focus: keep the owner path concise while Stage 5 evidence
+  accumulates; add new learning surfaces only when their real evidence gates
+  are satisfied.
+
 - Latest paper action context is live on Cloud Run revision
   `atlas-dashboard-stg-00171-qjf`. The dashboard, daily job, and weekly job use
   image `20260810-latest-action`, digest

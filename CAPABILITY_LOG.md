@@ -3,6 +3,37 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 10, 2026 - Benchmark performance becomes glanceable
+
+New capabilities:
+
+- See the current Atlas, SPY, and QQQ returns without reading a large chart.
+- Read a plain-language result showing whether Atlas is ahead of, behind, or
+  effectively in line with the stronger benchmark.
+- Open the full historical chart, current benchmark prices, legend, and ETF
+  definitions only when deeper context is useful.
+
+Validated result:
+
+- Desktop and 390-pixel mobile layouts pass visual review without overflow,
+  duplicate IDs, or browser warnings.
+- The history disclosure opens correctly and retains all benchmark evidence.
+- The full local suite passes with 434 tests.
+- Cloud Run revision `atlas-dashboard-stg-00172-dzc`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260810-compact-performance`.
+- The deployed image digest is
+  `sha256:2faca61343abbb0a8c732ea9e86648810bcd0cc759ca69842a3bb84a5044e822`.
+- All 26 staging readiness checks and all 24 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules remain enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Returns describe a simulated paper portfolio and do not predict future
+  performance.
+- The comparison cannot create a brokerage order or authorize real trading.
+- Overall program completion remains estimated at 85%.
+
 ## August 10, 2026 - Today explains Atlas's latest paper action
 
 New capabilities:

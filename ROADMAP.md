@@ -29,6 +29,9 @@ Atlas now:
 - Explains the most recent simulated purchase, trim, or sale on Today with its
   reason, fill detail, and current or realized paper result, while retaining
   the full history in Portfolio.
+- Summarizes Atlas, SPY, and QQQ performance as one plain-language comparison
+  and three current returns, with the full historical chart available on
+  demand.
 - Uses four primary workflows: Today, Ideas, Portfolio, and Reports. Less-used
   strategy, development, security, and product context lives under More.
 - Separates ideas into needs attention, buy, sell or trim, and all tracked
