@@ -312,6 +312,7 @@ function renderDashboard(data) {
     `${data.research?.high_priority || 0} high priority`;
 
   renderOwnerBriefing(data);
+  renderTodayDecisionInbox(data);
   renderMarketPills(data.market || []);
   renderBreadth(overview);
   renderPerformance(data.history || []);
@@ -366,6 +367,7 @@ function renderDashboardSummary(data) {
     `${data.research?.high_priority || 0} high priority`;
 
   renderOwnerBriefing(data);
+  renderTodayDecisionInbox(data);
   renderMarketPills(data.market || []);
   renderBreadth(overview);
   renderPerformance(data.history || []);
@@ -614,6 +616,18 @@ function renderOwnerBriefing(data) {
         ? "Buy review"
         : "Monitoring";
   const decisionTone = entriesPaused ? "paused" : exitCount > 0 ? "risk" : "clear";
+  let decisionWhy = "No current proposal or portfolio risk signal requires intervention.";
+  if (entriesPaused) {
+    decisionWhy = "Today's price comparison did not pass Atlas's reliability checks.";
+  } else if (exitCount > 0) {
+    decisionWhy = "One or more simulated holdings crossed a portfolio risk threshold.";
+  } else if (readyBuys > 0) {
+    decisionWhy = "These ideas passed review and are approved for simulated entry.";
+  } else if (pendingBuys > 0) {
+    decisionWhy = "Atlas found candidates that still need a paper-trade decision.";
+  } else if (autoManaged) {
+    decisionWhy = "Automatic paper management is active and no owner intervention is waiting.";
+  }
 
   document.getElementById("owner-briefing-grid").innerHTML = `
     <section class="owner-decision-card ${decisionTone}">
@@ -621,8 +635,11 @@ function renderOwnerBriefing(data) {
         <span class="command-label">Atlas recommends</span>
         <b>${escapeHtml(decisionState)}</b>
       </div>
-      <h3>${escapeHtml(nextTitle)}</h3>
-      <p>${escapeHtml(nextDetail)}</p>
+      <dl class="owner-decision-explanation">
+        <div><dt>Action</dt><dd>${escapeHtml(nextTitle)}</dd></div>
+        <div><dt>Why</dt><dd>${escapeHtml(decisionWhy)}</dd></div>
+        <div><dt>Next</dt><dd>${escapeHtml(nextDetail)}</dd></div>
+      </dl>
       <a href="#recommendations">${exitCount + pendingBuys + readyBuys ? "Review the action queue" : "Open recommendations"}</a>
       <small class="owner-mode-line">${escapeHtml(operatingTitle)}. Real-money trading is disabled.</small>
     </section>
@@ -670,6 +687,110 @@ function renderOwnerBriefing(data) {
     </div>
     <small class="owner-signal-disclosure">Only upward moves into Monitor closely or Review now appear here. Alerts are review-only and cannot place or force a simulated trade.</small>
   `;
+}
+
+function renderTodayDecisionInbox(data) {
+  const target = document.getElementById("today-decision-inbox");
+  if (!target) return;
+  const proposals = Array.isArray(data.owner_controls?.paper_proposals)
+    ? data.owner_controls.paper_proposals
+    : [];
+  const positions = Array.isArray(data.paper?.positions) ? data.paper.positions : [];
+  const autoManaged = data.paper?.operating_mode?.current?.id === "paper_auto_manage";
+  const formalSellTickers = new Set(
+    proposals
+      .filter(item => item.side === "sell")
+      .map(item => String(item.ticker || ""))
+  );
+  const items = [];
+
+  proposals
+    .filter(item => item.side === "sell")
+    .forEach(item => items.push({
+      priority: proposalActionLabel(item) === "exit" ? 0 : 1,
+      tone: "risk",
+      label: proposalActionLabel(item) === "exit" ? "Sell" : "Trim",
+      ticker: item.ticker || "Holding",
+      action: `${proposalActionLabel(item) === "exit" ? "Exit" : "Trim"} the simulated ${item.ticker || "holding"} position`,
+      reason: item.thesis || primaryRationaleText(item),
+      next: autoManaged
+        ? "Atlas will apply the normal paper risk gate and record any simulated fill automatically."
+        : item.status === "approved"
+          ? "Record the approved simulated fill from the Ideas page."
+          : "Review the proposal before changing the paper portfolio.",
+      evidence: recommendationJudgedCount(item)
+        ? `${recommendationJudgedCount(item)} judged paper outcome${recommendationJudgedCount(item) === 1 ? "" : "s"}`
+        : "New paper evidence",
+      href: "#recommendations",
+    }));
+
+  positions
+    .filter(item => ["trim", "exit"].includes(String(item.thesis_status?.label || "").toLowerCase()))
+    .filter(item => !formalSellTickers.has(String(item.ticker || "")))
+    .forEach(item => {
+      const label = String(item.thesis_status?.label || "review").toLowerCase();
+      items.push({
+        priority: label === "exit" ? 0 : 1,
+        tone: "risk",
+        label: label === "exit" ? "Sell review" : "Trim review",
+        ticker: item.ticker || "Holding",
+        action: `Review ${item.ticker || "this holding"} for ${label}`,
+        reason: item.thesis_status?.summary || "The simulated holding crossed a portfolio risk threshold.",
+        next: "Open the holding and inspect the latest thesis evidence before any paper action.",
+        evidence: `${money.format(Number(item.unrealized_gain_loss) || 0)} open result`,
+        href: "#paper",
+      });
+    });
+
+  proposals
+    .filter(item => item.side === "buy")
+    .forEach(item => items.push({
+      priority: item.status === "approved" ? 2 : 3,
+      tone: item.status === "approved" ? "ready" : "buy",
+      label: item.status === "approved" ? "Ready to add" : "Buy review",
+      ticker: item.ticker || "Candidate",
+      action: `${item.status === "approved" ? "Add" : "Review"} ${item.ticker || "this candidate"} in the paper portfolio`,
+      reason: item.thesis || primaryRationaleText(item),
+      next: autoManaged
+        ? "Atlas will apply the paper risk gate during the next autonomous cycle."
+        : item.status === "approved"
+          ? "Record the approved simulated fill from the Ideas page."
+          : "Approve or reject the idea after reviewing its evidence.",
+      evidence: recommendationJudgedCount(item)
+        ? `${recommendationJudgedCount(item)} judged paper outcome${recommendationJudgedCount(item) === 1 ? "" : "s"}`
+        : "Awaiting paper validation",
+      href: "#recommendations",
+    }));
+
+  const visible = items
+    .sort((left, right) => left.priority - right.priority || String(left.ticker).localeCompare(String(right.ticker)))
+    .slice(0, 4);
+  if (!visible.length) {
+    target.innerHTML = `
+      <div class="today-decision-empty">
+        <span class="today-decision-check" aria-hidden="true">&#10003;</span>
+        <div>
+          <strong>No decision needs your attention</strong>
+          <small>Atlas is monitoring ${positions.length} open simulated position${positions.length === 1 ? "" : "s"} and will place any new paper decision here.</small>
+        </div>
+        <a href="#paper">View portfolio</a>
+      </div>`;
+    return;
+  }
+  target.innerHTML = visible.map(item => `
+    <article class="today-decision-row ${escapeHtml(item.tone)}">
+      <span class="today-decision-tag">${escapeHtml(item.label)}</span>
+      <div class="today-decision-copy">
+        <strong>${escapeHtml(item.action)}</strong>
+        <p><b>Why:</b> ${escapeHtml(item.reason || "Atlas identified a current paper decision.")}</p>
+        <small><b>Next:</b> ${escapeHtml(item.next)}</small>
+      </div>
+      <div class="today-decision-meta">
+        <span>${escapeHtml(item.evidence)}</span>
+        <a href="${escapeHtml(item.href)}">Review</a>
+      </div>
+    </article>
+  `).join("");
 }
 
 function renderOwnerReportStatus(reports) {

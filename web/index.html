@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-    <link rel="stylesheet" href="/styles.css?v=20260807-simplified-workspace">
+    <link rel="stylesheet" href="/styles.css?v=20260810-decision-inbox">
 </head>
 <body>
   <div class="app-shell">
@@ -187,7 +187,19 @@
         <span id="coverage"></span><span id="breadth"></span><span id="research-count"></span><span id="research-detail"></span>
         <span id="breadth-center"></span><span id="advancing"></span><span id="declining"></span>
         <div id="breadth-donut"></div><div id="overview-current-list"></div><div id="overview-validation-summary"></div>
+        <div id="overview-recommended-buys"></div><div id="overview-recommended-exits"></div><div id="portfolio-focus"></div>
       </div>
+      <section class="panel today-decision-panel" aria-labelledby="today-decision-title">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Prioritized for you</p>
+            <h2 id="today-decision-title">Today&rsquo;s decision inbox</h2>
+            <p class="section-intro">Only current paper decisions that need attention, ordered by importance.</p>
+          </div>
+          <a class="section-link" href="#recommendations">Review all ideas</a>
+        </div>
+        <div id="today-decision-inbox" class="today-decision-inbox"></div>
+      </section>
       <section class="content-grid overview-performance-grid">
         <article class="panel performance-panel">
           <div class="panel-heading">
@@ -212,39 +224,6 @@
             <span><i class="legend-line qqq"></i>QQQ (Nasdaq-100 ETF benchmark)</span>
           </div>
           <p class="legend-note">SPY tracks the S&amp;P 500 as a broad U.S. large-cap benchmark. QQQ tracks the Nasdaq-100 and is commonly used as a growth and technology benchmark.</p>
-        </article>
-
-      </section>
-      <section class="content-grid overview-action-grid">
-        <article class="panel recommendation-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Recommended simulated buys</p>
-              <h2>Purchase recommendations</h2>
-            </div>
-            <a class="section-link" href="#recommendations">Open page</a>
-          </div>
-          <div id="overview-recommended-buys" class="recommendation-list"></div>
-        </article>
-        <article class="panel exit-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Position risk review</p>
-              <h2>Exit / trim recommendations</h2>
-            </div>
-            <a class="section-link" href="#recommendations">Open page</a>
-          </div>
-          <div id="overview-recommended-exits" class="recommendation-list"></div>
-        </article>
-        <article class="panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Portfolio posture</p>
-              <h2>Portfolio focus right now</h2>
-            </div>
-            <a class="section-link" href="#paper">Open page</a>
-          </div>
-          <div id="portfolio-focus" class="portfolio-focus"></div>
         </article>
       </section>
       </section>
@@ -1066,6 +1045,6 @@
       </div>
     </form>
   </dialog>
-    <script src="/app.js?v=20260807-simplified-workspace"></script>
+    <script src="/app.js?v=20260810-decision-inbox"></script>
 </body>
 </html>
