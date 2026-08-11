@@ -313,6 +313,7 @@ function renderDashboard(data) {
 
   renderOwnerBriefing(data);
   renderTodayDecisionInbox(data);
+  renderTodayLatestPaperAction(paper);
   renderMarketPills(data.market || []);
   renderBreadth(overview);
   renderPerformance(data.history || []);
@@ -791,6 +792,62 @@ function renderTodayDecisionInbox(data) {
       </div>
     </article>
   `).join("");
+}
+
+function renderTodayLatestPaperAction(paper) {
+  const target = document.getElementById("today-latest-paper-action");
+  if (!target) return;
+  const activity = Array.isArray(paper?.activity) ? paper.activity : [];
+  const latest = activity[0] || null;
+  if (!latest) {
+    target.hidden = true;
+    target.innerHTML = "";
+    return;
+  }
+  const positions = Array.isArray(paper?.positions) ? paper.positions : [];
+  const position = positions.find(item => item.ticker === latest.ticker) || null;
+  const action = String(latest.action_label || latest.side || "trade").toLowerCase();
+  const isSell = latest.side === "sell";
+  const actionLabel = action === "trim" ? "Trimmed" : action === "exit" ? "Sold" : isSell ? "Sold" : "Bought";
+  const rationale = Array.isArray(latest.rationale) ? latest.rationale.filter(Boolean) : [];
+  const decisionContext = Array.isArray(latest.decision_context)
+    ? latest.decision_context.filter(Boolean)
+    : [];
+  const reason = rationale[0]
+    || latest.summary
+    || latest.thesis
+    || decisionContext[0]
+    || "Atlas recorded this simulated action under the active paper policy.";
+  let resultLabel = "Now being monitored";
+  let resultClass = "";
+  if (isSell) {
+    const realized = Number(latest.realized_gain_loss || 0);
+    resultLabel = `Realized paper result ${money.format(realized)}`;
+    resultClass = changeClass(realized);
+  } else if (position) {
+    const openResult = Number(position.unrealized_gain_loss || 0);
+    resultLabel = `Current open result ${money.format(openResult)}`;
+    resultClass = changeClass(openResult);
+  }
+  target.hidden = false;
+  target.innerHTML = `
+    <div class="today-latest-heading">
+      <span class="access-label">Latest paper action</span>
+      <span>Simulation only</span>
+    </div>
+    <div class="today-latest-content">
+      <span class="tag ${isSell ? "exit-tag" : "buy-tag"}">${escapeHtml(actionLabel)}</span>
+      <div>
+        <strong>${escapeHtml(actionLabel)} ${Number(latest.shares || 0).toFixed(2)} shares of ${escapeHtml(latest.ticker || "a paper holding")}</strong>
+        <p><b>Why:</b> ${escapeHtml(conciseText(reason, 180))}</p>
+        <small>${new Date(latest.timestamp).toLocaleString()} &middot; ${money.format(Number(latest.fill_price) || 0)} per share</small>
+      </div>
+      <div class="today-latest-result">
+        <strong class="${resultClass}">${escapeHtml(resultLabel)}</strong>
+        <button class="link-button" type="button" data-paper-section="paper-activity-panel">Open activity</button>
+      </div>
+    </div>
+  `;
 }
 
 function renderOwnerReportStatus(reports) {
@@ -3958,6 +4015,10 @@ document.getElementById("paper").addEventListener("click", event => {
   if (button) {
     openPositionDetailDialog(button.dataset.positionDetail);
   }
+});
+document.getElementById("overview").addEventListener("click", event => {
+  const sectionButton = event.target.closest("[data-paper-section]");
+  if (sectionButton) jumpToPaperSection(sectionButton.dataset.paperSection);
 });
 document.getElementById("position-detail-open-basis").addEventListener("click", () => {
   closePositionDetailDialog();
