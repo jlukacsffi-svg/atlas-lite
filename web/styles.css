@@ -18,6 +18,8 @@
   --gold-soft: #fff1d8;
   --cyan: #0f7c8f;
   --cyan-soft: #dff3f6;
+  --teal: #17836f;
+  --teal-dark: #0c5f52;
   --radius: 8px;
   font-family: Inter, "Segoe UI", Arial, sans-serif;
 }
@@ -4231,7 +4233,8 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 
 /* Focused recommendation views */
 .recommendation-view-switcher,
-.report-view-switcher {
+.report-view-switcher,
+.control-view-switcher {
   display: inline-grid;
   grid-template-columns: repeat(4, minmax(110px, 1fr));
   gap: 3px;
@@ -4241,8 +4244,11 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   border-radius: 7px;
   background: #e7ebee;
 }
+.report-view-switcher,
+.control-view-switcher { grid-template-columns: repeat(3, minmax(120px, 1fr)); }
 .recommendation-view-button,
-.report-view-button {
+.report-view-button,
+.control-view-button {
   min-height: 34px;
   padding: 0 12px;
   border: 0;
@@ -4257,7 +4263,8 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   gap: 8px;
 }
 .recommendation-view-button b,
-.report-view-button b {
+.report-view-button b,
+.control-view-button b {
   min-width: 20px;
   min-height: 20px;
   display: inline-grid;
@@ -4269,15 +4276,18 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   font-size: 10px;
 }
 .recommendation-view-button:hover,
-.report-view-button:hover { color: var(--text); }
+.report-view-button:hover,
+.control-view-button:hover { color: var(--text); }
 .recommendation-view-button.active,
-.report-view-button.active {
+.report-view-button.active,
+.control-view-button.active {
   color: var(--green);
   background: #fff;
   box-shadow: 0 1px 3px rgba(23, 33, 43, .12);
 }
 .recommendation-view-button.active b,
-.report-view-button.active b { color: #fff; background: var(--green); }
+.report-view-button.active b,
+.control-view-button.active b { color: #fff; background: var(--green); }
 
 /* Explainable Atlas scores */
 .score-universe-item {
@@ -4551,7 +4561,8 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
     border-bottom: 1px solid var(--line);
   }
   .recommendation-view-switcher,
-  .report-view-switcher {
+  .report-view-switcher,
+  .control-view-switcher {
     width: 100%;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
@@ -4721,6 +4732,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   gap: 16px;
 }
 [data-report-section][hidden] { display: none !important; }
+[data-control-section][hidden] { display: none !important; }
 .report-archive-list {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -1458,11 +1458,17 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(pipeline["partial_trims"], 1)
         self.assertEqual(pipeline["sell_executions"], 1)
         self.assertEqual(pipeline["latest_snapshot_at"], "2026-06-07T16:00:00")
+        integrity = summary["evaluation_integrity"]
+        self.assertTrue(integrity["available"])
+        self.assertEqual(integrity["snapshot_count"], 5)
+        self.assertEqual(integrity["judged_decisions"], 2)
+        self.assertFalse(integrity["policy_changed"])
         self.assertFalse(summary["completed_position_diagnostics"]["available"])
         self.assertTrue(summary["prospective_review_tracker"]["activated"])
         self.assertFalse(
             summary["prospective_review_tracker"]["policy_changed"]
         )
+
         self.assertFalse(
             summary["prospective_review_effectiveness"][
                 "ready_for_owner_review"
@@ -1515,6 +1521,54 @@ class PaperTradingAccountTests(unittest.TestCase):
             "Atlas is not yet ahead of the tracked benchmarks on total paper return.",
             summary["takeaways"],
         )
+
+    def test_stage5_evaluation_integrity_starts_a_new_policy_epoch(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            times = iter(
+                [
+                    datetime(2026, 6, 1, 9, 0, 0),
+                    datetime(2026, 6, 1, 16, 0, 0),
+                    datetime(2026, 6, 2, 9, 0, 0),
+                    datetime(2026, 6, 2, 16, 0, 0),
+                    datetime(2026, 6, 3, 16, 0, 0),
+                ]
+            )
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: next(times),
+            )
+            account.initialize(100000)
+            account.record_performance_snapshot(
+                prices={},
+                benchmark_prices={"SPY": 500, "QQQ": 400},
+            )
+            account.update_policy(
+                {"strategy_minimum_buy_score": 90.0},
+                source="owner_test",
+            )
+            account.record_performance_snapshot(
+                prices={},
+                benchmark_prices={"SPY": 501, "QQQ": 402},
+            )
+            account.record_performance_snapshot(
+                prices={},
+                benchmark_prices={"SPY": 503, "QQQ": 405},
+            )
+
+            integrity = account.stage5_evaluation_integrity(feedback_rows=[])
+
+        self.assertTrue(integrity["available"])
+        self.assertTrue(integrity["policy_changed"])
+        self.assertEqual(integrity["policy_update_count"], 1)
+        self.assertEqual(integrity["snapshot_count"], 2)
+        self.assertEqual(integrity["trade_count"], 0)
+        self.assertEqual(integrity["judged_decisions"], 0)
+        self.assertEqual(
+            integrity["changed_fields"],
+            ["strategy_minimum_buy_score"],
+        )
+        self.assertFalse(integrity["comparable"])
 
     def test_proposal_feedback_tracks_snapshot_persistence_horizons(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -482,6 +482,7 @@ class DashboardDataService:
             "validation_summary": self.paper_account.stage5_validation_summary(
                 latest_prices=prices,
                 feedback_summary=feedback_summary,
+                feedback_rows=feedback_rows,
             ),
             "operating_mode": self._paper_operating_mode(),
             "proposals": {

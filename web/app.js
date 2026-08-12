@@ -14,6 +14,7 @@ let reportArchive = [];
 let reportArchiveFilter = "all";
 let reportArchiveExpanded = false;
 let reportView = "latest";
+let controlView = "settings";
 
 const PAGE_METADATA = {
   about: {
@@ -42,9 +43,9 @@ const PAGE_METADATA = {
     description: "See current simulated holdings, performance, recent activity, and positions that need attention.",
   },
   controls: {
-    eyebrow: "Policy workspace",
-    title: "Controls",
-    description: "Set the boundaries Atlas must follow while managing recommendations and the simulated paper portfolio.",
+    eyebrow: "Simulation policy",
+    title: "Paper settings",
+    description: "Review Atlas's simulated operating mode, strategy limits, pending decisions, and monitoring queues.",
   },
   access: {
     eyebrow: "Security workspace",
@@ -942,6 +943,9 @@ function jumpToPageTarget(pageId, targetId) {
 
 function jumpToControlsTarget(targetId) {
   const target = document.getElementById(String(targetId || ""));
+  const section = target?.closest("[data-control-section]") || target;
+  const sectionName = section?.dataset?.controlSection;
+  if (sectionName) setControlView(sectionName);
   const disclosure = target?.matches(".control-disclosure")
     ? target
     : target?.closest(".control-disclosure");
@@ -1134,6 +1138,10 @@ function renderControlWorkspace({
   const trimEscalation = Number(values.maximum_partial_trims_per_position ?? 2);
   const paperMode = autoManageEnabled ? "Automatic paper management" : "Recommendations only";
   const researchMode = researchAutoManageEnabled ? "Automatic research review" : "Owner research review";
+  const decisionsCount = document.getElementById("control-decisions-count");
+  const monitoringCount = document.getElementById("control-monitoring-count");
+  if (decisionsCount) decisionsCount.textContent = String(ownerAttention);
+  if (monitoringCount) monitoringCount.textContent = String(portfolioQueue.length);
 
   target.innerHTML = `
     <div class="control-summary-grid">
@@ -1185,13 +1193,26 @@ function renderControlWorkspace({
         </div>
       </section>
     </div>
-    <div class="control-summary-actions">
-      <button class="secondary-button" type="button" data-controls-target="control-decisions-panel">Review decisions</button>
-      <button class="secondary-button" type="button" data-controls-target="control-strategy-panel">Edit paper strategy</button>
-      <button class="secondary-button" type="button" data-controls-target="control-portfolio-panel">Inspect paper monitoring</button>
-    </div>
     <p class="control-boundary-note"><b>Important:</b> every portfolio action on this page remains hypothetical and is recorded only in the Atlas paper account.</p>
   `;
+}
+
+function setControlView(view) {
+  controlView = ["settings", "decisions", "monitoring"].includes(view)
+    ? view
+    : "settings";
+  document.querySelectorAll("[data-control-view]").forEach(button => {
+    const active = button.dataset.controlView === controlView;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+  document.querySelectorAll("[data-control-section]").forEach(section => {
+    const active = section.dataset.controlSection === controlView;
+    section.hidden = !active;
+    if (active && section.matches("details") && controlView !== "settings") {
+      section.open = true;
+    }
+  });
 }
 
 function renderOwnerControls(controls) {
@@ -3537,6 +3558,7 @@ function renderValidationSummary(summary) {
   const takeaways = Array.isArray(summary.takeaways) ? summary.takeaways : [];
   const readiness = summary.capital_readiness || {};
   const readinessCriteria = Array.isArray(readiness.criteria) ? readiness.criteria : [];
+  const integrity = summary.evaluation_integrity || {};
   const stateClass = escapeHtml(String(summary.status || "building"));
   const html = `
     <div class="feedback-summary-grid validation-grid">
@@ -3563,6 +3585,16 @@ function renderValidationSummary(summary) {
               </div>
             `).join("")}
           </div>
+        </div>
+      ` : ""}
+      ${integrity.available ? `
+        <div class="feedback-summary-card spotlight evaluation-integrity ${integrity.comparable ? "ready" : "building"}">
+          <span class="summary-label">Current policy evidence</span>
+          <strong>${escapeHtml(integrity.status_label || "Current policy building")}</strong>
+          <small>${escapeHtml(integrity.headline || "Atlas is separating current-policy evidence from earlier strategy periods.")}</small>
+          <p>${escapeHtml(integrity.detail || "")}</p>
+          ${Array.isArray(integrity.changed_fields) && integrity.changed_fields.length ? `<small>Latest policy change: ${escapeHtml(integrity.changed_fields.join(", ").replaceAll("_", " "))}</small>` : `<small>Baseline policy period; no later policy update is recorded.</small>`}
+          <small>${escapeHtml(integrity.boundary || "This measurement does not change trading authority.")}</small>
         </div>
       ` : ""}
       ${scorecards.map(item => `
@@ -4043,6 +4075,11 @@ document.getElementById("report-archive-toggle").addEventListener("click", () =>
   renderReportArchive(reportArchive);
 });
 document.getElementById("controls").addEventListener("click", event => {
+  const viewButton = event.target.closest("[data-control-view]");
+  if (viewButton) {
+    setControlView(viewButton.dataset.controlView);
+    return;
+  }
   const jumpButton = event.target.closest("[data-controls-target]");
   if (jumpButton) {
     jumpToControlsTarget(jumpButton.dataset.controlsTarget);
@@ -4135,6 +4172,7 @@ renderEnvironment();
 initializeHelpPopovers();
 setRecommendationView("actions");
 setReportView("latest");
+setControlView("settings");
 setActivePage(window.location.hash.replace("#", "") || "overview");
 hydrateDashboardFromCache();
 loadDashboard();

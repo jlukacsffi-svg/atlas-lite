@@ -529,6 +529,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Recovery durability gap";\n'
                 '"Recovery quality";\n'
                 '"Paper evidence updates";\n'
+                '"Current policy evidence";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
             )
@@ -543,6 +544,15 @@ class CloudWebApplicationTests(unittest.TestCase):
                         "paper": {
                             "validation_summary": {
                                 "headline": "ready",
+                                "evaluation_integrity": {
+                                    "available": True,
+                                    "current_epoch_started_at": "2026-06-01T09:00:00",
+                                    "snapshot_count": 40,
+                                    "trade_count": 8,
+                                    "judged_decisions": 6,
+                                    "policy_update_count": 1,
+                                    "comparable": False,
+                                },
                                 "completed_position_diagnostics": {
                                     "available": True,
                                     "sample_size": 3,
@@ -693,6 +703,11 @@ class CloudWebApplicationTests(unittest.TestCase):
             )
         self.assertEqual(response["status"], "200 OK")
         self.assertTrue(response["json"]["checks"]["stage5_scoreboard"]["ok"])
+        self.assertTrue(response["json"]["checks"]["evaluation_integrity"]["ok"])
+        self.assertEqual(
+            response["json"]["checks"]["evaluation_integrity"]["snapshot_count"],
+            40,
+        )
         self.assertTrue(
             response["json"]["checks"]["completed_position_diagnostics"]["ok"]
         )

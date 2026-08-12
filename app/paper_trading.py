@@ -725,7 +725,12 @@ class PaperTradingAccount:
             },
         }
 
-    def stage5_validation_summary(self, latest_prices=None, feedback_summary=None):
+    def stage5_validation_summary(
+        self,
+        latest_prices=None,
+        feedback_summary=None,
+        feedback_rows=None,
+    ):
         """Summarize whether Stage 5 paper validation is building proof of quality."""
         performance = self.performance_summary()
         if not performance.get("available"):
@@ -746,9 +751,12 @@ class PaperTradingAccount:
 
         latest = performance["latest"]
         trade_stats = performance.get("trade_statistics") or self.trade_statistics()
-        feedback = feedback_summary or self.proposal_feedback_summary(
-            latest_prices=latest_prices
-        )
+        if feedback_rows is None:
+            feedback_rows = self.proposal_feedback(latest_prices=latest_prices)
+        if feedback_summary is None:
+            feedback = self.proposal_feedback_summary(rows=feedback_rows)
+        else:
+            feedback = feedback_summary
         snapshots = int(performance.get("snapshots") or 0)
         judged = int(feedback.get("judged") or 0)
         realized_exits = int(trade_stats.get("realized_exits") or 0)
@@ -1166,6 +1174,9 @@ class PaperTradingAccount:
                 prospective_review_tracker
             )
         )
+        evaluation_integrity = self.stage5_evaluation_integrity(
+            feedback_rows=feedback_rows,
+        )
         return {
             "available": True,
             "status": status,
@@ -1185,6 +1196,96 @@ class PaperTradingAccount:
             "prospective_review_tracker": prospective_review_tracker,
             "prospective_review_effectiveness": (
                 prospective_review_effectiveness
+            ),
+            "evaluation_integrity": evaluation_integrity,
+        }
+
+    def stage5_evaluation_integrity(self, feedback_rows=None, events=None):
+        """Describe the comparable evidence accumulated under the current policy."""
+        events = list(events if events is not None else self.ledger())
+        policy_updates = [
+            event for event in events
+            if event.get("event") == "paper_policy_update"
+        ]
+        initializations = [
+            event for event in events
+            if event.get("event") == "account_initialized"
+        ]
+        marker = policy_updates[-1] if policy_updates else (
+            initializations[-1] if initializations else None
+        )
+        started_at = str((marker or {}).get("timestamp") or "")
+        if not started_at:
+            return {
+                "available": False,
+                "status": "not_started",
+                "status_label": "Not started",
+                "headline": "Atlas has no paper-policy epoch to evaluate yet.",
+                "detail": "Initialize the simulated account before measuring policy stability.",
+                "policy_changed": False,
+            }
+
+        current_snapshots = [
+            event for event in events
+            if event.get("event") == "performance_snapshot"
+            and str(event.get("timestamp") or "") >= started_at
+        ]
+        current_trades = [
+            event for event in events
+            if event.get("event") == "paper_trade"
+            and str(event.get("timestamp") or "") >= started_at
+        ]
+        rows = feedback_rows
+        if rows is None:
+            rows = self.proposal_feedback()
+        current_feedback = [
+            row for row in rows
+            if str(row.get("filled_at") or "") >= started_at
+        ]
+        judged = sum(
+            1 for row in current_feedback
+            if row.get("verdict") != "not_enough_time"
+        )
+        snapshot_target = 30
+        judged_target = 10
+        comparable = (
+            len(current_snapshots) >= snapshot_target
+            and judged >= judged_target
+        )
+        changed_fields = sorted((marker or {}).get("changes", {}).keys())
+        policy_changed = bool(policy_updates)
+        return {
+            "available": True,
+            "status": "comparable" if comparable else "building",
+            "status_label": (
+                "Comparable sample" if comparable else "Current policy building"
+            ),
+            "headline": (
+                "The current paper policy has enough internal history for a first comparable read."
+                if comparable
+                else "Atlas is separating current-policy evidence from earlier strategy periods."
+            ),
+            "detail": (
+                f"Since {started_at}, Atlas has recorded {len(current_snapshots)} "
+                f"snapshots, {len(current_trades)} simulated trades, and {judged} "
+                "judged decisions under the current paper policy."
+            ),
+            "current_epoch_started_at": started_at,
+            "source": str((marker or {}).get("source") or "account_initialization"),
+            "policy_changed": policy_changed,
+            "policy_update_count": len(policy_updates),
+            "changed_fields": changed_fields,
+            "snapshot_count": len(current_snapshots),
+            "trade_count": len(current_trades),
+            "judged_decisions": judged,
+            "targets": {
+                "snapshots": snapshot_target,
+                "judged_decisions": judged_target,
+            },
+            "comparable": comparable,
+            "boundary": (
+                "This measurement preserves evaluation context only. It does not alter "
+                "paper policy, brokerage access, or real-money authority."
             ),
         }
 

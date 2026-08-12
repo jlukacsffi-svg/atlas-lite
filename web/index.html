@@ -33,9 +33,9 @@
         <a class="nav-item" href="#research">Reports</a>
         <details class="nav-more">
           <summary>More</summary>
-          <a class="nav-item" href="#controls">Strategy settings</a>
-          <a class="nav-item" href="#roadmap">Development</a>
-          <a class="nav-item" href="#access">Security</a>
+          <a class="nav-item" href="#controls">Paper settings</a>
+          <a class="nav-item" href="#access">Security status</a>
+          <a class="nav-item" href="#roadmap">Development status</a>
           <a class="nav-item" href="#about">About Atlas</a>
         </details>
       </nav>
@@ -703,7 +703,7 @@
           <div>
             <p class="eyebrow">Owner authority</p>
             <div class="title-with-help">
-              <h2>Policy &amp; authority</h2>
+              <h2>Paper strategy &amp; limits</h2>
               <details class="info-popover">
                 <summary aria-label="About decision controls">?</summary>
                 <p>Owner-only controls for approving, deferring, or rejecting research and simulation proposals. These actions do not execute real trades.</p>
@@ -716,7 +716,12 @@
           Owner actions are available after secure Google sign-in.
         </div>
         <div id="control-content" class="control-workspace" hidden>
-          <article class="control-workspace-panel">
+          <div class="control-view-switcher" role="group" aria-label="Paper settings page view">
+            <button class="control-view-button active" type="button" data-control-view="settings"><span>Strategy &amp; limits</span><b id="control-settings-count">5</b></button>
+            <button class="control-view-button" type="button" data-control-view="decisions"><span>Pending decisions</span><b id="control-decisions-count">0</b></button>
+            <button class="control-view-button" type="button" data-control-view="monitoring"><span>Monitoring</span><b id="control-monitoring-count">0</b></button>
+          </div>
+          <article class="control-workspace-panel" data-control-section="settings">
             <div class="panel-heading">
               <div>
                 <p class="eyebrow">Owner policy brief</p>
@@ -727,7 +732,7 @@
             <div id="control-workspace-summary"></div>
           </article>
 
-          <details id="control-decisions-panel" class="control-disclosure">
+          <details id="control-decisions-panel" class="control-disclosure" data-control-section="decisions" hidden>
             <summary>
               <span><b>Owner decisions</b><small>Research reviews, outcomes, and items requiring a decision</small></span>
               <strong id="research-review-count">0 awaiting review</strong>
@@ -739,7 +744,7 @@
             </div>
           </details>
 
-          <details id="control-strategy-panel" class="control-disclosure">
+          <details id="control-strategy-panel" class="control-disclosure" data-control-section="settings">
             <summary>
               <span><b>Simulated strategy settings</b><small>Paper autonomy, entry thresholds, sizing, and risk preferences</small></span>
               <strong>Owner editable</strong>
@@ -752,7 +757,7 @@
             </div>
           </details>
 
-          <details id="control-portfolio-panel" class="control-disclosure">
+          <details id="control-portfolio-panel" class="control-disclosure" data-control-section="monitoring" hidden>
             <summary>
               <span><b>Paper portfolio monitoring</b><small>Current posture, watch items, steady holdings, and simulated proposals</small></span>
               <strong id="portfolio-action-count">0 items</strong>

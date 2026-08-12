@@ -488,6 +488,7 @@ class AtlasCloudApplication:
         prospective_review_effectiveness = (
             validation.get("prospective_review_effectiveness") or {}
         )
+        evaluation_integrity = validation.get("evaluation_integrity") or {}
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -516,6 +517,30 @@ class AtlasCloudApplication:
                     "partial_trims": int(
                         evidence_pipeline.get("partial_trims") or 0
                     ),
+                },
+                "evaluation_integrity": {
+                    "ok": bool(evaluation_integrity.get("available"))
+                    and bool(evaluation_integrity.get("current_epoch_started_at"))
+                    and self._ui_contains("Current policy evidence"),
+                    "detail": (
+                        "Stage 5 separates the current paper-policy period with "
+                        f"{int(evaluation_integrity.get('snapshot_count') or 0)} snapshots, "
+                        f"{int(evaluation_integrity.get('trade_count') or 0)} trades, and "
+                        f"{int(evaluation_integrity.get('judged_decisions') or 0)} judged decisions."
+                    ),
+                    "policy_update_count": int(
+                        evaluation_integrity.get("policy_update_count") or 0
+                    ),
+                    "snapshot_count": int(
+                        evaluation_integrity.get("snapshot_count") or 0
+                    ),
+                    "trade_count": int(
+                        evaluation_integrity.get("trade_count") or 0
+                    ),
+                    "judged_decisions": int(
+                        evaluation_integrity.get("judged_decisions") or 0
+                    ),
+                    "comparable": bool(evaluation_integrity.get("comparable")),
                 },
                 "completed_position_diagnostics": {
                     "ok": bool(completed_diagnostics.get("available"))
