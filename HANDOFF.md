@@ -61,6 +61,22 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The owner-first Portfolio workspace is live on Cloud Run revision
+  `atlas-dashboard-stg-00174-4jd`. The dashboard, daily job, and weekly job use
+  image `20260811-compact-portfolio-v2`, digest
+  `sha256:7658585f51ae9f2d4858711f19f1be792554de9d71edcc03b85170df6bb03728`.
+  All 434 local tests, 26 staging checks, and 24 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- Portfolio now leads with account summary, holdings, and five recent
+  simulated actions. Complete trade and basis history remain available in the
+  audit dialogs, while Stage 5 diagnostics live under `How Atlas is learning`.
+- Current evidence is 165 snapshots, 63 judged decisions, and 11 completed
+  positions. No elevated warning episode has yet satisfied the next gated
+  outcome-scorecard requirement.
+- Next development focus: continue owner-workflow simplification while the
+  scheduled Stage 5 proof period accumulates evidence.
+
 - The compact benchmark result is live on Cloud Run revision
   `atlas-dashboard-stg-00172-dzc`. The dashboard, daily job, and weekly job use
   image `20260810-compact-performance`, digest

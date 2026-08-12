@@ -38,6 +38,9 @@ Atlas now:
   stocks.
 - Shows concise portfolio value, return, cash, positions, and recent activity
   before optional paper-learning evidence and controls.
+- Limits the default Portfolio activity feed to five recent simulated actions,
+  keeps complete history in audit dialogs, and places Stage 5 learning behind
+  one optional disclosure.
 - Shows six recent reports by default while keeping the full archive and
   supporting research available on demand.
 - Explains each Atlas Score through Growth, Quality, Moat, Momentum, and Risk
@@ -58,7 +61,7 @@ Atlas now:
 Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
-Current Stage 5 evidence: 163 snapshots, 63 judged decisions, and 11 completed
+Current Stage 5 evidence: 165 snapshots, 63 judged decisions, and 11 completed
 paper positions. The next warning-outcome scorecard remains gated until actual
 elevated warning episodes are recorded and resolved.
 

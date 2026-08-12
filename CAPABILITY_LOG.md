@@ -3,6 +3,40 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 11, 2026 - Portfolio becomes an owner-first workspace
+
+New capabilities:
+
+- Scan the paper account summary, open holdings, and recent simulated actions
+  before seeing any technical validation material.
+- Review only the five most recent simulated buys, trims, or sales by default,
+  while retaining the complete trade history and basis report in their
+  existing audit dialogs.
+- Open Stage 5 benchmark validation and recommendation-learning evidence from
+  one optional `How Atlas is learning` disclosure.
+
+Validated result:
+
+- Desktop and 390-pixel mobile layouts pass visual review without overflow,
+  duplicate IDs, or browser warnings.
+- The optional learning disclosure opens correctly and preserves all Stage 5
+  evidence and SPY/QQQ definitions.
+- The full local suite passes with 434 tests.
+- Cloud Run revision `atlas-dashboard-stg-00174-4jd`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260811-compact-portfolio-v2`.
+- The deployed image digest is
+  `sha256:7658585f51ae9f2d4858711f19f1be792554de9d71edcc03b85170df6bb03728`.
+- All 26 staging readiness checks and all 24 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules remain enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Every holding and action remains simulated; Atlas has no brokerage access.
+- Stage 5 evidence is 165 snapshots, 63 judged decisions, and 11 completed
+  positions. The proof period remains active.
+- Overall program completion remains estimated at 85%.
+
 ## August 10, 2026 - Benchmark performance becomes glanceable
 
 New capabilities:
