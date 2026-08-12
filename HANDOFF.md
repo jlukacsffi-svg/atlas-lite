@@ -61,6 +61,25 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Comparable policy-period evidence is live on Cloud Run revision
+  `atlas-dashboard-stg-00177-c7t`. The dashboard, daily job, and weekly job use
+  image `20260811-policy-epochs`, digest
+  `sha256:6cae04596375fe4cca360dfe3c99d5670eea4768c581fc45b48fd3c1c41d01e1`.
+  All 435 local tests, 26 staging checks, and 25 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed
+  during the release.
+- Atlas now separates evidence accumulated under the current paper-policy
+  period from older strategy periods. The current period has 82 snapshots,
+  49 simulated trades, and 49 judged decisions; broader Stage 5 history remains
+  165 snapshots, 63 judged decisions, and 11 completed positions.
+- Paper settings is split into Strategy & limits, Pending decisions, and
+  Monitoring so the owner can inspect one workflow at a time. This is a
+  supporting usability improvement and does not alter policy or authority.
+- Next development focus: preserve the aligned policy while scheduled evidence
+  grows toward 250 snapshots, 100 judged decisions, 30 completed positions,
+  and enough resolved elevated-warning episodes for a defensible review.
+  Interface work should support that evaluation rather than displace it.
+
 - The focused Reports workflow is live on Cloud Run revision
   `atlas-dashboard-stg-00176-jfc`. The dashboard, daily job, and weekly job
   use image `20260811-focused-reports`, digest

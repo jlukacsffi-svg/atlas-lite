@@ -3,6 +3,41 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 11, 2026 - Comparable policy evidence and focused paper settings
+
+New capabilities:
+
+- Separate Stage 5 results accumulated under the current paper-policy period
+  from evidence produced before the latest strategy-setting change.
+- Show the current policy period, changed settings, and comparable evidence
+  counts inside the existing optional paper-learning view.
+- Use Paper settings as three focused owner workflows: Strategy & limits,
+  Pending decisions, and Monitoring, each with a live item count.
+
+Validated result:
+
+- The live current-policy period contains 82 snapshots, 49 simulated trades,
+  and 49 judged decisions. The broader Stage 5 history remains 165 snapshots,
+  63 judged decisions, and 11 completed positions.
+- Desktop and 390-pixel mobile layouts pass visual review without horizontal
+  overflow, duplicate IDs, or browser warnings.
+- The full local suite passes with 435 tests.
+- Cloud Run revision `atlas-dashboard-stg-00177-c7t`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260811-policy-epochs`.
+- The deployed image digest is
+  `sha256:6cae04596375fe4cca360dfe3c99d5670eea4768c581fc45b48fd3c1c41d01e1`.
+- All 26 staging readiness checks and all 25 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- The policy-period measurement changes no strategy rule or trading authority.
+- Atlas remains paper-only with no brokerage connection or real-money access.
+- Comparable forward performance, completed positions, and resolved warning
+  episodes remain the active proof requirements.
+- Overall program completion remains estimated at 85%.
+
 ## August 11, 2026 - Reports becomes a one-task-at-a-time workspace
 
 New capabilities:
