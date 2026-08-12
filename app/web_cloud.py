@@ -955,7 +955,10 @@ class AtlasCloudApplication:
                     "detail": "Paper feedback includes persistence checkpoints and learning context.",
                 },
                 "benchmark_labels": {
-                    "ok": self._ui_contains("Open Stage 5 validation and learning detail")
+                    "ok": (
+                        self._ui_contains("How Atlas is learning")
+                        or self._ui_contains("Open Stage 5 validation and learning detail")
+                    )
                     and self._ui_contains("SPY (S&P 500 ETF benchmark)")
                     and self._ui_contains("QQQ (Nasdaq-100 ETF benchmark)"),
                     "detail": "UI assets keep Stage 5 evidence available behind concise detail and label SPY and QQQ explicitly.",
