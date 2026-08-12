@@ -932,6 +932,19 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   gap: 10px;
   margin-top: 10px;
 }
+.recommendation-decision-status {
+  display: grid;
+  gap: 5px;
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--green);
+  border-radius: 6px;
+  background: var(--surface-subtle);
+}
+.recommendation-decision-status.active { border-left-color: var(--blue); }
+.recommendation-decision-status.attention { border-left-color: var(--red); }
+.recommendation-decision-status strong { font-size: 17px; }
+.recommendation-decision-status small { color: var(--muted); font-size: 11px; line-height: 1.45; }
 .recommendation-focus-row {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -4236,6 +4249,21 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   background: transparent;
   font-size: 11px;
   font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.recommendation-view-button b {
+  min-width: 20px;
+  min-height: 20px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 4px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, .65);
+  font-size: 10px;
 }
 .recommendation-view-button:hover { color: var(--text); }
 .recommendation-view-button.active {
@@ -4243,6 +4271,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   background: #fff;
   box-shadow: 0 1px 3px rgba(23, 33, 43, .12);
 }
+.recommendation-view-button.active b { color: #fff; background: var(--green); }
 
 /* Explainable Atlas scores */
 .score-universe-item {

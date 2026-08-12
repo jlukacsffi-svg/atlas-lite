@@ -462,6 +462,17 @@ function renderRecommendationSummary(proposals, watchlist) {
     buyReady: rows.filter(item => item.side === "buy" && item.status === "approved").length,
     reduce: rows.filter(item => item.side === "sell").length + positionAlerts.length,
   };
+  const currentDecisionCount = rows.length + positionAlerts.length;
+  const viewCounts = {
+    "ideas-action-count": currentDecisionCount,
+    "ideas-buy-count": summary.buyPending + summary.buyReady,
+    "ideas-exit-count": summary.reduce,
+    "ideas-universe-count": Array.isArray(watchlist) ? watchlist.length : 0,
+  };
+  Object.entries(viewCounts).forEach(([id, value]) => {
+    const node = document.getElementById(id);
+    if (node) node.textContent = String(value);
+  });
   const highlights = [
     ...positionAlerts.map(item => ({ kind: "position", item })),
     ...rows.slice().sort(compareRecommendations).map(item => ({ kind: "proposal", item })),
@@ -469,22 +480,16 @@ function renderRecommendationSummary(proposals, watchlist) {
     .slice(0, 3);
 
   document.getElementById("recommendation-summary").innerHTML = `
-    <div class="recommendation-summary-grid simplified">
-      <div class="recommendation-summary-card">
-        <span class="summary-label">Buy ideas under review</span>
-        <strong>${summary.buyPending}</strong>
-        <small>${autoManaged ? "Atlas is reviewing these automatically" : "Waiting for your decision"}</small>
-      </div>
-      <div class="recommendation-summary-card ready">
-        <span class="summary-label">Ready to add</span>
-        <strong>${summary.buyReady}</strong>
-        <small>${autoManaged ? "Queued for automatic paper entry" : "Approved for the simulated portfolio"}</small>
-      </div>
-      <div class="recommendation-summary-card exit">
-        <span class="summary-label">Sell or trim</span>
-        <strong>${summary.reduce}</strong>
-        <small>Positions Atlas recommends reducing</small>
-      </div>
+    <div class="recommendation-decision-status ${summary.reduce ? "attention" : currentDecisionCount ? "active" : "quiet"}">
+      <span class="access-label">Current decision load</span>
+      <strong>${currentDecisionCount
+        ? `${currentDecisionCount} active paper decision${currentDecisionCount === 1 ? "" : "s"}`
+        : "No active paper decisions"}</strong>
+      <small>${currentDecisionCount
+        ? (autoManaged
+          ? `Atlas is handling ${summary.buyPending + summary.buyReady} buy decision${summary.buyPending + summary.buyReady === 1 ? "" : "s"} automatically. Positions Atlas recommends reducing: ${summary.reduce}.`
+          : `${summary.buyPending} buy idea${summary.buyPending === 1 ? "" : "s"} need review; ${summary.buyReady} are approved. Positions Atlas recommends reducing: ${summary.reduce}.`)
+        : "Atlas is monitoring the research universe and open simulated positions."}</small>
     </div>
     <div class="recommendation-summary-focus">
       <span class="access-label">What needs attention now</span>
@@ -2152,9 +2157,7 @@ function setRecommendationView(view) {
   });
   document.querySelectorAll("[data-recommendation-section]").forEach(section => {
     const sectionName = section.dataset.recommendationSection;
-    section.hidden = recommendationView === "actions"
-      ? sectionName === "universe"
-      : sectionName !== recommendationView;
+    section.hidden = sectionName !== recommendationView;
   });
 }
 

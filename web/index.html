@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-    <link rel="stylesheet" href="/styles.css?v=20260811-compact-portfolio">
+    <link rel="stylesheet" href="/styles.css?v=20260811-counted-ideas">
 </head>
 <body>
   <div class="app-shell">
@@ -244,10 +244,10 @@
 
       <section id="recommendations" class="dashboard-page" data-page="recommendations">
         <div class="recommendation-view-switcher" role="group" aria-label="Recommendation page view">
-          <button class="recommendation-view-button active" type="button" data-recommendation-view="actions">Needs attention</button>
-          <button class="recommendation-view-button" type="button" data-recommendation-view="buys">Buy</button>
-          <button class="recommendation-view-button" type="button" data-recommendation-view="exits">Sell or trim</button>
-          <button class="recommendation-view-button" type="button" data-recommendation-view="universe">All tracked stocks</button>
+          <button class="recommendation-view-button active" type="button" data-recommendation-view="actions"><span>Needs attention</span><b id="ideas-action-count">0</b></button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="buys"><span>Buy ideas</span><b id="ideas-buy-count">0</b></button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="exits"><span>Sell or trim</span><b id="ideas-exit-count">0</b></button>
+          <button class="recommendation-view-button" type="button" data-recommendation-view="universe"><span>Tracked stocks</span><b id="ideas-universe-count">0</b></button>
         </div>
         <section class="content-grid">
           <article class="panel recommendation-summary-panel decision-desk-panel" data-recommendation-section="actions">
@@ -1062,6 +1062,6 @@
       </div>
     </form>
   </dialog>
-    <script src="/app.js?v=20260811-compact-portfolio"></script>
+    <script src="/app.js?v=20260811-counted-ideas"></script>
 </body>
 </html>
