@@ -13,6 +13,7 @@ let recommendationView = "actions";
 let reportArchive = [];
 let reportArchiveFilter = "all";
 let reportArchiveExpanded = false;
+let reportView = "latest";
 
 const PAGE_METADATA = {
   about: {
@@ -971,6 +972,7 @@ function jumpToPaperSection(targetId) {
 }
 
 function jumpToResearchTarget(targetId) {
+  setReportView("insights");
   const target = document.getElementById(String(targetId || ""));
   const disclosure = target?.querySelector(".research-disclosure");
   if (disclosure) disclosure.open = true;
@@ -1980,6 +1982,8 @@ function renderResearchWorkspace(data) {
   const strongestSector = sectors[0] || null;
   const weakestSector = sectors.length ? sectors[sectors.length - 1] : null;
   renderReportArchive(Array.isArray(data.reports) ? data.reports : []);
+  const researchCount = document.getElementById("report-research-count");
+  if (researchCount) researchCount.textContent = String(Number(research.open || 0));
 
   document.getElementById("research-workspace-summary").innerHTML = `
     <div class="research-summary-grid">
@@ -2076,8 +2080,57 @@ function renderResearchWorkspace(data) {
   `;
 }
 
+function reportGeneratedLabel(report) {
+  return report?.generated_at
+    ? new Date(report.generated_at).toLocaleString([], {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : "Date unavailable";
+}
+
+function reportEvidenceLabel(report) {
+  if (report?.coverage) {
+    return `${Number(report.coverage)} securities${report.leader?.ticker ? ` · Leader ${escapeHtml(report.leader.ticker)} ${Number(report.leader.score || 0).toFixed(1)}` : ""}`;
+  }
+  return report?.type === "Weekly summary"
+    ? "Seven-day research and paper evidence synthesis"
+    : "Historical evidence is preserved in the full report";
+}
+
+function renderLatestReport(reports) {
+  const latest = reports[0] || null;
+  const container = document.getElementById("latest-report");
+  const count = document.getElementById("report-latest-count");
+  if (count) count.textContent = latest ? "1" : "0";
+  if (!latest) {
+    container.innerHTML = `<div class="empty">No executive report is available yet.</div>`;
+    return;
+  }
+  container.innerHTML = `
+    <div class="latest-report-mark" aria-hidden="true">${latest.type === "Weekly summary" ? "W" : "D"}</div>
+    <div class="latest-report-copy">
+      <span class="access-label">${escapeHtml(latest.type || "Atlas report")}</span>
+      <h3>${escapeHtml(latest.title || "Executive report")}</h3>
+      <p>${escapeHtml(reportGeneratedLabel(latest))}</p>
+      <strong>${reportEvidenceLabel(latest)}</strong>
+      <small>This is the newest preserved Atlas briefing. Open it for the complete conclusions and supporting evidence.</small>
+    </div>
+    <div class="latest-report-actions">
+      <a class="latest-report-open report-open-link" href="${escapeHtml(latest.url || "#")}" target="_blank" rel="noopener">Open latest report</a>
+      <button class="secondary-button" type="button" data-report-view="history">View report history</button>
+    </div>
+  `;
+}
+
 function renderReportArchive(reports) {
   reportArchive = reports;
+  renderLatestReport(reports);
+  const historyCount = document.getElementById("report-history-count");
+  if (historyCount) historyCount.textContent = String(reports.length);
   const visible = reports.filter(report => {
     if (reportArchiveFilter === "daily") return report.type === "Morning brief";
     if (reportArchiveFilter === "weekly") return report.type === "Weekly summary";
@@ -2097,20 +2150,8 @@ function renderReportArchive(reports) {
     button.setAttribute("aria-pressed", String(active));
   });
   document.getElementById("report-archive").innerHTML = shown.map(report => {
-    const generated = report.generated_at
-      ? new Date(report.generated_at).toLocaleString([], {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-        })
-      : "Date unavailable";
-    const evidence = report.coverage
-      ? `${Number(report.coverage)} securities${report.leader?.ticker ? ` · Leader ${escapeHtml(report.leader.ticker)} ${Number(report.leader.score || 0).toFixed(1)}` : ""}`
-      : report.type === "Weekly summary"
-        ? "Seven-day research and paper evidence synthesis"
-        : "Historical evidence is preserved in the full report";
+    const generated = reportGeneratedLabel(report);
+    const evidence = reportEvidenceLabel(report);
     return `
       <article class="report-archive-row">
         <div class="report-archive-mark" aria-hidden="true">${report.type === "Weekly summary" ? "W" : "D"}</div>
@@ -2127,6 +2168,18 @@ function renderReportArchive(reports) {
       </article>
     `;
   }).join("") || `<div class="empty compact">No ${escapeHtml(reportArchiveFilter === "all" ? "" : reportArchiveFilter)} reports are available in the recent archive.</div>`;
+}
+
+function setReportView(view) {
+  reportView = ["latest", "history", "insights"].includes(view) ? view : "latest";
+  document.querySelectorAll("[data-report-view]").forEach(button => {
+    const active = button.dataset.reportView === reportView;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", active ? "true" : "false");
+  });
+  document.querySelectorAll("[data-report-section]").forEach(section => {
+    section.hidden = section.dataset.reportSection !== reportView;
+  });
 }
 
 function renderScores(rows) {
@@ -3962,6 +4015,11 @@ document.getElementById("recommendations").addEventListener("click", event => {
   }
 });
 document.getElementById("research").addEventListener("click", event => {
+  const viewButton = event.target.closest("[data-report-view]");
+  if (viewButton) {
+    setReportView(viewButton.dataset.reportView);
+    return;
+  }
   const reportFilter = event.target.closest("[data-report-filter]");
   if (reportFilter) {
     reportArchiveFilter = reportFilter.dataset.reportFilter || "all";
@@ -4076,6 +4134,7 @@ document.getElementById("position-detail-dialog").addEventListener("cancel", eve
 renderEnvironment();
 initializeHelpPopovers();
 setRecommendationView("actions");
+setReportView("latest");
 setActivePage(window.location.hash.replace("#", "") || "overview");
 hydrateDashboardFromCache();
 loadDashboard();

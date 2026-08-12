@@ -339,7 +339,28 @@
       </section>
 
       <section id="research" class="dashboard-page" data-page="research">
-      <section class="panel report-archive-panel">
+      <div class="report-view-switcher" role="group" aria-label="Reports page view">
+        <button class="report-view-button active" type="button" data-report-view="latest"><span>Latest brief</span><b id="report-latest-count">0</b></button>
+        <button class="report-view-button" type="button" data-report-view="history"><span>Report history</span><b id="report-history-count">0</b></button>
+        <button class="report-view-button" type="button" data-report-view="insights"><span>Research detail</span><b id="report-research-count">0</b></button>
+      </div>
+      <section class="panel latest-report-panel" data-report-section="latest">
+        <div class="panel-heading">
+          <div>
+            <p class="eyebrow">Newest owner briefing</p>
+            <div class="title-with-help">
+              <h2>Latest Atlas report</h2>
+              <details class="info-popover">
+                <summary aria-label="About the latest Atlas report">?</summary>
+                <p>The newest private daily or weekly briefing. It preserves Atlas's market view, research priorities, paper activity, risks, and available evidence at the time it was generated.</p>
+              </details>
+            </div>
+          </div>
+          <span class="tag">Owner only</span>
+        </div>
+        <div id="latest-report" class="latest-report"></div>
+      </section>
+      <section class="panel report-archive-panel" data-report-section="history" hidden>
         <div class="panel-heading">
           <div>
             <p class="eyebrow">Owner report library</p>
@@ -365,6 +386,7 @@
         <div id="report-archive" class="report-archive-list"></div>
         <button id="report-archive-toggle" class="secondary-button report-archive-toggle" type="button" hidden>Show all reports</button>
       </section>
+      <div class="report-insights-view" data-report-section="insights" hidden>
       <section class="content-grid lower-grid">
         <article id="research-priorities-panel" class="panel research-summary-panel">
           <div class="panel-heading">
@@ -487,6 +509,7 @@
           </div>
         </details>
       </section>
+      </div>
       </section>
 
       <section id="paper" class="dashboard-page" data-page="paper">
