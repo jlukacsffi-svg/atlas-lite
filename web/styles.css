@@ -4149,6 +4149,10 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   border-top-color: transparent;
   box-shadow: none;
 }
+.portfolio-more.portfolio-learning-more > article {
+  margin: 0 12px 12px;
+  box-shadow: none;
+}
 .research-more {
   grid-column: 1 / -1;
   border: 1px solid var(--line);

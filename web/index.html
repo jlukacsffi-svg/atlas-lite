@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Atlas Capital Research</title>
-    <link rel="stylesheet" href="/styles.css?v=20260810-compact-performance">
+    <link rel="stylesheet" href="/styles.css?v=20260811-compact-portfolio">
 </head>
 <body>
   <div class="app-shell">
@@ -569,33 +569,6 @@
           </div>
           <div id="positions" class="positions"></div>
         </article>
-        <article id="paper-learning-panel" class="panel feedback-panel">
-          <div class="panel-heading">
-            <div>
-              <p class="eyebrow">Paper feedback loop</p>
-              <div class="title-with-help">
-                <h2>Recommendation performance</h2>
-                <details class="info-popover">
-                  <summary aria-label="About recommendation performance">?</summary>
-                  <p>Compares executed simulated buys, trims, and exits against later market behavior and SPY/QQQ benchmarks. This helps Atlas learn whether entries and sell decisions are working, lagging, mixed, or still too new to judge.</p>
-                </details>
-              </div>
-            </div>
-            <span class="tag">Learning mode</span>
-          </div>
-          <details class="paper-disclosure learning-disclosure">
-            <summary>Open Stage 5 validation and learning detail</summary>
-            <div class="paper-disclosure-content">
-              <div class="explain-box">This is the original Stage 5 checkpoint: Atlas should beat or meaningfully inform benchmarks over time with clear accountability before any later autonomy discussion.</div>
-              <div id="paper-evidence-detail" class="paper-evidence-detail"></div>
-              <div id="paper-validation-summary" class="feedback-summary"></div>
-              <div class="explain-box">Benchmark reference: <b>SPY</b> is the broad S&amp;P 500 ETF yardstick, and <b>QQQ</b> is the Nasdaq-100 growth and technology ETF yardstick.</div>
-              <div id="paper-feedback-summary" class="feedback-summary"></div>
-              <div id="capital-rotation-scoreboard" class="capital-rotation-scoreboard"></div>
-              <div id="paper-feedback" class="feedback-list"></div>
-            </div>
-          </details>
-        </article>
       </section>
       <section class="content-grid">
         <article id="paper-activity-panel" class="panel activity-panel">
@@ -603,10 +576,10 @@
             <div>
               <p class="eyebrow">Executed paper activity</p>
               <div class="title-with-help">
-                <h2>What Atlas bought and sold</h2>
+                <h2>Recent simulated actions</h2>
                 <details class="info-popover">
                   <summary aria-label="About paper activity">?</summary>
-                  <p>Shows completed simulated buys and sells already recorded in the Atlas paper portfolio, along with the thesis and rationale that drove each action.</p>
+                  <p>Shows the five most recent simulated buys and sells, along with the reason for each action. Use trade history for the complete paper audit record.</p>
                 </details>
               </div>
             </div>
@@ -645,6 +618,36 @@
           <div class="simulation-boundary inline-boundary">
             No brokerage order is sent. No real money is spent. This only updates Atlas paper tracking.
           </div>
+          </article>
+        </details>
+        <details id="paper-learning-panel" class="portfolio-more portfolio-learning-more">
+          <summary>
+            <span><b>How Atlas is learning</b><small>Stage 5 validation, benchmark evidence, and recommendation outcomes</small></span>
+            <strong>Optional</strong>
+          </summary>
+          <article class="panel feedback-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="eyebrow">Paper feedback loop</p>
+                <div class="title-with-help">
+                  <h2>Recommendation performance</h2>
+                  <details class="info-popover">
+                    <summary aria-label="About recommendation performance">?</summary>
+                    <p>Compares executed simulated buys, trims, and exits against later market behavior and SPY/QQQ benchmarks. This helps Atlas learn whether entries and sell decisions are working, lagging, mixed, or still too new to judge.</p>
+                  </details>
+                </div>
+              </div>
+              <span class="tag">Learning mode</span>
+            </div>
+            <div class="paper-disclosure-content">
+              <div class="explain-box">This is the original Stage 5 checkpoint: Atlas should beat or meaningfully inform benchmarks over time with clear accountability before any later autonomy discussion.</div>
+              <div id="paper-evidence-detail" class="paper-evidence-detail"></div>
+              <div id="paper-validation-summary" class="feedback-summary"></div>
+              <div class="explain-box">Benchmark reference: <b>SPY</b> is the broad S&amp;P 500 ETF yardstick, and <b>QQQ</b> is the Nasdaq-100 growth and technology ETF yardstick.</div>
+              <div id="paper-feedback-summary" class="feedback-summary"></div>
+              <div id="capital-rotation-scoreboard" class="capital-rotation-scoreboard"></div>
+              <div id="paper-feedback" class="feedback-list"></div>
+            </div>
           </article>
         </details>
       </section>
@@ -1059,6 +1062,6 @@
       </div>
     </form>
   </dialog>
-    <script src="/app.js?v=20260810-compact-performance"></script>
+    <script src="/app.js?v=20260811-compact-portfolio"></script>
 </body>
 </html>

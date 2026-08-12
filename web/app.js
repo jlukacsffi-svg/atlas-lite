@@ -958,7 +958,9 @@ function jumpToPaperTarget(targetId) {
 
 function jumpToPaperSection(targetId) {
   const target = document.getElementById(String(targetId || ""));
-  const disclosure = target?.querySelector(".paper-disclosure");
+  const disclosure = target?.matches("details")
+    ? target
+    : target?.querySelector(".paper-disclosure");
   if (disclosure) disclosure.open = true;
   jumpToPaperTarget(targetId);
 }
@@ -2724,7 +2726,6 @@ function renderPaperWorkspaceSummary(paper) {
     <div class="paper-summary-actions">
       <button class="secondary-button" type="button" data-paper-section="paper-positions-panel">View holdings</button>
       <button class="secondary-button" type="button" data-paper-section="paper-activity-panel">View recent activity</button>
-      <button class="secondary-button" type="button" data-paper-section="paper-learning-panel">View Stage 5 evidence</button>
     </div>
   `;
 }
@@ -3559,7 +3560,8 @@ function renderRoadmap(data) {
 }
 
 function renderPaperActivity(rows) {
-  document.getElementById("paper-activity").innerHTML = rows.map(item => {
+  const recentRows = Array.isArray(rows) ? rows.slice(0, 5) : [];
+  document.getElementById("paper-activity").innerHTML = recentRows.map(item => {
     const action = String(item.action_label || item.side || "activity");
     const rationale = item.rationale || [];
     const decisionContext = item.decision_context || [];
