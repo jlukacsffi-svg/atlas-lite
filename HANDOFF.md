@@ -61,6 +61,22 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The focused Reports workflow is live on Cloud Run revision
+  `atlas-dashboard-stg-00176-jfc`. The dashboard, daily job, and weekly job
+  use image `20260811-focused-reports`, digest
+  `sha256:6c7a8ca793b8288d34e4f161ef0648ab878108beaed89c60f8340be78cca8d73`.
+  All 434 local tests, 26 staging checks, and 24 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- Reports now opens on the newest executive briefing. Report history and live
+  research detail are separate counted views rather than competing sections
+  on one long page.
+- Current evidence is 165 snapshots, 63 judged decisions, and 11 completed
+  positions. No elevated warning episode has yet satisfied the next gated
+  outcome-scorecard requirement.
+- Next development focus: simplify the less-used More workflows while the
+  scheduled Stage 5 proof period accumulates evidence.
+
 - The focused Ideas workflow is live on Cloud Run revision
   `atlas-dashboard-stg-00175-gr6`. The dashboard, daily job, and weekly job
   use image `20260811-counted-ideas`, digest

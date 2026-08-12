@@ -3,6 +3,38 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 11, 2026 - Reports becomes a one-task-at-a-time workspace
+
+New capabilities:
+
+- Open the newest daily or weekly executive briefing from the default Reports
+  view without first scanning an archive.
+- Switch between Latest brief, Report history, and Research detail as three
+  separate workflows with live counts.
+- Browse dated reports and current research diagnostics only when those deeper
+  views are selected.
+
+Validated result:
+
+- Desktop and 390-pixel mobile layouts pass visual review across all three
+  views without overflow, duplicate IDs, or browser warnings.
+- The full local suite passes with 434 tests.
+- Cloud Run revision `atlas-dashboard-stg-00176-jfc`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260811-focused-reports`.
+- The deployed image digest is
+  `sha256:6c7a8ca793b8288d34e4f161ef0648ab878108beaed89c60f8340be78cca8d73`.
+- All 26 staging readiness checks and all 24 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Reports explain research and simulated portfolio activity; they do not
+  authorize or execute brokerage trades.
+- Stage 5 evidence is 165 snapshots, 63 judged decisions, and 11 completed
+  positions. The proof period remains active.
+- Overall program completion remains estimated at 85%.
+
 ## August 11, 2026 - Ideas becomes a focused decision workflow
 
 New capabilities:

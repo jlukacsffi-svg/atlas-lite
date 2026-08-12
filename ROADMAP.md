@@ -46,6 +46,8 @@ Atlas now:
   one optional disclosure.
 - Shows six recent reports by default while keeping the full archive and
   supporting research available on demand.
+- Opens Reports on one newest briefing and separates report history from live
+  research detail, so each view supports one owner task at a time.
 - Explains each Atlas Score through Growth, Quality, Moat, Momentum, and Risk
   drivers, plus the company thesis, primary driver, and key risk.
 - Groups navigation around Decide, Understand, and Manage workflows.
