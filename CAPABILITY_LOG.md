@@ -3,6 +3,38 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 11, 2026 - Ideas becomes a focused decision workflow
+
+New capabilities:
+
+- See live counts for needs-attention, buy, sell-or-trim, and tracked-stock
+  views before opening them.
+- Use each Ideas view for one purpose: decision status, purchase candidates,
+  trim or exit candidates, or the complete tracked universe.
+- Read the current decision load in one plain-language block without repeated
+  buy and sell panels on the needs-attention view.
+
+Validated result:
+
+- Desktop and 390-pixel mobile layouts pass visual review without overflow,
+  duplicate IDs, or browser warnings.
+- The full local suite passes with 434 tests.
+- Cloud Run revision `atlas-dashboard-stg-00175-gr6`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260811-counted-ideas`.
+- The deployed image digest is
+  `sha256:af387d2a8c518ac3b415e3999cdbb766fa87565e5d385966a9d4976936c5f698`.
+- All 26 staging readiness checks and all 24 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled under the approved
+  cost envelope, and neither job was manually executed during this release.
+
+Current boundaries:
+
+- Ideas remain research recommendations and simulated portfolio guidance;
+  Atlas has no brokerage access.
+- Stage 5 evidence is 165 snapshots, 63 judged decisions, and 11 completed
+  positions. The proof period remains active.
+- Overall program completion remains estimated at 85%.
+
 ## August 11, 2026 - Portfolio becomes an owner-first workspace
 
 New capabilities:

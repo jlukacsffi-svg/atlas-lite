@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-08-10
+Last updated: 2026-08-11
 
 ## Current Roadmap Position
 
@@ -60,6 +60,23 @@ identity checks still open before final sign-off:
 - Non-owner Google account denial
 
 Most recent Stage 5 refinement:
+
+- The focused Ideas workflow is live on Cloud Run revision
+  `atlas-dashboard-stg-00175-gr6`. The dashboard, daily job, and weekly job
+  use image `20260811-counted-ideas`, digest
+  `sha256:af387d2a8c518ac3b415e3999cdbb766fa87565e5d385966a9d4976936c5f698`.
+  All 434 local tests, 26 staging checks, and 24 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually
+  executed during the release.
+- Ideas tabs now show live counts and each presents one workflow only: current
+  decision status, buy candidates, sell-or-trim candidates, or all tracked
+  stocks. The needs-attention view no longer repeats the full buy and sell
+  panels.
+- Current evidence is 165 snapshots, 63 judged decisions, and 11 completed
+  positions. No elevated warning episode has yet satisfied the next gated
+  outcome-scorecard requirement.
+- Next development focus: continue reducing decision friction on Reports and
+  the less-used More workflows while scheduled Stage 5 evidence accumulates.
 
 - The owner-first Portfolio workspace is live on Cloud Run revision
   `atlas-dashboard-stg-00174-4jd`. The dashboard, daily job, and weekly job use

@@ -36,6 +36,9 @@ Atlas now:
   strategy, development, security, and product context lives under More.
 - Separates ideas into needs attention, buy, sell or trim, and all tracked
   stocks.
+- Shows a live item count on every Ideas view and keeps each view limited to
+  its own decision purpose, so purchase, exit, and universe research no longer
+  repeat on the needs-attention screen.
 - Shows concise portfolio value, return, cash, positions, and recent activity
   before optional paper-learning evidence and controls.
 - Limits the default Portfolio activity feed to five recent simulated actions,
