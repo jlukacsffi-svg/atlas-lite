@@ -2295,6 +2295,23 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
   border-color: #b9d8e1;
   background: linear-gradient(180deg, #eefbff 0, #ffffff 100%);
 }
+.evaluation-period-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin: 4px 0;
+}
+.evaluation-period-metrics span {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  background: rgba(23, 131, 111, 0.07);
+  border-left: 2px solid var(--teal);
+}
+.evaluation-period-metrics small,
+.evaluation-period-metrics b {
+  display: block;
+}
 .capital-readiness {
   border-left: 4px solid #c2410c;
 }
@@ -4446,6 +4463,7 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 }
 
 @media (max-width: 760px) {
+  .evaluation-period-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .app-shell { display: block; }
   .sidebar {
     position: static;

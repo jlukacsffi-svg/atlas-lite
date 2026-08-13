@@ -1568,7 +1568,53 @@ class PaperTradingAccountTests(unittest.TestCase):
             integrity["changed_fields"],
             ["strategy_minimum_buy_score"],
         )
+        performance = integrity["performance"]
+        self.assertTrue(performance["available"])
+        self.assertEqual(performance["atlas_return_pct"], 0.0)
+        self.assertEqual(performance["benchmark_returns_pct"]["SPY"], 0.3992)
+        self.assertEqual(performance["benchmark_returns_pct"]["QQQ"], 0.7463)
+        self.assertEqual(performance["excess_returns_pct"]["SPY"], -0.3992)
+        self.assertEqual(performance["excess_returns_pct"]["QQQ"], -0.7463)
+        self.assertEqual(performance["maximum_drawdown_pct"], 0.0)
+        self.assertEqual(performance["sample_label"], "2 current-policy snapshots")
         self.assertFalse(integrity["comparable"])
+
+    def test_policy_epoch_performance_measures_drawdown_from_epoch_peak(self):
+        snapshots = [
+            {
+                "timestamp": "2026-06-01T16:00:00",
+                "equity": 100000,
+                "benchmark_prices": {"SPY": 500, "QQQ": 400},
+            },
+            {
+                "timestamp": "2026-06-02T16:00:00",
+                "equity": 105000,
+                "benchmark_prices": {"SPY": 510, "QQQ": 404},
+            },
+            {
+                "timestamp": "2026-06-03T16:00:00",
+                "equity": 102000,
+                "benchmark_prices": {"SPY": 505, "QQQ": 408},
+            },
+        ]
+
+        performance = PaperTradingAccount._policy_epoch_performance(snapshots)
+
+        self.assertTrue(performance["available"])
+        self.assertEqual(performance["atlas_return_pct"], 2.0)
+        self.assertEqual(performance["benchmark_returns_pct"]["SPY"], 1.0)
+        self.assertEqual(performance["benchmark_returns_pct"]["QQQ"], 2.0)
+        self.assertEqual(performance["excess_returns_pct"]["SPY"], 1.0)
+        self.assertEqual(performance["excess_returns_pct"]["QQQ"], 0.0)
+        self.assertEqual(performance["maximum_drawdown_pct"], -2.8571)
+
+    def test_policy_epoch_performance_requires_two_snapshots(self):
+        performance = PaperTradingAccount._policy_epoch_performance(
+            [{"equity": 100000, "benchmark_prices": {"SPY": 500, "QQQ": 400}}]
+        )
+
+        self.assertFalse(performance["available"])
+        self.assertIn("two current-policy snapshots", performance["detail"])
 
     def test_proposal_feedback_tracks_snapshot_persistence_horizons(self):
         with tempfile.TemporaryDirectory() as temp_dir:

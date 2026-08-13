@@ -3559,6 +3559,7 @@ function renderValidationSummary(summary) {
   const readiness = summary.capital_readiness || {};
   const readinessCriteria = Array.isArray(readiness.criteria) ? readiness.criteria : [];
   const integrity = summary.evaluation_integrity || {};
+  const epochPerformance = integrity.performance || {};
   const stateClass = escapeHtml(String(summary.status || "building"));
   const html = `
     <div class="feedback-summary-grid validation-grid">
@@ -3593,6 +3594,15 @@ function renderValidationSummary(summary) {
           <strong>${escapeHtml(integrity.status_label || "Current policy building")}</strong>
           <small>${escapeHtml(integrity.headline || "Atlas is separating current-policy evidence from earlier strategy periods.")}</small>
           <p>${escapeHtml(integrity.detail || "")}</p>
+          ${epochPerformance.available ? `
+            <div class="evaluation-period-metrics" aria-label="Current policy performance">
+              <span><small>Atlas</small><b>${signed(epochPerformance.atlas_return_pct)}</b></span>
+              <span><small>vs SPY</small><b>${signed(epochPerformance.excess_returns_pct?.SPY)}</b></span>
+              <span><small>vs QQQ</small><b>${signed(epochPerformance.excess_returns_pct?.QQQ)}</b></span>
+              <span><small>Max drawdown</small><b>${signed(epochPerformance.maximum_drawdown_pct)}</b></span>
+            </div>
+            <small>${escapeHtml(epochPerformance.sample_label || "Current-policy sample")}. ${escapeHtml(epochPerformance.boundary || "")}</small>
+          ` : `<small>${escapeHtml(epochPerformance.detail || "Performance requires at least two current-policy snapshots.")}</small>`}
           ${Array.isArray(integrity.changed_fields) && integrity.changed_fields.length ? `<small>Latest policy change: ${escapeHtml(integrity.changed_fields.join(", ").replaceAll("_", " "))}</small>` : `<small>Baseline policy period; no later policy update is recorded.</small>`}
           <small>${escapeHtml(integrity.boundary || "This measurement does not change trading authority.")}</small>
         </div>

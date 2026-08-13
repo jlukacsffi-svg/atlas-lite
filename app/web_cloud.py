@@ -489,6 +489,7 @@ class AtlasCloudApplication:
             validation.get("prospective_review_effectiveness") or {}
         )
         evaluation_integrity = validation.get("evaluation_integrity") or {}
+        epoch_performance = evaluation_integrity.get("performance") or {}
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -521,7 +522,9 @@ class AtlasCloudApplication:
                 "evaluation_integrity": {
                     "ok": bool(evaluation_integrity.get("available"))
                     and bool(evaluation_integrity.get("current_epoch_started_at"))
-                    and self._ui_contains("Current policy evidence"),
+                    and bool(epoch_performance.get("available"))
+                    and self._ui_contains("Current policy evidence")
+                    and self._ui_contains("Current policy performance"),
                     "detail": (
                         "Stage 5 separates the current paper-policy period with "
                         f"{int(evaluation_integrity.get('snapshot_count') or 0)} snapshots, "
@@ -541,6 +544,14 @@ class AtlasCloudApplication:
                         evaluation_integrity.get("judged_decisions") or 0
                     ),
                     "comparable": bool(evaluation_integrity.get("comparable")),
+                    "performance_available": bool(epoch_performance.get("available")),
+                    "atlas_return_pct": epoch_performance.get("atlas_return_pct"),
+                    "spy_excess_return_pct": (
+                        epoch_performance.get("excess_returns_pct") or {}
+                    ).get("SPY"),
+                    "qqq_excess_return_pct": (
+                        epoch_performance.get("excess_returns_pct") or {}
+                    ).get("QQQ"),
                 },
                 "completed_position_diagnostics": {
                     "ok": bool(completed_diagnostics.get("available"))

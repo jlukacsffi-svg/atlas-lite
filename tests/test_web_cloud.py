@@ -530,6 +530,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Recovery quality";\n'
                 '"Paper evidence updates";\n'
                 '"Current policy evidence";\n'
+                '"Current policy performance";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
             )
@@ -552,6 +553,14 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "judged_decisions": 6,
                                     "policy_update_count": 1,
                                     "comparable": False,
+                                    "performance": {
+                                        "available": True,
+                                        "atlas_return_pct": 2.5,
+                                        "excess_returns_pct": {
+                                            "SPY": 1.2,
+                                            "QQQ": -0.4,
+                                        },
+                                    },
                                 },
                                 "completed_position_diagnostics": {
                                     "available": True,
@@ -707,6 +716,13 @@ class CloudWebApplicationTests(unittest.TestCase):
         self.assertEqual(
             response["json"]["checks"]["evaluation_integrity"]["snapshot_count"],
             40,
+        )
+        self.assertTrue(
+            response["json"]["checks"]["evaluation_integrity"]["performance_available"]
+        )
+        self.assertEqual(
+            response["json"]["checks"]["evaluation_integrity"]["atlas_return_pct"],
+            2.5,
         )
         self.assertTrue(
             response["json"]["checks"]["completed_position_diagnostics"]["ok"]

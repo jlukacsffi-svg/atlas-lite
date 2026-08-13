@@ -1246,6 +1246,7 @@ class PaperTradingAccount:
             1 for row in current_feedback
             if row.get("verdict") != "not_enough_time"
         )
+        performance = self._policy_epoch_performance(current_snapshots)
         snapshot_target = 30
         judged_target = 10
         comparable = (
@@ -1278,6 +1279,7 @@ class PaperTradingAccount:
             "snapshot_count": len(current_snapshots),
             "trade_count": len(current_trades),
             "judged_decisions": judged,
+            "performance": performance,
             "targets": {
                 "snapshots": snapshot_target,
                 "judged_decisions": judged_target,
@@ -1286,6 +1288,68 @@ class PaperTradingAccount:
             "boundary": (
                 "This measurement preserves evaluation context only. It does not alter "
                 "paper policy, brokerage access, or real-money authority."
+            ),
+        }
+
+    @staticmethod
+    def _policy_epoch_performance(snapshots):
+        """Calculate account and benchmark results inside one policy epoch."""
+        if len(snapshots) < 2:
+            return {
+                "available": False,
+                "detail": "At least two current-policy snapshots are needed to measure return.",
+            }
+
+        first = snapshots[0]
+        latest = snapshots[-1]
+        starting_equity = float(first.get("equity") or 0.0)
+        ending_equity = float(latest.get("equity") or 0.0)
+        if starting_equity <= 0:
+            return {
+                "available": False,
+                "detail": "The first current-policy snapshot has no valid paper equity.",
+            }
+
+        atlas_return = (ending_equity / starting_equity - 1.0) * 100.0
+        benchmark_returns = {}
+        excess_returns = {}
+        for ticker in ("SPY", "QQQ"):
+            start_price = float(
+                (first.get("benchmark_prices") or {}).get(ticker) or 0.0
+            )
+            end_price = float(
+                (latest.get("benchmark_prices") or {}).get(ticker) or 0.0
+            )
+            if start_price <= 0 or end_price <= 0:
+                continue
+            benchmark_return = (end_price / start_price - 1.0) * 100.0
+            benchmark_returns[ticker] = round(benchmark_return, 4)
+            excess_returns[ticker] = round(atlas_return - benchmark_return, 4)
+
+        peak_equity = starting_equity
+        maximum_drawdown = 0.0
+        for snapshot in snapshots:
+            equity = float(snapshot.get("equity") or 0.0)
+            if equity <= 0:
+                continue
+            peak_equity = max(peak_equity, equity)
+            drawdown = (equity / peak_equity - 1.0) * 100.0
+            maximum_drawdown = min(maximum_drawdown, drawdown)
+
+        return {
+            "available": True,
+            "starting_equity": round(starting_equity, 2),
+            "ending_equity": round(ending_equity, 2),
+            "atlas_return_pct": round(atlas_return, 4),
+            "benchmark_returns_pct": benchmark_returns,
+            "excess_returns_pct": excess_returns,
+            "maximum_drawdown_pct": round(maximum_drawdown, 4),
+            "first_snapshot_at": str(first.get("timestamp") or ""),
+            "latest_snapshot_at": str(latest.get("timestamp") or ""),
+            "sample_label": f"{len(snapshots)} current-policy snapshots",
+            "boundary": (
+                "This is observational paper performance, not a forecast or a trigger "
+                "for changing strategy settings."
             ),
         }
 
