@@ -61,6 +61,21 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Current-policy benchmark performance is live on Cloud Run revision
+  `atlas-dashboard-stg-00178-j7w`. The dashboard, daily job, and weekly job use
+  image `20260812-epoch-performance`, digest
+  `sha256:d5f6e1ea7f629ba7e793b91c1bebfc8bb54a32b73efb8481052a75b92490dad7`.
+  All 437 local tests, 26 staging checks, and 25 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed.
+- Atlas now reports return, SPY/QQQ excess return, and maximum drawdown inside
+  the current policy period. At 84 snapshots, Atlas is -0.64%, trailing SPY by
+  4.46 points and QQQ by 2.95 points.
+- This is observational evidence only. It cannot retune policy, enable a broker,
+  or grant real-money authority.
+- Next development focus: explain the current benchmark shortfall through cash
+  drag, entry selection, exit timing, and sector allocation while evidence grows
+  toward 250 snapshots, 100 judged decisions, and 30 completed positions.
+
 - Comparable policy-period evidence is live on Cloud Run revision
   `atlas-dashboard-stg-00177-c7t`. The dashboard, daily job, and weekly job use
   image `20260811-policy-epochs`, digest

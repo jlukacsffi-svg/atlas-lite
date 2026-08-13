@@ -3,6 +3,40 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 12, 2026 - Current-policy benchmark performance
+
+New capabilities:
+
+- Measure Atlas paper return from the first snapshot after the latest strategy
+  change through the newest current-policy snapshot.
+- Compare that same interval with SPY and QQQ and report excess return against
+  each benchmark.
+- Measure maximum paper-account drawdown within the current policy period.
+
+Validated result:
+
+- The current period has 84 snapshots, 50 simulated trades, and 49 judged
+  decisions. Atlas return is -0.64%, trailing SPY by 4.46 percentage points
+  and QQQ by 2.95 points.
+- The broader Stage 5 history has 167 snapshots, 63 judged decisions, and 11
+  completed positions.
+- The full local suite passes with 437 tests.
+- Cloud Run revision `atlas-dashboard-stg-00178-j7w`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260812-epoch-performance`.
+- The deployed image digest is
+  `sha256:d5f6e1ea7f629ba7e793b91c1bebfc8bb54a32b73efb8481052a75b92490dad7`.
+- All 26 staging readiness checks and all 25 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+
+Current boundaries:
+
+- These results are observational and cannot automatically change policy.
+- Atlas remains paper-only with no brokerage connection or real-money access.
+- Current underperformance reinforces the need for continued validation and
+  attribution before any later authority stage.
+- Overall program completion remains estimated at 85%.
+
 ## August 11, 2026 - Comparable policy evidence and focused paper settings
 
 New capabilities:

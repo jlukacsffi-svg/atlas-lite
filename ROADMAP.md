@@ -69,9 +69,10 @@ Atlas now:
 Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
-Current Stage 5 evidence: 165 snapshots, 63 judged decisions, and 11 completed
-paper positions. The current policy period contains 82 snapshots, 49 simulated
-trades, and 49 judged decisions. The next warning-outcome scorecard remains
+Current Stage 5 evidence: 167 snapshots, 63 judged decisions, and 11 completed
+paper positions. The current policy period contains 84 snapshots, 50 simulated
+trades, and 49 judged decisions. Current-policy return is -0.64%, trailing SPY
+by 4.46 percentage points and QQQ by 2.95 points. The next warning-outcome scorecard remains
 gated until actual elevated warning episodes are recorded and resolved.
 
 ## Stage 1: Reliable Daily Briefing
@@ -223,10 +224,13 @@ Current validation focus:
   completed outcomes before any paper policy can be promoted for owner review.
 - Atlas now starts a distinct evaluation period after each paper-policy update
   and reports the current period separately from older evidence.
+- Atlas now measures current-period return, excess return versus SPY and QQQ,
+  and maximum drawdown without feeding an immature result back into policy.
 - Next: continue the scheduled forward study toward 250 snapshots, 100 judged
   decisions, 30 completed positions, and enough resolved elevated-warning
-  episodes to assess signal usefulness. Do not change paper authority while
-  those proof gates remain open.
+  episodes to assess signal usefulness. Attribute the current benchmark
+  shortfall to cash drag, entries, exits, and sector allocation before proposing
+  a strategy change. Do not change paper authority while those proof gates remain open.
 
 ## Stage 6: Human-Approved Trading
 
