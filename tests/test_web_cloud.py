@@ -531,6 +531,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Paper evidence updates";\n'
                 '"Current policy evidence";\n'
                 '"Current policy performance";\n'
+                '"What is driving the result";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
             )
@@ -559,6 +560,14 @@ class CloudWebApplicationTests(unittest.TestCase):
                                         "excess_returns_pct": {
                                             "SPY": 1.2,
                                             "QQQ": -0.4,
+                                        },
+                                    },
+                                    "attribution": {
+                                        "available": True,
+                                        "average_cash_pct": 22.5,
+                                        "decision_quality": {
+                                            "buy": {"average_decision_edge_pct": -1.2},
+                                            "sell": {"average_decision_edge_pct": 0.8},
                                         },
                                     },
                                 },
@@ -723,6 +732,13 @@ class CloudWebApplicationTests(unittest.TestCase):
         self.assertEqual(
             response["json"]["checks"]["evaluation_integrity"]["atlas_return_pct"],
             2.5,
+        )
+        self.assertTrue(
+            response["json"]["checks"]["evaluation_integrity"]["attribution_available"]
+        )
+        self.assertEqual(
+            response["json"]["checks"]["evaluation_integrity"]["average_cash_pct"],
+            22.5,
         )
         self.assertTrue(
             response["json"]["checks"]["completed_position_diagnostics"]["ok"]

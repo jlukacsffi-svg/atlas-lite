@@ -3560,6 +3560,7 @@ function renderValidationSummary(summary) {
   const readinessCriteria = Array.isArray(readiness.criteria) ? readiness.criteria : [];
   const integrity = summary.evaluation_integrity || {};
   const epochPerformance = integrity.performance || {};
+  const epochAttribution = integrity.attribution || {};
   const stateClass = escapeHtml(String(summary.status || "building"));
   const html = `
     <div class="feedback-summary-grid validation-grid">
@@ -3603,6 +3604,19 @@ function renderValidationSummary(summary) {
             </div>
             <small>${escapeHtml(epochPerformance.sample_label || "Current-policy sample")}. ${escapeHtml(epochPerformance.boundary || "")}</small>
           ` : `<small>${escapeHtml(epochPerformance.detail || "Performance requires at least two current-policy snapshots.")}</small>`}
+          ${epochAttribution.available ? `
+            <div class="evaluation-attribution" aria-label="Why current policy differs from benchmarks">
+              <b>What is driving the result</b>
+              <ul>
+                <li>Average cash: ${Number(epochAttribution.average_cash_pct || 0).toFixed(1)}%; estimated SPY opportunity cost ${signed(epochAttribution.estimated_cash_drag_pct?.SPY)}</li>
+                <li>Judged buys: ${epochAttribution.decision_quality?.buy?.judged || 0}; average edge ${signed(epochAttribution.decision_quality?.buy?.average_decision_edge_pct)}</li>
+                <li>Judged trims/exits: ${epochAttribution.decision_quality?.sell?.judged || 0}; average decision edge ${signed(epochAttribution.decision_quality?.sell?.average_decision_edge_pct)}</li>
+                ${epochAttribution.top_contributor ? `<li>Best continuing position: ${escapeHtml(epochAttribution.top_contributor.ticker)} ${signed(epochAttribution.top_contributor.contribution_pct)} contribution</li>` : ""}
+                ${epochAttribution.largest_detractor ? `<li>Largest continuing-position drag: ${escapeHtml(epochAttribution.largest_detractor.ticker)} ${signed(epochAttribution.largest_detractor.contribution_pct)} contribution</li>` : ""}
+              </ul>
+              <small>${escapeHtml(epochAttribution.boundary || "Attribution is diagnostic only.")}</small>
+            </div>
+          ` : ""}
           ${Array.isArray(integrity.changed_fields) && integrity.changed_fields.length ? `<small>Latest policy change: ${escapeHtml(integrity.changed_fields.join(", ").replaceAll("_", " "))}</small>` : `<small>Baseline policy period; no later policy update is recorded.</small>`}
           <small>${escapeHtml(integrity.boundary || "This measurement does not change trading authority.")}</small>
         </div>

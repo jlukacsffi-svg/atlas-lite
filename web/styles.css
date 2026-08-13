@@ -2312,6 +2312,20 @@ h2 { margin-bottom: 0; font-size: 17px; line-height: 1.25; }
 .evaluation-period-metrics b {
   display: block;
 }
+.evaluation-attribution {
+  display: grid;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid #cfe4df;
+}
+.evaluation-attribution ul {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: var(--muted);
+  font-size: 11px;
+}
 .capital-readiness {
   border-left: 4px solid #c2410c;
 }

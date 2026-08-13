@@ -490,6 +490,7 @@ class AtlasCloudApplication:
         )
         evaluation_integrity = validation.get("evaluation_integrity") or {}
         epoch_performance = evaluation_integrity.get("performance") or {}
+        epoch_attribution = evaluation_integrity.get("attribution") or {}
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -523,8 +524,10 @@ class AtlasCloudApplication:
                     "ok": bool(evaluation_integrity.get("available"))
                     and bool(evaluation_integrity.get("current_epoch_started_at"))
                     and bool(epoch_performance.get("available"))
+                    and bool(epoch_attribution.get("available"))
                     and self._ui_contains("Current policy evidence")
-                    and self._ui_contains("Current policy performance"),
+                    and self._ui_contains("Current policy performance")
+                    and self._ui_contains("What is driving the result"),
                     "detail": (
                         "Stage 5 separates the current paper-policy period with "
                         f"{int(evaluation_integrity.get('snapshot_count') or 0)} snapshots, "
@@ -552,6 +555,14 @@ class AtlasCloudApplication:
                     "qqq_excess_return_pct": (
                         epoch_performance.get("excess_returns_pct") or {}
                     ).get("QQQ"),
+                    "attribution_available": bool(epoch_attribution.get("available")),
+                    "average_cash_pct": epoch_attribution.get("average_cash_pct"),
+                    "buy_decision_edge_pct": (
+                        epoch_attribution.get("decision_quality") or {}
+                    ).get("buy", {}).get("average_decision_edge_pct"),
+                    "sell_decision_edge_pct": (
+                        epoch_attribution.get("decision_quality") or {}
+                    ).get("sell", {}).get("average_decision_edge_pct"),
                 },
                 "completed_position_diagnostics": {
                     "ok": bool(completed_diagnostics.get("available"))

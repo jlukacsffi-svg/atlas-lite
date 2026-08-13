@@ -1616,6 +1616,74 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertFalse(performance["available"])
         self.assertIn("two current-policy snapshots", performance["detail"])
 
+    def test_policy_epoch_attribution_explains_cash_decisions_and_holdings(self):
+        snapshots = [
+            {
+                "timestamp": "2026-06-01T16:00:00",
+                "equity": 100000,
+                "cash": 40000,
+                "benchmark_prices": {"SPY": 500, "QQQ": 400},
+                "positions": [
+                    {"ticker": "NVDA", "shares": 10, "price": 100},
+                    {"ticker": "MSFT", "shares": 20, "price": 200},
+                ],
+            },
+            {
+                "timestamp": "2026-06-02T16:00:00",
+                "equity": 102000,
+                "cash": 30000,
+                "benchmark_prices": {"SPY": 525, "QQQ": 410},
+                "positions": [],
+            },
+            {
+                "timestamp": "2026-06-03T16:00:00",
+                "equity": 105000,
+                "cash": 20000,
+                "benchmark_prices": {"SPY": 550, "QQQ": 420},
+                "positions": [
+                    {"ticker": "NVDA", "shares": 8, "price": 110},
+                    {"ticker": "MSFT", "shares": 20, "price": 190},
+                    {"ticker": "PLTR", "shares": 10, "price": 150},
+                ],
+            },
+        ]
+        feedback = [
+            {
+                "side": "buy",
+                "verdict": "working",
+                "security_return_pct": 8,
+                "benchmark_returns_pct": {"SPY": 5, "QQQ": 6},
+            },
+            {
+                "side": "sell",
+                "verdict": "working",
+                "security_return_pct": -2,
+                "benchmark_returns_pct": {"SPY": 3, "QQQ": 4},
+            },
+        ]
+
+        attribution = PaperTradingAccount._policy_epoch_attribution(
+            snapshots,
+            feedback,
+        )
+
+        self.assertTrue(attribution["available"])
+        self.assertEqual(attribution["average_cash_pct"], 29.49)
+        self.assertEqual(attribution["estimated_cash_drag_pct"]["SPY"], -2.9486)
+        self.assertEqual(attribution["estimated_cash_drag_pct"]["QQQ"], -1.4743)
+        self.assertEqual(
+            attribution["decision_quality"]["buy"]["average_decision_edge_pct"],
+            2.0,
+        )
+        self.assertEqual(
+            attribution["decision_quality"]["sell"]["average_decision_edge_pct"],
+            6.0,
+        )
+        self.assertEqual(attribution["top_contributor"]["ticker"], "NVDA")
+        self.assertEqual(attribution["top_contributor"]["contribution_pct"], 0.08)
+        self.assertEqual(attribution["largest_detractor"]["ticker"], "MSFT")
+        self.assertEqual(attribution["largest_detractor"]["contribution_pct"], -0.2)
+
     def test_proposal_feedback_tracks_snapshot_persistence_horizons(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             times = iter(

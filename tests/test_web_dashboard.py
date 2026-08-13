@@ -1798,6 +1798,8 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn('data-control-view="monitoring"', html)
         self.assertIn("Current policy performance", script)
         self.assertIn("evaluation-period-metrics", script)
+        self.assertIn("What is driving the result", script)
+        self.assertIn("evaluation-attribution", styles)
         self.assertIn('data-control-section="settings"', html)
         self.assertIn("setControlView", script)
         self.assertIn("control-decisions-count", script)

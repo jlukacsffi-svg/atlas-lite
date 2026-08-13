@@ -1247,6 +1247,10 @@ class PaperTradingAccount:
             if row.get("verdict") != "not_enough_time"
         )
         performance = self._policy_epoch_performance(current_snapshots)
+        attribution = self._policy_epoch_attribution(
+            current_snapshots,
+            current_feedback,
+        )
         snapshot_target = 30
         judged_target = 10
         comparable = (
@@ -1280,6 +1284,7 @@ class PaperTradingAccount:
             "trade_count": len(current_trades),
             "judged_decisions": judged,
             "performance": performance,
+            "attribution": attribution,
             "targets": {
                 "snapshots": snapshot_target,
                 "judged_decisions": judged_target,
@@ -1350,6 +1355,129 @@ class PaperTradingAccount:
             "boundary": (
                 "This is observational paper performance, not a forecast or a trigger "
                 "for changing strategy settings."
+            ),
+        }
+
+    @classmethod
+    def _policy_epoch_attribution(cls, snapshots, feedback_rows):
+        """Explain observable drivers inside one policy epoch without changing policy."""
+        if len(snapshots) < 2:
+            return {
+                "available": False,
+                "detail": "At least two current-policy snapshots are needed for attribution.",
+            }
+
+        first = snapshots[0]
+        latest = snapshots[-1]
+        starting_equity = float(first.get("equity") or 0.0)
+        if starting_equity <= 0:
+            return {
+                "available": False,
+                "detail": "The first current-policy snapshot has no valid paper equity.",
+            }
+
+        cash_weights = []
+        for snapshot in snapshots:
+            equity = float(snapshot.get("equity") or 0.0)
+            cash = float(snapshot.get("cash") or 0.0)
+            if equity > 0:
+                cash_weights.append(max(0.0, min(1.0, cash / equity)))
+        average_cash_pct = (
+            (sum(cash_weights) / len(cash_weights)) * 100.0
+            if cash_weights
+            else 0.0
+        )
+        benchmark_returns = cls._policy_epoch_performance(snapshots).get(
+            "benchmark_returns_pct", {}
+        )
+        cash_drag = {
+            ticker: round(-(average_cash_pct / 100.0) * float(value), 4)
+            for ticker, value in benchmark_returns.items()
+        }
+
+        decision_quality = {}
+        for side in ("buy", "sell"):
+            rows = [
+                row for row in feedback_rows
+                if str(row.get("side") or "").lower() == side
+                and str(row.get("verdict") or "").lower()
+                in {"working", "mixed", "lagging"}
+            ]
+            edges = []
+            for row in rows:
+                edge = cls._best_benchmark_edge(row)
+                if edge is not None:
+                    edges.append(edge if side == "buy" else -edge)
+            working = sum(
+                1 for row in rows
+                if str(row.get("verdict") or "").lower() == "working"
+            )
+            decision_quality[side] = {
+                "judged": len(rows),
+                "working": working,
+                "working_rate_pct": (
+                    round((working / len(rows)) * 100.0, 1) if rows else None
+                ),
+                "average_decision_edge_pct": (
+                    round(sum(edges) / len(edges), 4) if edges else None
+                ),
+            }
+
+        first_positions = {
+            str(item.get("ticker") or "").upper(): item
+            for item in first.get("positions") or []
+            if item.get("ticker")
+        }
+        latest_positions = {
+            str(item.get("ticker") or "").upper(): item
+            for item in latest.get("positions") or []
+            if item.get("ticker")
+        }
+        continuing = []
+        for ticker in sorted(set(first_positions) & set(latest_positions)):
+            start = first_positions[ticker]
+            end = latest_positions[ticker]
+            shares = min(
+                float(start.get("shares") or 0.0),
+                float(end.get("shares") or 0.0),
+            )
+            start_price = float(start.get("price") or 0.0)
+            end_price = float(end.get("price") or 0.0)
+            if shares <= 0 or start_price <= 0 or end_price <= 0:
+                continue
+            gain_loss = shares * (end_price - start_price)
+            continuing.append(
+                {
+                    "ticker": ticker,
+                    "shares": round(shares, 4),
+                    "gain_loss": round(gain_loss, 2),
+                    "contribution_pct": round(
+                        (gain_loss / starting_equity) * 100.0,
+                        4,
+                    ),
+                    "security_return_pct": round(
+                        (end_price / start_price - 1.0) * 100.0,
+                        4,
+                    ),
+                }
+            )
+        continuing.sort(
+            key=lambda item: item["contribution_pct"],
+            reverse=True,
+        )
+
+        return {
+            "available": True,
+            "average_cash_pct": round(average_cash_pct, 2),
+            "estimated_cash_drag_pct": cash_drag,
+            "decision_quality": decision_quality,
+            "continuing_positions": continuing,
+            "top_contributor": continuing[0] if continuing else None,
+            "largest_detractor": continuing[-1] if continuing else None,
+            "boundary": (
+                "Cash drag is an estimate, and continuing-position contribution covers "
+                "only the minimum shares held at both period endpoints. These diagnostics "
+                "do not change paper policy."
             ),
         }
 
