@@ -3561,6 +3561,8 @@ function renderValidationSummary(summary) {
   const integrity = summary.evaluation_integrity || {};
   const epochPerformance = integrity.performance || {};
   const epochAttribution = integrity.attribution || {};
+  const exposureScenarios = Array.isArray(epochAttribution.exposure_scenarios) ? epochAttribution.exposure_scenarios : [];
+  const sectorContributions = Array.isArray(epochAttribution.sector_contributions) ? epochAttribution.sector_contributions : [];
   const stateClass = escapeHtml(String(summary.status || "building"));
   const html = `
     <div class="feedback-summary-grid validation-grid">
@@ -3614,6 +3616,24 @@ function renderValidationSummary(summary) {
                 ${epochAttribution.top_contributor ? `<li>Best continuing position: ${escapeHtml(epochAttribution.top_contributor.ticker)} ${signed(epochAttribution.top_contributor.contribution_pct)} contribution</li>` : ""}
                 ${epochAttribution.largest_detractor ? `<li>Largest continuing-position drag: ${escapeHtml(epochAttribution.largest_detractor.ticker)} ${signed(epochAttribution.largest_detractor.contribution_pct)} contribution</li>` : ""}
               </ul>
+              ${sectorContributions.length ? `
+                <div class="attribution-sector-line">
+                  <span><small>Best continuing sector</small><b>${escapeHtml(sectorContributions[0].sector)} ${signed(sectorContributions[0].contribution_pct)}</b></span>
+                  <span><small>Largest continuing-sector drag</small><b>${escapeHtml(sectorContributions[sectorContributions.length - 1].sector)} ${signed(sectorContributions[sectorContributions.length - 1].contribution_pct)}</b></span>
+                </div>
+              ` : ""}
+              ${exposureScenarios.length ? `
+                <b>Idle-cash exposure study</b>
+                <div class="exposure-scenario-grid">
+                  ${exposureScenarios.map(item => `
+                    <span>
+                      <small>Deploy ${Number(item.idle_cash_deployed_pct || 0).toFixed(0)}% of idle cash</small>
+                      <b>${signed(item.estimated_policy_return_pct)} estimated return</b>
+                      <small>${signed(item.estimated_return_uplift_pct)} uplift · ${signed(item.modeled_sleeve_drawdown_pct)} modeled ${escapeHtml(item.benchmark)} sleeve drawdown</small>
+                    </span>
+                  `).join("")}
+                </div>
+              ` : ""}
               <small>${escapeHtml(epochAttribution.boundary || "Attribution is diagnostic only.")}</small>
             </div>
           ` : ""}

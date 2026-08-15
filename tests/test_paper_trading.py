@@ -1665,6 +1665,7 @@ class PaperTradingAccountTests(unittest.TestCase):
         attribution = PaperTradingAccount._policy_epoch_attribution(
             snapshots,
             feedback,
+            sector_map={"NVDA": "AI & Semiconductors", "MSFT": "Cloud & Software"},
         )
 
         self.assertTrue(attribution["available"])
@@ -1683,6 +1684,21 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(attribution["top_contributor"]["contribution_pct"], 0.08)
         self.assertEqual(attribution["largest_detractor"]["ticker"], "MSFT")
         self.assertEqual(attribution["largest_detractor"]["contribution_pct"], -0.2)
+        self.assertEqual(
+            attribution["sector_contributions"][0]["sector"],
+            "AI & Semiconductors",
+        )
+        self.assertEqual(
+            attribution["sector_contributions"][-1]["sector"],
+            "Cloud & Software",
+        )
+        scenarios = attribution["exposure_scenarios"]
+        self.assertEqual(len(scenarios), 3)
+        self.assertEqual(scenarios[0]["idle_cash_deployed_pct"], 25.0)
+        self.assertEqual(scenarios[0]["added_portfolio_exposure_pct"], 7.37)
+        self.assertEqual(scenarios[0]["estimated_return_uplift_pct"], 0.7372)
+        self.assertEqual(scenarios[0]["estimated_policy_return_pct"], 5.7372)
+        self.assertEqual(scenarios[0]["modeled_sleeve_drawdown_pct"], 0.0)
 
     def test_proposal_feedback_tracks_snapshot_persistence_horizons(self):
         with tempfile.TemporaryDirectory() as temp_dir:

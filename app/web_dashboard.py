@@ -483,6 +483,10 @@ class DashboardDataService:
                 latest_prices=prices,
                 feedback_summary=feedback_summary,
                 feedback_rows=feedback_rows,
+                sector_map={
+                    ticker: data.get("sector") or "Unclassified"
+                    for ticker, data in available.items()
+                },
             ),
             "operating_mode": self._paper_operating_mode(),
             "proposals": {

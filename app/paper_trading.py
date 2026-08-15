@@ -730,6 +730,7 @@ class PaperTradingAccount:
         latest_prices=None,
         feedback_summary=None,
         feedback_rows=None,
+        sector_map=None,
     ):
         """Summarize whether Stage 5 paper validation is building proof of quality."""
         performance = self.performance_summary()
@@ -1176,6 +1177,7 @@ class PaperTradingAccount:
         )
         evaluation_integrity = self.stage5_evaluation_integrity(
             feedback_rows=feedback_rows,
+            sector_map=sector_map,
         )
         return {
             "available": True,
@@ -1200,7 +1202,12 @@ class PaperTradingAccount:
             "evaluation_integrity": evaluation_integrity,
         }
 
-    def stage5_evaluation_integrity(self, feedback_rows=None, events=None):
+    def stage5_evaluation_integrity(
+        self,
+        feedback_rows=None,
+        events=None,
+        sector_map=None,
+    ):
         """Describe the comparable evidence accumulated under the current policy."""
         events = list(events if events is not None else self.ledger())
         policy_updates = [
@@ -1250,6 +1257,7 @@ class PaperTradingAccount:
         attribution = self._policy_epoch_attribution(
             current_snapshots,
             current_feedback,
+            sector_map=sector_map,
         )
         snapshot_target = 30
         judged_target = 10
@@ -1359,7 +1367,7 @@ class PaperTradingAccount:
         }
 
     @classmethod
-    def _policy_epoch_attribution(cls, snapshots, feedback_rows):
+    def _policy_epoch_attribution(cls, snapshots, feedback_rows, sector_map=None):
         """Explain observable drivers inside one policy epoch without changing policy."""
         if len(snapshots) < 2:
             return {
@@ -1433,6 +1441,10 @@ class PaperTradingAccount:
             for item in latest.get("positions") or []
             if item.get("ticker")
         }
+        sector_map = {
+            str(ticker).upper(): str(sector or "Unclassified")
+            for ticker, sector in (sector_map or {}).items()
+        }
         continuing = []
         for ticker in sorted(set(first_positions) & set(latest_positions)):
             start = first_positions[ticker]
@@ -1449,6 +1461,7 @@ class PaperTradingAccount:
             continuing.append(
                 {
                     "ticker": ticker,
+                    "sector": sector_map.get(ticker, "Unclassified"),
                     "shares": round(shares, 4),
                     "gain_loss": round(gain_loss, 2),
                     "contribution_pct": round(
@@ -1465,6 +1478,74 @@ class PaperTradingAccount:
             key=lambda item: item["contribution_pct"],
             reverse=True,
         )
+        sector_contributions = {}
+        for item in continuing:
+            sector = item["sector"]
+            stats = sector_contributions.setdefault(
+                sector,
+                {
+                    "sector": sector,
+                    "positions": 0,
+                    "gain_loss": 0.0,
+                    "contribution_pct": 0.0,
+                },
+            )
+            stats["positions"] += 1
+            stats["gain_loss"] += item["gain_loss"]
+            stats["contribution_pct"] += item["contribution_pct"]
+        sector_contributions = sorted(
+            [
+                {
+                    **stats,
+                    "gain_loss": round(stats["gain_loss"], 2),
+                    "contribution_pct": round(stats["contribution_pct"], 4),
+                }
+                for stats in sector_contributions.values()
+            ],
+            key=lambda item: item["contribution_pct"],
+            reverse=True,
+        )
+
+        performance = cls._policy_epoch_performance(snapshots)
+        scenario_benchmark = (
+            "SPY" if "SPY" in benchmark_returns else next(iter(benchmark_returns), None)
+        )
+        benchmark_return = float(benchmark_returns.get(scenario_benchmark) or 0.0)
+        benchmark_peak = None
+        benchmark_drawdown = 0.0
+        if scenario_benchmark:
+            for snapshot in snapshots:
+                price = float(
+                    (snapshot.get("benchmark_prices") or {}).get(scenario_benchmark)
+                    or 0.0
+                )
+                if price <= 0:
+                    continue
+                benchmark_peak = max(benchmark_peak or price, price)
+                benchmark_drawdown = min(
+                    benchmark_drawdown,
+                    (price / benchmark_peak - 1.0) * 100.0,
+                )
+        exposure_scenarios = []
+        if performance.get("available") and scenario_benchmark:
+            atlas_return = float(performance.get("atlas_return_pct") or 0.0)
+            for deployment_share in (0.25, 0.50, 0.75):
+                added_exposure = (average_cash_pct / 100.0) * deployment_share
+                return_uplift = added_exposure * benchmark_return
+                sleeve_drawdown = added_exposure * benchmark_drawdown
+                exposure_scenarios.append(
+                    {
+                        "idle_cash_deployed_pct": round(deployment_share * 100.0, 1),
+                        "added_portfolio_exposure_pct": round(added_exposure * 100.0, 2),
+                        "benchmark": scenario_benchmark,
+                        "estimated_return_uplift_pct": round(return_uplift, 4),
+                        "estimated_policy_return_pct": round(
+                            atlas_return + return_uplift,
+                            4,
+                        ),
+                        "modeled_sleeve_drawdown_pct": round(sleeve_drawdown, 4),
+                    }
+                )
 
         return {
             "available": True,
@@ -1472,12 +1553,16 @@ class PaperTradingAccount:
             "estimated_cash_drag_pct": cash_drag,
             "decision_quality": decision_quality,
             "continuing_positions": continuing,
+            "sector_contributions": sector_contributions,
             "top_contributor": continuing[0] if continuing else None,
             "largest_detractor": continuing[-1] if continuing else None,
+            "exposure_scenarios": exposure_scenarios,
+            "scenario_benchmark": scenario_benchmark,
             "boundary": (
                 "Cash drag is an estimate, and continuing-position contribution covers "
                 "only the minimum shares held at both period endpoints. These diagnostics "
-                "do not change paper policy."
+                "do not change paper policy. Exposure scenarios assume idle cash followed "
+                "the selected benchmark and are not forecasts."
             ),
         }
 

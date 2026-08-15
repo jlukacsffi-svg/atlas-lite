@@ -532,6 +532,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Current policy evidence";\n'
                 '"Current policy performance";\n'
                 '"What is driving the result";\n'
+                '"Idle-cash exposure study";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
             )
@@ -569,6 +570,14 @@ class CloudWebApplicationTests(unittest.TestCase):
                                             "buy": {"average_decision_edge_pct": -1.2},
                                             "sell": {"average_decision_edge_pct": 0.8},
                                         },
+                                        "sector_contributions": [
+                                            {"sector": "AI & Semiconductors"},
+                                        ],
+                                        "exposure_scenarios": [
+                                            {"idle_cash_deployed_pct": 25},
+                                            {"idle_cash_deployed_pct": 50},
+                                            {"idle_cash_deployed_pct": 75},
+                                        ],
                                     },
                                 },
                                 "completed_position_diagnostics": {
@@ -739,6 +748,14 @@ class CloudWebApplicationTests(unittest.TestCase):
         self.assertEqual(
             response["json"]["checks"]["evaluation_integrity"]["average_cash_pct"],
             22.5,
+        )
+        self.assertEqual(
+            response["json"]["checks"]["evaluation_integrity"]["sector_attribution_count"],
+            1,
+        )
+        self.assertEqual(
+            response["json"]["checks"]["evaluation_integrity"]["exposure_scenario_count"],
+            3,
         )
         self.assertTrue(
             response["json"]["checks"]["completed_position_diagnostics"]["ok"]
