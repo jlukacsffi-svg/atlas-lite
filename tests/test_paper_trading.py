@@ -780,6 +780,78 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(study["experiment_proposal"]["delta"], -1.0)
         self.assertEqual(len(study["experiment_proposal"]["rollback_gates"]), 3)
 
+    def test_entry_experiment_approval_applies_only_bounded_change(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
+            )
+            account.initialize(100000)
+            for index in range(10):
+                account.record_entry_constraint_observation(
+                    {
+                        "event": "entry_constraint_observation",
+                        "cycle_key": f"approval-{index}",
+                        "confirmation_blocked_candidates": 0,
+                        "available_buy_slots": 3,
+                        "scenarios": [
+                            {"label": "Current entry rules", "minimum_buy_score": 88.0, "eligible_ideas": 1},
+                            {"label": "Lower score threshold by 1 point", "minimum_buy_score": 87.0, "eligible_ideas": 2},
+                            {"label": "Lower score threshold by 2 points", "minimum_buy_score": 86.0, "eligible_ideas": 3},
+                        ],
+                    }
+                )
+
+            with self.assertRaisesRegex(ValueError, "Confirmation must be"):
+                account.decide_entry_experiment("approve", confirmation="wrong")
+            event = account.decide_entry_experiment(
+                "approve",
+                confirmation="APPROVE PAPER EXPERIMENT",
+            )
+
+        self.assertTrue(event["policy_changed"])
+        self.assertEqual(event["applied_change"]["field"], "strategy_minimum_buy_score")
+        self.assertEqual(event["applied_change"]["from"], 88.0)
+        self.assertEqual(event["applied_change"]["to"], 87.0)
+
+    def test_entry_experiment_rejection_resets_gate_without_policy_change(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
+            )
+            account.initialize(100000)
+            for index in range(10):
+                account.record_entry_constraint_observation(
+                    {
+                        "event": "entry_constraint_observation",
+                        "cycle_key": f"rejection-{index}",
+                        "scenarios": [{"label": "Current entry rules", "eligible_ideas": 1}],
+                    }
+                )
+            policy_before = account.effective_policy()
+            event = account.decide_entry_experiment("reject")
+            reset_study = account.entry_constraint_study()
+            policy_after = account.effective_policy()
+
+        self.assertFalse(event["policy_changed"])
+        self.assertIsNone(event["applied_change"])
+        self.assertEqual(policy_after, policy_before)
+        self.assertEqual(reset_study["observations"], 0)
+        self.assertFalse(reset_study["requires_owner_attention"])
+
+    def test_entry_experiment_decision_rejects_premature_action(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+            )
+            account.initialize(100000)
+            with self.assertRaisesRegex(ValueError, "evidence gate is not complete"):
+                account.decide_entry_experiment("reject")
+
     def test_entry_constraint_observation_deduplicates_cycle_key(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = PaperTradingAccount(

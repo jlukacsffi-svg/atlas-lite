@@ -538,7 +538,12 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Owner only";\n'
                 '"duplicate research cycles are ignored";\n'
                 '"No shadow fills";\n'
-                '"owner-signal-digest";\n',
+                '"owner-signal-digest";\n'
+                '"Approve bounded experiment";\n'
+                '"APPROVE PAPER EXPERIMENT";\n'
+                '"entry-experiment-decision";\n'
+                '"Approve experiment";\n'
+                '"Decline";\n',
                 encoding="utf-8",
             )
             data_service = type(

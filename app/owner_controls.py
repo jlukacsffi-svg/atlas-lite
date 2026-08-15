@@ -99,6 +99,11 @@ class OwnerControlService:
             "enabled": True,
             "boundary": "Owner only; simulation and research decisions",
             "paper_strategy_policy": self._paper_strategy_policy(),
+            "entry_experiment_review": (
+                self.paper_account.entry_constraint_study()
+                if self.paper_account.account_file.exists()
+                else {"available": False}
+            ),
             "daily_action_list": self._daily_action_list(
                 ranked_reviews,
                 action_context,
@@ -2113,6 +2118,8 @@ class OwnerControlService:
                     result = self._paper_fill(payload)
                 elif action == "paper-policy":
                     result = self._paper_policy(payload)
+                elif action == "entry-experiment-decision":
+                    result = self._entry_experiment_decision(payload)
                 else:
                     raise ValueError("Unknown owner action")
                 self.persist(paths)
@@ -2238,10 +2245,29 @@ class OwnerControlService:
             "auto_manage_enabled": bool(policy.get("auto_manage_enabled")),
         }
 
+    def _entry_experiment_decision(self, payload):
+        decision = self._required(payload.get("decision"), "decision").lower()
+        event = self.paper_account.decide_entry_experiment(
+            decision,
+            confirmation=str(payload.get("confirmation") or ""),
+        )
+        return {
+            "action": "entry-experiment-decision",
+            "decision": event["decision"],
+            "policy_changed": event["policy_changed"],
+            "applied_change": event["applied_change"],
+            "simulation_only": True,
+        }
+
     def _affected_paths(self, action):
         if action == "research-decision":
             return [self.research_queue.task_file, *self._research_outputs()]
-        if action in {"paper-decision", "paper-fill", "paper-policy"}:
+        if action in {
+            "paper-decision",
+            "paper-fill",
+            "paper-policy",
+            "entry-experiment-decision",
+        }:
             return [
                 self.paper_account.account_file,
                 self.paper_account.ledger_file,

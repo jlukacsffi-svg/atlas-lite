@@ -739,6 +739,7 @@
             </summary>
             <div class="control-detail-content">
               <div id="owner-outcomes" class="decision-list"></div>
+              <div id="entry-experiment-review" class="decision-list"></div>
               <div id="daily-action-list" class="decision-list"></div>
               <div id="research-reviews" class="decision-list"></div>
             </div>
@@ -919,9 +920,9 @@
           </div>
           <div class="roadmap-overall">
             <span>Estimated overall completion</span>
-            <strong>85%</strong>
-            <div class="roadmap-progress" aria-label="85 percent complete">
-              <span style="width:85%"></span>
+            <strong>91%</strong>
+            <div class="roadmap-progress" aria-label="91 percent complete">
+              <span style="width:91%"></span>
             </div>
             <small>The owner-only research and paper platform is further along than the full company vision.</small>
           </div>
@@ -1090,6 +1091,29 @@
       </div>
     </form>
   </dialog>
-    <script src="/app.js?v=20260811-counted-ideas"></script>
+  <dialog id="entry-experiment-dialog" class="confirmation-dialog">
+    <form id="entry-experiment-form" method="dialog">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">Paper-policy experiment</p>
+          <h2>Approve bounded experiment</h2>
+        </div>
+        <button id="entry-experiment-close" class="icon-button" type="button" aria-label="Close experiment confirmation">&times;</button>
+      </div>
+      <p id="entry-experiment-summary" class="dialog-summary"></p>
+      <div class="simulation-boundary">
+        This can change one Atlas paper-policy setting only. It cannot place a brokerage order, use real capital, or expand trading authority.
+      </div>
+      <label class="confirmation-field" for="entry-experiment-confirmation">
+        <span>Type <strong>APPROVE PAPER EXPERIMENT</strong> to continue</span>
+        <input id="entry-experiment-confirmation" name="confirmation" type="text" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="dialog-actions">
+        <button id="entry-experiment-cancel" class="secondary" type="button">Cancel</button>
+        <button id="entry-experiment-submit" type="submit" disabled>Approve paper experiment</button>
+      </div>
+    </form>
+  </dialog>
+    <script src="/app.js?v=20260814-entry-experiment-control"></script>
 </body>
 </html>

@@ -152,6 +152,53 @@ class PaperTradingAccount:
         )
         return dict(account_policy)
 
+    def decide_entry_experiment(self, decision, confirmation=""):
+        normalized = str(decision or "").strip().lower()
+        if normalized not in {"approve", "reject"}:
+            raise ValueError("Entry experiment decision must be approve or reject")
+        study = self.entry_constraint_study()
+        proposal = study.get("experiment_proposal") or {}
+        if not study.get("diagnosis_ready") or not proposal:
+            raise ValueError("Entry experiment evidence gate is not complete")
+        if normalized == "approve" and confirmation != "APPROVE PAPER EXPERIMENT":
+            raise ValueError(
+                "Confirmation must be APPROVE PAPER EXPERIMENT"
+            )
+
+        policy_before = self.effective_policy()
+        field = proposal.get("field")
+        delta = proposal.get("delta")
+        applied_change = None
+        if normalized == "approve" and field and delta is not None:
+            prior_value = policy_before.get(field)
+            if prior_value is None:
+                raise ValueError("Proposed paper policy field is unavailable")
+            next_value = prior_value + delta
+            self.update_policy(
+                {field: next_value},
+                source="owner_entry_experiment",
+            )
+            applied_change = {
+                "field": field,
+                "from": prior_value,
+                "to": next_value,
+                "delta": delta,
+            }
+
+        event = {
+            "event": "entry_experiment_decision",
+            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "decision": normalized,
+            "observations": study.get("observations"),
+            "dominant_constraint": study.get("dominant_constraint"),
+            "proposal": proposal,
+            "applied_change": applied_change,
+            "policy_changed": applied_change is not None,
+            "simulation_only": True,
+        }
+        self._append_event(event)
+        return event
+
     def effective_policy(self):
         account = self.load()
         policy = dict(self.policy)
@@ -2074,6 +2121,7 @@ class PaperTradingAccount:
             if event.get("event") in {
                 "account_initialized",
                 "paper_policy_update",
+                "entry_experiment_decision",
             }:
                 marker_index = index
         policy_marker = (

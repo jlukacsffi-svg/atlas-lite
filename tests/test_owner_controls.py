@@ -118,6 +118,7 @@ class OwnerControlServiceTests(unittest.TestCase):
             model["paper_proposals"][0]["news_summary"]["event_detail"],
         )
         self.assertTrue(model["paper_strategy_policy"]["available"])
+        self.assertIn("entry_experiment_review", model)
         self.assertIn(
             "strategy_maximum_new_proposals",
             model["paper_strategy_policy"]["values"],
@@ -159,6 +160,13 @@ class OwnerControlServiceTests(unittest.TestCase):
         self.assertEqual(policy["strategy_trend_quality_weight"], 0.35)
         self.assertEqual(policy["strategy_sector_repeat_penalty"], 1.5)
         self.assertEqual(policy["strategy_minimum_daily_move_pct"], -6.0)
+
+    def test_apply_rejects_entry_experiment_before_evidence_gate(self):
+        with self.assertRaisesRegex(ValueError, "evidence gate is not complete"):
+            self.service.apply(
+                "entry-experiment-decision",
+                {"decision": "reject"},
+            )
 
     def test_model_backfills_structured_rationale_for_legacy_buy_proposals(self):
         proposal = self.dashboard.paper_account.create_proposal(

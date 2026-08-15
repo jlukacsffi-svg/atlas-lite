@@ -61,6 +61,21 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The guarded entry-experiment owner control is live on Cloud Run revision
+  `atlas-dashboard-stg-00188-d8n`. The dashboard, daily job, and weekly job use
+  image `20260814-entry-experiment-control-v2`, digest
+  `sha256:a17239972e6994708a1916348b43c8243fd1444e724e36aaba101a59087d0152`.
+  All 448 local tests, 26 staging checks, and 28 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed.
+- At 10/10, Paper settings can present Approve experiment and Decline actions.
+  Approval requires the exact typed confirmation `APPROVE PAPER EXPERIMENT`
+  and can apply only the proposal's one precomputed paper-policy change.
+- Approval or rejection is audit logged and starts a fresh forward evidence
+  period. No action can connect to a brokerage or use real capital.
+- Next development focus: allow the normal daily schedule to collect
+  observation 1/10, verify its owner milestone, and continue the evidence run.
+- Estimated overall program completion is 91%.
+
 - Owner entry-study milestones are live on Cloud Run revision
   `atlas-dashboard-stg-00186-5s7`. The dashboard, daily job, and weekly job use
   image `20260814-entry-milestones`, digest

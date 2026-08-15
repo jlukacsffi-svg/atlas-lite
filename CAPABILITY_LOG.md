@@ -3,6 +3,39 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Guarded entry-experiment owner control
+
+New capabilities:
+
+- Present a completed entry-study proposal as an owner decision in Paper
+  settings only after the ten-observation gate passes.
+- Require the owner to type `APPROVE PAPER EXPERIMENT` before applying a
+  bounded proposal.
+- Apply only the single precomputed paper-policy field and delta; a
+  research-only recommendation records acceptance without changing policy.
+- Allow the owner to decline without changing policy, and retain either
+  decision in the paper audit ledger.
+- Start a fresh forward evidence period after approval or rejection while
+  preserving the completed study in history.
+
+Validated result:
+
+- The full local suite passes with 448 tests.
+- Cloud Run revision `atlas-dashboard-stg-00188-d8n`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260814-entry-experiment-control-v2`.
+- The deployed image digest is
+  `sha256:a17239972e6994708a1916348b43c8243fd1444e724e36aaba101a59087d0152`.
+- All 26 staging readiness checks and all 28 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+
+Current boundaries:
+
+- The control is dormant until ten valid forward observations exist.
+- Approval can affect only the paper account. Brokerage access and real-money
+  trading remain disabled.
+- Overall program completion is estimated at 91%.
+
 ## August 14, 2026 - Owner entry-study milestones
 
 New capabilities:

@@ -1054,6 +1054,23 @@ class AtlasCloudApplication:
                         )
                     ),
                 },
+                "entry_experiment_owner_control": {
+                    "ok": self._ui_contains("Approve bounded experiment")
+                    and self._ui_contains("APPROVE PAPER EXPERIMENT")
+                    and self._ui_contains("entry-experiment-decision")
+                    and self._ui_contains("Approve experiment")
+                    and self._ui_contains("Decline"),
+                    "detail": (
+                        "A completed entry-study gate can enter a typed, "
+                        "owner-only paper experiment decision without "
+                        "granting brokerage or real-capital authority."
+                    ),
+                    "available": bool(
+                        entry_constraint_study.get(
+                            "requires_owner_attention"
+                        )
+                    ),
+                },
                 "persistence_learning": {
                     "ok": bool(
                         (feedback_summary.get("horizon_learning") or [])
