@@ -61,6 +61,21 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Owner entry-study milestones are live on Cloud Run revision
+  `atlas-dashboard-stg-00186-5s7`. The dashboard, daily job, and weekly job use
+  image `20260814-entry-milestones`, digest
+  `sha256:ee97b36c187e9e68bac9da6c06cd62f419c2c027ecdb99f977c650fc96a347c3`.
+  All 444 local tests, 26 staging checks, and 27 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed.
+- Today stays quiet during ordinary study cycles, shows concise milestones at
+  observations 1 and 5, and creates an owner decision only when the
+  10-observation evidence gate is complete.
+- Atlas explicitly states that the resulting proposal cannot change paper
+  policy without a separate owner action.
+- Next development focus: allow the scheduled daily cycle to collect the first
+  valid observation, then monitor evidence quality and milestone delivery.
+- Estimated overall program completion is 90%.
+
 - Entry-study evidence integrity is live on Cloud Run revision
   `atlas-dashboard-stg-00185-bd7`. The dashboard, daily job, and weekly job use
   image `20260814-entry-integrity-v2`, digest

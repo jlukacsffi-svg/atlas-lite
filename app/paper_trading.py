@@ -2097,6 +2097,8 @@ class PaperTradingAccount:
                 "minimum_observations": minimum_observations,
                 "evidence_progress_pct": 0.0,
                 "diagnosis_ready": False,
+                "owner_milestone": None,
+                "requires_owner_attention": False,
                 "experiment_proposal": None,
                 "policy_epoch_started_at": (
                     (policy_marker or {}).get("timestamp")
@@ -2185,6 +2187,15 @@ class PaperTradingAccount:
             key=constraint_scores.get,
         )
         diagnosis_ready = observations >= minimum_observations
+        owner_milestone = (
+            "owner_review"
+            if diagnosis_ready
+            else "midpoint"
+            if observations == 5
+            else "started"
+            if observations == 1
+            else None
+        )
         proposals = {
             "score_threshold": {
                 "change": "Lower the paper buy threshold by 1 Atlas Score point.",
@@ -2240,6 +2251,8 @@ class PaperTradingAccount:
                 1,
             ),
             "diagnosis_ready": diagnosis_ready,
+            "owner_milestone": owner_milestone,
+            "requires_owner_attention": diagnosis_ready,
             "dominant_constraint": dominant_constraint if diagnosis_ready else None,
             "constraint_scores": constraint_scores,
             "experiment_proposal": experiment_proposal,

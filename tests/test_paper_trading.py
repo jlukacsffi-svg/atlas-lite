@@ -716,7 +716,30 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(study["observations"], 1)
         self.assertEqual(study["minimum_observations"], 10)
         self.assertFalse(study["diagnosis_ready"])
+        self.assertEqual(study["owner_milestone"], "started")
+        self.assertFalse(study["requires_owner_attention"])
         self.assertEqual(study["scenarios"][0]["average_eligible_ideas"], 1.0)
+
+    def test_entry_constraint_study_marks_midpoint_for_owner(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
+            )
+            account.initialize(100000)
+            for index in range(5):
+                account.record_entry_constraint_observation(
+                    {
+                        "event": "entry_constraint_observation",
+                        "cycle_key": f"cycle-{index}",
+                        "scenarios": [],
+                    }
+                )
+            study = account.entry_constraint_study()
+
+        self.assertEqual(study["owner_milestone"], "midpoint")
+        self.assertFalse(study["requires_owner_attention"])
 
     def test_entry_constraint_study_requires_evidence_before_bounded_proposal(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -747,6 +770,8 @@ class PaperTradingAccountTests(unittest.TestCase):
             study = account.entry_constraint_study()
 
         self.assertTrue(study["diagnosis_ready"])
+        self.assertEqual(study["owner_milestone"], "owner_review")
+        self.assertTrue(study["requires_owner_attention"])
         self.assertEqual(study["dominant_constraint"], "score_threshold")
         self.assertEqual(
             study["experiment_proposal"]["status"],

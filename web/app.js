@@ -549,6 +549,7 @@ function renderEntryEvidenceGate(overview) {
 
 function renderOwnerBriefing(data) {
   const paper = data.paper || {};
+  const entryStudy = paper.validation_summary?.entry_constraint_study || {};
   const prospectiveTracker =
     paper.validation_summary?.prospective_review_tracker || {};
   const latestPriorityEscalations = Array.isArray(
@@ -673,16 +674,41 @@ function renderOwnerBriefing(data) {
   renderOwnerReportStatus(Array.isArray(data.reports) ? data.reports : []);
 
   const signalDigest = document.getElementById("owner-signal-digest");
-  signalDigest.hidden = !prospectiveTracker.available || !latestPriorityEscalations.length;
+  const entryMilestones = {
+    started: {
+      title: "Entry study started",
+      detail: "Atlas recorded the first of 10 forward observations. No action is needed.",
+    },
+    midpoint: {
+      title: "Entry study halfway",
+      detail: "Atlas has recorded 5 of 10 observations. Policy remains unchanged.",
+    },
+    owner_review: {
+      title: "Entry study ready for owner review",
+      detail: "The 10-observation evidence gate is complete. Atlas will not change policy automatically.",
+    },
+  };
+  const entryMilestone = entryMilestones[entryStudy.owner_milestone] || null;
+  const hasEscalations = prospectiveTracker.available && latestPriorityEscalations.length;
+  signalDigest.hidden = !hasEscalations && !entryMilestone;
   signalDigest.innerHTML = signalDigest.hidden ? "" : `
     <div class="owner-signal-digest-heading">
       <div>
-        <span>Priority escalation watch</span>
-        <b>${latestPriorityEscalations.length} new elevated-priority change${latestPriorityEscalations.length === 1 ? "" : "s"}</b>
+        <span>${entryMilestone ? "Research milestone" : "Priority escalation watch"}</span>
+        <b>${escapeHtml(entryMilestone?.title || `${latestPriorityEscalations.length} new elevated-priority change${latestPriorityEscalations.length === 1 ? "" : "s"}`)}</b>
       </div>
       <a href="#paper">Open tracker</a>
     </div>
     <div class="owner-signal-digest-list">
+      ${entryMilestone ? `
+        <div class="owner-signal-digest-item ${entryStudy.requires_owner_attention ? "urgent" : "monitor"}">
+          <div>
+            <b>${Number(entryStudy.observations || 0)}/${Number(entryStudy.minimum_observations || 10)} observations</b>
+            <span>${escapeHtml(entryMilestone.title)}</span>
+          </div>
+          <small>${escapeHtml(entryMilestone.detail)}</small>
+        </div>
+      ` : ""}
       ${latestPriorityEscalations.map(item => `
         <div class="owner-signal-digest-item ${escapeHtml(item.review_priority || "monitor")}">
           <div>
@@ -705,12 +731,28 @@ function renderTodayDecisionInbox(data) {
     : [];
   const positions = Array.isArray(data.paper?.positions) ? data.paper.positions : [];
   const autoManaged = data.paper?.operating_mode?.current?.id === "paper_auto_manage";
+  const entryStudy = data.paper?.validation_summary?.entry_constraint_study || {};
   const formalSellTickers = new Set(
     proposals
       .filter(item => item.side === "sell")
       .map(item => String(item.ticker || ""))
   );
   const items = [];
+
+  if (entryStudy.requires_owner_attention && entryStudy.experiment_proposal) {
+    const proposal = entryStudy.experiment_proposal;
+    items.push({
+      priority: 2,
+      tone: "ready",
+      label: "Strategy review",
+      ticker: "Atlas",
+      action: "Review the entry-policy experiment proposal",
+      reason: proposal.change || "Atlas completed the forward entry-constraint evidence gate.",
+      next: "Review the evidence in Portfolio. Atlas will not change policy without a separate owner action.",
+      evidence: `${Number(entryStudy.observations || 0)} forward observations`,
+      href: "#paper",
+    });
+  }
 
   proposals
     .filter(item => item.side === "sell")

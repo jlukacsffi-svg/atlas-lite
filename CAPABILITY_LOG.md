@@ -3,6 +3,36 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Owner entry-study milestones
+
+New capabilities:
+
+- Keep routine entry-study observations out of the Today decision inbox.
+- Surface concise research milestones when the study starts and reaches its
+  five-observation midpoint.
+- Create a persistent owner decision item only after the ten-observation
+  evidence gate is complete and an experiment proposal exists.
+- State clearly that Atlas cannot change paper policy automatically.
+
+Validated result:
+
+- The full local suite passes with 444 tests.
+- Cloud Run revision `atlas-dashboard-stg-00186-5s7`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260814-entry-milestones`.
+- The deployed image digest is
+  `sha256:ee97b36c187e9e68bac9da6c06cd62f419c2c027ecdb99f977c650fc96a347c3`.
+- All 26 staging readiness checks and all 27 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+
+Current boundaries:
+
+- Milestones communicate evidence progress; they do not approve an experiment
+  or change policy.
+- The study remains at 0/10 until the next normal daily cycle records a valid
+  observation.
+- Overall program completion is estimated at 90%.
+
 ## August 14, 2026 - Entry-study evidence integrity
 
 New capabilities:

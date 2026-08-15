@@ -65,8 +65,11 @@ Atlas now:
 - Separates evidence produced under the current paper-policy period from older
   strategy periods, so a settings change cannot masquerade as one continuous
   performance experiment.
+- Keeps routine entry-study cycles out of Today, announces only the start and
+  midpoint milestones, and creates an owner decision only when the evidence
+  gate is complete.
 
-Estimated overall Atlas program completion: 89%. Stage 5 paper evidence remains
+Estimated overall Atlas program completion: 90%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
 Current Stage 5 evidence: 171 snapshots, 65 judged decisions, and 11 completed
@@ -90,6 +93,11 @@ Entry-study evidence integrity is complete: duplicate research-cycle keys count
 once, and only observations after the latest paper-policy marker advance the
 current 10-observation gate. A policy update resets current progress without
 deleting the historical audit trail.
+
+Owner notification is also complete for this gate: Today remains concise during
+ordinary evidence collection, surfaces progress at observations 1 and 5, and
+adds a persistent review item at observation 10. Notification never grants
+policy authority.
 
 ## Stage 1: Reliable Daily Briefing
 

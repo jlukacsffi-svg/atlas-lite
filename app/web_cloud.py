@@ -1033,6 +1033,27 @@ class AtlasCloudApplication:
                         or 0
                     ),
                 },
+                "entry_study_owner_notification": {
+                    "ok": self._ui_contains("Entry study started")
+                    and self._ui_contains("Entry study halfway")
+                    and self._ui_contains("Entry study ready for owner review")
+                    and self._ui_contains(
+                        "Review the entry-policy experiment proposal"
+                    ),
+                    "detail": (
+                        "Today stays quiet during routine entry-study cycles, "
+                        "surfaces milestone progress, and creates an owner "
+                        "decision only after the evidence gate is complete."
+                    ),
+                    "milestone": entry_constraint_study.get(
+                        "owner_milestone"
+                    ),
+                    "requires_owner_attention": bool(
+                        entry_constraint_study.get(
+                            "requires_owner_attention"
+                        )
+                    ),
+                },
                 "persistence_learning": {
                     "ok": bool(
                         (feedback_summary.get("horizon_learning") or [])
