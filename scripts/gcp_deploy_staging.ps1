@@ -138,7 +138,7 @@ Invoke-Gcloud @(
     '--memory=512Mi',
     '--concurrency=20',
     '--timeout=60',
-    "--set-env-vars=$($EnvVars -join ',')",
+    "--update-env-vars=$($EnvVars -join ',')",
     "--set-secrets=ATLAS_GOOGLE_CLIENT_ID=$GoogleClientIdSecret`:latest,ATLAS_GOOGLE_CLIENT_SECRET=$GoogleClientSecretSecret`:latest,ATLAS_SESSION_SECRET=$SessionSecret`:latest"
 )
 
