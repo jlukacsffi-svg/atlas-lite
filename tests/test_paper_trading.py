@@ -755,6 +755,51 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(study["experiment_proposal"]["delta"], -1.0)
         self.assertEqual(len(study["experiment_proposal"]["rollback_gates"]), 3)
 
+    def test_entry_constraint_observation_deduplicates_cycle_key(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
+            )
+            account.initialize(100000)
+            observation = {
+                "event": "entry_constraint_observation",
+                "cycle_key": "2026-06-06T09:30:00",
+                "scenarios": [],
+            }
+            first = account.record_entry_constraint_observation(observation)
+            second = account.record_entry_constraint_observation(observation)
+            study = account.entry_constraint_study()
+
+        self.assertEqual(first, second)
+        self.assertEqual(study["observations"], 1)
+
+    def test_entry_constraint_study_resets_after_policy_update(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
+            )
+            account.initialize(100000)
+            account.record_entry_constraint_observation(
+                {"event": "entry_constraint_observation", "cycle_key": "before", "scenarios": []}
+            )
+            account.update_policy(
+                {"strategy_minimum_buy_score": 87.0},
+                source="test",
+            )
+            empty_study = account.entry_constraint_study()
+            account.record_entry_constraint_observation(
+                {"event": "entry_constraint_observation", "cycle_key": "after", "scenarios": []}
+            )
+            current_study = account.entry_constraint_study()
+
+        self.assertEqual(empty_study["observations"], 0)
+        self.assertFalse(empty_study["activated"])
+        self.assertEqual(current_study["observations"], 1)
+
     def test_entry_strategy_profile_loosens_buy_threshold_after_constructive_buys(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = PaperTradingAccount(

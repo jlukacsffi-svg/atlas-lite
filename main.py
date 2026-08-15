@@ -223,12 +223,16 @@ def main():
                     },
                 )
                 paper_strategy = PaperStrategy.from_account_policy(paper_account)
-                paper_account.record_entry_constraint_observation(
-                    paper_strategy.entry_constraint_observation(
-                        paper_account,
-                        market_data,
-                    )
+                entry_observation = paper_strategy.entry_constraint_observation(
+                    paper_account,
+                    market_data,
                 )
+                performance_history = paper_account.performance_history()
+                if performance_history:
+                    entry_observation["cycle_key"] = performance_history[-1].get(
+                        "timestamp"
+                    )
+                paper_account.record_entry_constraint_observation(entry_observation)
                 paper_proposals = paper_strategy.generate(paper_account, market_data)
                 position_monitor = PaperPositionMonitor.from_account(
                     paper_account,

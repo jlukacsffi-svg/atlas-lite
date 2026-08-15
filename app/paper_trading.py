@@ -2048,6 +2048,19 @@ class PaperTradingAccount:
         event = dict(observation or {})
         if event.get("event") != "entry_constraint_observation":
             raise ValueError("entry constraint observation event is required")
+        cycle_key = str(event.get("cycle_key") or "").strip()
+        if cycle_key:
+            existing = next(
+                (
+                    row
+                    for row in reversed(self.ledger())
+                    if row.get("event") == "entry_constraint_observation"
+                    and str(row.get("cycle_key") or "") == cycle_key
+                ),
+                None,
+            )
+            if existing:
+                return existing
         event["timestamp"] = self.clock().isoformat(timespec="seconds")
         event["policy_changed"] = False
         self._append_event(event)
@@ -2055,9 +2068,22 @@ class PaperTradingAccount:
 
     def entry_constraint_study(self, events=None):
         minimum_observations = 10
+        source_events = list(events if events is not None else self.ledger())
+        marker_index = -1
+        for index, event in enumerate(source_events):
+            if event.get("event") in {
+                "account_initialized",
+                "paper_policy_update",
+            }:
+                marker_index = index
+        policy_marker = (
+            source_events[marker_index]
+            if marker_index >= 0
+            else None
+        )
         rows = [
             event
-            for event in (events if events is not None else self.ledger())
+            for event in source_events[marker_index + 1:]
             if event.get("event") == "entry_constraint_observation"
         ]
         if not rows:
@@ -2072,6 +2098,9 @@ class PaperTradingAccount:
                 "evidence_progress_pct": 0.0,
                 "diagnosis_ready": False,
                 "experiment_proposal": None,
+                "policy_epoch_started_at": (
+                    (policy_marker or {}).get("timestamp")
+                ),
                 "scenarios": [],
             }
         latest = rows[-1]
@@ -2214,6 +2243,9 @@ class PaperTradingAccount:
             "dominant_constraint": dominant_constraint if diagnosis_ready else None,
             "constraint_scores": constraint_scores,
             "experiment_proposal": experiment_proposal,
+            "policy_epoch_started_at": (
+                (policy_marker or {}).get("timestamp")
+            ),
             "market_regimes_observed": sorted(
                 {
                     str(row.get("market_regime") or "unknown")
