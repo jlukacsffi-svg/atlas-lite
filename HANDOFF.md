@@ -61,6 +61,25 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Completed entry experiments now expose owner-only Retain setting and Roll
+  back setting actions. Each action requires exact typed confirmation.
+- Rollback restores the exact pre-experiment paper value and is refused if a
+  later policy change makes the experiment state ambiguous. Retain closes the
+  experiment without changing the tested value.
+- Either decision is audit logged and starts a fresh forward evidence period.
+  No result action can connect to a brokerage or use real capital.
+- All 449 local tests pass.
+- The capability is live on Cloud Run revision
+  `atlas-dashboard-stg-00190-7t4`. The dashboard, daily job, and weekly job use
+  image `20260814-entry-experiment-result`, digest
+  `sha256:24e815bf8ecd1ddbad781cb6b64494333c735ec0d7c7f2c5688b0767dd68b3cd`.
+- All 30 protected dashboard checks and all 26 staging-readiness checks pass.
+  Recurring schedules are enabled, and neither job was manually executed for
+  this release.
+- Next development focus: collect observation 1/10 during the next normal daily
+  run and verify the live milestone rather than manufacturing evidence.
+- Estimated overall program completion is 93%.
+
 - The entry-experiment lifecycle is live on Cloud Run revision
   `atlas-dashboard-stg-00189-jkf`. The dashboard, daily job, and weekly job use
   image `20260814-entry-experiment-lifecycle`, digest

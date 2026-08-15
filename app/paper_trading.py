@@ -224,6 +224,58 @@ class PaperTradingAccount:
         self._append_event(event)
         return event
 
+    def decide_entry_experiment_result(self, decision, confirmation=""):
+        normalized = str(decision or "").strip().lower()
+        if normalized not in {"retain", "rollback"}:
+            raise ValueError(
+                "Entry experiment result decision must be retain or rollback"
+            )
+        expected = (
+            "RETAIN PAPER EXPERIMENT"
+            if normalized == "retain"
+            else "ROLL BACK PAPER EXPERIMENT"
+        )
+        if confirmation != expected:
+            raise ValueError(f"Confirmation must be {expected}")
+        study = self.entry_constraint_study()
+        experiment = study.get("active_experiment") or {}
+        if not study.get("experiment_review_ready") or not experiment:
+            raise ValueError("Entry experiment result is not ready for review")
+
+        applied_change = experiment.get("applied_change") or {}
+        rollback_change = None
+        if normalized == "rollback" and applied_change.get("field"):
+            field = applied_change["field"]
+            prior_value = applied_change.get("from")
+            if prior_value is None:
+                raise ValueError("Pre-experiment paper value is unavailable")
+            current_value = self.effective_policy().get(field)
+            if current_value != applied_change.get("to"):
+                raise ValueError(
+                    "Paper policy changed after experiment approval"
+                )
+            self.update_policy(
+                {field: prior_value},
+                source="owner_entry_experiment_rollback",
+            )
+            rollback_change = {
+                "field": field,
+                "from": current_value,
+                "to": prior_value,
+            }
+
+        event = {
+            "event": "entry_experiment_result_decision",
+            "timestamp": self.clock().isoformat(timespec="seconds"),
+            "decision": normalized,
+            "experiment": experiment,
+            "rollback_change": rollback_change,
+            "policy_changed": rollback_change is not None,
+            "simulation_only": True,
+        }
+        self._append_event(event)
+        return event
+
     def effective_policy(self):
         account = self.load()
         policy = dict(self.policy)
@@ -2147,6 +2199,7 @@ class PaperTradingAccount:
                 "account_initialized",
                 "paper_policy_update",
                 "entry_experiment_decision",
+                "entry_experiment_result_decision",
             }:
                 marker_index = index
         policy_marker = (

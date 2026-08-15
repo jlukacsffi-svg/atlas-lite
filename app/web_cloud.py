@@ -1094,6 +1094,23 @@ class AtlasCloudApplication:
                         )
                     ),
                 },
+                "entry_experiment_result_control": {
+                    "ok": self._ui_contains("Retain setting")
+                    and self._ui_contains("Roll back setting")
+                    and self._ui_contains("RETAIN PAPER EXPERIMENT")
+                    and self._ui_contains("ROLL BACK PAPER EXPERIMENT")
+                    and self._ui_contains("entry-experiment-result"),
+                    "detail": (
+                        "A completed experiment requires a typed owner "
+                        "decision to retain the tested setting or restore "
+                        "the exact pre-experiment paper value."
+                    ),
+                    "available": bool(
+                        entry_constraint_study.get(
+                            "experiment_review_ready"
+                        )
+                    ),
+                },
                 "persistence_learning": {
                     "ok": bool(
                         (feedback_summary.get("horizon_learning") or [])

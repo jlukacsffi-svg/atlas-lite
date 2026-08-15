@@ -2120,6 +2120,8 @@ class OwnerControlService:
                     result = self._paper_policy(payload)
                 elif action == "entry-experiment-decision":
                     result = self._entry_experiment_decision(payload)
+                elif action == "entry-experiment-result":
+                    result = self._entry_experiment_result(payload)
                 else:
                     raise ValueError("Unknown owner action")
                 self.persist(paths)
@@ -2259,6 +2261,20 @@ class OwnerControlService:
             "simulation_only": True,
         }
 
+    def _entry_experiment_result(self, payload):
+        decision = self._required(payload.get("decision"), "decision").lower()
+        event = self.paper_account.decide_entry_experiment_result(
+            decision,
+            confirmation=str(payload.get("confirmation") or ""),
+        )
+        return {
+            "action": "entry-experiment-result",
+            "decision": event["decision"],
+            "policy_changed": event["policy_changed"],
+            "rollback_change": event["rollback_change"],
+            "simulation_only": True,
+        }
+
     def _affected_paths(self, action):
         if action == "research-decision":
             return [self.research_queue.task_file, *self._research_outputs()]
@@ -2267,6 +2283,7 @@ class OwnerControlService:
             "paper-fill",
             "paper-policy",
             "entry-experiment-decision",
+            "entry-experiment-result",
         }:
             return [
                 self.paper_account.account_file,

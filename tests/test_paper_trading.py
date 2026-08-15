@@ -862,6 +862,17 @@ class PaperTradingAccountTests(unittest.TestCase):
                     }
                 )
             completed = account.entry_constraint_study()
+            with self.assertRaisesRegex(ValueError, "Confirmation must be"):
+                account.decide_entry_experiment_result(
+                    "rollback",
+                    confirmation="wrong",
+                )
+            result = account.decide_entry_experiment_result(
+                "rollback",
+                confirmation="ROLL BACK PAPER EXPERIMENT",
+            )
+            reset = account.entry_constraint_study()
+            restored_policy = account.effective_policy()
 
         self.assertTrue(midpoint["experiment_active"])
         self.assertEqual(midpoint["minimum_observations"], 20)
@@ -873,6 +884,13 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertTrue(completed["requires_owner_attention"])
         self.assertEqual(completed["active_experiment"]["status"], "owner_review")
         self.assertEqual(completed["active_experiment"]["observations"], 20)
+        self.assertTrue(result["policy_changed"])
+        self.assertEqual(result["rollback_change"]["field"], "strategy_minimum_buy_score")
+        self.assertEqual(result["rollback_change"]["from"], 87.0)
+        self.assertEqual(result["rollback_change"]["to"], 88.0)
+        self.assertEqual(restored_policy["strategy_minimum_buy_score"], 88.0)
+        self.assertEqual(reset["observations"], 0)
+        self.assertFalse(reset["experiment_active"])
 
     def test_entry_experiment_rejection_resets_gate_without_policy_change(self):
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -910,6 +928,11 @@ class PaperTradingAccountTests(unittest.TestCase):
             account.initialize(100000)
             with self.assertRaisesRegex(ValueError, "evidence gate is not complete"):
                 account.decide_entry_experiment("reject")
+            with self.assertRaisesRegex(ValueError, "result is not ready"):
+                account.decide_entry_experiment_result(
+                    "retain",
+                    confirmation="RETAIN PAPER EXPERIMENT",
+                )
 
     def test_entry_constraint_observation_deduplicates_cycle_key(self):
         with tempfile.TemporaryDirectory() as temp_dir:

@@ -547,7 +547,12 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Entry experiment started";\n'
                 '"Entry experiment halfway";\n'
                 '"Entry experiment ready for owner review";\n'
-                '"Review the completed entry experiment";\n',
+                '"Review the completed entry experiment";\n'
+                '"Retain setting";\n'
+                '"Roll back setting";\n'
+                '"RETAIN PAPER EXPERIMENT";\n'
+                '"ROLL BACK PAPER EXPERIMENT";\n'
+                '"entry-experiment-result";\n',
                 encoding="utf-8",
             )
             data_service = type(

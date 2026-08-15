@@ -920,9 +920,9 @@
           </div>
           <div class="roadmap-overall">
             <span>Estimated overall completion</span>
-            <strong>92%</strong>
-            <div class="roadmap-progress" aria-label="92 percent complete">
-              <span style="width:92%"></span>
+            <strong>93%</strong>
+            <div class="roadmap-progress" aria-label="93 percent complete">
+              <span style="width:93%"></span>
             </div>
             <small>The owner-only research and paper platform is further along than the full company vision.</small>
           </div>
@@ -1114,6 +1114,29 @@
       </div>
     </form>
   </dialog>
-    <script src="/app.js?v=20260814-entry-experiment-lifecycle"></script>
+  <dialog id="entry-experiment-result-dialog" class="confirmation-dialog">
+    <form id="entry-experiment-result-form" method="dialog">
+      <div class="dialog-heading">
+        <div>
+          <p class="eyebrow">Experiment result decision</p>
+          <h2 id="entry-experiment-result-title">Resolve bounded experiment</h2>
+        </div>
+        <button id="entry-experiment-result-close" class="icon-button" type="button" aria-label="Close experiment result confirmation">&times;</button>
+      </div>
+      <p id="entry-experiment-result-summary" class="dialog-summary"></p>
+      <div class="simulation-boundary">
+        This affects only the tested Atlas paper-policy setting. It cannot place a brokerage order, use real capital, or expand trading authority.
+      </div>
+      <label class="confirmation-field" for="entry-experiment-result-confirmation">
+        <span>Type <strong id="entry-experiment-result-expected"></strong> to continue</span>
+        <input id="entry-experiment-result-confirmation" name="confirmation" type="text" autocomplete="off" spellcheck="false">
+      </label>
+      <div class="dialog-actions">
+        <button id="entry-experiment-result-cancel" class="secondary" type="button">Cancel</button>
+        <button id="entry-experiment-result-submit" type="submit" disabled>Confirm result</button>
+      </div>
+    </form>
+  </dialog>
+    <script src="/app.js?v=20260814-entry-experiment-result"></script>
 </body>
 </html>

@@ -5,6 +5,7 @@ const DASHBOARD_FULL_CACHE_KEY = "atlas_dashboard_full_v1";
 let ownerControls = null;
 let pendingPaperFill = null;
 let pendingEntryExperiment = null;
+let pendingEntryExperimentResult = null;
 let paperTradeHistory = { total_trades: 0, ticker_count: 0, tickers: [] };
 let paperAccountabilityReport = { summary: {}, tickers: [] };
 let paperPositions = [];
@@ -1277,6 +1278,27 @@ function renderEntryExperimentReview(study) {
   const target = document.getElementById("entry-experiment-review");
   if (!target) return;
   const proposal = study?.experiment_proposal || null;
+  const experiment = study?.active_experiment || null;
+  if (study?.experiment_review_ready && experiment) {
+    target.innerHTML = `
+      <article class="decision-row">
+        <div>
+          <span class="tag ready-tag">Experiment result</span>
+          <b class="row-title">Choose whether to retain or roll back the tested setting</b>
+          <p>${escapeHtml(experiment.headline || "The bounded entry experiment is ready for owner review.")}</p>
+          <small class="row-meta">${Number(experiment.passed_gates || 0)} of ${(experiment.gates || []).length} predefined success gates passed across ${Number(experiment.observations || 0)} forward observations.</small>
+          <div class="why-now compact"><ul>
+            ${(experiment.gates || []).map(gate => `<li>${gate.passed ? "Passed" : "Not passed"}: ${escapeHtml(gate.label || "Experiment gate")}</li>`).join("")}
+          </ul></div>
+          <small class="row-meta">Atlas cannot make this result decision automatically.</small>
+        </div>
+        <div class="decision-actions">
+          <button type="button" data-entry-experiment-result="retain">Retain setting</button>
+          <button type="button" class="danger" data-entry-experiment-result="rollback">Roll back setting</button>
+        </div>
+      </article>`;
+    return;
+  }
   if (!study?.requires_owner_attention || !proposal) {
     target.innerHTML = "";
     return;
@@ -1295,6 +1317,37 @@ function renderEntryExperimentReview(study) {
         <button type="button" class="danger" data-entry-experiment="reject">Decline</button>
       </div>
     </article>`;
+}
+
+function closeEntryExperimentResultDialog() {
+  const dialog = document.getElementById("entry-experiment-result-dialog");
+  pendingEntryExperimentResult = null;
+  document.getElementById("entry-experiment-result-confirmation").value = "";
+  document.getElementById("entry-experiment-result-submit").disabled = true;
+  if (dialog.open) dialog.close();
+}
+
+function openEntryExperimentResultDialog(decision) {
+  const study = ownerControls?.entry_experiment_review || {};
+  if (!study.experiment_review_ready || !study.active_experiment) {
+    showMessage("The entry experiment result is no longer awaiting review.", true);
+    return;
+  }
+  const rollback = decision === "rollback";
+  const expected = rollback
+    ? "ROLL BACK PAPER EXPERIMENT"
+    : "RETAIN PAPER EXPERIMENT";
+  pendingEntryExperimentResult = { decision, expected };
+  document.getElementById("entry-experiment-result-title").textContent =
+    rollback ? "Roll back tested setting" : "Retain tested setting";
+  document.getElementById("entry-experiment-result-summary").textContent = rollback
+    ? "Restore the exact paper-policy value recorded before this experiment."
+    : "Keep the tested paper-policy value and close this experiment period.";
+  document.getElementById("entry-experiment-result-expected").textContent = expected;
+  document.getElementById("entry-experiment-result-confirmation").value = "";
+  document.getElementById("entry-experiment-result-submit").disabled = true;
+  document.getElementById("entry-experiment-result-dialog").showModal();
+  document.getElementById("entry-experiment-result-confirmation").focus();
 }
 
 function closeEntryExperimentDialog() {
@@ -4177,6 +4230,10 @@ async function submitOwnerAction(action, payload, button) {
         ? (result.result?.decision === "approve"
           ? `Bounded paper experiment approved.${result.result?.policy_changed ? " The single approved policy change is active." : " No policy setting changed."}`
           : "Entry experiment declined. Atlas will collect a fresh evidence period.")
+        : action === "entry-experiment-result"
+        ? (result.result?.decision === "rollback"
+          ? `Entry experiment rolled back.${result.result?.policy_changed ? " The pre-experiment paper value is restored." : " No paper setting required restoration."}`
+          : "Entry experiment retained. Atlas will collect a fresh evidence period under the retained paper setting.")
         : "Owner action saved.",
       false
     );
@@ -4318,6 +4375,12 @@ document.getElementById("controls").addEventListener("click", event => {
       experimentButton
     );
   }
+  const resultButton = event.target.closest("[data-entry-experiment-result]");
+  if (resultButton) {
+    openEntryExperimentResultDialog(
+      resultButton.dataset.entryExperimentResult
+    );
+  }
 });
 document.getElementById("access").addEventListener("click", event => {
   const jumpButton = event.target.closest("[data-access-target]");
@@ -4373,6 +4436,30 @@ document.getElementById("entry-experiment-close").addEventListener("click", clos
 document.getElementById("entry-experiment-dialog").addEventListener("cancel", event => {
   event.preventDefault();
   closeEntryExperimentDialog();
+});
+document.getElementById("entry-experiment-result-confirmation").addEventListener("input", event => {
+  document.getElementById("entry-experiment-result-submit").disabled =
+    !pendingEntryExperimentResult
+    || event.target.value !== pendingEntryExperimentResult.expected;
+});
+document.getElementById("entry-experiment-result-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (!pendingEntryExperimentResult) return;
+  const result = pendingEntryExperimentResult;
+  const confirmation = document.getElementById("entry-experiment-result-confirmation").value;
+  if (confirmation !== result.expected) return;
+  closeEntryExperimentResultDialog();
+  await submitOwnerAction(
+    "entry-experiment-result",
+    { decision: result.decision, confirmation },
+    null
+  );
+});
+document.getElementById("entry-experiment-result-cancel").addEventListener("click", closeEntryExperimentResultDialog);
+document.getElementById("entry-experiment-result-close").addEventListener("click", closeEntryExperimentResultDialog);
+document.getElementById("entry-experiment-result-dialog").addEventListener("cancel", event => {
+  event.preventDefault();
+  closeEntryExperimentResultDialog();
 });
 document.getElementById("open-trade-history").addEventListener("click", openTradeHistoryDialog);
 document.getElementById("trade-history-close").addEventListener("click", closeTradeHistoryDialog);

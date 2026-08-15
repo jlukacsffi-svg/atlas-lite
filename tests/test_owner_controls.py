@@ -167,6 +167,14 @@ class OwnerControlServiceTests(unittest.TestCase):
                 "entry-experiment-decision",
                 {"decision": "reject"},
             )
+        with self.assertRaisesRegex(ValueError, "result is not ready"):
+            self.service.apply(
+                "entry-experiment-result",
+                {
+                    "decision": "retain",
+                    "confirmation": "RETAIN PAPER EXPERIMENT",
+                },
+            )
 
     def test_model_backfills_structured_rationale_for_legacy_buy_proposals(self):
         proposal = self.dashboard.paper_account.create_proposal(

@@ -3,6 +3,37 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Owner experiment result decision
+
+New capabilities:
+
+- Present Retain setting and Roll back setting only after a bounded experiment
+  completes its 20-observation evidence period.
+- Require exact typed confirmation for either result decision.
+- Restore the exact pre-experiment paper-policy value during rollback and refuse
+  rollback if an unrelated policy update interrupted the experiment.
+- Audit log the result decision and restart forward evidence collection without
+  deleting the completed experiment.
+
+Validated result:
+
+- The full local suite passes with 449 tests.
+- Premature result actions, incorrect confirmations, and ambiguous rollback
+  state are rejected.
+- The capability is live on Cloud Run revision
+  `atlas-dashboard-stg-00190-7t4` using image
+  `20260814-entry-experiment-result`, digest
+  `sha256:24e815bf8ecd1ddbad781cb6b64494333c735ec0d7c7f2c5688b0767dd68b3cd`.
+- All 30 protected dashboard checks and all 26 staging-readiness checks pass.
+  Recurring schedules are enabled, and neither job was manually executed for
+  this release.
+
+Current boundaries:
+
+- Result decisions affect only one bounded paper-policy setting.
+- Brokerage access and real-money trading remain disabled.
+- Overall program completion is estimated at 93%.
+
 ## August 14, 2026 - Entry-experiment lifecycle
 
 New capabilities:
