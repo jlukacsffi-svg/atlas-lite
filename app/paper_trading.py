@@ -1200,6 +1200,7 @@ class PaperTradingAccount:
                 prospective_review_effectiveness
             ),
             "evaluation_integrity": evaluation_integrity,
+            "entry_constraint_study": self.entry_constraint_study(),
         }
 
     def stage5_evaluation_integrity(
@@ -2042,6 +2043,89 @@ class PaperTradingAccount:
     def entry_strategy_profile(self, latest_prices=None):
         rows = self.proposal_feedback(latest_prices=latest_prices)
         return self._entry_strategy_profile_from_rows(rows)
+
+    def record_entry_constraint_observation(self, observation):
+        event = dict(observation or {})
+        if event.get("event") != "entry_constraint_observation":
+            raise ValueError("entry constraint observation event is required")
+        event["timestamp"] = self.clock().isoformat(timespec="seconds")
+        event["policy_changed"] = False
+        self._append_event(event)
+        return event
+
+    def entry_constraint_study(self, events=None):
+        rows = [
+            event
+            for event in (events if events is not None else self.ledger())
+            if event.get("event") == "entry_constraint_observation"
+        ]
+        if not rows:
+            return {
+                "available": True,
+                "activated": False,
+                "policy_changed": False,
+                "headline": "The forward entry-constraint study starts with the next scheduled cycle.",
+                "detail": "Atlas will separate score threshold, confirmation, proposal capacity, and sizing constraints without creating shadow fills.",
+                "observations": 0,
+                "scenarios": [],
+            }
+        latest = rows[-1]
+        scenario_totals = {}
+        for row in rows:
+            for scenario in row.get("scenarios") or []:
+                key = str(scenario.get("label") or "Scenario")
+                bucket = scenario_totals.setdefault(
+                    key,
+                    {
+                        "label": key,
+                        "minimum_buy_score": scenario.get("minimum_buy_score"),
+                        "eligible_ideas": 0,
+                        "selected_ideas": 0,
+                        "estimated_deployable_pct": 0.0,
+                    },
+                )
+                bucket["eligible_ideas"] += int(scenario.get("eligible_ideas") or 0)
+                bucket["selected_ideas"] += int(scenario.get("selected_ideas") or 0)
+                bucket["estimated_deployable_pct"] += float(
+                    scenario.get("estimated_deployable_pct") or 0.0
+                )
+        scenarios = []
+        for bucket in scenario_totals.values():
+            scenarios.append(
+                {
+                    **bucket,
+                    "average_eligible_ideas": round(
+                        bucket["eligible_ideas"] / len(rows), 2
+                    ),
+                    "average_selected_ideas": round(
+                        bucket["selected_ideas"] / len(rows), 2
+                    ),
+                    "average_deployable_pct": round(
+                        bucket["estimated_deployable_pct"] / len(rows), 2
+                    ),
+                }
+            )
+        return {
+            "available": True,
+            "activated": True,
+            "policy_changed": False,
+            "headline": f"Atlas has recorded {len(rows)} forward entry-constraint observation{'' if len(rows) == 1 else 's'}.",
+            "detail": "The study compares opportunity supply while preserving confirmation filters, paper fills, and financial authority.",
+            "observations": len(rows),
+            "latest_timestamp": latest.get("timestamp"),
+            "latest": {
+                key: latest.get(key)
+                for key in (
+                    "candidate_universe",
+                    "unheld_candidates",
+                    "score_pass_candidates",
+                    "confirmation_blocked_candidates",
+                    "available_buy_slots",
+                    "target_position_pct",
+                )
+            },
+            "scenarios": scenarios,
+        }
 
     def trade_pressure_profile(self, latest_prices=None):
         rows = self.proposal_feedback(latest_prices=latest_prices)

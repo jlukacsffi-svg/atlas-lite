@@ -3563,6 +3563,8 @@ function renderValidationSummary(summary) {
   const epochAttribution = integrity.attribution || {};
   const exposureScenarios = Array.isArray(epochAttribution.exposure_scenarios) ? epochAttribution.exposure_scenarios : [];
   const sectorContributions = Array.isArray(epochAttribution.sector_contributions) ? epochAttribution.sector_contributions : [];
+  const entryStudy = summary.entry_constraint_study || {};
+  const entryScenarios = Array.isArray(entryStudy.scenarios) ? entryStudy.scenarios : [];
   const stateClass = escapeHtml(String(summary.status || "building"));
   const html = `
     <div class="feedback-summary-grid validation-grid">
@@ -3633,6 +3635,22 @@ function renderValidationSummary(summary) {
                     </span>
                   `).join("")}
                 </div>
+              ` : ""}
+              ${entryStudy.available ? `
+                <b>Forward entry-constraint study</b>
+                <small>${escapeHtml(entryStudy.headline || "The study starts with the next scheduled cycle.")}</small>
+                ${entryScenarios.length ? `
+                  <div class="exposure-scenario-grid">
+                    ${entryScenarios.map(item => `
+                      <span>
+                        <small>${escapeHtml(item.label || "Entry scenario")} · score ${Number(item.minimum_buy_score || 0).toFixed(1)}</small>
+                        <b>${Number(item.average_eligible_ideas || 0).toFixed(1)} eligible ideas per cycle</b>
+                        <small>${Number(item.average_selected_ideas || 0).toFixed(1)} selected · ${Number(item.average_deployable_pct || 0).toFixed(1)}% estimated deployable capital</small>
+                      </span>
+                    `).join("")}
+                  </div>
+                ` : ""}
+                <small>Forward observations only. No shadow fills, policy changes, or real-money authority.</small>
               ` : ""}
               <small>${escapeHtml(epochAttribution.boundary || "Attribution is diagnostic only.")}</small>
             </div>

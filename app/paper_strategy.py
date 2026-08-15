@@ -172,6 +172,93 @@ class PaperStrategy:
 
         return created
 
+    def entry_constraint_observation(self, account, market_data):
+        """Measure entry constraints without creating proposals or changing policy."""
+        state = account.load()
+        positions = set((state.get("positions") or {}).keys())
+        active_buys = {
+            proposal["ticker"]
+            for proposal in account.proposals()
+            if proposal.get("side") == "buy"
+            and proposal.get("status") in {"pending", "approved"}
+        }
+        benchmark_context = self._benchmark_context(
+            market_data,
+            preferred_benchmark=self.preferred_benchmark,
+        )
+        learning_context = self._paper_learning_context(account, market_data)
+        candidates = self._candidate_rows(
+            market_data,
+            benchmark_context,
+            learning_context,
+        )
+        available = [
+            row
+            for row in candidates
+            if row.get("ticker") not in positions
+            and row.get("ticker") not in active_buys
+        ]
+        available_slots = max(
+            self.maximum_new_proposals - len(active_buys),
+            0,
+        )
+        scenarios = []
+        for reduction in (0.0, 1.0, 2.0):
+            threshold = max(self.minimum_buy_score - reduction, 0.0)
+            original_threshold = self.minimum_buy_score
+            self.minimum_buy_score = threshold
+            try:
+                eligible = [row for row in available if self._can_open_buy(row)]
+            finally:
+                self.minimum_buy_score = original_threshold
+            selected = self._preferred_candidate_order(eligible)[:available_slots]
+            deployable = sum(
+                self._target_shares(state["starting_cash"], row["price"])
+                * float(row["price"])
+                for row in selected
+            )
+            scenarios.append(
+                {
+                    "label": (
+                        "Current entry rules"
+                        if reduction == 0
+                        else f"Lower score threshold by {int(reduction)} point"
+                        f"{'' if reduction == 1 else 's'}"
+                    ),
+                    "minimum_buy_score": round(threshold, 1),
+                    "eligible_ideas": len(eligible),
+                    "selected_ideas": len(selected),
+                    "selected_tickers": [row["ticker"] for row in selected],
+                    "estimated_deployable_cash": round(deployable, 2),
+                    "estimated_deployable_pct": round(
+                        deployable / float(state["starting_cash"]) * 100.0,
+                        2,
+                    ),
+                }
+            )
+
+        score_pass = [
+            row for row in available if row["score"] >= self.minimum_buy_score
+        ]
+        confirmation_blocked = sum(
+            1 for row in score_pass if not self._can_open_buy(row)
+        )
+        return {
+            "event": "entry_constraint_observation",
+            "source": "paper_entry_shadow_v1",
+            "policy_changed": False,
+            "minimum_buy_score": round(self.minimum_buy_score, 1),
+            "target_position_pct": round(self.target_position_pct, 2),
+            "maximum_new_proposals": self.maximum_new_proposals,
+            "active_buy_proposals": len(active_buys),
+            "available_buy_slots": available_slots,
+            "candidate_universe": len(candidates),
+            "unheld_candidates": len(available),
+            "score_pass_candidates": len(score_pass),
+            "confirmation_blocked_candidates": confirmation_blocked,
+            "scenarios": scenarios,
+        }
+
     def _candidate_rows(self, market_data, benchmark_context, learning_context=None):
         sector_context = self._sector_context(market_data, benchmark_context)
         breadth_context = self._breadth_context(market_data)

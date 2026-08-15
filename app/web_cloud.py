@@ -491,6 +491,7 @@ class AtlasCloudApplication:
         evaluation_integrity = validation.get("evaluation_integrity") or {}
         epoch_performance = evaluation_integrity.get("performance") or {}
         epoch_attribution = evaluation_integrity.get("attribution") or {}
+        entry_constraint_study = validation.get("entry_constraint_study") or {}
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -571,6 +572,26 @@ class AtlasCloudApplication:
                     ),
                     "exposure_scenario_count": len(
                         epoch_attribution.get("exposure_scenarios") or []
+                    ),
+                },
+                "entry_constraint_study": {
+                    "ok": bool(entry_constraint_study.get("available"))
+                    and entry_constraint_study.get("policy_changed") is False
+                    and self._ui_contains("Forward entry-constraint study")
+                    and self._ui_contains("No shadow fills"),
+                    "detail": (
+                        "Dashboard exposes a forward-only entry-constraint study "
+                        f"with {int(entry_constraint_study.get('observations') or 0)} observations and no policy authority."
+                    ),
+                    "activated": bool(entry_constraint_study.get("activated")),
+                    "observations": int(
+                        entry_constraint_study.get("observations") or 0
+                    ),
+                    "scenario_count": len(
+                        entry_constraint_study.get("scenarios") or []
+                    ),
+                    "policy_changed": bool(
+                        entry_constraint_study.get("policy_changed")
                     ),
                 },
                 "completed_position_diagnostics": {

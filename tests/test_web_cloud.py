@@ -533,6 +533,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Current policy performance";\n'
                 '"What is driving the result";\n'
                 '"Idle-cash exposure study";\n'
+                '"Forward entry-constraint study";\n'
+                '"No shadow fills";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",
             )
@@ -579,6 +581,17 @@ class CloudWebApplicationTests(unittest.TestCase):
                                             {"idle_cash_deployed_pct": 75},
                                         ],
                                     },
+                                },
+                                "entry_constraint_study": {
+                                    "available": True,
+                                    "activated": True,
+                                    "policy_changed": False,
+                                    "observations": 2,
+                                    "scenarios": [
+                                        {"label": "Current entry rules"},
+                                        {"label": "Lower score threshold by 1 point"},
+                                        {"label": "Lower score threshold by 2 points"},
+                                    ],
                                 },
                                 "completed_position_diagnostics": {
                                     "available": True,
@@ -756,6 +769,16 @@ class CloudWebApplicationTests(unittest.TestCase):
         self.assertEqual(
             response["json"]["checks"]["evaluation_integrity"]["exposure_scenario_count"],
             3,
+        )
+        self.assertTrue(
+            response["json"]["checks"]["entry_constraint_study"]["ok"]
+        )
+        self.assertEqual(
+            response["json"]["checks"]["entry_constraint_study"]["observations"],
+            2,
+        )
+        self.assertFalse(
+            response["json"]["checks"]["entry_constraint_study"]["policy_changed"]
         )
         self.assertTrue(
             response["json"]["checks"]["completed_position_diagnostics"]["ok"]

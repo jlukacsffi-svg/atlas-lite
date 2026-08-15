@@ -681,6 +681,41 @@ class PaperTradingAccountTests(unittest.TestCase):
             profile["monitor_overrides"]["projection_review_excess_pct"], 0.5
         )
 
+    def test_entry_constraint_study_aggregates_forward_observations(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
+            )
+            account.initialize(100000)
+            account.record_entry_constraint_observation(
+                {
+                    "event": "entry_constraint_observation",
+                    "candidate_universe": 5,
+                    "unheld_candidates": 4,
+                    "score_pass_candidates": 2,
+                    "confirmation_blocked_candidates": 1,
+                    "available_buy_slots": 2,
+                    "target_position_pct": 5.0,
+                    "scenarios": [
+                        {
+                            "label": "Current entry rules",
+                            "minimum_buy_score": 88.0,
+                            "eligible_ideas": 1,
+                            "selected_ideas": 1,
+                            "estimated_deployable_pct": 5.0,
+                        }
+                    ],
+                }
+            )
+            study = account.entry_constraint_study()
+
+        self.assertTrue(study["activated"])
+        self.assertFalse(study["policy_changed"])
+        self.assertEqual(study["observations"], 1)
+        self.assertEqual(study["scenarios"][0]["average_eligible_ideas"], 1.0)
+
     def test_entry_strategy_profile_loosens_buy_threshold_after_constructive_buys(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = PaperTradingAccount(

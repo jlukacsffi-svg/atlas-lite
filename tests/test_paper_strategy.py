@@ -139,6 +139,27 @@ class PaperStrategyTests(unittest.TestCase):
         self.assertEqual(len(created), 1)
         self.assertEqual(created[0]["ticker"], "CCC")
 
+    def test_entry_constraint_observation_compares_thresholds_without_proposals(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            strategy = PaperStrategy(minimum_buy_score=88, maximum_new_proposals=2)
+            observation = strategy.entry_constraint_observation(
+                account,
+                {
+                    "AAA": market_security(91),
+                    "BBB": market_security(88),
+                    "CCC": market_security(87),
+                    "DDD": market_security(86),
+                    "SPY": {**market_security(99), "sector": "Benchmark ETF"},
+                },
+            )
+
+        self.assertFalse(observation["policy_changed"])
+        self.assertEqual(len(observation["scenarios"]), 3)
+        self.assertEqual(observation["scenarios"][0]["eligible_ideas"], 2)
+        self.assertGreaterEqual(observation["scenarios"][2]["eligible_ideas"], 2)
+        self.assertEqual(account.proposals(), [])
+
     def test_generates_exit_for_held_name_below_threshold(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)

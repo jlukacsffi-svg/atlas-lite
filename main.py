@@ -222,9 +222,14 @@ def main():
                         "QQQ": prices.get("QQQ"),
                     },
                 )
-                paper_proposals = PaperStrategy.from_account_policy(
-                    paper_account
-                ).generate(paper_account, market_data)
+                paper_strategy = PaperStrategy.from_account_policy(paper_account)
+                paper_account.record_entry_constraint_observation(
+                    paper_strategy.entry_constraint_observation(
+                        paper_account,
+                        market_data,
+                    )
+                )
+                paper_proposals = paper_strategy.generate(paper_account, market_data)
                 position_monitor = PaperPositionMonitor.from_account(
                     paper_account,
                     latest_prices=prices,
