@@ -552,6 +552,7 @@ function renderEntryEvidenceGate(overview) {
 function renderOwnerBriefing(data) {
   const paper = data.paper || {};
   const entryStudy = paper.validation_summary?.entry_constraint_study || {};
+  const entryCadence = entryStudy.collection_cadence || {};
   const prospectiveTracker =
     paper.validation_summary?.prospective_review_tracker || {};
   const latestPriorityEscalations = Array.isArray(
@@ -691,6 +692,12 @@ function renderOwnerBriefing(data) {
     },
   };
   let entryMilestone = entryMilestones[entryStudy.owner_milestone] || null;
+  if (!entryMilestone && entryCadence.requires_attention) {
+    entryMilestone = {
+      title: "Entry study observation overdue",
+      detail: entryCadence.detail || "The scheduled evidence collector needs review.",
+    };
+  }
   if (entryMilestone && entryStudy.experiment_active) {
     const experimentMilestones = {
       started: {
@@ -3748,6 +3755,7 @@ function renderValidationSummary(summary) {
   const strongestCurrentSector = currentSectorRows[0] || {};
   const currentSectorToReview = currentSectorRows[currentSectorRows.length - 1] || {};
   const entryStudy = summary.entry_constraint_study || {};
+  const entryCadence = entryStudy.collection_cadence || {};
   const entryScenarios = Array.isArray(entryStudy.scenarios) ? entryStudy.scenarios : [];
   const stateClass = escapeHtml(String(summary.status || "building"));
   const html = `
@@ -3827,8 +3835,9 @@ function renderValidationSummary(summary) {
                   <span><small>Evidence progress</small><b>${Number(entryStudy.evidence_progress_pct || 0).toFixed(0)}%</b></span>
                   <span><small>Observations</small><b>${Number(entryStudy.observations || 0)}/${Number(entryStudy.minimum_observations || 10)}</b></span>
                   <span><small>Diagnosis</small><b>${entryStudy.diagnosis_ready ? "Ready" : "Collecting"}</b></span>
-                  <span><small>Policy authority</small><b>Owner only</b></span>
+                  <span><small>Collection health</small><b>${escapeHtml(entryCadence.status_label || "Waiting for schedule")}</b></span>
                 </div>
+                <small>${escapeHtml(entryCadence.detail || "Atlas records only genuine scheduled observations.")}</small>
                 <small>Evidence integrity: current policy period only · duplicate research cycles are ignored.</small>
                 ${entryScenarios.length ? `
                   <div class="exposure-scenario-grid">

@@ -492,6 +492,9 @@ class AtlasCloudApplication:
         epoch_performance = evaluation_integrity.get("performance") or {}
         epoch_attribution = evaluation_integrity.get("attribution") or {}
         entry_constraint_study = validation.get("entry_constraint_study") or {}
+        entry_collection_cadence = (
+            entry_constraint_study.get("collection_cadence") or {}
+        )
         evidence_maturity_pct = (
             (validation.get("capital_readiness") or {}).get("progress_pct")
         )
@@ -584,6 +587,8 @@ class AtlasCloudApplication:
                     and self._ui_contains("Entry experiment evidence gate")
                     and self._ui_contains("Owner only")
                     and self._ui_contains("duplicate research cycles are ignored")
+                    and self._ui_contains("Collection health")
+                    and self._ui_contains("Entry study observation overdue")
                     and self._ui_contains("No shadow fills"),
                     "detail": (
                         "Dashboard exposes a forward-only entry-constraint study "
@@ -595,6 +600,10 @@ class AtlasCloudApplication:
                     ),
                     "scenario_count": len(
                         entry_constraint_study.get("scenarios") or []
+                    ),
+                    "collection_status": entry_collection_cadence.get("status"),
+                    "collection_requires_attention": bool(
+                        entry_collection_cadence.get("requires_attention")
                     ),
                     "minimum_observations": int(
                         entry_constraint_study.get("minimum_observations") or 0

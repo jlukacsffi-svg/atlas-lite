@@ -3,6 +3,38 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Entry-study collection health
+
+New capabilities:
+
+- Track whether genuine entry-study observations arrive within the expected
+  daily cadence and a 12-hour grace window.
+- Distinguish waiting for the first run, collecting on schedule, observation
+  overdue, and evidence-gate complete states.
+- Surface an overdue collector on Today while keeping normal evidence
+  collection quiet.
+
+Validated result:
+
+- The full local suite passes with 452 tests.
+- Cadence status is derived from real ledger timestamps and never creates an
+  observation.
+- Before observation 1, Atlas waits for the first scheduled run instead of
+  treating an older policy marker as a missed observation.
+- The capability is live on Cloud Run revision
+  `atlas-dashboard-stg-00193-dnv` using image
+  `20260814-entry-study-health-v2`, digest
+  `sha256:e281ea5a58edda58f380d0cb30bce08bd97690ac96097a0847c36ecac21bdd5d`.
+- All 30 protected dashboard checks and all 26 staging-readiness checks pass.
+  Live collection status is `waiting`, with no owner attention required.
+
+Current boundaries:
+
+- Collection health can request operational review but cannot execute a job,
+  change paper policy, or grant financial authority.
+- Brokerage access and real-money trading remain disabled.
+- Overall program completion is estimated at 95%.
+
 ## August 14, 2026 - Current-policy sector attribution
 
 New capabilities:

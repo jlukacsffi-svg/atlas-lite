@@ -79,8 +79,10 @@ Atlas now:
   evidence period with the complete audit trail intact.
 - Attributes current-policy continuing-position results and judged buy or sell
   quality by sector, without mixing evidence from earlier policy periods.
+- Monitors whether genuine entry-study observations arrive on the expected
+  daily cadence and alerts the owner if collection becomes stale.
 
-Estimated overall Atlas program completion: 94%. Stage 5 paper evidence remains
+Estimated overall Atlas program completion: 95%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
 Current Stage 5 evidence: 171 snapshots, 65 judged decisions, and 11 completed

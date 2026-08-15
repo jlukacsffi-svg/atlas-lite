@@ -720,6 +720,63 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertFalse(study["requires_owner_attention"])
         self.assertEqual(study["scenarios"][0]["average_eligible_ideas"], 1.0)
 
+    def test_entry_constraint_study_flags_missed_collection_window(self):
+        events = [
+            {"event": "account_initialized", "timestamp": "2026-06-01T07:00:00"},
+            {
+                "event": "entry_constraint_observation",
+                "timestamp": "2026-06-01T07:00:00",
+                "cycle_key": "scheduled-2026-06-01",
+                "scenarios": [],
+            },
+        ]
+
+        study = PaperTradingAccount().entry_constraint_study(
+            events=events,
+            now=datetime(2026, 6, 2, 20, 0, 0),
+        )
+
+        cadence = study["collection_cadence"]
+        self.assertEqual(cadence["status"], "overdue")
+        self.assertTrue(cadence["requires_attention"])
+        self.assertEqual(cadence["age_hours"], 37.0)
+
+    def test_entry_constraint_study_waits_for_first_genuine_observation(self):
+        events = [
+            {"event": "account_initialized", "timestamp": "2026-06-01T07:00:00"}
+        ]
+
+        study = PaperTradingAccount().entry_constraint_study(
+            events=events,
+            now=datetime(2026, 7, 1, 7, 0, 0),
+        )
+
+        cadence = study["collection_cadence"]
+        self.assertEqual(cadence["status"], "waiting")
+        self.assertFalse(cadence["requires_attention"])
+        self.assertNotIn("age_hours", cadence)
+
+    def test_entry_constraint_study_reports_healthy_genuine_observation(self):
+        events = [
+            {"event": "account_initialized", "timestamp": "2026-06-01T07:00:00"},
+            {
+                "event": "entry_constraint_observation",
+                "timestamp": "2026-06-02T07:00:00",
+                "cycle_key": "scheduled-2026-06-02",
+                "scenarios": [],
+            },
+        ]
+
+        study = PaperTradingAccount().entry_constraint_study(
+            events=events,
+            now=datetime(2026, 6, 3, 8, 0, 0),
+        )
+
+        cadence = study["collection_cadence"]
+        self.assertEqual(cadence["status"], "on_schedule")
+        self.assertFalse(cadence["requires_attention"])
+        self.assertEqual(cadence["last_observation_at"], "2026-06-02T07:00:00")
+
     def test_entry_constraint_study_marks_midpoint_for_owner(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = PaperTradingAccount(

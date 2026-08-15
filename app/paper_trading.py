@@ -2256,7 +2256,7 @@ class PaperTradingAccount:
         self._append_event(event)
         return event
 
-    def entry_constraint_study(self, events=None):
+    def entry_constraint_study(self, events=None, now=None):
         minimum_observations = 10
         source_events = list(events if events is not None else self.ledger())
         marker_index = -1
@@ -2290,6 +2290,11 @@ class PaperTradingAccount:
             if event.get("event") == "entry_constraint_observation"
         ]
         if not rows:
+            collection_cadence = self._entry_study_collection_cadence(
+                policy_marker,
+                [],
+                now=now,
+            )
             return {
                 "available": True,
                 "activated": False,
@@ -2326,6 +2331,7 @@ class PaperTradingAccount:
                     (policy_marker or {}).get("timestamp")
                 ),
                 "scenarios": [],
+                "collection_cadence": collection_cadence,
             }
         latest = rows[-1]
         scenario_totals = {}
@@ -2413,6 +2419,12 @@ class PaperTradingAccount:
         )
         diagnosis_ready = (
             not active_experiment and observations >= minimum_observations
+        )
+        collection_cadence = self._entry_study_collection_cadence(
+            policy_marker,
+            rows,
+            complete=diagnosis_ready or experiment_review_ready,
+            now=now,
         )
         owner_milestone = (
             "owner_review"
@@ -2506,6 +2518,7 @@ class PaperTradingAccount:
                 }
             ),
             "latest_timestamp": latest.get("timestamp"),
+            "collection_cadence": collection_cadence,
             "latest": {
                 key: latest.get(key)
                 for key in (
@@ -2518,6 +2531,82 @@ class PaperTradingAccount:
                 )
             },
             "scenarios": scenarios,
+        }
+
+    @staticmethod
+    def _entry_study_collection_cadence(
+        policy_marker,
+        rows,
+        complete=False,
+        now=None,
+    ):
+        """Report whether genuine scheduled observations are arriving on time."""
+        expected_hours = 24
+        grace_hours = 12
+        if not rows and not complete:
+            return {
+                "status": "waiting",
+                "status_label": "Waiting for first scheduled run",
+                "detail": "The first genuine observation will establish the daily collection baseline.",
+                "requires_attention": False,
+                "expected_interval_hours": expected_hours,
+                "grace_hours": grace_hours,
+                "last_observation_at": None,
+            }
+        reference_timestamp = str(
+            ((rows or [])[-1] if rows else (policy_marker or {})).get("timestamp")
+            or ""
+        )
+        if complete:
+            return {
+                "status": "complete",
+                "status_label": "Evidence gate complete",
+                "detail": "The required forward observations are complete and waiting for owner review.",
+                "requires_attention": False,
+                "expected_interval_hours": expected_hours,
+                "grace_hours": grace_hours,
+                "last_observation_at": (
+                    str((rows or [])[-1].get("timestamp") or "") if rows else None
+                ),
+            }
+        try:
+            reference = datetime.fromisoformat(reference_timestamp.replace("Z", "+00:00"))
+        except (TypeError, ValueError):
+            return {
+                "status": "unknown",
+                "status_label": "Cadence unavailable",
+                "detail": "Atlas cannot verify observation cadence until a valid policy-period timestamp is available.",
+                "requires_attention": True,
+                "expected_interval_hours": expected_hours,
+                "grace_hours": grace_hours,
+                "last_observation_at": None,
+            }
+        current = now or datetime.now(reference.tzinfo)
+        if current.tzinfo is None and reference.tzinfo is not None:
+            current = current.replace(tzinfo=reference.tzinfo)
+        elif current.tzinfo is not None and reference.tzinfo is None:
+            current = current.replace(tzinfo=None)
+        age_hours = max((current - reference).total_seconds() / 3600.0, 0.0)
+        overdue = age_hours > expected_hours + grace_hours
+        return {
+            "status": "overdue" if overdue else "on_schedule",
+            "status_label": (
+                "Observation overdue"
+                if overdue
+                else "Collecting on schedule"
+            ),
+            "detail": (
+                f"No genuine entry-study observation has arrived for {age_hours:.1f} hours; check the daily job before relying on this evidence period."
+                if overdue
+                else f"The latest genuine observation arrived {age_hours:.1f} hours ago."
+            ),
+            "requires_attention": overdue,
+            "expected_interval_hours": expected_hours,
+            "grace_hours": grace_hours,
+            "age_hours": round(age_hours, 1),
+            "last_observation_at": (
+                str((rows or [])[-1].get("timestamp") or "") if rows else None
+            ),
         }
 
     def _entry_experiment_status(self, decision_event, rows, target):

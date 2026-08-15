@@ -61,6 +61,25 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Entry-study collection health now distinguishes normal waiting, on-schedule
+  collection, overdue collection, and a completed evidence gate using genuine
+  ledger timestamps.
+- The expected interval is 24 hours with a 12-hour grace window. Today remains
+  quiet during normal collection and surfaces an operational warning only when
+  the observation is overdue.
+- Observation 1 establishes the cadence baseline, preventing an older paper
+  policy timestamp from producing a false initial warning.
+- All 452 local tests pass.
+- The capability is live on Cloud Run revision
+  `atlas-dashboard-stg-00193-dnv`. The dashboard, daily job, and weekly job use
+  image `20260814-entry-study-health-v2`, digest
+  `sha256:e281ea5a58edda58f380d0cb30bce08bd97690ac96097a0847c36ecac21bdd5d`.
+- All 30 protected dashboard checks and all 26 staging-readiness checks pass.
+  Live collection status is `waiting`, with no owner attention required.
+- Next development focus: let the normal daily schedule collect observation 1,
+  then verify that collection becomes on schedule without manufacturing data.
+- Estimated overall program completion is 95%.
+
 - Current-policy attribution now joins judged paper buys and sells to sector
   mapping inside the active policy period. It reports sector contribution,
   decision working rate, and benchmark-relative decision edge without mixing

@@ -539,6 +539,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Entry experiment evidence gate";\n'
                 '"Owner only";\n'
                 '"duplicate research cycles are ignored";\n'
+                '"Collection health";\n'
+                '"Entry study observation overdue";\n'
                 '"No shadow fills";\n'
                 '"owner-signal-digest";\n'
                 '"Approve bounded experiment";\n'
@@ -614,6 +616,10 @@ class CloudWebApplicationTests(unittest.TestCase):
                                     "activated": True,
                                     "policy_changed": False,
                                     "observations": 2,
+                                    "collection_cadence": {
+                                        "status": "on_schedule",
+                                        "requires_attention": False,
+                                    },
                                     "scenarios": [
                                         {"label": "Current entry rules"},
                                         {"label": "Lower score threshold by 1 point"},
@@ -803,6 +809,10 @@ class CloudWebApplicationTests(unittest.TestCase):
         self.assertEqual(
             response["json"]["checks"]["entry_constraint_study"]["observations"],
             2,
+        )
+        self.assertEqual(
+            response["json"]["checks"]["entry_constraint_study"]["collection_status"],
+            "on_schedule",
         )
         self.assertFalse(
             response["json"]["checks"]["entry_constraint_study"]["policy_changed"]
