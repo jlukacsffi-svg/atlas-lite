@@ -66,7 +66,7 @@ Atlas now:
   strategy periods, so a settings change cannot masquerade as one continuous
   performance experiment.
 
-Estimated overall Atlas program completion: 87%. Stage 5 paper evidence remains
+Estimated overall Atlas program completion: 88%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
 Current Stage 5 evidence: 171 snapshots, 65 judged decisions, and 11 completed
@@ -79,8 +79,10 @@ focus is now a live forward-only entry-constraint study. Each scheduled cycle
 compares current rules with one-point and two-point lower score thresholds,
 while separately reporting confirmation failures, proposal capacity, and
 deployable capital at current sizing. After enough observations across different
-market conditions, Atlas can identify the dominant participation constraint and
-propose a bounded paper-policy experiment. The next
+market conditions, Atlas can identify the dominant participation constraint.
+The diagnosis is now gated at ten observations. Any resulting experiment is
+limited to one variable, requires explicit owner approval, runs for 20 further
+observations, and carries predefined success and rollback conditions. The next
 warning-outcome scorecard remains gated until actual elevated warning episodes
 are recorded and resolved.
 

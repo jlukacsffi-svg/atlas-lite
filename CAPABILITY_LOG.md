@@ -3,6 +3,40 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Bounded entry-experiment governance
+
+New capabilities:
+
+- Require ten forward entry-constraint observations before diagnosing a
+  dominant participation constraint.
+- Score threshold sensitivity, confirmation-filter pressure, proposal
+  capacity, and qualifying-opportunity supply using rules fixed in advance.
+- Produce a one-variable paper-experiment proposal only after the evidence
+  gate passes, with explicit success, rollback, and owner-approval conditions.
+
+Validated result:
+
+- The evidence gate is live at 0 of 10 observations and will advance through
+  normal scheduled cycles.
+- The full local suite passes with 441 tests.
+- Cloud Run revision `atlas-dashboard-stg-00183-5d5`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260814-entry-governance`.
+- The deployed image digest is
+  `sha256:121607a608d3a846b8cddea9f44f2abfa9df267513822a772a09cd62535db038`.
+- All 26 staging readiness checks and all 26 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+
+Current boundaries:
+
+- Passing the evidence gate creates an owner-review proposal, not a policy
+  change.
+- Any future experiment changes only one paper-policy variable and lasts for a
+  defined 20-observation evaluation period.
+- Rollback is required if buy edge falls below -1.5 points, paper drawdown
+  worsens by more than 2 points, or an existing paper risk limit is breached.
+- Overall program completion is estimated at 88%.
+
 ## August 14, 2026 - Forward entry-constraint study
 
 New capabilities:

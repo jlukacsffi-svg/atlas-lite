@@ -61,6 +61,23 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Bounded entry-experiment governance is live on Cloud Run revision
+  `atlas-dashboard-stg-00183-5d5`. The dashboard, daily job, and weekly job use
+  image `20260814-entry-governance`, digest
+  `sha256:121607a608d3a846b8cddea9f44f2abfa9df267513822a772a09cd62535db038`.
+  All 441 local tests, 26 staging checks, and 26 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed.
+- Atlas requires ten forward observations before diagnosing score threshold,
+  confirmation-filter, proposal-capacity, or opportunity-supply pressure.
+- A diagnosis can create only an owner-review-required, one-variable paper
+  experiment proposal. It cannot change policy itself.
+- Any future experiment runs for 20 observations and rolls back if judged buy
+  edge falls below -1.5 points, maximum paper drawdown worsens by more than 2
+  points, or an existing paper risk limit is breached.
+- Next development focus: allow scheduled evidence to advance the 0/10 gate,
+  then review the diagnosis before implementing any paper-policy experiment.
+- Estimated overall program completion is 88%.
+
 - The forward entry-constraint study is live on Cloud Run revision
   `atlas-dashboard-stg-00182-r68`. The dashboard, daily job, and weekly job use
   image `20260814-entry-constraints`, digest
