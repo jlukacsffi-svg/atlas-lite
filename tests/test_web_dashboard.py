@@ -1802,6 +1802,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Idle-cash exposure study", script)
         self.assertIn("Forward entry-constraint study", script)
         self.assertIn("Entry experiment evidence gate", script)
+        self.assertIn("duplicate research cycles are ignored", script)
         self.assertIn("exposure-scenario-grid", styles)
         self.assertIn("evaluation-attribution", styles)
         self.assertIn('data-control-section="settings"', html)

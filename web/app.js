@@ -3645,6 +3645,7 @@ function renderValidationSummary(summary) {
                   <span><small>Diagnosis</small><b>${entryStudy.diagnosis_ready ? "Ready" : "Collecting"}</b></span>
                   <span><small>Policy authority</small><b>Owner only</b></span>
                 </div>
+                <small>Evidence integrity: current policy period only · duplicate research cycles are ignored.</small>
                 ${entryScenarios.length ? `
                   <div class="exposure-scenario-grid">
                     ${entryScenarios.map(item => `

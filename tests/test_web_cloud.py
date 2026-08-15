@@ -536,6 +536,7 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Forward entry-constraint study";\n'
                 '"Entry experiment evidence gate";\n'
                 '"Owner only";\n'
+                '"duplicate research cycles are ignored";\n'
                 '"No shadow fills";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",

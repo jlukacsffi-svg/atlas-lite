@@ -580,6 +580,7 @@ class AtlasCloudApplication:
                     and self._ui_contains("Forward entry-constraint study")
                     and self._ui_contains("Entry experiment evidence gate")
                     and self._ui_contains("Owner only")
+                    and self._ui_contains("duplicate research cycles are ignored")
                     and self._ui_contains("No shadow fills"),
                     "detail": (
                         "Dashboard exposes a forward-only entry-constraint study "
