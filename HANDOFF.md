@@ -61,6 +61,23 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Current-policy performance attribution is live on Cloud Run revision
+  `atlas-dashboard-stg-00179-992`. The dashboard, daily job, and weekly job use
+  image `20260812-performance-attribution`, digest
+  `sha256:b7a50e9a7a629ad0feae574c6d7ccca7ee4a7ef4733b0c2854323cd12a1428a7`.
+  All 438 local tests, 26 staging checks, and 25 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed.
+- Atlas now attributes current-period results through estimated cash drag,
+  judged buy and sell decision edge, and continuously held position
+  contribution. Average cash is 76.34%; judged buys average +2.64 points and
+  trims/exits +2.01 points versus their stronger benchmark bars.
+- The working diagnosis is low participation, not broadly poor judged security
+  decisions. This is not authorization to increase exposure automatically.
+- Next development focus: determine whether entry thresholds, position sizing,
+  or insufficient qualifying opportunities caused the idle cash; model the
+  drawdown tradeoff before proposing any paper-policy change; then join sector
+  mappings to current-period attribution without mixing evidence periods.
+
 - Current-policy benchmark performance is live on Cloud Run revision
   `atlas-dashboard-stg-00178-j7w`. The dashboard, daily job, and weekly job use
   image `20260812-epoch-performance`, digest

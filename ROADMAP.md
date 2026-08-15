@@ -226,11 +226,18 @@ Current validation focus:
   and reports the current period separately from older evidence.
 - Atlas now measures current-period return, excess return versus SPY and QQQ,
   and maximum drawdown without feeding an immature result back into policy.
+- Current attribution shows 76.34% average cash exposure, +2.64 points of
+  judged buy-decision edge, and +2.01 points of judged trim/exit edge. Low
+  participation is therefore the leading current explanation for benchmark
+  underperformance, but increasing exposure has not been validated.
 - Next: continue the scheduled forward study toward 250 snapshots, 100 judged
   decisions, 30 completed positions, and enough resolved elevated-warning
-  episodes to assess signal usefulness. Attribute the current benchmark
-  shortfall to cash drag, entries, exits, and sector allocation before proposing
-  a strategy change. Do not change paper authority while those proof gates remain open.
+  episodes to assess signal usefulness. Test whether entry thresholds, sizing
+  limits, or opportunity supply caused excessive idle cash, and compare any
+  proposed exposure change with drawdown risk before changing policy. Add
+  current-period sector attribution once the sector mapping can be joined
+  without mixing lifetime and epoch evidence. Do not change paper authority
+  while those proof gates remain open.
 
 ## Stage 6: Human-Approved Trading
 

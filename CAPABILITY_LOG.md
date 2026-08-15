@@ -3,6 +3,41 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 12, 2026 - Current-policy performance attribution
+
+New capabilities:
+
+- Estimate the opportunity cost of average paper cash exposure against SPY and
+  QQQ during the current policy period.
+- Separate benchmark-relative entry quality from trim and exit quality using
+  judged simulated decisions.
+- Identify the best and worst contribution from shares continuously held at
+  both endpoints of the current policy period.
+
+Validated result:
+
+- Average cash exposure is 76.34%. Judged buys average +2.64 percentage points
+  of decision edge, while judged trims and exits average +2.01 points.
+- This indicates that low participation is the leading current explanation for
+  benchmark underperformance; it does not prove that increasing exposure would
+  improve risk-adjusted results.
+- The full local suite passes with 438 tests.
+- Cloud Run revision `atlas-dashboard-stg-00179-992`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260812-performance-attribution`.
+- The deployed image digest is
+  `sha256:b7a50e9a7a629ad0feae574c6d7ccca7ee4a7ef4733b0c2854323cd12a1428a7`.
+- All 26 staging readiness checks and all 25 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+
+Current boundaries:
+
+- Cash drag is an estimate rather than a complete accounting identity.
+- Continuing-position contribution excludes shares added or removed during
+  the period and is labeled accordingly.
+- Attribution cannot change paper policy or grant real-money authority.
+- Overall program completion remains estimated at 85%.
+
 ## August 12, 2026 - Current-policy benchmark performance
 
 New capabilities:
