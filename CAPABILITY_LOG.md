@@ -3,6 +3,40 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Forward entry-constraint study
+
+New capabilities:
+
+- Record one forward entry-constraint observation during each scheduled daily
+  paper cycle.
+- Compare current entry rules with one-point and two-point lower Atlas Score
+  thresholds while preserving every confirmation filter.
+- Separate eligible-opportunity supply, proposal-slot capacity, confirmation
+  failures, and estimated deployable capital at the current target size.
+
+Validated result:
+
+- The study is live and will record its first observation during the next
+  normally scheduled daily cycle. No additional research execution was used.
+- The full local suite passes with 440 tests.
+- Cloud Run revision `atlas-dashboard-stg-00182-r68`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260814-entry-constraints`.
+- The deployed image digest is
+  `sha256:e7fe9d81b222d6932487a4652eb7cb63d2bc0f7f4c4a4892265e2856fd039f22`.
+- All 26 staging readiness checks and all 26 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+- Deployment automation now preserves protected environment settings that are
+  not part of a routine release update.
+
+Current boundaries:
+
+- The study records eligibility observations, not hypothetical or actual fills.
+- It cannot modify paper policy, create a proposal, or grant financial authority.
+- Several observations across different market conditions are required before
+  Atlas should propose a paper-policy experiment.
+- Overall program completion is estimated at 87%.
+
 ## August 14, 2026 - Idle-cash exposure study
 
 New capabilities:

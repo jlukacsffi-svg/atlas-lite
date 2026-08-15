@@ -61,6 +61,25 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The forward entry-constraint study is live on Cloud Run revision
+  `atlas-dashboard-stg-00182-r68`. The dashboard, daily job, and weekly job use
+  image `20260814-entry-constraints`, digest
+  `sha256:e7fe9d81b222d6932487a4652eb7cb63d2bc0f7f4c4a4892265e2856fd039f22`.
+  All 440 local tests, 26 staging checks, and 26 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed.
+- Each future scheduled daily cycle records current-rule eligibility and
+  compares it with one-point and two-point lower Atlas Score thresholds while
+  preserving confirmation filters. It also reports proposal capacity and
+  estimated deployable capital at current sizing.
+- The study starts with the next normal daily cycle. It records observations,
+  not shadow fills, and cannot change paper policy or financial authority.
+- Deployment automation now preserves unrelated protected environment settings
+  during routine releases.
+- Next development focus: accumulate observations across market conditions,
+  identify the dominant participation constraint, and only then design a
+  bounded paper-policy experiment with explicit success and rollback gates.
+- Estimated overall program completion is 87%.
+
 - The idle-cash exposure study is live on Cloud Run revision
   `atlas-dashboard-stg-00180-rv7`. The dashboard, daily job, and weekly job use
   image `20260814-exposure-study`, digest
