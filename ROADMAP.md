@@ -66,7 +66,7 @@ Atlas now:
   strategy periods, so a settings change cannot masquerade as one continuous
   performance experiment.
 
-Estimated overall Atlas program completion: 88%. Stage 5 paper evidence remains
+Estimated overall Atlas program completion: 89%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
 Current Stage 5 evidence: 171 snapshots, 65 judged decisions, and 11 completed
@@ -85,6 +85,11 @@ limited to one variable, requires explicit owner approval, runs for 20 further
 observations, and carries predefined success and rollback conditions. The next
 warning-outcome scorecard remains gated until actual elevated warning episodes
 are recorded and resolved.
+
+Entry-study evidence integrity is complete: duplicate research-cycle keys count
+once, and only observations after the latest paper-policy marker advance the
+current 10-observation gate. A policy update resets current progress without
+deleting the historical audit trail.
 
 ## Stage 1: Reliable Daily Briefing
 

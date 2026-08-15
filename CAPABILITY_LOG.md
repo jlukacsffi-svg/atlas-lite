@@ -3,6 +3,35 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Entry-study evidence integrity
+
+New capabilities:
+
+- Assign each scheduled entry observation a cycle key so retries cannot inflate
+  the experiment evidence count.
+- Scope the 10-observation gate to the current paper-policy period.
+- Reset current-study progress after a policy update while retaining the older
+  observations in the audit ledger.
+- Explain these protections directly beside the evidence gate in Portfolio.
+
+Validated result:
+
+- The full local suite passes with 443 tests.
+- Cloud Run revision `atlas-dashboard-stg-00185-bd7`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260814-entry-integrity-v2`.
+- The deployed image digest is
+  `sha256:76eeea20dbacfe4e2088040df376bcc6322bc36f29ee739e64f2cda5d7e5bff4`.
+- All 26 staging readiness checks and all 26 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+
+Current boundaries:
+
+- Integrity controls protect observation counts; they do not accelerate the
+  evidence gate or change policy.
+- The first valid observation remains scheduled for the next normal daily run.
+- Overall program completion is estimated at 89%.
+
 ## August 14, 2026 - Bounded entry-experiment governance
 
 New capabilities:

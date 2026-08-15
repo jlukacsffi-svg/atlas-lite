@@ -61,6 +61,21 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Entry-study evidence integrity is live on Cloud Run revision
+  `atlas-dashboard-stg-00185-bd7`. The dashboard, daily job, and weekly job use
+  image `20260814-entry-integrity-v2`, digest
+  `sha256:76eeea20dbacfe4e2088040df376bcc6322bc36f29ee739e64f2cda5d7e5bff4`.
+  All 443 local tests, 26 staging checks, and 26 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed.
+- Duplicate cycle keys count once, and only observations after the latest paper
+  policy marker advance the current evidence gate. Older observations remain in
+  the audit ledger.
+- Portfolio now states these evidence-integrity protections beside the 0/10
+  entry experiment gate.
+- Next development focus: collect the first valid observation during the next
+  normal daily cycle, then monitor the gate without manufacturing extra runs.
+- Estimated overall program completion is 89%.
+
 - Bounded entry-experiment governance is live on Cloud Run revision
   `atlas-dashboard-stg-00183-5d5`. The dashboard, daily job, and weekly job use
   image `20260814-entry-governance`, digest
