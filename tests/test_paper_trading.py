@@ -1947,12 +1947,14 @@ class PaperTradingAccountTests(unittest.TestCase):
         ]
         feedback = [
             {
+                "ticker": "NVDA",
                 "side": "buy",
                 "verdict": "working",
                 "security_return_pct": 8,
                 "benchmark_returns_pct": {"SPY": 5, "QQQ": 6},
             },
             {
+                "ticker": "MSFT",
                 "side": "sell",
                 "verdict": "working",
                 "security_return_pct": -2,
@@ -1989,6 +1991,25 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(
             attribution["sector_contributions"][-1]["sector"],
             "Cloud & Software",
+        )
+        sector_attribution = {
+            item["sector"]: item for item in attribution["sector_attribution"]
+        }
+        self.assertEqual(
+            sector_attribution["AI & Semiconductors"]["judged_decisions"],
+            1,
+        )
+        self.assertEqual(
+            sector_attribution["AI & Semiconductors"]["average_decision_edge_pct"],
+            2.0,
+        )
+        self.assertEqual(
+            sector_attribution["Cloud & Software"]["sell_decisions"],
+            1,
+        )
+        self.assertEqual(
+            sector_attribution["Cloud & Software"]["average_decision_edge_pct"],
+            6.0,
         )
         scenarios = attribution["exposure_scenarios"]
         self.assertEqual(len(scenarios), 3)

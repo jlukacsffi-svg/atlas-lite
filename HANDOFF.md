@@ -61,6 +61,24 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- Current-policy attribution now joins judged paper buys and sells to sector
+  mapping inside the active policy period. It reports sector contribution,
+  decision working rate, and benchmark-relative decision edge without mixing
+  lifetime strategy evidence into the comparison.
+- The Stage 5 panel shows the strongest current-policy sector and the sector
+  needing review. Lifetime capital-rotation evidence remains a separate view.
+- All 449 local tests pass.
+- The capability is live on Cloud Run revision
+  `atlas-dashboard-stg-00191-dbq`. The dashboard, daily job, and weekly job use
+  image `20260814-current-sector-attribution`, digest
+  `sha256:c29033b06a74703948ef0bf01757a20770beda8104e81f12a2f3020901fd29d4`.
+- All 30 protected dashboard checks and all 26 staging-readiness checks pass.
+  Recurring schedules are enabled, and neither job was manually executed for
+  this release.
+- Next development focus: allow the next normal daily run to collect genuine
+  entry-study evidence and verify the owner milestone.
+- Estimated overall program completion is 94%.
+
 - Completed entry experiments now expose owner-only Retain setting and Roll
   back setting actions. Each action requires exact typed confirmation.
 - Rollback restores the exact pre-experiment paper value and is refused if a

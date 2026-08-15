@@ -77,8 +77,10 @@ Atlas now:
 - Requires a typed owner decision to retain the tested paper setting or restore
   its exact pre-experiment value, then closes the experiment and begins a fresh
   evidence period with the complete audit trail intact.
+- Attributes current-policy continuing-position results and judged buy or sell
+  quality by sector, without mixing evidence from earlier policy periods.
 
-Estimated overall Atlas program completion: 93%. Stage 5 paper evidence remains
+Estimated overall Atlas program completion: 94%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
 Current Stage 5 evidence: 171 snapshots, 65 judged decisions, and 11 completed
@@ -268,9 +270,8 @@ Current validation focus:
   episodes to assess signal usefulness. Test whether entry thresholds, sizing
   limits, or opportunity supply caused excessive idle cash, and compare any
   proposed exposure change with drawdown risk before changing policy. Add
-  current-period sector attribution once the sector mapping can be joined
-  without mixing lifetime and epoch evidence. Do not change paper authority
-  while those proof gates remain open.
+  current-period sector attribution now keeps lifetime and epoch evidence
+  separate. Do not change paper authority while those proof gates remain open.
 
 ## Stage 6: Human-Approved Trading
 

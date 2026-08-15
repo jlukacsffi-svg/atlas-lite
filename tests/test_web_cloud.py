@@ -532,6 +532,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"Current policy evidence";\n'
                 '"Current policy performance";\n'
                 '"What is driving the result";\n'
+                '"Strongest current-policy sector";\n'
+                '"Current-policy sector to review";\n'
                 '"Idle-cash exposure study";\n'
                 '"Forward entry-constraint study";\n'
                 '"Entry experiment evidence gate";\n'
@@ -591,6 +593,14 @@ class CloudWebApplicationTests(unittest.TestCase):
                                         },
                                         "sector_contributions": [
                                             {"sector": "AI & Semiconductors"},
+                                        ],
+                                        "sector_attribution": [
+                                            {
+                                                "sector": "AI & Semiconductors",
+                                                "contribution_pct": 0.2,
+                                                "judged_decisions": 2,
+                                                "average_decision_edge_pct": 1.5,
+                                            }
                                         ],
                                         "exposure_scenarios": [
                                             {"idle_cash_deployed_pct": 25},

@@ -528,9 +528,12 @@ class AtlasCloudApplication:
                     and bool(epoch_attribution.get("available"))
                     and len(epoch_attribution.get("exposure_scenarios") or []) == 3
                     and bool(epoch_attribution.get("sector_contributions"))
+                    and bool(epoch_attribution.get("sector_attribution"))
                     and self._ui_contains("Current policy evidence")
                     and self._ui_contains("Current policy performance")
                     and self._ui_contains("What is driving the result")
+                    and self._ui_contains("Strongest current-policy sector")
+                    and self._ui_contains("Current-policy sector to review")
                     and self._ui_contains("Idle-cash exposure study"),
                     "detail": (
                         "Stage 5 separates the current paper-policy period with "
@@ -568,7 +571,7 @@ class AtlasCloudApplication:
                         epoch_attribution.get("decision_quality") or {}
                     ).get("sell", {}).get("average_decision_edge_pct"),
                     "sector_attribution_count": len(
-                        epoch_attribution.get("sector_contributions") or []
+                        epoch_attribution.get("sector_attribution") or []
                     ),
                     "exposure_scenario_count": len(
                         epoch_attribution.get("exposure_scenarios") or []

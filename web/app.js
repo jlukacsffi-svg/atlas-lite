@@ -3743,6 +3743,10 @@ function renderValidationSummary(summary) {
   const epochAttribution = integrity.attribution || {};
   const exposureScenarios = Array.isArray(epochAttribution.exposure_scenarios) ? epochAttribution.exposure_scenarios : [];
   const sectorContributions = Array.isArray(epochAttribution.sector_contributions) ? epochAttribution.sector_contributions : [];
+  const sectorAttribution = Array.isArray(epochAttribution.sector_attribution) ? epochAttribution.sector_attribution : [];
+  const currentSectorRows = sectorAttribution.length ? sectorAttribution : sectorContributions;
+  const strongestCurrentSector = currentSectorRows[0] || {};
+  const currentSectorToReview = currentSectorRows[currentSectorRows.length - 1] || {};
   const entryStudy = summary.entry_constraint_study || {};
   const entryScenarios = Array.isArray(entryStudy.scenarios) ? entryStudy.scenarios : [];
   const stateClass = escapeHtml(String(summary.status || "building"));
@@ -3798,10 +3802,10 @@ function renderValidationSummary(summary) {
                 ${epochAttribution.top_contributor ? `<li>Best continuing position: ${escapeHtml(epochAttribution.top_contributor.ticker)} ${signed(epochAttribution.top_contributor.contribution_pct)} contribution</li>` : ""}
                 ${epochAttribution.largest_detractor ? `<li>Largest continuing-position drag: ${escapeHtml(epochAttribution.largest_detractor.ticker)} ${signed(epochAttribution.largest_detractor.contribution_pct)} contribution</li>` : ""}
               </ul>
-              ${sectorContributions.length ? `
+              ${currentSectorRows.length ? `
                 <div class="attribution-sector-line">
-                  <span><small>Best continuing sector</small><b>${escapeHtml(sectorContributions[0].sector)} ${signed(sectorContributions[0].contribution_pct)}</b></span>
-                  <span><small>Largest continuing-sector drag</small><b>${escapeHtml(sectorContributions[sectorContributions.length - 1].sector)} ${signed(sectorContributions[sectorContributions.length - 1].contribution_pct)}</b></span>
+                  <span><small>Strongest current-policy sector</small><b>${escapeHtml(strongestCurrentSector.sector)} ${signed(strongestCurrentSector.contribution_pct)} contribution</b><small>${strongestCurrentSector.judged_decisions || 0} judged decisions Â· ${signed(strongestCurrentSector.average_decision_edge_pct)} average edge</small></span>
+                  <span><small>Current-policy sector to review</small><b>${escapeHtml(currentSectorToReview.sector)} ${signed(currentSectorToReview.contribution_pct)} contribution</b><small>${currentSectorToReview.judged_decisions || 0} judged decisions Â· ${signed(currentSectorToReview.average_decision_edge_pct)} average edge</small></span>
                 </div>
               ` : ""}
               ${exposureScenarios.length ? `

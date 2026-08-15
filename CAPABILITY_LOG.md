@@ -3,6 +3,37 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Current-policy sector attribution
+
+New capabilities:
+
+- Join each current-policy judged paper decision to its sector without mixing
+  decisions from earlier paper-policy periods.
+- Combine continuing-position contribution with sector-level buy and sell
+  decision quality, working rate, and benchmark-relative edge.
+- Show the strongest current-policy sector and the sector needing review in the
+  Stage 5 evidence panel while keeping lifetime capital-rotation evidence
+  separate.
+
+Validated result:
+
+- The full local suite passes with 449 tests.
+- The protected dashboard contract requires the current-policy sector readout.
+- The capability is live on Cloud Run revision
+  `atlas-dashboard-stg-00191-dbq` using image
+  `20260814-current-sector-attribution`, digest
+  `sha256:c29033b06a74703948ef0bf01757a20770beda8104e81f12a2f3020901fd29d4`.
+- All 30 protected dashboard checks and all 26 staging-readiness checks pass.
+  Recurring schedules are enabled, and neither job was manually executed for
+  this release.
+
+Current boundaries:
+
+- Sector attribution is observational paper evidence, not a policy-change or
+  brokerage instruction.
+- Brokerage access and real-money trading remain disabled.
+- Overall program completion is estimated at 94%.
+
 ## August 14, 2026 - Owner experiment result decision
 
 New capabilities:

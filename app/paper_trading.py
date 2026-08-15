@@ -1,5 +1,6 @@
 """Strictly simulated paper-trading account for Atlas Stage 5."""
 
+from collections import defaultdict
 from datetime import datetime
 import json
 from pathlib import Path
@@ -1631,6 +1632,70 @@ class PaperTradingAccount:
             reverse=True,
         )
 
+        sector_attribution = {}
+        for item in sector_contributions:
+            sector_attribution[item["sector"]] = {
+                **item,
+                "judged_decisions": 0,
+                "working_decisions": 0,
+                "working_rate_pct": None,
+                "average_decision_edge_pct": None,
+                "buy_decisions": 0,
+                "sell_decisions": 0,
+            }
+        sector_edges = defaultdict(list)
+        for item in feedback_rows:
+            verdict = str(item.get("verdict") or "").lower()
+            if verdict not in {"working", "mixed", "lagging"}:
+                continue
+            ticker = str(item.get("ticker") or "").upper()
+            sector = sector_map.get(ticker, "Unclassified")
+            stats = sector_attribution.setdefault(
+                sector,
+                {
+                    "sector": sector,
+                    "positions": 0,
+                    "gain_loss": 0.0,
+                    "contribution_pct": 0.0,
+                    "judged_decisions": 0,
+                    "working_decisions": 0,
+                    "working_rate_pct": None,
+                    "average_decision_edge_pct": None,
+                    "buy_decisions": 0,
+                    "sell_decisions": 0,
+                },
+            )
+            side = str(item.get("side") or "").lower()
+            stats["judged_decisions"] += 1
+            stats["working_decisions"] += int(verdict == "working")
+            if side in {"buy", "sell"}:
+                stats[f"{side}_decisions"] += 1
+            edge = cls._best_benchmark_edge(item)
+            if edge is not None:
+                sector_edges[sector].append(edge if side == "buy" else -edge)
+
+        for sector, stats in sector_attribution.items():
+            judged_decisions = stats["judged_decisions"]
+            if judged_decisions:
+                stats["working_rate_pct"] = round(
+                    (stats["working_decisions"] / judged_decisions) * 100.0,
+                    1,
+                )
+            if sector_edges[sector]:
+                stats["average_decision_edge_pct"] = round(
+                    sum(sector_edges[sector]) / len(sector_edges[sector]),
+                    4,
+                )
+        sector_attribution = sorted(
+            sector_attribution.values(),
+            key=lambda item: (
+                float(item.get("contribution_pct") or 0.0),
+                float(item.get("average_decision_edge_pct") or 0.0),
+                int(item.get("judged_decisions") or 0),
+            ),
+            reverse=True,
+        )
+
         performance = cls._policy_epoch_performance(snapshots)
         scenario_benchmark = (
             "SPY" if "SPY" in benchmark_returns else next(iter(benchmark_returns), None)
@@ -1679,6 +1744,7 @@ class PaperTradingAccount:
             "decision_quality": decision_quality,
             "continuing_positions": continuing,
             "sector_contributions": sector_contributions,
+            "sector_attribution": sector_attribution,
             "top_contributor": continuing[0] if continuing else None,
             "largest_detractor": continuing[-1] if continuing else None,
             "exposure_scenarios": exposure_scenarios,
