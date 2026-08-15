@@ -3639,6 +3639,12 @@ function renderValidationSummary(summary) {
               ${entryStudy.available ? `
                 <b>Forward entry-constraint study</b>
                 <small>${escapeHtml(entryStudy.headline || "The study starts with the next scheduled cycle.")}</small>
+                <div class="evaluation-period-metrics" aria-label="Entry experiment evidence gate">
+                  <span><small>Evidence progress</small><b>${Number(entryStudy.evidence_progress_pct || 0).toFixed(0)}%</b></span>
+                  <span><small>Observations</small><b>${Number(entryStudy.observations || 0)}/${Number(entryStudy.minimum_observations || 10)}</b></span>
+                  <span><small>Diagnosis</small><b>${entryStudy.diagnosis_ready ? "Ready" : "Collecting"}</b></span>
+                  <span><small>Policy authority</small><b>Owner only</b></span>
+                </div>
                 ${entryScenarios.length ? `
                   <div class="exposure-scenario-grid">
                     ${entryScenarios.map(item => `
@@ -3650,6 +3656,13 @@ function renderValidationSummary(summary) {
                     `).join("")}
                   </div>
                 ` : ""}
+                ${entryStudy.experiment_proposal ? `
+                  <div class="paper-evidence-note">
+                    <b>Bounded experiment proposal</b><br>
+                    ${escapeHtml(entryStudy.experiment_proposal.change || "No policy change proposed.")}<br>
+                    ${escapeHtml(entryStudy.experiment_proposal.authority || "Explicit owner approval is required.")}
+                  </div>
+                ` : `<small>Atlas will not diagnose a dominant constraint or propose an experiment before the evidence gate is complete.</small>`}
                 <small>Forward observations only. No shadow fills, policy changes, or real-money authority.</small>
               ` : ""}
               <small>${escapeHtml(epochAttribution.boundary || "Attribution is diagnostic only.")}</small>

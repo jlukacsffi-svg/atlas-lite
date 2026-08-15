@@ -714,7 +714,46 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertTrue(study["activated"])
         self.assertFalse(study["policy_changed"])
         self.assertEqual(study["observations"], 1)
+        self.assertEqual(study["minimum_observations"], 10)
+        self.assertFalse(study["diagnosis_ready"])
         self.assertEqual(study["scenarios"][0]["average_eligible_ideas"], 1.0)
+
+    def test_entry_constraint_study_requires_evidence_before_bounded_proposal(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
+            )
+            account.initialize(100000)
+            for _index in range(10):
+                account.record_entry_constraint_observation(
+                    {
+                        "event": "entry_constraint_observation",
+                        "market_regime": "cautious",
+                        "candidate_universe": 8,
+                        "unheld_candidates": 8,
+                        "score_pass_candidates": 1,
+                        "confirmation_blocked_candidates": 0,
+                        "available_buy_slots": 3,
+                        "target_position_pct": 5.0,
+                        "scenarios": [
+                            {"label": "Current entry rules", "minimum_buy_score": 88.0, "eligible_ideas": 1, "selected_ideas": 1, "estimated_deployable_pct": 5.0},
+                            {"label": "Lower score threshold by 1 point", "minimum_buy_score": 87.0, "eligible_ideas": 2, "selected_ideas": 2, "estimated_deployable_pct": 10.0},
+                            {"label": "Lower score threshold by 2 points", "minimum_buy_score": 86.0, "eligible_ideas": 3, "selected_ideas": 3, "estimated_deployable_pct": 15.0},
+                        ],
+                    }
+                )
+            study = account.entry_constraint_study()
+
+        self.assertTrue(study["diagnosis_ready"])
+        self.assertEqual(study["dominant_constraint"], "score_threshold")
+        self.assertEqual(
+            study["experiment_proposal"]["status"],
+            "owner_review_required",
+        )
+        self.assertEqual(study["experiment_proposal"]["delta"], -1.0)
+        self.assertEqual(len(study["experiment_proposal"]["rollback_gates"]), 3)
 
     def test_entry_strategy_profile_loosens_buy_threshold_after_constructive_buys(self):
         with tempfile.TemporaryDirectory() as temp_dir:

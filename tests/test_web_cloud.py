@@ -534,6 +534,8 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"What is driving the result";\n'
                 '"Idle-cash exposure study";\n'
                 '"Forward entry-constraint study";\n'
+                '"Entry experiment evidence gate";\n'
+                '"Owner only";\n'
                 '"No shadow fills";\n'
                 '"owner-signal-digest";\n',
                 encoding="utf-8",

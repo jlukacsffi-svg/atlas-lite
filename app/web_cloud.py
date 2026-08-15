@@ -578,6 +578,8 @@ class AtlasCloudApplication:
                     "ok": bool(entry_constraint_study.get("available"))
                     and entry_constraint_study.get("policy_changed") is False
                     and self._ui_contains("Forward entry-constraint study")
+                    and self._ui_contains("Entry experiment evidence gate")
+                    and self._ui_contains("Owner only")
                     and self._ui_contains("No shadow fills"),
                     "detail": (
                         "Dashboard exposes a forward-only entry-constraint study "
@@ -589,6 +591,12 @@ class AtlasCloudApplication:
                     ),
                     "scenario_count": len(
                         entry_constraint_study.get("scenarios") or []
+                    ),
+                    "minimum_observations": int(
+                        entry_constraint_study.get("minimum_observations") or 0
+                    ),
+                    "diagnosis_ready": bool(
+                        entry_constraint_study.get("diagnosis_ready")
                     ),
                     "policy_changed": bool(
                         entry_constraint_study.get("policy_changed")

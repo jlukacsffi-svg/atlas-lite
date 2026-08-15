@@ -202,6 +202,10 @@ class PaperStrategy:
             self.maximum_new_proposals - len(active_buys),
             0,
         )
+        market_regime = str(
+            (candidates[0] if candidates else {}).get("market_regime")
+            or "unknown"
+        )
         scenarios = []
         for reduction in (0.0, 1.0, 2.0):
             threshold = max(self.minimum_buy_score - reduction, 0.0)
@@ -252,6 +256,7 @@ class PaperStrategy:
             "maximum_new_proposals": self.maximum_new_proposals,
             "active_buy_proposals": len(active_buys),
             "available_buy_slots": available_slots,
+            "market_regime": market_regime,
             "candidate_universe": len(candidates),
             "unheld_candidates": len(available),
             "score_pass_candidates": len(score_pass),

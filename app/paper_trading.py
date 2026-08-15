@@ -2054,6 +2054,7 @@ class PaperTradingAccount:
         return event
 
     def entry_constraint_study(self, events=None):
+        minimum_observations = 10
         rows = [
             event
             for event in (events if events is not None else self.ledger())
@@ -2067,6 +2068,10 @@ class PaperTradingAccount:
                 "headline": "The forward entry-constraint study starts with the next scheduled cycle.",
                 "detail": "Atlas will separate score threshold, confirmation, proposal capacity, and sizing constraints without creating shadow fills.",
                 "observations": 0,
+                "minimum_observations": minimum_observations,
+                "evidence_progress_pct": 0.0,
+                "diagnosis_ready": False,
+                "experiment_proposal": None,
                 "scenarios": [],
             }
         latest = rows[-1]
@@ -2105,13 +2110,116 @@ class PaperTradingAccount:
                     ),
                 }
             )
+        observations = len(rows)
+        current = next(
+            (item for item in scenarios if item["label"] == "Current entry rules"),
+            scenarios[0] if scenarios else {},
+        )
+        relaxed = scenarios[-1] if scenarios else {}
+        average_confirmation_blocked = round(
+            sum(
+                int(row.get("confirmation_blocked_candidates") or 0)
+                for row in rows
+            )
+            / observations,
+            2,
+        )
+        capacity_limited_cycles = sum(
+            1
+            for row in rows
+            if int(row.get("available_buy_slots") or 0) == 0
+            or (
+                (row.get("scenarios") or [])
+                and int((row.get("scenarios") or [])[0].get("eligible_ideas") or 0)
+                > int(row.get("available_buy_slots") or 0)
+            )
+        )
+        score_sensitivity = round(
+            float(relaxed.get("average_eligible_ideas") or 0.0)
+            - float(current.get("average_eligible_ideas") or 0.0),
+            2,
+        )
+        constraint_scores = {
+            "score_threshold": max(score_sensitivity, 0.0),
+            "confirmation_filters": average_confirmation_blocked,
+            "proposal_capacity": round(
+                capacity_limited_cycles / observations * 3.0,
+                2,
+            ),
+            "opportunity_supply": round(
+                max(1.0 - float(current.get("average_eligible_ideas") or 0.0), 0.0),
+                2,
+            ),
+        }
+        dominant_constraint = max(
+            constraint_scores,
+            key=constraint_scores.get,
+        )
+        diagnosis_ready = observations >= minimum_observations
+        proposals = {
+            "score_threshold": {
+                "change": "Lower the paper buy threshold by 1 Atlas Score point.",
+                "field": "strategy_minimum_buy_score",
+                "delta": -1.0,
+            },
+            "confirmation_filters": {
+                "change": "Do not loosen policy; review the most frequently failed confirmation filter first.",
+                "field": None,
+                "delta": None,
+            },
+            "proposal_capacity": {
+                "change": "Increase concurrent new paper proposal capacity by one.",
+                "field": "strategy_maximum_new_proposals",
+                "delta": 1,
+            },
+            "opportunity_supply": {
+                "change": "Expand qualifying-idea research before changing entry policy.",
+                "field": None,
+                "delta": None,
+            },
+        }
+        experiment_proposal = None
+        if diagnosis_ready:
+            proposal = proposals[dominant_constraint]
+            experiment_proposal = {
+                **proposal,
+                "status": "owner_review_required",
+                "dominant_constraint": dominant_constraint,
+                "duration_observations": 20,
+                "success_gates": [
+                    "Increase average invested exposure without breaching the minimum cash reserve.",
+                    "Keep judged buy decision edge at or above 0 percentage points.",
+                    "Do not worsen maximum paper drawdown by more than 2 percentage points.",
+                ],
+                "rollback_gates": [
+                    "Rollback if judged buy edge falls below -1.5 percentage points.",
+                    "Rollback if maximum paper drawdown worsens by more than 2 percentage points.",
+                    "Rollback immediately if any existing paper risk limit is breached.",
+                ],
+                "authority": "Explicit owner approval is required before a paper-policy experiment can begin.",
+            }
         return {
             "available": True,
             "activated": True,
             "policy_changed": False,
             "headline": f"Atlas has recorded {len(rows)} forward entry-constraint observation{'' if len(rows) == 1 else 's'}.",
             "detail": "The study compares opportunity supply while preserving confirmation filters, paper fills, and financial authority.",
-            "observations": len(rows),
+            "observations": observations,
+            "minimum_observations": minimum_observations,
+            "evidence_progress_pct": round(
+                min(observations / minimum_observations, 1.0) * 100.0,
+                1,
+            ),
+            "diagnosis_ready": diagnosis_ready,
+            "dominant_constraint": dominant_constraint if diagnosis_ready else None,
+            "constraint_scores": constraint_scores,
+            "experiment_proposal": experiment_proposal,
+            "market_regimes_observed": sorted(
+                {
+                    str(row.get("market_regime") or "unknown")
+                    for row in rows
+                }
+            ),
             "latest_timestamp": latest.get("timestamp"),
             "latest": {
                 key: latest.get(key)
