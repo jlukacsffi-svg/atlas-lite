@@ -61,6 +61,25 @@ identity checks still open before final sign-off:
 
 Most recent Stage 5 refinement:
 
+- The entry-experiment lifecycle is live on Cloud Run revision
+  `atlas-dashboard-stg-00189-jkf`. The dashboard, daily job, and weekly job use
+  image `20260814-entry-experiment-lifecycle`, digest
+  `sha256:cadd1747c210f71324a01a40e5a0683d2507f3eae4e42e9236eea1a6606d62ba`.
+- The lifecycle separates the 10-observation diagnosis gate
+  from a 20-observation approved experiment. It captures baseline cash,
+  buy-edge, drawdown, snapshot, and judged-decision evidence at approval.
+- An active experiment cannot generate another policy proposal. Today announces
+  progress at observations 1 and 10, then creates a result review at 20.
+- Portfolio compares the completed experiment with its baseline and reports how
+  many predefined success gates passed. Atlas cannot retain or roll back the
+  setting automatically.
+- All 449 local tests pass.
+- All 26 staging readiness checks and all 29 protected dashboard checks pass.
+  Recurring schedules are enabled, and neither job was manually executed.
+- Next development focus: add the final owner retain-or-rollback decision after
+  a completed 20-observation experiment, without granting automatic authority.
+- Estimated overall program completion is 92%.
+
 - The guarded entry-experiment owner control is live on Cloud Run revision
   `atlas-dashboard-stg-00188-d8n`. The dashboard, daily job, and weekly job use
   image `20260814-entry-experiment-control-v2`, digest

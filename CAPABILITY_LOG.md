@@ -3,6 +3,38 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Entry-experiment lifecycle
+
+New capabilities:
+
+- Capture current-policy cash, buy-edge, drawdown, snapshot, and judged-decision
+  evidence when the owner approves a bounded entry experiment.
+- Transition from the 10-observation diagnosis phase into a separate
+  20-observation experiment phase.
+- Prevent an active experiment from generating another entry-policy proposal.
+- Surface experiment milestones at observations 1, 10, and 20.
+- Compare baseline and current evidence against the three predefined success
+  gates, then return the completed result to owner review.
+
+Validated result:
+
+- The full local suite passes with 449 tests.
+- Cloud Run revision `atlas-dashboard-stg-00189-jkf`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260814-entry-experiment-lifecycle`.
+- The deployed image digest is
+  `sha256:cadd1747c210f71324a01a40e5a0683d2507f3eae4e42e9236eea1a6606d62ba`.
+- All 26 staging readiness checks and all 29 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+- The release preserves owner-only paper authority and requires a later owner
+  decision before Atlas can retain or roll back an experimental setting.
+
+Current boundaries:
+
+- Atlas does not decide the experiment result automatically.
+- Experiment evidence remains observational and paper-only.
+- Overall program completion is estimated at 92%.
+
 ## August 14, 2026 - Guarded entry-experiment owner control
 
 New capabilities:

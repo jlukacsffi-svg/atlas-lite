@@ -814,6 +814,65 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(event["applied_change"]["field"], "strategy_minimum_buy_score")
         self.assertEqual(event["applied_change"]["from"], 88.0)
         self.assertEqual(event["applied_change"]["to"], 87.0)
+        self.assertIn("baseline_evidence", event)
+
+    def test_approved_entry_experiment_uses_twenty_observation_lifecycle(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = PaperTradingAccount(
+                account_file=Path(temp_dir) / "account.json",
+                ledger_file=Path(temp_dir) / "ledger.jsonl",
+                clock=lambda: datetime(2026, 6, 6, 9, 30, 0),
+            )
+            account.initialize(100000)
+            scenario = [
+                {"label": "Current entry rules", "minimum_buy_score": 88.0, "eligible_ideas": 1},
+                {"label": "Lower score threshold by 1 point", "minimum_buy_score": 87.0, "eligible_ideas": 2},
+                {"label": "Lower score threshold by 2 points", "minimum_buy_score": 86.0, "eligible_ideas": 3},
+            ]
+            for index in range(10):
+                account.record_entry_constraint_observation(
+                    {
+                        "event": "entry_constraint_observation",
+                        "cycle_key": f"diagnosis-{index}",
+                        "available_buy_slots": 3,
+                        "scenarios": scenario,
+                    }
+                )
+            account.decide_entry_experiment(
+                "approve",
+                confirmation="APPROVE PAPER EXPERIMENT",
+            )
+            for index in range(10):
+                account.record_entry_constraint_observation(
+                    {
+                        "event": "entry_constraint_observation",
+                        "cycle_key": f"experiment-first-{index}",
+                        "available_buy_slots": 3,
+                        "scenarios": scenario,
+                    }
+                )
+            midpoint = account.entry_constraint_study()
+            for index in range(10):
+                account.record_entry_constraint_observation(
+                    {
+                        "event": "entry_constraint_observation",
+                        "cycle_key": f"experiment-second-{index}",
+                        "available_buy_slots": 3,
+                        "scenarios": scenario,
+                    }
+                )
+            completed = account.entry_constraint_study()
+
+        self.assertTrue(midpoint["experiment_active"])
+        self.assertEqual(midpoint["minimum_observations"], 20)
+        self.assertEqual(midpoint["owner_milestone"], "midpoint")
+        self.assertFalse(midpoint["diagnosis_ready"])
+        self.assertIsNone(midpoint["experiment_proposal"])
+        self.assertEqual(midpoint["active_experiment"]["status"], "running")
+        self.assertTrue(completed["experiment_review_ready"])
+        self.assertTrue(completed["requires_owner_attention"])
+        self.assertEqual(completed["active_experiment"]["status"], "owner_review")
+        self.assertEqual(completed["active_experiment"]["observations"], 20)
 
     def test_entry_experiment_rejection_resets_gate_without_policy_change(self):
         with tempfile.TemporaryDirectory() as temp_dir:

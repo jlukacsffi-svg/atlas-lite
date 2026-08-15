@@ -1071,6 +1071,29 @@ class AtlasCloudApplication:
                         )
                     ),
                 },
+                "entry_experiment_lifecycle": {
+                    "ok": self._ui_contains("Entry experiment started")
+                    and self._ui_contains("Entry experiment halfway")
+                    and self._ui_contains(
+                        "Entry experiment ready for owner review"
+                    )
+                    and self._ui_contains(
+                        "Review the completed entry experiment"
+                    ),
+                    "detail": (
+                        "An approved entry experiment uses a distinct "
+                        "20-observation lifecycle and returns to owner "
+                        "review without automatically changing policy."
+                    ),
+                    "active": bool(
+                        entry_constraint_study.get("experiment_active")
+                    ),
+                    "review_ready": bool(
+                        entry_constraint_study.get(
+                            "experiment_review_ready"
+                        )
+                    ),
+                },
                 "persistence_learning": {
                     "ok": bool(
                         (feedback_summary.get("horizon_learning") or [])

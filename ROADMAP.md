@@ -71,8 +71,11 @@ Atlas now:
 - Provides a typed, owner-only approval or decline workflow after the gate,
   applies at most one precomputed paper-policy change, and audit logs the
   decision before starting a fresh evidence period.
+- Tracks an approved experiment for 20 new observations, preserves its baseline,
+  blocks nested proposals, and returns the success-gate comparison to owner
+  review without making the result decision automatically.
 
-Estimated overall Atlas program completion: 91%. Stage 5 paper evidence remains
+Estimated overall Atlas program completion: 92%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
 Current Stage 5 evidence: 171 snapshots, 65 judged decisions, and 11 completed

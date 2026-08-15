@@ -543,7 +543,11 @@ class CloudWebApplicationTests(unittest.TestCase):
                 '"APPROVE PAPER EXPERIMENT";\n'
                 '"entry-experiment-decision";\n'
                 '"Approve experiment";\n'
-                '"Decline";\n',
+                '"Decline";\n'
+                '"Entry experiment started";\n'
+                '"Entry experiment halfway";\n'
+                '"Entry experiment ready for owner review";\n'
+                '"Review the completed entry experiment";\n',
                 encoding="utf-8",
             )
             data_service = type(

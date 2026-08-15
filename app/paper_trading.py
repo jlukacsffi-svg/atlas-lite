@@ -166,6 +166,30 @@ class PaperTradingAccount:
             )
 
         policy_before = self.effective_policy()
+        baseline_integrity = self.stage5_evaluation_integrity()
+        baseline_performance = baseline_integrity.get("performance") or {}
+        baseline_attribution = baseline_integrity.get("attribution") or {}
+        baseline_buy_quality = (
+            baseline_attribution.get("decision_quality") or {}
+        ).get("buy") or {}
+        baseline_evidence = {
+            "available": bool(baseline_integrity.get("available")),
+            "snapshot_count": int(
+                baseline_integrity.get("snapshot_count") or 0
+            ),
+            "judged_decisions": int(
+                baseline_integrity.get("judged_decisions") or 0
+            ),
+            "average_cash_pct": baseline_attribution.get(
+                "average_cash_pct"
+            ),
+            "buy_edge_pct": baseline_buy_quality.get(
+                "average_decision_edge_pct"
+            ),
+            "maximum_drawdown_pct": baseline_performance.get(
+                "maximum_drawdown_pct"
+            ),
+        }
         field = proposal.get("field")
         delta = proposal.get("delta")
         applied_change = None
@@ -193,6 +217,7 @@ class PaperTradingAccount:
             "dominant_constraint": study.get("dominant_constraint"),
             "proposal": proposal,
             "applied_change": applied_change,
+            "baseline_evidence": baseline_evidence,
             "policy_changed": applied_change is not None,
             "simulation_only": True,
         }
@@ -2129,6 +2154,17 @@ class PaperTradingAccount:
             if marker_index >= 0
             else None
         )
+        active_experiment = bool(
+            (policy_marker or {}).get("event") == "entry_experiment_decision"
+            and (policy_marker or {}).get("decision") == "approve"
+        )
+        if active_experiment:
+            minimum_observations = int(
+                ((policy_marker or {}).get("proposal") or {}).get(
+                    "duration_observations"
+                )
+                or 20
+            )
         rows = [
             event
             for event in source_events[marker_index + 1:]
@@ -2139,12 +2175,31 @@ class PaperTradingAccount:
                 "available": True,
                 "activated": False,
                 "policy_changed": False,
-                "headline": "The forward entry-constraint study starts with the next scheduled cycle.",
-                "detail": "Atlas will separate score threshold, confirmation, proposal capacity, and sizing constraints without creating shadow fills.",
+                "headline": (
+                    "The approved entry experiment starts with the next scheduled cycle."
+                    if active_experiment
+                    else "The forward entry-constraint study starts with the next scheduled cycle."
+                ),
+                "detail": (
+                    "Atlas will measure the approved one-variable paper experiment for 20 forward observations."
+                    if active_experiment
+                    else "Atlas will separate score threshold, confirmation, proposal capacity, and sizing constraints without creating shadow fills."
+                ),
                 "observations": 0,
                 "minimum_observations": minimum_observations,
                 "evidence_progress_pct": 0.0,
                 "diagnosis_ready": False,
+                "experiment_active": active_experiment,
+                "experiment_review_ready": False,
+                "active_experiment": (
+                    self._entry_experiment_status(
+                        policy_marker,
+                        [],
+                        minimum_observations,
+                    )
+                    if active_experiment
+                    else None
+                ),
                 "owner_milestone": None,
                 "requires_owner_attention": False,
                 "experiment_proposal": None,
@@ -2234,12 +2289,17 @@ class PaperTradingAccount:
             constraint_scores,
             key=constraint_scores.get,
         )
-        diagnosis_ready = observations >= minimum_observations
+        experiment_review_ready = (
+            active_experiment and observations >= minimum_observations
+        )
+        diagnosis_ready = (
+            not active_experiment and observations >= minimum_observations
+        )
         owner_milestone = (
             "owner_review"
-            if diagnosis_ready
+            if diagnosis_ready or experiment_review_ready
             else "midpoint"
-            if observations == 5
+            if observations == minimum_observations // 2
             else "started"
             if observations == 1
             else None
@@ -2300,7 +2360,20 @@ class PaperTradingAccount:
             ),
             "diagnosis_ready": diagnosis_ready,
             "owner_milestone": owner_milestone,
-            "requires_owner_attention": diagnosis_ready,
+            "requires_owner_attention": (
+                diagnosis_ready or experiment_review_ready
+            ),
+            "experiment_active": active_experiment,
+            "experiment_review_ready": experiment_review_ready,
+            "active_experiment": (
+                self._entry_experiment_status(
+                    policy_marker,
+                    rows,
+                    minimum_observations,
+                )
+                if active_experiment
+                else None
+            ),
             "dominant_constraint": dominant_constraint if diagnosis_ready else None,
             "constraint_scores": constraint_scores,
             "experiment_proposal": experiment_proposal,
@@ -2326,6 +2399,88 @@ class PaperTradingAccount:
                 )
             },
             "scenarios": scenarios,
+        }
+
+    def _entry_experiment_status(self, decision_event, rows, target):
+        baseline = (decision_event or {}).get("baseline_evidence") or {}
+        observations = len(rows)
+        review_ready = observations >= target
+        current_integrity = self.stage5_evaluation_integrity()
+        current_performance = current_integrity.get("performance") or {}
+        current_attribution = current_integrity.get("attribution") or {}
+        current_buy_quality = (
+            current_attribution.get("decision_quality") or {}
+        ).get("buy") or {}
+        current = {
+            "available": bool(current_integrity.get("available")),
+            "snapshot_count": int(current_integrity.get("snapshot_count") or 0),
+            "judged_decisions": int(
+                current_integrity.get("judged_decisions") or 0
+            ),
+            "average_cash_pct": current_attribution.get("average_cash_pct"),
+            "buy_edge_pct": current_buy_quality.get(
+                "average_decision_edge_pct"
+            ),
+            "maximum_drawdown_pct": current_performance.get(
+                "maximum_drawdown_pct"
+            ),
+        }
+        gates = []
+        if review_ready:
+            baseline_cash = baseline.get("average_cash_pct")
+            current_cash = current.get("average_cash_pct")
+            buy_edge = current.get("buy_edge_pct")
+            baseline_drawdown = baseline.get("maximum_drawdown_pct")
+            current_drawdown = current.get("maximum_drawdown_pct")
+            gates = [
+                {
+                    "label": "Invested exposure improved",
+                    "passed": (
+                        baseline_cash is not None
+                        and current_cash is not None
+                        and float(current_cash) < float(baseline_cash)
+                    ),
+                },
+                {
+                    "label": "Judged buy edge stayed non-negative",
+                    "passed": (
+                        buy_edge is not None and float(buy_edge) >= 0.0
+                    ),
+                },
+                {
+                    "label": "Drawdown did not worsen by more than 2 points",
+                    "passed": (
+                        baseline_drawdown is not None
+                        and current_drawdown is not None
+                        and float(current_drawdown)
+                        >= float(baseline_drawdown) - 2.0
+                    ),
+                },
+            ]
+        return {
+            "status": "owner_review" if review_ready else "running",
+            "headline": (
+                "The bounded entry experiment is ready for owner review."
+                if review_ready
+                else "The bounded entry experiment is collecting forward evidence."
+            ),
+            "change": ((decision_event or {}).get("proposal") or {}).get(
+                "change"
+            ),
+            "applied_change": (decision_event or {}).get("applied_change"),
+            "started_at": (decision_event or {}).get("timestamp"),
+            "observations": observations,
+            "target_observations": target,
+            "progress_pct": round(min(observations / target, 1.0) * 100.0, 1),
+            "baseline": baseline,
+            "current": current,
+            "gates": gates,
+            "passed_gates": sum(1 for gate in gates if gate["passed"]),
+            "review_ready": review_ready,
+            "authority": (
+                "Results require owner review. Atlas cannot retain, expand, "
+                "or roll back paper policy automatically."
+            ),
         }
 
     def trade_pressure_profile(self, latest_prices=None):

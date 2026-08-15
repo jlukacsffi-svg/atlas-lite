@@ -689,7 +689,24 @@ function renderOwnerBriefing(data) {
       detail: "The 10-observation evidence gate is complete. Atlas will not change policy automatically.",
     },
   };
-  const entryMilestone = entryMilestones[entryStudy.owner_milestone] || null;
+  let entryMilestone = entryMilestones[entryStudy.owner_milestone] || null;
+  if (entryMilestone && entryStudy.experiment_active) {
+    const experimentMilestones = {
+      started: {
+        title: "Entry experiment started",
+        detail: "Atlas recorded the first of 20 forward experiment observations. No action is needed.",
+      },
+      midpoint: {
+        title: "Entry experiment halfway",
+        detail: "Atlas has recorded 10 of 20 observations. The approved paper setting remains bounded.",
+      },
+      owner_review: {
+        title: "Entry experiment ready for owner review",
+        detail: "The 20-observation experiment is complete. Atlas will not retain or roll back policy automatically.",
+      },
+    };
+    entryMilestone = experimentMilestones[entryStudy.owner_milestone] || entryMilestone;
+  }
   const hasEscalations = prospectiveTracker.available && latestPriorityEscalations.length;
   signalDigest.hidden = !hasEscalations && !entryMilestone;
   signalDigest.innerHTML = signalDigest.hidden ? "" : `
@@ -752,6 +769,20 @@ function renderTodayDecisionInbox(data) {
       next: "Approve or decline the bounded paper experiment in Paper settings.",
       evidence: `${Number(entryStudy.observations || 0)} forward observations`,
       href: "#controls",
+    });
+  }
+  if (entryStudy.experiment_review_ready && entryStudy.active_experiment) {
+    const experiment = entryStudy.active_experiment;
+    items.push({
+      priority: 2,
+      tone: "ready",
+      label: "Result review",
+      ticker: "Atlas",
+      action: "Review the completed entry experiment",
+      reason: `${Number(experiment.passed_gates || 0)} of ${(experiment.gates || []).length} predefined success gates passed.`,
+      next: "Review baseline and current evidence in Portfolio. Atlas will not retain or roll back the setting automatically.",
+      evidence: `${Number(experiment.observations || 0)} forward observations`,
+      href: "#paper",
     });
   }
 
@@ -3751,6 +3782,15 @@ function renderValidationSummary(summary) {
                         <small>${Number(item.average_selected_ideas || 0).toFixed(1)} selected · ${Number(item.average_deployable_pct || 0).toFixed(1)}% estimated deployable capital</small>
                       </span>
                     `).join("")}
+                  </div>
+                ` : ""}
+                ${entryStudy.active_experiment ? `
+                  <div class="paper-evidence-note">
+                    <b>${escapeHtml(entryStudy.active_experiment.headline || "Bounded entry experiment")}</b><br>
+                    ${escapeHtml(entryStudy.active_experiment.change || "One-variable paper experiment")}<br>
+                    Progress: ${Number(entryStudy.active_experiment.observations || 0)}/${Number(entryStudy.active_experiment.target_observations || 20)} observations (${Number(entryStudy.active_experiment.progress_pct || 0).toFixed(0)}%).
+                    ${entryStudy.active_experiment.review_ready ? `<br>Success gates: ${Number(entryStudy.active_experiment.passed_gates || 0)} of ${(entryStudy.active_experiment.gates || []).length} passed.` : ""}
+                    <br>${escapeHtml(entryStudy.active_experiment.authority || "Results require owner review.")}
                   </div>
                 ` : ""}
                 ${entryStudy.experiment_proposal ? `
