@@ -3,6 +3,44 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 14, 2026 - Idle-cash exposure study
+
+New capabilities:
+
+- Attribute continuing-position results by sector within the current paper
+  policy period.
+- Model three transparent counterfactual scenarios that deploy 25%, 50%, or
+  75% of average idle cash into SPY exposure.
+- Show the estimated return uplift and modeled sleeve drawdown for each
+  scenario inside the optional paper-learning view.
+
+Validated result:
+
+- The current policy period contains 88 snapshots, 52 simulated trades, and
+  51 judged decisions. Atlas return is -0.43%, trailing SPY by 5.06 percentage
+  points and QQQ by 4.00 points.
+- Average cash is 75.79%. Judged buys average +1.01 points of decision edge,
+  while judged trims and exits average +3.19 points.
+- Sector attribution covers three continuing-position sectors, and all three
+  no-action exposure scenarios are available in the live dashboard.
+- The full local suite passes with 438 tests.
+- Cloud Run revision `atlas-dashboard-stg-00180-rv7`, `atlas-daily-stg`, and
+  `atlas-weekly-stg` use image `20260814-exposure-study`.
+- The deployed image digest is
+  `sha256:c05589e28533c96a14c1293eeed043b6f5e55f6d63309d68cf5f608fceeb8dfc`.
+- All 26 staging readiness checks and all 25 protected Stage 5 dashboard
+  contract checks pass. Recurring schedules are enabled, and neither job was
+  manually executed during this release.
+
+Current boundaries:
+
+- The scenarios are counterfactual assumptions, not forecasts or a policy
+  recommendation.
+- The study does not change entry thresholds, position sizing, paper fills,
+  or financial authority.
+- Atlas remains paper-only with no brokerage connection or real-money access.
+- Overall program completion is estimated at 86%.
+
 ## August 12, 2026 - Current-policy performance attribution
 
 New capabilities:

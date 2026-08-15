@@ -66,14 +66,20 @@ Atlas now:
   strategy periods, so a settings change cannot masquerade as one continuous
   performance experiment.
 
-Estimated overall Atlas program completion: 85%. Stage 5 paper evidence remains
+Estimated overall Atlas program completion: 86%. Stage 5 paper evidence remains
 the active investment-capability gate.
 
-Current Stage 5 evidence: 167 snapshots, 63 judged decisions, and 11 completed
-paper positions. The current policy period contains 84 snapshots, 50 simulated
-trades, and 49 judged decisions. Current-policy return is -0.64%, trailing SPY
-by 4.46 percentage points and QQQ by 2.95 points. The next warning-outcome scorecard remains
-gated until actual elevated warning episodes are recorded and resolved.
+Current Stage 5 evidence: 171 snapshots, 65 judged decisions, and 11 completed
+paper positions. The current policy period contains 88 snapshots, 52 simulated
+trades, and 51 judged decisions. Current-policy return is -0.43%, trailing SPY
+by 5.06 percentage points and QQQ by 4.00 points. Average cash is 75.79%, so
+Atlas now models 25%, 50%, and 75% idle-cash deployment scenarios and their
+drawdown tradeoff without changing policy. The next investment-development
+focus is to identify whether entry thresholds, sizing limits, or insufficient
+qualifying opportunities caused the low participation, then run a forward-only
+shadow policy experiment before proposing any paper-policy change. The next
+warning-outcome scorecard remains gated until actual elevated warning episodes
+are recorded and resolved.
 
 ## Stage 1: Reliable Daily Briefing
 

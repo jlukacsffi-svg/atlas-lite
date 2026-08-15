@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-08-11
+Last updated: 2026-08-14
 
 ## Current Roadmap Position
 
@@ -60,6 +60,25 @@ identity checks still open before final sign-off:
 - Non-owner Google account denial
 
 Most recent Stage 5 refinement:
+
+- The idle-cash exposure study is live on Cloud Run revision
+  `atlas-dashboard-stg-00180-rv7`. The dashboard, daily job, and weekly job use
+  image `20260814-exposure-study`, digest
+  `sha256:c05589e28533c96a14c1293eeed043b6f5e55f6d63309d68cf5f608fceeb8dfc`.
+  All 438 local tests, 26 staging checks, and 25 protected dashboard checks
+  pass. Recurring schedules are enabled, and neither job was manually executed.
+- Atlas now attributes continuing-position results by sector and models
+  counterfactual deployment of 25%, 50%, or 75% of average idle cash into SPY,
+  including estimated return uplift and modeled sleeve drawdown.
+- Current-policy evidence is 88 snapshots, 52 simulated trades, and 51 judged
+  decisions. Atlas is -0.43%, trailing SPY by 5.06 points and QQQ by 4.00
+  points; average cash is 75.79%.
+- These scenarios are assumptions, not forecasts or authority. They cannot
+  alter policy, create fills, connect a broker, or use real money.
+- Next development focus: attribute low participation to entry thresholds,
+  sizing limits, or insufficient qualifying opportunities, then build a
+  forward-only shadow policy experiment before proposing a paper-policy change.
+- Estimated overall program completion is 86%.
 
 - Current-policy performance attribution is live on Cloud Run revision
   `atlas-dashboard-stg-00179-992`. The dashboard, daily job, and weekly job use
