@@ -696,6 +696,10 @@ class PaperTradingAccountTests(unittest.TestCase):
                     "unheld_candidates": 4,
                     "score_pass_candidates": 2,
                     "confirmation_blocked_candidates": 1,
+                    "confirmation_blockers": {
+                        "trend_alignment": 1,
+                        "follow_through": 1,
+                    },
                     "available_buy_slots": 2,
                     "target_position_pct": 5.0,
                     "scenarios": [
@@ -719,6 +723,8 @@ class PaperTradingAccountTests(unittest.TestCase):
         self.assertEqual(study["owner_milestone"], "started")
         self.assertFalse(study["requires_owner_attention"])
         self.assertEqual(study["scenarios"][0]["average_eligible_ideas"], 1.0)
+        self.assertEqual(study["confirmation_blockers"][0]["label"], "Follow Through")
+        self.assertEqual(study["confirmation_blockers"][1]["label"], "Trend Alignment")
 
     def test_entry_constraint_study_flags_missed_collection_window(self):
         events = [

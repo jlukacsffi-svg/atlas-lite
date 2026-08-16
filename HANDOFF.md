@@ -1,6 +1,6 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-08-14
+Last updated: 2026-08-16
 
 ## Current Roadmap Position
 
@@ -60,6 +60,28 @@ identity checks still open before final sign-off:
 - Non-owner Google account denial
 
 Most recent Stage 5 refinement:
+
+- The normal August 15 and 16 daily runs produced the first two genuine
+  entry-study observations. Collection is healthy at 2/10.
+- Both observations found six score-qualified candidates but no eligible
+  entries. Lowering the score threshold by one or two points would not have
+  increased deployable capital.
+- Atlas now records the exact confirmation-rule families blocking those ideas
+  and shows the most frequent early blocker, while preserving the full
+  ten-observation diagnosis gate and all paper-only authority boundaries.
+- All 453 local tests pass. The capability is live on Cloud Run revision
+  `atlas-dashboard-stg-00195-hq6`; dashboard and scheduled jobs use image
+  `20260816-entry-blocker-diagnostics-v2`, digest
+  `sha256:fe24e6949c283070c6b6d224da4df03c68f22fcb892bfe22fa6fefd5e164441c`.
+- All 30 protected dashboard checks and all 26 automated staging-readiness
+  checks pass. Daily and weekly schedules are enabled, and no manual research
+  cycle was run for this release.
+- Next development focus: collect the remaining eight scheduled observations,
+  then diagnose the dominant confirmation constraint and present at most one
+  bounded paper-policy experiment for explicit owner review.
+- Estimated overall program completion is 95%.
+
+Previous Stage 5 refinement:
 
 - Entry-study collection health now distinguishes normal waiting, on-schedule
   collection, overdue collection, and a completed evidence gate using genuine

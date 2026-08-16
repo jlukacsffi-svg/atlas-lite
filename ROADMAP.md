@@ -81,6 +81,9 @@ Atlas now:
   quality by sector, without mixing evidence from earlier policy periods.
 - Monitors whether genuine entry-study observations arrive on the expected
   daily cadence and alerts the owner if collection becomes stale.
+- Records the specific confirmation-rule families blocking score-qualified
+  ideas, so the ten-observation diagnosis can identify the real participation
+  constraint without loosening policy early.
 
 Estimated overall Atlas program completion: 95%. Stage 5 paper evidence remains
 the active investment-capability gate.
@@ -106,6 +109,12 @@ Entry-study evidence integrity is complete: duplicate research-cycle keys count
 once, and only observations after the latest paper-policy marker advance the
 current 10-observation gate. A policy update resets current progress without
 deleting the historical audit trail.
+
+The first two genuine scheduled observations arrived on August 15 and 16,
+2026. Both found six score-qualified candidates but no eligible entries; lower
+score thresholds would not have increased deployable capital. Atlas is now
+collecting confirmation-family diagnostics for the remaining observations and
+will not diagnose or change policy before the ten-observation gate.
 
 Owner notification is also complete for this gate: Today remains concise during
 ordinary evidence collection, surfaces progress at observations 1 and 5, and

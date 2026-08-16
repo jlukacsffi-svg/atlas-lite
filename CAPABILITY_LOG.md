@@ -3,6 +3,36 @@
 This log records owner-visible capabilities as they become available. Each
 entry states what Atlas can do now and which safety boundaries remain.
 
+## August 16, 2026 - Entry confirmation diagnostics
+
+Atlas can now:
+
+- Verify that the August 15 and 16 scheduled cycles produced the first two
+  genuine forward entry-study observations.
+- Record which confirmation-rule families blocked each score-qualified idea,
+  aggregate their frequency across the current policy period, and show the
+  leading early blocker in the Stage 5 evidence panel.
+- Preserve the ten-observation diagnosis gate: early blocker evidence cannot
+  change paper policy, create fills, or grant financial authority.
+
+The two current observations each found six score-qualified candidates and no
+eligible entries. Lowering the Atlas Score threshold by one or two points would
+not have deployed additional capital, so the study is now measuring the actual
+confirmation constraints. Overall program completion remains 95% while Stage 5
+paper evidence accumulates.
+
+Validated result:
+
+- All 453 local tests pass.
+- The capability is live on Cloud Run revision
+  `atlas-dashboard-stg-00195-hq6` using image
+  `20260816-entry-blocker-diagnostics-v2`, digest
+  `sha256:fe24e6949c283070c6b6d224da4df03c68f22fcb892bfe22fa6fefd5e164441c`.
+- All 30 protected dashboard checks and all 26 automated staging-readiness
+  checks pass. Collection is on schedule at 2/10 observations.
+- Daily and weekly schedules remain enabled. No manual research job was run
+  for this release.
+
 ## August 14, 2026 - Entry-study collection health
 
 New capabilities:

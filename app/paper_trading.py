@@ -2383,6 +2383,24 @@ class PaperTradingAccount:
             / observations,
             2,
         )
+        blocker_totals = {}
+        for row in rows:
+            for blocker, count in (row.get("confirmation_blockers") or {}).items():
+                blocker_totals[str(blocker)] = (
+                    blocker_totals.get(str(blocker), 0) + int(count or 0)
+                )
+        confirmation_blockers = [
+            {
+                "key": key,
+                "label": key.replace("_", " ").title(),
+                "occurrences": count,
+                "average_per_cycle": round(count / observations, 2),
+            }
+            for key, count in sorted(
+                blocker_totals.items(),
+                key=lambda item: (-item[1], item[0]),
+            )
+        ]
         capacity_limited_cycles = sum(
             1
             for row in rows
@@ -2507,6 +2525,7 @@ class PaperTradingAccount:
             ),
             "dominant_constraint": dominant_constraint if diagnosis_ready else None,
             "constraint_scores": constraint_scores,
+            "confirmation_blockers": confirmation_blockers,
             "experiment_proposal": experiment_proposal,
             "policy_epoch_started_at": (
                 (policy_marker or {}).get("timestamp")

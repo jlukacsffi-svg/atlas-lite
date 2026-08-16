@@ -160,6 +160,22 @@ class PaperStrategyTests(unittest.TestCase):
         self.assertGreaterEqual(observation["scenarios"][2]["eligible_ideas"], 2)
         self.assertEqual(account.proposals(), [])
 
+    def test_entry_constraint_observation_records_confirmation_blocker_families(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            account = self.make_account(temp_dir)
+            strategy = PaperStrategy(minimum_buy_score=88)
+            observation = strategy.entry_constraint_observation(
+                account,
+                {
+                    "AAA": market_security(91, change=-9.0),
+                    "SPY": {**market_security(99), "sector": "Benchmark ETF"},
+                },
+            )
+
+        self.assertEqual(observation["confirmation_blocked_candidates"], 1)
+        self.assertEqual(observation["confirmation_blockers"]["daily_move"], 1)
+        self.assertEqual(account.proposals(), [])
+
     def test_generates_exit_for_held_name_below_threshold(self):
         with tempfile.TemporaryDirectory() as temp_dir:
             account = self.make_account(temp_dir)

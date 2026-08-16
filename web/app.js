@@ -3757,6 +3757,7 @@ function renderValidationSummary(summary) {
   const entryStudy = summary.entry_constraint_study || {};
   const entryCadence = entryStudy.collection_cadence || {};
   const entryScenarios = Array.isArray(entryStudy.scenarios) ? entryStudy.scenarios : [];
+  const entryBlockers = Array.isArray(entryStudy.confirmation_blockers) ? entryStudy.confirmation_blockers : [];
   const stateClass = escapeHtml(String(summary.status || "building"));
   const html = `
     <div class="feedback-summary-grid validation-grid">
@@ -3839,6 +3840,14 @@ function renderValidationSummary(summary) {
                 </div>
                 <small>${escapeHtml(entryCadence.detail || "Atlas records only genuine scheduled observations.")}</small>
                 <small>Evidence integrity: current policy period only · duplicate research cycles are ignored.</small>
+                ${entryBlockers.length ? `
+                  <div class="paper-evidence-note">
+                    <b>Early confirmation evidence</b><br>
+                    Most frequent blocker so far: ${escapeHtml(entryBlockers[0].label || "Confirmation filter")}
+                    (${Number(entryBlockers[0].occurrences || 0)} occurrence${Number(entryBlockers[0].occurrences || 0) === 1 ? "" : "s"}).
+                    Atlas will not diagnose or change policy until the full evidence gate is complete.
+                  </div>
+                ` : ""}
                 ${entryScenarios.length ? `
                   <div class="exposure-scenario-grid">
                     ${entryScenarios.map(item => `

@@ -247,6 +247,14 @@ class PaperStrategy:
         confirmation_blocked = sum(
             1 for row in score_pass if not self._can_open_buy(row)
         )
+        confirmation_blockers = {}
+        for row in score_pass:
+            if self._can_open_buy(row):
+                continue
+            for blocker in self._buy_confirmation_blockers(row):
+                confirmation_blockers[blocker] = (
+                    confirmation_blockers.get(blocker, 0) + 1
+                )
         return {
             "event": "entry_constraint_observation",
             "source": "paper_entry_shadow_v1",
@@ -261,8 +269,107 @@ class PaperStrategy:
             "unheld_candidates": len(available),
             "score_pass_candidates": len(score_pass),
             "confirmation_blocked_candidates": confirmation_blocked,
+            "confirmation_blockers": confirmation_blockers,
             "scenarios": scenarios,
         }
+
+    def _buy_confirmation_blockers(self, row):
+        """Explain failed confirmation families without changing entry behavior."""
+        blockers = []
+        if not row.get("daily_change_reliable", True):
+            return ["unreliable_daily_change"]
+        if row.get("category") == "Avoid":
+            blockers.append("avoid_classification")
+        if float(row.get("percent_change") or 0.0) <= self.minimum_daily_move_pct:
+            blockers.append("daily_move")
+
+        news_label = str(row.get("news_signal_label") or "neutral")
+        if news_label == "adverse" and (
+            int(row.get("news_negative_count") or 0) >= 2
+            or self._value_or_default(row.get("news_negative_weight"), 0.0) >= 3.0
+            or int(row.get("news_high_impact_negative_count") or 0) >= 1
+        ):
+            blockers.append("adverse_news")
+
+        trend_state = str(row.get("trend_state") or "unknown")
+        trend_regime = str(row.get("trend_regime") or "unknown")
+        market_regime = str(row.get("market_regime") or "cautious")
+        benchmark_excess = self._value_or_default(row.get("benchmark_excess_pct"), 0.0)
+        sector_relative = self._value_or_default(row.get("sector_relative_strength_pct"), 0.0)
+        sector_breadth = self._value_or_default(row.get("sector_breadth_pct"), 0.0)
+        benchmark_breadth = self._value_or_default(row.get("benchmark_breadth"), 50.0)
+        trend_quality = self._value_or_default(row.get("trend_quality_score"), 50.0)
+        persistence = self._value_or_default(row.get("persistence_score"), 50.0)
+        follow_through = self._value_or_default(row.get("follow_through_score"), 50.0)
+        paper_learning = self._value_or_default(row.get("paper_learning_adjustment"), 0.0)
+        sector_caution = paper_learning <= -2.0
+        sector_boost = paper_learning >= 1.5
+        has_trend_metadata = not (
+            trend_state == "unknown" and trend_regime == "unknown"
+        )
+
+        if not has_trend_metadata:
+            if benchmark_excess < (0.25 if market_regime == "risk_off" else (-0.25 if not sector_caution else 0.5)):
+                blockers.append("benchmark_strength")
+            if sector_relative < (0.0 if market_regime == "risk_off" else (-0.5 if not sector_caution else 0.5)):
+                blockers.append("sector_strength")
+            if sector_breadth < (50.0 if market_regime == "risk_off" else (40.0 if not sector_caution else 55.0)):
+                blockers.append("sector_breadth")
+            if market_regime == "risk_off" and row["score"] < self.minimum_buy_score + 2.0:
+                blockers.append("risk_off_score_buffer")
+            if sector_caution and row["score"] < self.minimum_buy_score + 4.0:
+                blockers.append("sector_caution_score_buffer")
+            return list(dict.fromkeys(blockers))
+
+        if trend_state == "downtrend" or trend_regime == "breakdown":
+            blockers.append("trend_alignment")
+        if market_regime == "risk_off":
+            if trend_state not in {"uptrend", "extended_uptrend"} or trend_regime not in {"leadership", "constructive"}:
+                blockers.append("trend_alignment")
+            thresholds = {
+                "trend_quality": 72.0 if sector_caution else 68.0,
+                "persistence": 68.0 if sector_caution else (62.0 if sector_boost else 64.0),
+                "benchmark_strength": 0.5 if sector_caution else 0.0,
+                "sector_strength": 0.0,
+                "sector_breadth": 55.0,
+                "benchmark_breadth": 25.0,
+                "follow_through": 67.0 if sector_caution else (61.0 if sector_boost else 63.0),
+            }
+        elif market_regime == "cautious":
+            if trend_state not in {"uptrend", "extended_uptrend", "improving"} or trend_regime not in {"leadership", "constructive", "repair"}:
+                blockers.append("trend_alignment")
+            thresholds = {
+                "trend_quality": 64.0 if sector_caution else (58.0 if sector_boost else 60.0),
+                "persistence": 58.0 if sector_caution else (52.0 if sector_boost else 54.0),
+                "benchmark_strength": 0.25 if sector_caution else -0.25,
+                "sector_strength": 0.25 if sector_caution else -0.25,
+                "sector_breadth": 55.0 if sector_caution else 45.0,
+                "follow_through": 62.0 if sector_caution else (54.0 if sector_boost else 56.0),
+            }
+        else:
+            if trend_state not in {"uptrend", "extended_uptrend", "improving"}:
+                blockers.append("trend_alignment")
+            thresholds = {
+                "trend_quality": 60.0 if sector_caution else (53.0 if sector_boost else 55.0),
+                "persistence": 56.0 if sector_caution else (50.0 if sector_boost else 52.0),
+                "sector_breadth": 50.0 if sector_caution else 40.0,
+                "follow_through": 58.0 if sector_caution else (50.0 if sector_boost else 52.0),
+            }
+
+        values = {
+            "trend_quality": trend_quality,
+            "persistence": persistence,
+            "benchmark_strength": benchmark_excess,
+            "sector_strength": sector_relative,
+            "sector_breadth": sector_breadth,
+            "benchmark_breadth": benchmark_breadth,
+            "follow_through": follow_through,
+        }
+        blockers.extend(
+            name for name, threshold in thresholds.items()
+            if values[name] < threshold
+        )
+        return list(dict.fromkeys(blockers))
 
     def _candidate_rows(self, market_data, benchmark_context, learning_context=None):
         sector_context = self._sector_context(market_data, benchmark_context)
