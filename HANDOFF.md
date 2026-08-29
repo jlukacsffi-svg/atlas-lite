@@ -17,6 +17,11 @@ Current redesign artifacts:
 - `web_redesign/`: an interactive responsive prototype covering Today,
   Discover, Research, Portfolio, Activity, Reports, Alerts, and Settings.
 
+The approved visual exploration now uses periwinkle-blue actions, coral brand
+accents, warm gold context, cool white surfaces, and a charcoal-blue sidebar.
+Semantic green and red remain available for gains and losses without dominating
+the overall interface.
+
 The prototype uses clearly labeled sample data and cannot place a real or paper
 order, send a notification, or change cloud state. The existing Atlas engine
 and owner-only staging site continue operating normally.

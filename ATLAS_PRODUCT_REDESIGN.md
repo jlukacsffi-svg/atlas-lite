@@ -48,6 +48,17 @@ The current production dashboard remains intact during this work.
 - Trading mode and data freshness remain visible at all times.
 - Mobile layouts preserve decisions and alerts before secondary analytics.
 
+## Visual Direction
+
+- Friendly periwinkle-blue is the primary action and navigation color.
+- Coral gives Atlas a warmer identity and highlights selected navigation.
+- Warm gold provides context for cautions, events, and prototype status.
+- Green and red are reserved mainly for positive and negative financial
+  outcomes, rather than coloring the entire product.
+- Cool white surfaces and a charcoal-blue sidebar keep the workspace calm,
+  readable, and professional without repeating the previous green-heavy Atlas
+  theme.
+
 ## Feature Inventory
 
 ### Today

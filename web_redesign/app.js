@@ -178,12 +178,12 @@ function drawPerformanceChart(id, security = false) {
     ctx.beginPath(); ctx.moveTo(10, y); ctx.lineTo(width - 10, y); ctx.stroke();
   }
   const series = security ? [
-    { color: "#087a5b", data: [20,22,21,28,31,36,34,41,48,52,59,64] },
-    { color: "#2f62b8", data: [20,21,22,23,26,27,29,31,33,34,36,38] }
+    { color: "#586fdb", data: [20,22,21,28,31,36,34,41,48,52,59,64] },
+    { color: "#3984c6", data: [20,21,22,23,26,27,29,31,33,34,36,38] }
   ] : [
-    { color: "#087a5b", data: [30,31,29,34,36,35,39,42,43,47,46,51] },
-    { color: "#2f62b8", data: [30,32,31,35,38,39,42,44,46,49,50,54] },
-    { color: "#9a6a16", data: [30,31,30,34,37,38,40,43,44,47,48,52] }
+    { color: "#586fdb", data: [30,31,29,34,36,35,39,42,43,47,46,51] },
+    { color: "#3984c6", data: [30,32,31,35,38,39,42,44,46,49,50,54] },
+    { color: "#e08a52", data: [30,31,30,34,37,38,40,43,44,47,48,52] }
   ];
   series.forEach(item => {
     ctx.strokeStyle = item.color;
