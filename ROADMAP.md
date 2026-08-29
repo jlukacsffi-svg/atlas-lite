@@ -9,6 +9,21 @@ presented through modern dashboards, graphics, and private user accounts.
 Web-platform maturity and trading autonomy are separate tracks: a richer
 interface never grants additional financial authority.
 
+## Experience-First Website Redesign
+
+Status: interactive product prototype ready for owner review.
+
+The replacement website is being developed alongside the live dashboard. Its
+information architecture centers on Today, Discover, Research, Portfolio,
+Activity, Reports, Alerts, and Settings. The first prototype deliberately uses
+labeled sample data so the complete product experience can be judged before
+existing Atlas capabilities are reconnected page by page.
+
+The live owner dashboard, scheduled research, paper evidence, and cloud
+security boundaries remain unchanged. The redesign may replace the current web
+shell only after read-only data parity, protected owner-control parity,
+responsive and accessibility verification, and explicit owner approval.
+
 ## Guiding Principle
 
 Atlas should earn autonomy one layer at a time.

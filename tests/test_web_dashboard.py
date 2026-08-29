@@ -1252,7 +1252,7 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn('id="data-freshness"', html)
         self.assertIn('id="sign-out"', html)
         self.assertIn('/styles.css?v=20260811-counted-ideas', html)
-        self.assertIn('/app.js?v=20260814-entry-study-health-v2', html)
+        self.assertIn('/app.js?v=20260816-entry-blocker-diagnostics-v2', html)
         self.assertIn('id="ideas-action-count"', html)
         self.assertIn('id="ideas-universe-count"', html)
         self.assertIn("Current decision load", script)

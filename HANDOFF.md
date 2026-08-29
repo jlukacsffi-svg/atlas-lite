@@ -1,6 +1,30 @@
 # Atlas Lite Handoff
 
-Last updated: 2026-08-16
+Last updated: 2026-08-29
+
+## Website Redesign Track
+
+On August 29, 2026, the owner redirected web work toward a complete,
+experience-first product redesign. The current production dashboard remains
+unchanged while the replacement is designed and tested alongside it.
+
+Current redesign artifacts:
+
+- `ATLAS_PRODUCT_REDESIGN.md`: information architecture, complete feature
+  inventory, experience rules, and delivery sequence.
+- `ATLAS_REDESIGN_INTEGRATION_MAP.md`: existing backend reuse and required v2
+  view-model APIs.
+- `web_redesign/`: an interactive responsive prototype covering Today,
+  Discover, Research, Portfolio, Activity, Reports, Alerts, and Settings.
+
+The prototype uses clearly labeled sample data and cannot place a real or paper
+order, send a notification, or change cloud state. The existing Atlas engine
+and owner-only staging site continue operating normally.
+
+Next redesign focus: owner review of the complete prototype, followed by
+read-only API contracts and live data integration. The redesign phase is about
+35% complete; the pre-redesign Stage 5 engine remains 95% complete against its
+existing roadmap.
 
 ## Current Roadmap Position
 
