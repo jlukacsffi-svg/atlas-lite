@@ -2874,3 +2874,24 @@ Current in-flight stage:
   owner workflow. The next usability work should prioritize decision
   summaries and progressive disclosure on Recommendations and Paper Portfolio
   without weakening the detailed audit trail.
+
+Latest redesign trust-and-correctness update:
+
+- The local `web_redesign/` prototype now uses coherent per-security research
+  fixtures instead of displaying NVIDIA evidence for every selected company.
+- Research URLs preserve both ticker and active evidence view.
+- The paper portfolio is calculated from one account model, and displayed
+  holdings, invested value, cash, allocation, and returns reconcile.
+- Recommendation cards identify current ownership, target weight, range,
+  portfolio effect, invalidation context, and the no-order prototype boundary.
+- A persistent data-status notice remains visible at desktop and phone widths.
+- Paper holdings use a dedicated mobile card layout with no page-level
+  horizontal overflow.
+- The redesign is approximately 47% complete. The existing Stage 5 engine
+  remains approximately 95% complete for its current paper-only stage.
+
+Current in-flight redesign stage:
+
+- Simplify the primary workflow and prototype the full recommendation review
+  through paper-decision preview. Do not let the redesign write a paper fill;
+  reconnect that action only through the existing authorized server workflow.

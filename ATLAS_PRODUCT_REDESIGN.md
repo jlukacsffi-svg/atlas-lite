@@ -155,5 +155,25 @@ browser.
 6. Validate accessibility, responsive behavior, security, and data integrity.
 7. Replace the current dashboard only after parity and owner approval.
 
+## Current Prototype Maturity
+
+The trust-and-correctness pass is complete for the local redesign prototype:
+
+- Every covered security has coherent company-specific thesis, score,
+  financial, valuation, evidence, peer, and research-history views.
+- Security research routes are bookmarkable by ticker and active tab.
+- Paper portfolio totals, weights, gains, cash, and allocation are calculated
+  from one prototype account model instead of repeated display constants.
+- Recommendations show ownership state, target weight, preferred range,
+  portfolio effect, risk, and an explicit no-order boundary.
+- A persistent sample snapshot notice identifies the date, session, and
+  illustrative source on desktop and mobile.
+- Simulated holdings become readable mobile cards instead of requiring a wide
+  horizontal table.
+
+The redesign is approximately 47% complete. The next stage is to simplify the
+primary navigation and complete the recommendation-to-paper-decision journey
+without giving the static prototype authority to create a paper fill.
+
 This redesign does not expand Atlas's financial authority. Real brokerage
 execution remains disabled.
