@@ -55,6 +55,32 @@ must never authorize or construct the final server order.
 
 No brokerage or real-money endpoint is part of this redesign phase.
 
+## Frozen Read-Only Page Contracts
+
+All responses use ISO 8601 timestamps, USD amounts as numbers, percentages as
+numbers, and an explicit `data_status` object containing `as_of`, `session`,
+`source`, and `is_live`. Missing data is `null`; it is never replaced with a
+plausible-looking value.
+
+| Page | Required response groups | Primary interaction |
+|---|---|---|
+| Today | snapshot status, primary decision, portfolio summary, ranked recommendations, risks, benchmarks, catalysts, recent research | Open evidence or a contextual report/alert |
+| Ideas | security identity, action, score, price, daily move, confidence, catalyst, risk, ownership state | Filter locally, then open security research |
+| Research | quote freshness, thesis, evidence, score components, financials, valuation, events, peers, history, portfolio context | Open a server-calculated paper preview |
+| Portfolio | account summary, positions, cash, returns, benchmark series, allocation, attribution, risk observations | Open holding research or activity |
+| Activity | recommendation, owner-decision, paper-fill, policy, and audit events with immutable IDs and timestamps | Filter and inspect; no mutation in read-only phase |
+| Reports | report metadata plus sanitized rendered content | Select, download, or request approved delivery |
+| Alerts | severity, status, subject, reason, created time, and destination route | Open related research; durable read state is deferred |
+
+The first integration release covers Today, Ideas, Research, Portfolio, and
+Reports. Activity and Alerts remain read-only until their pagination, durable
+state, and tenant-isolation tests are complete.
+
+Navigation is intentionally limited to Today, Ideas, Portfolio, and Activity.
+Research is reached from a security, while Reports and Alerts are contextual
+destinations. Settings remains an account-level destination. This structure is
+part of the frozen prototype contract.
+
 ## Prototype Coverage
 
 Implemented now:

@@ -2917,3 +2917,22 @@ Current in-flight redesign stage:
 - Simplify the primary navigation, complete the remaining high-value
   prototype controls, and freeze the page contracts for read-only Atlas API
   integration. Keep all financial writes behind existing server authorization.
+
+## September 4, 2026 - Navigation And Page Contracts
+
+- The redesign primary navigation is now limited to Today, Ideas, Portfolio,
+  and Activity. Research is contextual to a selected security; Reports and
+  Alerts remain accessible from relevant page actions and the top bar.
+- Discover is renamed Ideas and its recommendation, sector, minimum-score, and
+  ownership filters now update results, rank numbers, result count, and empty
+  state in the browser.
+- `ATLAS_REDESIGN_INTEGRATION_MAP.md` now freezes common freshness rules,
+  response groups, and the primary interaction for each read-only page.
+- The local redesign is approximately 62% complete. The paper-only Stage 5
+  engine remains approximately 95% complete.
+
+Next redesign focus:
+
+- Connect Today and Ideas to real read-only Atlas APIs with clear loading,
+  empty, stale, and error states. Preserve static fixtures as an explicit
+  development fallback, never as silent production data.

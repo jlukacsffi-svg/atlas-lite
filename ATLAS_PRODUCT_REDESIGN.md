@@ -185,9 +185,19 @@ The recommendation-to-paper-decision journey is now represented end to end:
 - Desktop and mobile layouts expose the same steps without page-level
   horizontal overflow.
 
-The redesign is approximately 55% complete. The next stage is to simplify the
-primary navigation and finish the remaining high-value prototype interactions
-before freezing the page contracts for read-only API integration.
+The primary workflow and read-only page contracts are now frozen:
+
+- Primary navigation is limited to Today, Ideas, Portfolio, and Activity.
+- Research opens in the context of a selected security. Reports and Alerts are
+  contextual destinations rather than equal-weight primary sections.
+- The Ideas page uses working recommendation, sector, score, and ownership
+  filters with accurate result counts, reset behavior, and an empty state.
+- Page contracts define common freshness semantics and the required response
+  groups for each investor-facing surface.
+
+The redesign is approximately 62% complete. The next stage is to connect the
+Today and Ideas pages to real read-only Atlas APIs behind explicit loading,
+empty, stale, and error states.
 
 This redesign does not expand Atlas's financial authority. Real brokerage
 execution remains disabled.

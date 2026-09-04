@@ -160,7 +160,7 @@ function showToast(message) {
 
 function recommendationsTable(items = securities) {
   return `<div class="panel table-panel">
-    <div class="panel-heading"><div><h2>Atlas recommendations</h2><p>Ranked by conviction, evidence quality, and portfolio fit</p></div><button class="button" data-go="discover">View all ${icon("arrow-right")}</button></div>
+    <div class="panel-heading"><div><h2>Atlas recommendations</h2><p>Ranked by conviction, evidence quality, and portfolio fit</p></div><button class="button" data-go="ideas">View all ${icon("arrow-right")}</button></div>
     <table class="data-table"><thead><tr><th>Security</th><th>Action</th><th>Atlas Score</th><th>Price</th><th>Today</th><th>Primary catalyst</th><th>Position</th><th></th></tr></thead>
     <tbody>${items.map(item => `<tr>
       <td>${tickerCell(item)}</td><td><span class="tag ${actionClass(item.action)}">${item.action}</span></td><td><span class="score">${item.score}</span></td>
@@ -202,11 +202,40 @@ function renderToday() {
 }
 
 function renderDiscover() {
-  pageContent.innerHTML = pageHeading("Opportunity workspace", "Discover", "Find, compare, and save the strongest ideas across the Atlas universe.", `<button class="button">${icon("bookmark")} Saved screens</button><button class="button primary">${icon("plus")} New watchlist</button>`)
+  pageContent.innerHTML = pageHeading("Research opportunities", "Ideas", "See what Atlas recommends, what you already own, and which ideas need more evidence.")
     + `<section class="grid cols-4"><article class="panel metric"><small>Covered securities</small><strong>117</strong><span>8 sectors · 11 themes</span></article><article class="panel metric"><small>Buy candidates</small><strong>6</strong><span class="positive">2 newly qualified</span></article><article class="panel metric"><small>Near buy range</small><strong>11</strong><span>Within 5% of target</span></article><article class="panel metric"><small>Risk reviews</small><strong>4</strong><span class="negative">1 high priority</span></article></section><div class="spacer"></div>
-    <section class="panel table-panel"><div class="tabs"><button class="active">Rankings</button><button>Screener</button><button>Watchlists</button><button>Sectors & themes</button><button>Compare</button></div><div class="filter-bar"><select><option>All actions</option><option>Buy</option><option>Watch</option><option>Trim / Exit</option></select><select><option>All sectors</option><option>Semiconductors</option><option>Software</option><option>Cybersecurity</option><option>Defense</option></select><select><option>Atlas Score: 70+</option><option>80+</option><option>90+</option></select><select><option>Any position state</option><option>Not owned</option><option>Current holdings</option></select><button class="button">${icon("sliders-horizontal")} More filters</button><span class="filter-count">8 results</span></div>
-    <table class="data-table"><thead><tr><th>Rank / Security</th><th>Action</th><th>Score</th><th>Price</th><th>Today</th><th>Conviction</th><th>Catalyst</th><th>Key risk</th><th></th></tr></thead><tbody>${securities.map((item,index) => `<tr><td><div style="display:flex;align-items:center;gap:12px"><b>${index+1}</b>${tickerCell(item)}</div></td><td><span class="tag ${actionClass(item.action)}">${item.action}</span></td><td><span class="score">${item.score}</span></td><td>$${item.price.toFixed(2)}</td><td class="${item.move>=0?"positive":"negative"}">${signed(item.move)}</td><td>${item.conviction}</td><td>${item.catalyst}</td><td>${item.risk}</td><td><button class="icon-button" data-security="${item.ticker}" aria-label="Research ${item.ticker}">${icon("chevron-right")}</button></td></tr>`).join("")}</tbody></table></section>`;
+    <section class="panel table-panel"><div class="panel-heading"><div><h2>Ranked ideas</h2><p>Use the filters to focus on decisions that matter now</p></div></div><div class="filter-bar" aria-label="Idea filters"><label>Recommendation<select id="ideas-action"><option value="all">All recommendations</option><option value="Buy">Buy</option><option value="Watch">Watch</option><option value="Hold">Hold</option><option value="reduce">Trim or exit</option></select></label><label>Sector<select id="ideas-sector"><option value="all">All sectors</option>${[...new Set(securities.map(item => item.sector))].map(sector => `<option value="${sector}">${sector}</option>`).join("")}</select></label><label>Minimum score<select id="ideas-score"><option value="0">Any score</option><option value="80">80 or higher</option><option value="90">90 or higher</option></select></label><label>Portfolio status<select id="ideas-owned"><option value="all">Owned and not owned</option><option value="false">Not currently owned</option><option value="true">Current holdings</option></select></label><button class="button" id="ideas-reset" type="button">${icon("rotate-ccw")} Reset</button><span class="filter-count" id="ideas-count">${securities.length} ideas</span></div>
+    <table class="data-table ideas-table"><thead><tr><th>Rank / Security</th><th>Recommendation</th><th>Score</th><th>Price</th><th>Today</th><th>Confidence</th><th>Why it matters</th><th>Portfolio status</th><th></th></tr></thead><tbody id="ideas-results">${ideasRows(securities)}</tbody></table><div class="empty-state ideas-empty" id="ideas-empty" hidden>${icon("search-x")}<div><h3>No ideas match these filters</h3><p>Broaden one or more filters, or reset the view to see every ranked idea.</p><button class="button" id="ideas-empty-reset" type="button">Reset filters</button></div></div></section>`;
   initializePage();
+  initializeIdeasFilters();
+}
+
+function ideasRows(items) {
+  return items.map((item, index) => `<tr><td data-label="Ranked security"><div class="ranked-security"><b>${index + 1}</b>${tickerCell(item)}</div></td><td data-label="Recommendation"><span class="tag ${actionClass(item.action)}">${item.action}</span></td><td data-label="Atlas Score"><span class="score">${item.score}</span></td><td data-label="Sample price">${money(item.price, 2)}</td><td data-label="Last session" class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)}</td><td data-label="Confidence">${item.conviction}</td><td data-label="Why it matters">${item.catalyst}</td><td data-label="Portfolio status">${item.owned ? "Current holding" : "Not owned"}</td><td><button class="button" data-security="${item.ticker}" aria-label="Review ${item.ticker}">${icon("file-search")} Review research</button></td></tr>`).join("");
+}
+
+function initializeIdeasFilters() {
+  const controls = ["ideas-action", "ideas-sector", "ideas-score", "ideas-owned"].map(id => document.getElementById(id));
+  const results = document.getElementById("ideas-results");
+  const count = document.getElementById("ideas-count");
+  const empty = document.getElementById("ideas-empty");
+  const table = document.querySelector(".ideas-table");
+  const apply = () => {
+    const [action, sector, score, owned] = controls.map(control => control.value);
+    const filtered = securities.filter(item =>
+      (action === "all" || item.action === action || (action === "reduce" && ["Trim", "Exit"].includes(item.action))) &&
+      (sector === "all" || item.sector === sector) && item.score >= Number(score) &&
+      (owned === "all" || String(item.owned) === owned));
+    results.innerHTML = ideasRows(filtered);
+    count.textContent = `${filtered.length} ${filtered.length === 1 ? "idea" : "ideas"}`;
+    table.hidden = filtered.length === 0;
+    empty.hidden = filtered.length !== 0;
+    initializePage();
+  };
+  const reset = () => { controls.forEach(control => { control.selectedIndex = 0; }); apply(); };
+  controls.forEach(control => control.addEventListener("change", apply));
+  document.getElementById("ideas-reset").addEventListener("click", reset);
+  document.getElementById("ideas-empty-reset").addEventListener("click", reset);
 }
 
 function researchTabs(item, activeTab) {
@@ -402,11 +431,12 @@ function drawPerformanceChart(id, security = false) {
 
 function route() {
   const [name = "today", ticker = "NVDA", activeTab = "overview"] = (location.hash.replace("#", "") || "today").split("/");
-  const activeNavigation = name === "decision" ? "research" : name;
+  const activeNavigation = ["ideas", "discover", "research", "decision"].includes(name) ? "ideas" : ["reports", "alerts"].includes(name) ? "today" : name;
   document.querySelectorAll(".nav-link").forEach(link => link.classList.toggle("active", link.dataset.route === activeNavigation));
   document.querySelector(".sidebar").classList.remove("open");
   const routes = {
     today: renderToday,
+    ideas: renderDiscover,
     discover: renderDiscover,
     research: () => renderResearch(ticker.toUpperCase(), activeTab),
     decision: () => renderDecision(ticker.toUpperCase(), activeTab),
