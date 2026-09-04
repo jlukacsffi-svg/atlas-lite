@@ -2895,3 +2895,25 @@ Current in-flight redesign stage:
 - Simplify the primary workflow and prototype the full recommendation review
   through paper-decision preview. Do not let the redesign write a paper fill;
   reconnect that action only through the existing authorized server workflow.
+
+Latest paper-decision experience update:
+
+- Research now leads to a dedicated paper decision preview for actionable
+  buy, trim, and exit recommendations.
+- Preview estimates are calculated from the same reconciled prototype account
+  model and show shares, transaction value, cash reserve, and position weight
+  before and after the proposed action.
+- The workflow shows evidence, portfolio impact, paper policy checks, and the
+  final authority boundary as four clear steps.
+- Paper submission is intentionally disabled. A temporary browser-only review
+  note can demonstrate the Activity presentation without creating an owner
+  approval, paper fill, or audit record.
+- Buy, trim, and exit scenarios and phone responsiveness were browser-tested.
+- The redesign is approximately 55% complete; the paper-only Stage 5 engine
+  remains approximately 95% complete for its current stage.
+
+Current in-flight redesign stage:
+
+- Simplify the primary navigation, complete the remaining high-value
+  prototype controls, and freeze the page contracts for read-only Atlas API
+  integration. Keep all financial writes behind existing server authorization.

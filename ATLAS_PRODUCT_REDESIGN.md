@@ -171,9 +171,23 @@ The trust-and-correctness pass is complete for the local redesign prototype:
 - Simulated holdings become readable mobile cards instead of requiring a wide
   horizontal table.
 
-The redesign is approximately 47% complete. The next stage is to simplify the
-primary navigation and complete the recommendation-to-paper-decision journey
-without giving the static prototype authority to create a paper fill.
+The recommendation-to-paper-decision journey is now represented end to end:
+
+- Actionable buy, trim, and exit views calculate estimated shares, transaction
+  value, resulting cash, and resulting position weight.
+- The workflow moves through evidence, portfolio impact, policy checks, and a
+  locked confirmation boundary.
+- Paper authority, cash reserve, position size, actionability, and required
+  fresh server validation are visible before confirmation.
+- The submit control remains disabled. A browser-only acknowledgement can
+  demonstrate the Activity experience, but is explicitly not a paper fill,
+  owner approval, or audit event.
+- Desktop and mobile layouts expose the same steps without page-level
+  horizontal overflow.
+
+The redesign is approximately 55% complete. The next stage is to simplify the
+primary navigation and finish the remaining high-value prototype interactions
+before freezing the page contracts for read-only API integration.
 
 This redesign does not expand Atlas's financial authority. Real brokerage
 execution remains disabled.

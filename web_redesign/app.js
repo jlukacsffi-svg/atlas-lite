@@ -57,6 +57,7 @@ const money = (value, decimals = 0) => new Intl.NumberFormat("en-US", { style: "
 const percent = (value, decimals = 1) => `${Number(value).toFixed(decimals)}%`;
 const actionClass = (action) => action === "Buy" ? "buy" : action === "Exit" || action === "Trim" ? "sell" : "watch";
 const researchUrl = (ticker, tab = "overview") => `#research/${ticker}/${tab}`;
+const decisionUrl = (ticker, step = "impact") => `#decision/${ticker}/${step}`;
 
 function portfolioSnapshot() {
   const positions = paperAccount.positions.map(position => {
@@ -82,6 +83,57 @@ function portfolioSnapshot() {
 
 function positionFor(ticker) {
   return portfolioSnapshot().positions.find(position => position.ticker === ticker);
+}
+
+function decisionPreview(item) {
+  const portfolio = portfolioSnapshot();
+  const position = portfolio.positions.find(candidate => candidate.ticker === item.ticker);
+  const currentValue = position?.marketValue || 0;
+  const targetValue = portfolio.totalValue * item.targetWeight / 100;
+  let side = "None";
+  let shares = 0;
+
+  if (item.action === "Buy" && targetValue > currentValue) {
+    side = "Buy";
+    shares = Math.floor((targetValue - currentValue) / item.price);
+  } else if (item.action === "Trim" && currentValue > targetValue) {
+    side = "Sell";
+    shares = Math.min(position?.shares || 0, Math.ceil((currentValue - targetValue) / item.price));
+  } else if (item.action === "Exit" && position) {
+    side = "Sell";
+    shares = position.shares;
+  }
+
+  const estimatedValue = shares * item.price;
+  const projectedPositionValue = side === "Buy" ? currentValue + estimatedValue : side === "Sell" ? Math.max(0, currentValue - estimatedValue) : currentValue;
+  const projectedCash = side === "Buy" ? paperAccount.cash - estimatedValue : side === "Sell" ? paperAccount.cash + estimatedValue : paperAccount.cash;
+  const projectedWeight = projectedPositionValue / portfolio.totalValue * 100;
+  const projectedCashWeight = projectedCash / portfolio.totalValue * 100;
+  const instruction = side === "Buy" ? `Buy ${shares} simulated shares` : side === "Sell" && item.action === "Exit" ? `Exit ${shares} simulated shares` : side === "Sell" ? `Trim ${shares} simulated shares` : "No simulated transaction proposed";
+
+  return {
+    item,
+    portfolio,
+    position,
+    side,
+    shares,
+    estimatedValue,
+    currentValue,
+    currentWeight: currentValue / portfolio.totalValue * 100,
+    projectedPositionValue,
+    projectedCash,
+    projectedWeight,
+    projectedCashWeight,
+    instruction,
+    actionable: shares > 0,
+    checks: [
+      { label: "Paper authority only", detail: "The design contains no brokerage connection or real-order path.", passed: true },
+      { label: "Recommendation is actionable", detail: shares > 0 ? `${item.action} produces a non-zero simulated share estimate.` : `${item.action} does not require a transaction at this sample price.`, passed: shares > 0 },
+      { label: "Minimum cash reserve", detail: `${percent(projectedCashWeight)} projected cash versus a 20% minimum.`, passed: projectedCashWeight >= 20 },
+      { label: "Maximum position size", detail: `${percent(projectedWeight)} projected weight versus a 15% limit.`, passed: projectedWeight <= 15 },
+      { label: "Fresh server validation", detail: "Required when this screen is connected to Atlas. Not available in the static prototype.", passed: false, blocked: true }
+    ]
+  };
 }
 
 function dataStatus() {
@@ -168,7 +220,7 @@ function researchOverview(item) {
   const positionSummary = position
     ? `${position.shares} simulated shares · ${percent(position.marketValue / portfolio.totalValue * 100)} current weight · ${percent(item.targetWeight)} target`
     : `Not currently owned · proposed paper weight ${percent(item.targetWeight)}`;
-  return `<section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Atlas investment thesis</h2><p>Current view and the evidence that could change it</p></div><span class="tag ${actionClass(item.action)}">${item.conviction} confidence</span></div><div class="panel-body"><h3 class="research-thesis">${item.thesisTitle}</h3><p class="research-copy">${item.thesis}</p><div class="grid cols-3"><div class="callout"><strong>Why now</strong>${item.whyNow}</div><div class="callout"><strong>Primary catalyst</strong>${item.catalyst}</div><div class="callout risk"><strong>Invalidation trigger</strong>${item.invalidation}</div></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Decision context</h2><p>How the view relates to this paper portfolio</p></div></div><div class="panel-body decision-context"><div><span>Atlas action</span><strong class="tag ${actionClass(item.action)}">${item.action}</strong></div><div><span>Position</span><strong>${positionSummary}</strong></div><div><span>Preferred range</span><strong>${item.preferredRange}</strong></div><div><span>Key risk</span><strong>${item.risk}</strong></div><small>Prototype recommendation only. No order can be placed from this site.</small></div></article></section><div class="spacer"></div>
+  return `<section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Atlas investment thesis</h2><p>Current view and the evidence that could change it</p></div><span class="tag ${actionClass(item.action)}">${item.conviction} confidence</span></div><div class="panel-body"><h3 class="research-thesis">${item.thesisTitle}</h3><p class="research-copy">${item.thesis}</p><div class="grid cols-3"><div class="callout"><strong>Why now</strong>${item.whyNow}</div><div class="callout"><strong>Primary catalyst</strong>${item.catalyst}</div><div class="callout risk"><strong>Invalidation trigger</strong>${item.invalidation}</div></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Decision context</h2><p>How the view relates to this paper portfolio</p></div></div><div class="panel-body decision-context"><div><span>Atlas action</span><strong class="tag ${actionClass(item.action)}">${item.action}</strong></div><div><span>Position</span><strong>${positionSummary}</strong></div><div><span>Preferred range</span><strong>${item.preferredRange}</strong></div><div><span>Key risk</span><strong>${item.risk}</strong></div><button class="button primary" data-decision="${item.ticker}">${icon("clipboard-check")} Preview paper plan</button><small>Preview only. The static site cannot submit a paper or real order.</small></div></article></section><div class="spacer"></div>
     <section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Price context</h2><p>Illustrative one-year series through the sample close</p></div><div class="segment-control"><button disabled>1M</button><button disabled>3M</button><button class="active">1Y</button><button disabled>5Y</button></div></div><div class="chart-wrap"><canvas id="security-chart"></canvas><div class="chart-legend"><span><i class="legend-dot"></i>${item.ticker} +${item.return1y.toFixed(1)}%</span><span><i class="legend-dot spy"></i>SPY +16.2%</span></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Atlas Score</h2><p>0-100 composite · higher indicates stronger evidence</p></div></div><div class="panel-body score-breakdown"><div class="score-large"><strong>${item.score}</strong></div><div class="score-bars">${Object.entries(item.scores).map(([label, value]) => `<div class="allocation-row"><span>${label}</span><div class="bar ${label === "Risk" ? "gold" : ""}"><span style="width:${value}%"></span></div><b>${value}</b></div>`).join("")}</div></div><div class="score-note"><strong>How to read this</strong>Growth 40%, Quality 20%, Moat 15%, Momentum 15%, and Risk 10%. Risk is scored higher when the risk profile is stronger.</div></article></section>`;
 }
 
@@ -192,6 +244,38 @@ function renderResearch(ticker = "NVDA", activeTab = "overview") {
   drawPerformanceChart("security-chart", true);
 }
 
+function decisionStepper(item, activeStep) {
+  const steps = [["evidence", "Evidence"], ["impact", "Portfolio impact"], ["policy", "Policy checks"], ["confirm", "Confirmation"]];
+  const activeIndex = steps.findIndex(([key]) => key === activeStep);
+  return `<nav class="workflow-steps" aria-label="Paper decision preview progress">${steps.map(([key, label], index) => `<button class="workflow-step ${key === activeStep ? "active" : ""} ${index < activeIndex ? "complete" : ""}" ${key === "evidence" ? `data-security="${item.ticker}"` : `data-decision-step="${key}" data-ticker="${item.ticker}"`}><span>${index < activeIndex ? icon("check") : index + 1}</span><b>${label}</b></button>`).join("")}</nav>`;
+}
+
+function decisionStage(preview, activeStep) {
+  const { item } = preview;
+  if (activeStep === "policy") {
+    return `<article class="panel decision-stage"><div class="panel-heading"><div><h2>Paper-policy checks</h2><p>What Atlas must validate again on the authorized server</p></div><span class="tag risk">1 server gate</span></div><div class="panel-body policy-checks">${preview.checks.map(check => `<div class="policy-check"><span class="list-icon ${check.blocked ? "warning" : check.passed ? "positive" : "negative"}">${icon(check.blocked ? "server-cog" : check.passed ? "check" : "x")}</span><div><b>${check.label}</b><small>${check.detail}</small></div><span class="tag ${check.blocked ? "risk" : check.passed ? "buy" : "sell"}">${check.blocked ? "Server required" : check.passed ? "Clear" : "Blocked"}</span></div>`).join("")}</div><div class="decision-footer"><button class="button" data-decision-step="impact" data-ticker="${item.ticker}">${icon("arrow-left")} Back</button><button class="button primary" data-decision-step="confirm" data-ticker="${item.ticker}">Review boundary ${icon("arrow-right")}</button></div></article>`;
+  }
+  if (activeStep === "confirm") {
+    return `<article class="panel decision-stage"><div class="panel-heading"><div><h2>Confirmation boundary</h2><p>The design stops before any authorized account change</p></div><span class="tag risk">Locked</span></div><div class="panel-body"><div class="authority-boundary"><span class="boundary-icon">${icon("shield-alert")}</span><div><p class="eyebrow">No transaction will be created</p><h3>The static prototype cannot submit this paper decision.</h3><p>The production workflow must refresh prices, rerun risk checks, verify the signed-in owner and CSRF token, require the exact simulation confirmation, and append the result to the audit ledger.</p></div></div><div class="confirmation-actions"><button class="button" data-decision-step="policy" data-ticker="${item.ticker}">${icon("arrow-left")} Back to checks</button><button class="button" data-acknowledge-preview="${item.ticker}">${icon("check-circle-2")} Acknowledge preview only</button><button class="button primary" disabled title="Requires authorized Atlas server integration">Submit paper decision</button></div><p class="decision-note">Acknowledging saves only a temporary browser note so you can inspect the proposed Activity experience. It is not a paper fill, owner approval, or audit event.</p></div></article>`;
+  }
+  return `<article class="panel decision-stage"><div class="panel-heading"><div><h2>Projected paper impact</h2><p>Calculated from the illustrative account at the sample close</p></div><span class="tag ${actionClass(item.action)}">${item.action}</span></div><div class="panel-body"><div class="projection-summary"><span class="ticker-logo">${item.ticker.slice(0, 2)}</span><div><p class="eyebrow">Proposed instruction</p><h3>${preview.instruction}</h3><p>${preview.actionable ? `Estimated at ${money(item.price, 2)} per share before simulated costs.` : "The current recommendation calls for monitoring rather than a transaction."}</p></div></div><div class="projection-grid"><div><span>Position value</span><strong>${money(preview.currentValue)} → ${money(preview.projectedPositionValue)}</strong></div><div><span>Portfolio weight</span><strong>${percent(preview.currentWeight)} → ${percent(preview.projectedWeight)}</strong></div><div><span>Available cash</span><strong>${money(paperAccount.cash)} → ${money(preview.projectedCash)}</strong></div><div><span>Cash reserve</span><strong>${percent(preview.portfolio.cashWeight)} → ${percent(preview.projectedCashWeight)}</strong></div></div><div class="callout"><strong>Why Atlas proposed this</strong>${item.whyNow}</div><div class="callout risk"><strong>What would invalidate it</strong>${item.invalidation}</div></div><div class="decision-footer"><button class="button" data-security="${item.ticker}">${icon("arrow-left")} Back to evidence</button><button class="button primary" data-decision-step="policy" data-ticker="${item.ticker}" ${preview.actionable ? "" : "disabled"}>Check paper policy ${icon("arrow-right")}</button></div></article>`;
+}
+
+function renderDecision(ticker = "NVDA", activeStep = "impact") {
+  const item = securities.find(row => row.ticker === ticker) || securities[0];
+  if (activeStep === "evidence") {
+    location.hash = researchUrl(item.ticker);
+    return;
+  }
+  const allowedSteps = new Set(["impact", "policy", "confirm"]);
+  const step = allowedSteps.has(activeStep) ? activeStep : "impact";
+  const preview = decisionPreview(item);
+  pageContent.innerHTML = pageHeading("Paper decision workflow", `${item.ticker} decision preview`, "Understand the proposed action and its portfolio effect before any authorized submission.", `<button class="button" data-security="${item.ticker}">${icon("file-search")} Research evidence</button>`)
+    + decisionStepper(item, step)
+    + `<section class="grid two-one">${decisionStage(preview, step)}<aside class="panel order-ticket"><div class="panel-heading"><div><h2>Preview ticket</h2><p>Illustrative estimate only</p></div></div><div class="panel-body decision-context"><div><span>Account</span><strong>Atlas Paper Portfolio</strong></div><div><span>Instruction</span><strong>${preview.instruction}</strong></div><div><span>Estimated value</span><strong>${money(preview.estimatedValue)}</strong></div><div><span>Sample price</span><strong>${money(item.price, 2)}</strong></div><div><span>Target weight</span><strong>${percent(item.targetWeight)}</strong></div><div><span>Authority</span><strong class="tag risk">Preview only</strong></div><small>No broker is connected. No paper ledger write occurs from this prototype.</small></div></aside></section>`;
+  initializePage();
+}
+
 function renderPortfolio() {
   const portfolio = portfolioSnapshot();
   const totalReturn = (portfolio.totalValue / paperAccount.startingValue - 1) * 100;
@@ -211,7 +295,11 @@ function renderPortfolio() {
 }
 
 function renderActivity() {
+  let previewReview = null;
+  try { previewReview = JSON.parse(sessionStorage.getItem("atlasPreviewReview") || "null"); } catch { previewReview = null; }
+  const previewNotice = previewReview ? `<section class="preview-activity"><span class="list-icon neutral">${icon("clipboard-check")}</span><div><p class="eyebrow">Browser-only preview</p><h2>${previewReview.ticker} paper plan reviewed</h2><p>${previewReview.instruction}. This temporary note demonstrates the Activity flow; no paper transaction, owner approval, or audit record was created.</p></div><button class="button" data-decision="${previewReview.ticker}">Reopen preview</button></section><div class="spacer"></div>` : "";
   pageContent.innerHTML = pageHeading("Decision history", "Activity", "A complete record of Atlas recommendations, owner decisions, and simulated transactions.", `<button class="button">${icon("sliders-horizontal")} Filter</button><button class="button">${icon("download")} Export audit log</button>`)
+    + previewNotice
     + `<section class="grid cols-4"><article class="panel metric"><small>Recommendations</small><strong>67</strong><span>Current policy period</span></article><article class="panel metric"><small>Simulated buys</small><strong>21</strong><span class="positive">57% judged working</span></article><article class="panel metric"><small>Simulated sells</small><strong>14</strong><span class="positive">+0.8% avg decision edge</span></article><article class="panel metric"><small>Open decisions</small><strong>2</strong><span class="warning">Owner review requested</span></article></section><div class="spacer"></div>
     <section class="panel"><div class="tabs"><button class="active">All activity</button><button>Recommendations</button><button>Transactions</button><button>Owner decisions</button><button>Policy changes</button></div><div class="filter-bar"><select><option>Last 30 days</option><option>Last 90 days</option><option>All history</option></select><input type="search" placeholder="Filter by ticker"><span class="filter-count">12 recent events</span></div><div class="panel-body timeline">
       <div class="timeline-item"><b>Atlas recommended a simulated NVDA purchase</b><small>Today, 7:05 AM · 5.0% target weight · Score 94 · Awaiting entry condition</small></div>
@@ -250,6 +338,14 @@ function initializePage() {
   if (window.lucide) lucide.createIcons();
   pageContent.querySelectorAll("[data-go]").forEach(button => button.addEventListener("click", () => { location.hash = button.dataset.go; }));
   pageContent.querySelectorAll("[data-security]").forEach(button => button.addEventListener("click", () => { location.hash = researchUrl(button.dataset.security); }));
+  pageContent.querySelectorAll("[data-decision]").forEach(button => button.addEventListener("click", () => { location.hash = decisionUrl(button.dataset.decision); }));
+  pageContent.querySelectorAll("[data-decision-step]").forEach(button => button.addEventListener("click", () => { location.hash = decisionUrl(button.dataset.ticker, button.dataset.decisionStep); }));
+  pageContent.querySelectorAll("[data-acknowledge-preview]").forEach(button => button.addEventListener("click", () => {
+    const item = securities.find(row => row.ticker === button.dataset.acknowledgePreview) || securities[0];
+    const preview = decisionPreview(item);
+    sessionStorage.setItem("atlasPreviewReview", JSON.stringify({ ticker: item.ticker, instruction: preview.instruction }));
+    location.hash = "activity";
+  }));
   pageContent.querySelectorAll("[data-research-tab]").forEach(button => button.addEventListener("click", () => { location.hash = researchUrl(button.dataset.ticker, button.dataset.researchTab); }));
   pageContent.querySelectorAll("[data-watch]").forEach(button => button.addEventListener("click", () => showToast(`${button.dataset.watch} added to your prototype watchlist.`)));
   pageContent.querySelectorAll(".segment-control button:not([disabled])").forEach(button => button.addEventListener("click", () => { button.parentElement.querySelectorAll("button").forEach(item => item.classList.remove("active")); button.classList.add("active"); showToast(`View changed to ${button.textContent.trim()}.`); }));
@@ -306,12 +402,14 @@ function drawPerformanceChart(id, security = false) {
 
 function route() {
   const [name = "today", ticker = "NVDA", activeTab = "overview"] = (location.hash.replace("#", "") || "today").split("/");
-  document.querySelectorAll(".nav-link").forEach(link => link.classList.toggle("active", link.dataset.route === name));
+  const activeNavigation = name === "decision" ? "research" : name;
+  document.querySelectorAll(".nav-link").forEach(link => link.classList.toggle("active", link.dataset.route === activeNavigation));
   document.querySelector(".sidebar").classList.remove("open");
   const routes = {
     today: renderToday,
     discover: renderDiscover,
     research: () => renderResearch(ticker.toUpperCase(), activeTab),
+    decision: () => renderDecision(ticker.toUpperCase(), activeTab),
     portfolio: renderPortfolio,
     activity: renderActivity,
     reports: renderReports,

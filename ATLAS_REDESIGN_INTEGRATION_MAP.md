@@ -35,6 +35,11 @@ one very large dashboard response:
 - `GET /api/v2/alerts`
 - `GET /api/v2/preferences`
 
+The prototype also defines a contextual paper-decision preview that should be
+fed by a fresh, server-calculated endpoint before writes are enabled:
+
+- `POST /api/v2/paper-decisions/preview`
+
 Later authenticated writes should be narrow and separately authorized:
 
 - Watchlist membership
@@ -42,6 +47,11 @@ Later authenticated writes should be narrow and separately authorized:
 - Report delivery requests
 - Owner paper decisions
 - Paper operating-mode and policy changes
+
+The future submit endpoint must retain the existing exact simulation
+confirmation, signed owner session, CSRF, risk review, idempotency, and
+append-only audit requirements. Browser calculations are display-only and
+must never authorize or construct the final server order.
 
 No brokerage or real-money endpoint is part of this redesign phase.
 
@@ -58,6 +68,8 @@ Implemented now:
 - Report archive and reader
 - Alert inbox and preference controls
 - Account, paper mode, security, privacy, and integration settings
+- Recommendation-to-paper-preview flow with calculated buy, trim, and exit
+  impact, policy status, and a locked server confirmation boundary
 
 Prototype-only interactions are visibly labeled. They do not write to Atlas,
 create a paper fill, send email, or change cloud state.
