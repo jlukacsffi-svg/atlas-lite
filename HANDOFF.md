@@ -22,6 +22,11 @@ accents, warm gold context, cool white surfaces, and a charcoal-blue sidebar.
 Semantic green and red remain available for gains and losses without dominating
 the overall interface.
 
+The second color pass extends that system with lavender, aqua, peach, mint,
+sunshine, and rose accents across workflow icons, summary cards, company
+identities, events, and alerts. The layout and authority boundaries are
+unchanged.
+
 The prototype uses clearly labeled sample data and cannot place a real or paper
 order, send a notification, or change cloud state. The existing Atlas engine
 and owner-only staging site continue operating normally.

@@ -58,6 +58,9 @@ The current production dashboard remains intact during this work.
 - Cool white surfaces and a charcoal-blue sidebar keep the workspace calm,
   readable, and professional without repeating the previous green-heavy Atlas
   theme.
+- Lavender, aqua, peach, mint, sunshine, and rose accents distinguish summary
+  cards, workflows, security identities, events, and alerts without changing
+  the meaning of financial gain/loss colors.
 
 ## Feature Inventory
 
