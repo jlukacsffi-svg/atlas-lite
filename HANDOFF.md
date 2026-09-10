@@ -2936,3 +2936,28 @@ Next redesign focus:
 - Connect Today and Ideas to real read-only Atlas APIs with clear loading,
   empty, stale, and error states. Preserve static fixtures as an explicit
   development fallback, never as silent production data.
+
+## September 9, 2026 - First Real-Data Redesign Integration
+
+- `GET /api/v2/today` and `GET /api/v2/ideas` expose narrow, read-only page
+  models backed by the latest research archive and paper ledger.
+- `run_redesign.py` serves the redesign and APIs together at
+  `http://127.0.0.1:8771/`.
+- Today now shows the real paper account, benchmark comparison, decision queue,
+  research priorities, and position-review signals from the latest cycle.
+- Ideas now shows all 140 covered securities with real prices, daily changes,
+  scores, drivers, risks, ownership, and conservative research statuses.
+- Fresh, stale, empty, loading, and API-failure behavior is explicit. The
+  static fixture fallback is visibly identified and cannot be confused with
+  Atlas records.
+- Detailed research and Portfolio remain visibly marked as prototype pages
+  until their dedicated read-only contracts are connected.
+- Browser scripts are self-hosted; the local redesign server remains
+  read-only and keeps `script-src 'self'` in its CSP.
+- The redesign is approximately 70% complete. The paper-only Stage 5 engine
+  remains approximately 95% complete.
+
+Next redesign focus:
+
+- Connect security-detail Research and Portfolio to dedicated read-only APIs,
+  then connect the report archive. Do not enable paper writes yet.

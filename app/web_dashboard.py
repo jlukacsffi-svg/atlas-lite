@@ -36,6 +36,7 @@ STATIC_FILES = {
     "/index.html": ("index.html", "text/html; charset=utf-8"),
     "/styles.css": ("styles.css", "text/css; charset=utf-8"),
     "/app.js": ("app.js", "text/javascript; charset=utf-8"),
+    "/lucide.min.js": ("lucide.min.js", "text/javascript; charset=utf-8"),
 }
 
 
@@ -96,6 +97,137 @@ class DashboardDataService:
             "reports": self._reports(),
             "history": self._history(),
             "workspace": self._workspace(),
+        }
+
+    def build_ideas_page(self, snapshot=None):
+        """Build the narrow read model used by the redesigned Ideas page."""
+        snapshot = snapshot or self._latest_snapshot()
+        securities = snapshot.get("securities", {})
+        available = {
+            ticker: data
+            for ticker, data in securities.items()
+            if data.get("status") == "available"
+        }
+        paper = self._paper(available, include_details=True)
+        positions = {
+            item.get("ticker"): item
+            for item in paper.get("positions", [])
+            if item.get("ticker")
+        }
+        ideas = []
+        for item in self._watchlist(available):
+            ticker = item.get("ticker")
+            quote = available.get(ticker, {})
+            position = positions.get(ticker)
+            verdict = ((position or {}).get("review") or {}).get("verdict")
+            if position:
+                recommendation = "Review" if verdict == "review" else "Hold"
+            elif float(item.get("score") or 0) >= 80:
+                recommendation = "Research"
+            else:
+                recommendation = "Monitor"
+            ideas.append(
+                {
+                    **item,
+                    "price": quote.get("price"),
+                    "recommendation": recommendation,
+                    "confidence": self._score_confidence(item.get("score")),
+                    "owned": bool(position),
+                    "position_weight_pct": (
+                        float(position.get("market_value") or 0)
+                        / float(paper.get("equity"))
+                        * 100
+                        if position and paper.get("equity")
+                        else 0.0
+                    ),
+                }
+            )
+        ideas.sort(key=lambda item: float(item.get("score") or 0), reverse=True)
+        return {
+            "data_status": self._page_data_status(snapshot),
+            "summary": {
+                "covered": len(ideas),
+                "research_priorities": sum(
+                    item["recommendation"] == "Research" for item in ideas
+                ),
+                "current_holdings": sum(item["owned"] for item in ideas),
+                "needs_review": sum(
+                    item["recommendation"] == "Review" for item in ideas
+                ),
+            },
+            "ideas": ideas,
+        }
+
+    def build_today_page(self):
+        """Build the narrow read model used by the redesigned Today page."""
+        snapshot = self._latest_snapshot()
+        ideas_page = self.build_ideas_page(snapshot=snapshot)
+        available = {
+            ticker: data
+            for ticker, data in snapshot.get("securities", {}).items()
+            if data.get("status") == "available"
+        }
+        paper = self._paper(available, include_details=True)
+        review_positions = [
+            item
+            for item in paper.get("positions", [])
+            if ((item.get("review") or {}).get("verdict") == "review")
+        ]
+        return {
+            "data_status": ideas_page["data_status"],
+            "market": self._market(snapshot.get("market_summary", {})),
+            "portfolio": {
+                "name": paper.get("name"),
+                "configured": bool(paper.get("configured")),
+                "equity": paper.get("equity"),
+                "cash": paper.get("cash"),
+                "market_value": paper.get("market_value"),
+                "total_return_pct": paper.get("total_return_pct"),
+                "excess_return_pct": paper.get("excess_return_pct") or {},
+                "positions": paper.get("positions") or [],
+                "operating_mode": paper.get("operating_mode") or {},
+            },
+            "decision_queue": {
+                "pending": int((paper.get("proposals") or {}).get("pending") or 0),
+                "review_positions": len(review_positions),
+            },
+            "research_leader": (ideas_page["ideas"] or [None])[0],
+            "priorities": ideas_page["ideas"][:8],
+            "risks": [
+                {
+                    "ticker": item.get("ticker"),
+                    "summary": ((item.get("thesis_status") or {}).get("summary")),
+                }
+                for item in review_positions[:5]
+            ],
+        }
+
+    @staticmethod
+    def _score_confidence(score):
+        value = float(score or 0)
+        if value >= 85:
+            return "High"
+        if value >= 70:
+            return "Medium"
+        return "Low"
+
+    @staticmethod
+    def _page_data_status(snapshot):
+        generated_at = snapshot.get("generated_at")
+        state = "unknown"
+        if generated_at:
+            try:
+                generated = datetime.fromisoformat(str(generated_at))
+                age_hours = max(0, (datetime.now() - generated).total_seconds() / 3600)
+                state = "fresh" if age_hours <= 36 else "stale"
+            except (TypeError, ValueError):
+                state = "unknown"
+        return {
+            "as_of": generated_at,
+            "session": "latest completed Atlas research cycle",
+            "source": "Atlas research archive and paper ledger",
+            "is_live": bool(generated_at),
+            "state": state,
         }
 
     def build_verification(self):
@@ -1985,12 +2117,19 @@ class DashboardDataService:
 def create_handler(data_service=None, web_dir=WEB_DIR):
     service = data_service or DashboardDataService()
     static_root = Path(web_dir)
+    redesign_styles = " 'unsafe-inline'" if static_root.name == "web_redesign" else ""
 
     class DashboardHandler(BaseHTTPRequestHandler):
         server_version = "AtlasDashboard/1.0"
 
         def do_GET(self):
             path = urlparse(self.path).path
+            if path == "/api/v2/today":
+                self._send_json(service.build_today_page())
+                return
+            if path == "/api/v2/ideas":
+                self._send_json(service.build_ideas_page())
+                return
             if path == "/api/dashboard/summary":
                 self._send_json(service.build_summary())
                 return
@@ -2013,7 +2152,7 @@ def create_handler(data_service=None, web_dir=WEB_DIR):
             self.send_header("Cache-Control", "no-store")
             self.send_header(
                 "Content-Security-Policy",
-                "default-src 'self'; script-src 'self'; style-src 'self'; "
+                f"default-src 'self'; script-src 'self'; style-src 'self'{redesign_styles}; "
                 "img-src 'self' data:; connect-src 'self'; frame-ancestors 'none'",
             )
             super().end_headers()
@@ -2044,8 +2183,11 @@ def create_handler(data_service=None, web_dir=WEB_DIR):
     return DashboardHandler
 
 
-def run_server(host="127.0.0.1", port=8765):
-    server = ThreadingHTTPServer((host, int(port)), create_handler())
+def run_server(host="127.0.0.1", port=8765, web_dir=WEB_DIR):
+    server = ThreadingHTTPServer(
+        (host, int(port)),
+        create_handler(web_dir=web_dir),
+    )
     print(f"[web] Atlas owner dashboard: http://{host}:{port}")
     print("[web] Read-only local server. Press Ctrl+C to stop.")
     try:

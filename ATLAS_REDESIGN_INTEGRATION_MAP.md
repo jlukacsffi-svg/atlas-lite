@@ -35,6 +35,15 @@ one very large dashboard response:
 - `GET /api/v2/alerts`
 - `GET /api/v2/preferences`
 
+Implemented read-only endpoints:
+
+- `GET /api/v2/today`
+- `GET /api/v2/ideas`
+
+These endpoints are backed by the existing research archive and paper ledger.
+The redesigned browser loads both before rendering and exposes failures,
+staleness, and empty results rather than manufacturing replacement data.
+
 The prototype also defines a contextual paper-decision preview that should be
 fed by a fresh, server-calculated endpoint before writes are enabled:
 
@@ -96,6 +105,9 @@ Implemented now:
 - Account, paper mode, security, privacy, and integration settings
 - Recommendation-to-paper-preview flow with calculated buy, trim, and exit
   impact, policy status, and a locked server confirmation boundary
+- Real read-only Today and Ideas integration with server-derived freshness,
+  research-status semantics, paper-account reconciliation, and explicit
+  development fallback behavior
 
 Prototype-only interactions are visibly labeled. They do not write to Atlas,
 create a paper fill, send email, or change cloud state.

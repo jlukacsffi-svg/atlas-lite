@@ -195,9 +195,24 @@ The primary workflow and read-only page contracts are now frozen:
 - Page contracts define common freshness semantics and the required response
   groups for each investor-facing surface.
 
-The redesign is approximately 62% complete. The next stage is to connect the
-Today and Ideas pages to real read-only Atlas APIs behind explicit loading,
-empty, stale, and error states.
+The first real-data integration is complete:
+
+- Today and Ideas load narrow read-only page models from the existing Atlas
+  research archive and paper ledger.
+- Atlas distinguishes research priority, hold, review, and monitor states; a
+  high score is never presented as an automatic purchase instruction.
+- Fresh and stale snapshots are labeled from the server timestamp.
+- Loading, empty, and API-failure states are explicit. API failure uses a
+  prominently labeled development fixture fallback rather than silently
+  presenting sample values as Atlas records.
+- Live summary research pages show only fields supplied by the connected API;
+  unsupported detailed tabs and paper preview controls remain disabled.
+- Lucide is self-hosted under its ISC license, so the read-only server keeps a
+  self-only script policy without relying on a third-party runtime CDN.
+
+The redesign is approximately 70% complete. The next stage is to connect
+security-detail research and Portfolio to dedicated read-only APIs, followed
+by Reports. Paper decision writes remain deferred.
 
 This redesign does not expand Atlas's financial authority. Real brokerage
 execution remains disabled.

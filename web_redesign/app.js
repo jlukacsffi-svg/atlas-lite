@@ -1,11 +1,11 @@
-const prototypeSnapshot = {
+let prototypeSnapshot = {
   label: "Illustrative sample snapshot",
   asOf: "August 28, 2026 at 4:00 PM PT",
   session: "Friday market close",
   source: "Design fixtures, not a live market feed"
 };
 
-const securities = [
+let securities = [
   { ticker: "NVDA", name: "NVIDIA", sector: "Semiconductors", exchange: "NASDAQ", score: 94, price: 182.74, move: 2.8, action: "Buy", conviction: "High", catalyst: "Blackwell demand", risk: "Premium valuation", targetWeight: 5, preferredRange: "$176-$184", thesisTitle: "AI infrastructure leadership remains durable.", thesis: "NVIDIA combines category leadership, expanding software economics, and strong balance-sheet quality. Improving semiconductor breadth supports the setup, while valuation keeps the proposed paper position deliberately limited.", whyNow: "Price is inside the preferred range and estimate revisions remain constructive.", invalidation: "Hyperscaler capital spending slows materially or gross margins deteriorate for two consecutive reviews.", scores: { Growth: 97, Quality: 93, Moat: 96, Momentum: 89, Risk: 76 }, growth: { Revenue: "+42%", EPS: "+51%", FCF: "+36%" }, valuation: [["Forward P/E", "36.4x", "5-year range 24x-72x"], ["EV / Sales", "18.2x", "Peer median 12.8x"], ["FCF yield", "2.1%", "5-year median 2.4%"]], return1y: 34.7, evidence: ["Large cloud buyer expanded accelerator orders", "Consensus EPS estimate increased 2.3%", "Latest filing evidence incorporated"] },
   { ticker: "MSFT", name: "Microsoft", sector: "Software", exchange: "NASDAQ", score: 91, price: 536.12, move: 0.9, action: "Buy", conviction: "High", catalyst: "Azure AI growth", risk: "AI capex intensity", targetWeight: 14, preferredRange: "$515-$540", thesisTitle: "Cloud distribution strengthens the AI platform advantage.", thesis: "Microsoft pairs durable enterprise distribution with accelerating Azure AI demand and recurring software cash flow. The paper portfolio already owns the company, so Atlas favors measured additions rather than a new full position.", whyNow: "Azure growth and forward estimates improved while price remains near the preferred accumulation range.", invalidation: "AI infrastructure spending rises without corresponding cloud revenue or margin improvement.", scores: { Growth: 91, Quality: 96, Moat: 95, Momentum: 86, Risk: 78 }, growth: { Revenue: "+16%", EPS: "+18%", FCF: "+14%" }, valuation: [["Forward P/E", "32.8x", "5-year range 24x-38x"], ["EV / Sales", "12.1x", "Peer median 9.6x"], ["FCF yield", "2.7%", "5-year median 3.1%"]], return1y: 22.4, evidence: ["Azure AI consumption remained above plan", "Commercial bookings estimates moved higher", "Cloud margin guidance was maintained"] },
   { ticker: "AVGO", name: "Broadcom", sector: "Semiconductors", exchange: "NASDAQ", score: 89, price: 316.84, move: 1.7, action: "Watch", conviction: "Medium", catalyst: "Custom accelerator demand", risk: "Integration execution", targetWeight: 13, preferredRange: "$292-$305", thesisTitle: "Custom silicon demand broadens semiconductor exposure.", thesis: "Broadcom offers differentiated exposure to custom AI accelerators, networking, and infrastructure software. Atlas is constructive, but the paper position is already near its target and the sample price is above the preferred range.", whyNow: "Customer demand remains strong, but current price is above the preferred range.", invalidation: "Custom accelerator growth slows or infrastructure software integration misses cash-flow targets.", scores: { Growth: 92, Quality: 88, Moat: 91, Momentum: 87, Risk: 72 }, growth: { Revenue: "+24%", EPS: "+19%", FCF: "+21%" }, valuation: [["Forward P/E", "31.6x", "5-year range 16x-33x"], ["EV / Sales", "17.4x", "Peer median 12.8x"], ["FCF yield", "2.5%", "5-year median 3.4%"]], return1y: 41.2, evidence: ["Custom accelerator pipeline expanded", "Networking demand remained firm", "Integration savings tracked ahead of plan"] },
@@ -16,7 +16,7 @@ const securities = [
   { ticker: "META", name: "Meta Platforms", sector: "Communication", exchange: "NASDAQ", score: 74, price: 681.32, move: -3.6, action: "Exit", conviction: "High", catalyst: "Ad efficiency", risk: "Capital spending", targetWeight: 0, preferredRange: "No active entry range", thesisTitle: "Risk controls now outweigh the advertising thesis.", thesis: "Meta's advertising engine remains productive, but weakening estimate momentum and rising capital intensity triggered the current paper exit rule. Atlas prioritizes process discipline over waiting for a rebound.", whyNow: "The position breached the paper risk threshold after three consecutive weak observations.", invalidation: "Estimate momentum recovers and capital-spending returns become measurable enough to rebuild the score.", scores: { Growth: 82, Quality: 89, Moat: 90, Momentum: 49, Risk: 48 }, growth: { Revenue: "+14%", EPS: "+11%", FCF: "+7%" }, valuation: [["Forward P/E", "24.7x", "5-year range 14x-29x"], ["EV / Sales", "8.6x", "Peer median 6.9x"], ["FCF yield", "3.0%", "5-year median 3.8%"]], return1y: 11.7, evidence: ["Estimate momentum weakened again", "Capital-spending expectations increased", "Relative strength breached the risk threshold"] }
 ];
 
-const paperAccount = {
+let paperAccount = {
   cash: 31460,
   startingValue: 100000,
   positions: [
@@ -31,6 +31,11 @@ const paperAccount = {
 
 const heldTickers = new Set(paperAccount.positions.map(position => position.ticker));
 securities.forEach(item => { item.owned = heldTickers.has(item.ticker); });
+
+let integrationState = { mode: "loading", message: "Connecting to Atlas read-only data..." };
+let ideasSummary = null;
+let todayPage = null;
+let currentRouteName = "today";
 
 const alerts = [
   { severity: "High", title: "META breached Atlas risk threshold", detail: "Relative strength and estimate momentum weakened for a third observation.", time: "18 min ago", icon: "triangle-alert" },
@@ -55,7 +60,7 @@ const icon = (name) => `<i data-lucide="${name}"></i>`;
 const signed = (value) => `${Number(value) >= 0 ? "+" : ""}${Number(value).toFixed(2)}%`;
 const money = (value, decimals = 0) => new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", minimumFractionDigits: decimals, maximumFractionDigits: decimals }).format(value);
 const percent = (value, decimals = 1) => `${Number(value).toFixed(decimals)}%`;
-const actionClass = (action) => action === "Buy" ? "buy" : action === "Exit" || action === "Trim" ? "sell" : "watch";
+const actionClass = (action) => action === "Buy" || action === "Research" ? "buy" : ["Exit", "Trim", "Review"].includes(action) ? "sell" : "watch";
 const researchUrl = (ticker, tab = "overview") => `#research/${ticker}/${tab}`;
 const decisionUrl = (ticker, step = "impact") => `#decision/${ticker}/${step}`;
 
@@ -137,7 +142,12 @@ function decisionPreview(item) {
 }
 
 function dataStatus() {
-  return `<div class="data-status" role="note">${icon("flask-conical")}<div><strong>${prototypeSnapshot.label}</strong><span>${prototypeSnapshot.asOf} · ${prototypeSnapshot.session} · ${prototypeSnapshot.source}</span></div></div>`;
+  const integrated = integrationState.mode === "live" && ["today", "ideas", "discover", "research"].includes(currentRouteName);
+  const statusClass = integrated && prototypeSnapshot.state !== "stale" ? "live" : integrationState.mode === "error" ? "error" : "";
+  const statusIcon = integrated ? "database" : integrationState.mode === "error" ? "triangle-alert" : "flask-conical";
+  const label = integrated ? prototypeSnapshot.label : integrationState.mode === "live" ? "Prototype page · live integration pending" : prototypeSnapshot.label;
+  const detail = integrated ? `${prototypeSnapshot.asOf} · ${prototypeSnapshot.session} · ${prototypeSnapshot.source}` : integrationState.mode === "live" ? "This page still uses clearly labeled design fixtures and does not write to Atlas." : `${prototypeSnapshot.asOf} · ${prototypeSnapshot.session} · ${prototypeSnapshot.source}`;
+  return `<div class="data-status ${statusClass}" role="status">${icon(statusIcon)}<div><strong>${label}</strong><span>${detail}</span></div></div>`;
 }
 const pageHeading = (eyebrow, title, detail, actions = "") => `
   ${dataStatus()}
@@ -160,16 +170,17 @@ function showToast(message) {
 
 function recommendationsTable(items = securities) {
   return `<div class="panel table-panel">
-    <div class="panel-heading"><div><h2>Atlas recommendations</h2><p>Ranked by conviction, evidence quality, and portfolio fit</p></div><button class="button" data-go="ideas">View all ${icon("arrow-right")}</button></div>
-    <table class="data-table"><thead><tr><th>Security</th><th>Action</th><th>Atlas Score</th><th>Price</th><th>Today</th><th>Primary catalyst</th><th>Position</th><th></th></tr></thead>
+    <div class="panel-heading"><div><h2>${integrationState.mode === "live" ? "Atlas research priorities" : "Atlas recommendations"}</h2><p>${integrationState.mode === "live" ? "Ranked research evidence; trade instructions require a separate paper proposal" : "Ranked by conviction, evidence quality, and portfolio fit"}</p></div><button class="button" data-go="ideas">View all ${icon("arrow-right")}</button></div>
+    <table class="data-table"><thead><tr><th>Security</th><th>${integrationState.mode === "live" ? "Research status" : "Action"}</th><th>Atlas Score</th><th>Price</th><th>Today</th><th>Primary catalyst</th><th>Position</th><th></th></tr></thead>
     <tbody>${items.map(item => `<tr>
       <td>${tickerCell(item)}</td><td><span class="tag ${actionClass(item.action)}">${item.action}</span></td><td><span class="score">${item.score}</span></td>
-      <td>$${item.price.toFixed(2)}</td><td class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)}</td><td>${item.catalyst}</td>
+      <td>${item.price == null ? "Unavailable" : money(item.price, 2)}</td><td class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)}</td><td>${item.catalyst}</td>
       <td>${item.owned ? "Current holding" : "Not owned"}</td><td><button class="icon-button" data-security="${item.ticker}" aria-label="Research ${item.ticker}">${icon("chevron-right")}</button></td>
     </tr>`).join("")}</tbody></table></div>`;
 }
 
 function renderToday() {
+  if (integrationState.mode === "live") return renderLiveToday();
   const portfolio = portfolioSnapshot();
   const primary = securities[0];
   const totalReturn = (portfolio.totalValue / paperAccount.startingValue - 1) * 100;
@@ -201,17 +212,35 @@ function renderToday() {
   drawPerformanceChart("performance-chart");
 }
 
+function renderLiveToday() {
+  const portfolio = portfolioSnapshot();
+  const leader = securities[0];
+  const totalReturn = Number(todayPage?.portfolio?.total_return_pct || 0);
+  const benchmarkEdge = Number(todayPage?.portfolio?.excess_return_pct?.SPY || 0);
+  const pending = Number(todayPage?.decision_queue?.pending || 0);
+  const reviewCount = Number(todayPage?.decision_queue?.review_positions || 0);
+  const markets = todayPage?.market || [];
+  const risks = todayPage?.risks || [];
+  const decisionTitle = pending ? `${pending} paper decision${pending === 1 ? "" : "s"} await review.` : "No paper decisions are waiting for approval.";
+  pageContent.innerHTML = pageHeading("Latest completed Atlas cycle", "Your Atlas decision brief", "Real research priorities, paper-account status, and risks from the latest completed run.", `<button class="button primary" data-go="reports">${icon("notebook-text")} Latest reports</button>`)
+    + `<section class="panel decision-brief"><div class="brief-main"><span class="tag ${pending ? "risk" : "buy"}">${pending ? "Decision required" : "Decision queue clear"}</span><h2>${decisionTitle}</h2><p>${leader ? `${leader.ticker} is the highest current research priority at ${leader.score}/100. This score prioritizes research; it is not by itself a buy instruction.` : "No scored securities are available in the latest Atlas snapshot."}</p>${leader ? `<div class="brief-actions"><button class="button primary" data-security="${leader.ticker}">Review ${leader.ticker} evidence</button><button class="button" data-go="ideas">View all ideas</button></div>` : ""}<small class="decision-note">Live Atlas data · paper-only authority · no brokerage connection</small></div><div class="brief-side"><div><span>Paper mode</span><strong>${todayPage?.portfolio?.operating_mode?.current?.label || "Not configured"}</strong></div><div><span>Pending decisions</span><strong>${pending}</strong></div><div><span>Positions needing review</span><strong>${reviewCount}</strong></div><div><span>Research leader</span><strong>${leader ? `${leader.ticker} · ${leader.score}/100` : "Unavailable"}</strong></div><div><span>Primary driver</span><strong>${leader?.catalyst || "Unavailable"}</strong></div><div><span>Primary risk</span><strong>${leader?.risk || "Unavailable"}</strong></div></div></section><div class="spacer"></div>
+    <section class="grid cols-4"><article class="panel metric"><small>Paper portfolio</small><strong>${money(portfolio.totalValue)}</strong><span class="${totalReturn >= 0 ? "positive" : "negative"}">${signed(totalReturn)} since start</span></article><article class="panel metric"><small>Invested capital</small><strong>${money(portfolio.invested)}</strong><span>${portfolio.positions.length} open simulated positions</span></article><article class="panel metric"><small>Available cash</small><strong>${money(paperAccount.cash)}</strong><span>${percent(portfolio.cashWeight)} of portfolio</span></article><article class="panel metric"><small>Versus SPY</small><strong>${signed(benchmarkEdge)}</strong><span class="${benchmarkEdge >= 0 ? "positive" : "negative"}">${benchmarkEdge >= 0 ? "Ahead since start" : "Behind since start"}</span></article></section><div class="spacer"></div>
+    ${recommendationsTable(securities.slice(0, 8))}<div class="spacer"></div>
+    <section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Market benchmarks</h2><p>Latest completed price comparison</p></div></div><div class="panel-body">${markets.length ? markets.map(item => `<div class="allocation-row"><span>${item.ticker}</span><div class="bar ${item.ticker === "QQQ" ? "blue" : ""}"><span style="width:${Math.min(100, Math.max(5, 50 + Number(item.percent_change || 0) * 8))}%"></span></div><b class="${Number(item.percent_change) >= 0 ? "positive" : "negative"}">${signed(item.percent_change)}</b></div>`).join("") : `<div class="empty-state"><div><h3>Benchmark data unavailable</h3><p>The latest Atlas cycle did not provide benchmark quotes.</p></div></div>`}</div></article><article class="panel"><div class="panel-heading"><div><h2>Positions needing attention</h2><p>Paper holdings flagged by the latest review</p></div></div><div class="panel-body list">${risks.length ? risks.map(item => `<div class="list-row"><span class="list-icon warning">${icon("triangle-alert")}</span><div><b>${item.ticker}</b><small>${item.summary || "Review requested by Atlas."}</small></div></div>`).join("") : `<div class="empty-state"><div><h3>No position alerts</h3><p>No open paper position was flagged for review in this cycle.</p></div></div>`}</div></article></section>`;
+  initializePage();
+}
+
 function renderDiscover() {
-  pageContent.innerHTML = pageHeading("Research opportunities", "Ideas", "See what Atlas recommends, what you already own, and which ideas need more evidence.")
-    + `<section class="grid cols-4"><article class="panel metric"><small>Covered securities</small><strong>117</strong><span>8 sectors · 11 themes</span></article><article class="panel metric"><small>Buy candidates</small><strong>6</strong><span class="positive">2 newly qualified</span></article><article class="panel metric"><small>Near buy range</small><strong>11</strong><span>Within 5% of target</span></article><article class="panel metric"><small>Risk reviews</small><strong>4</strong><span class="negative">1 high priority</span></article></section><div class="spacer"></div>
-    <section class="panel table-panel"><div class="panel-heading"><div><h2>Ranked ideas</h2><p>Use the filters to focus on decisions that matter now</p></div></div><div class="filter-bar" aria-label="Idea filters"><label>Recommendation<select id="ideas-action"><option value="all">All recommendations</option><option value="Buy">Buy</option><option value="Watch">Watch</option><option value="Hold">Hold</option><option value="reduce">Trim or exit</option></select></label><label>Sector<select id="ideas-sector"><option value="all">All sectors</option>${[...new Set(securities.map(item => item.sector))].map(sector => `<option value="${sector}">${sector}</option>`).join("")}</select></label><label>Minimum score<select id="ideas-score"><option value="0">Any score</option><option value="80">80 or higher</option><option value="90">90 or higher</option></select></label><label>Portfolio status<select id="ideas-owned"><option value="all">Owned and not owned</option><option value="false">Not currently owned</option><option value="true">Current holdings</option></select></label><button class="button" id="ideas-reset" type="button">${icon("rotate-ccw")} Reset</button><span class="filter-count" id="ideas-count">${securities.length} ideas</span></div>
-    <table class="data-table ideas-table"><thead><tr><th>Rank / Security</th><th>Recommendation</th><th>Score</th><th>Price</th><th>Today</th><th>Confidence</th><th>Why it matters</th><th>Portfolio status</th><th></th></tr></thead><tbody id="ideas-results">${ideasRows(securities)}</tbody></table><div class="empty-state ideas-empty" id="ideas-empty" hidden>${icon("search-x")}<div><h3>No ideas match these filters</h3><p>Broaden one or more filters, or reset the view to see every ranked idea.</p><button class="button" id="ideas-empty-reset" type="button">Reset filters</button></div></div></section>`;
+  pageContent.innerHTML = pageHeading("Research opportunities", "Ideas", "See what Atlas prioritizes, what you already own, and which ideas need more evidence.")
+    + `<section class="grid cols-4"><article class="panel metric"><small>Covered securities</small><strong>${ideasSummary?.covered ?? securities.length}</strong><span>Available in this snapshot</span></article><article class="panel metric"><small>Research priorities</small><strong>${ideasSummary?.research_priorities ?? securities.filter(item => item.action === "Buy").length}</strong><span>High scoring, not automatic buys</span></article><article class="panel metric"><small>Current holdings</small><strong>${ideasSummary?.current_holdings ?? securities.filter(item => item.owned).length}</strong><span>Open simulated positions</span></article><article class="panel metric"><small>Needs review</small><strong>${ideasSummary?.needs_review ?? securities.filter(item => ["Trim", "Exit"].includes(item.action)).length}</strong><span>Paper holdings flagged by Atlas</span></article></section><div class="spacer"></div>
+    <section class="panel table-panel"><div class="panel-heading"><div><h2>Ranked ideas</h2><p>Atlas Scores prioritize research and do not independently authorize a purchase</p></div></div><div class="filter-bar" aria-label="Idea filters"><label>Research status<select id="ideas-action"><option value="all">All statuses</option>${[...new Set(securities.map(item => item.action))].map(action => `<option value="${action}">${action}</option>`).join("")}</select></label><label>Sector<select id="ideas-sector"><option value="all">All sectors</option>${[...new Set(securities.map(item => item.sector))].map(sector => `<option value="${sector}">${sector}</option>`).join("")}</select></label><label>Minimum score<select id="ideas-score"><option value="0">Any score</option><option value="80">80 or higher</option><option value="90">90 or higher</option></select></label><label>Portfolio status<select id="ideas-owned"><option value="all">Owned and not owned</option><option value="false">Not currently owned</option><option value="true">Current holdings</option></select></label><button class="button" id="ideas-reset" type="button">${icon("rotate-ccw")} Reset</button><span class="filter-count" id="ideas-count">${securities.length} ideas</span></div>
+    <table class="data-table ideas-table"><thead><tr><th>Rank / Security</th><th>Research status</th><th>Score</th><th>Price</th><th>Today</th><th>Confidence</th><th>Why it matters</th><th>Portfolio status</th><th></th></tr></thead><tbody id="ideas-results">${ideasRows(securities)}</tbody></table><div class="empty-state ideas-empty" id="ideas-empty" hidden>${icon("search-x")}<div><h3>No ideas match these filters</h3><p>Broaden one or more filters, or reset the view to see every ranked idea.</p><button class="button" id="ideas-empty-reset" type="button">Reset filters</button></div></div></section>`;
   initializePage();
   initializeIdeasFilters();
 }
 
 function ideasRows(items) {
-  return items.map((item, index) => `<tr><td data-label="Ranked security"><div class="ranked-security"><b>${index + 1}</b>${tickerCell(item)}</div></td><td data-label="Recommendation"><span class="tag ${actionClass(item.action)}">${item.action}</span></td><td data-label="Atlas Score"><span class="score">${item.score}</span></td><td data-label="Sample price">${money(item.price, 2)}</td><td data-label="Last session" class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)}</td><td data-label="Confidence">${item.conviction}</td><td data-label="Why it matters">${item.catalyst}</td><td data-label="Portfolio status">${item.owned ? "Current holding" : "Not owned"}</td><td><button class="button" data-security="${item.ticker}" aria-label="Review ${item.ticker}">${icon("file-search")} Review research</button></td></tr>`).join("");
+  return items.map((item, index) => `<tr><td data-label="Ranked security"><div class="ranked-security"><b>${index + 1}</b>${tickerCell(item)}</div></td><td data-label="Research status"><span class="tag ${actionClass(item.action)}">${item.action}</span></td><td data-label="Atlas Score"><span class="score">${item.score}</span></td><td data-label="Latest price">${item.price == null ? "Unavailable" : money(item.price, 2)}</td><td data-label="Last session" class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)}</td><td data-label="Confidence">${item.conviction}</td><td data-label="Why it matters">${item.catalyst}</td><td data-label="Portfolio status">${item.owned ? "Current holding" : "Not owned"}</td><td><button class="button" data-security="${item.ticker}" aria-label="Review ${item.ticker}">${icon("file-search")} Review research</button></td></tr>`).join("");
 }
 
 function initializeIdeasFilters() {
@@ -267,6 +296,19 @@ function researchDetail(item, activeTab) {
 
 function renderResearch(ticker = "NVDA", activeTab = "overview") {
   const item = securities.find(row => row.ticker === ticker) || securities[0];
+  if (!item) {
+    pageContent.innerHTML = pageHeading("Company research", "Research unavailable", "No securities were returned by the latest Atlas cycle.") + `<section class="panel empty-state">${icon("database-zap")}<div><h3>No research data available</h3><p>Run Atlas again, then refresh this page.</p></div></section>`;
+    initializePage();
+    return;
+  }
+  if (item.dataMode === "live-summary") {
+    const position = positionFor(item.ticker);
+    pageContent.innerHTML = pageHeading("Live research summary", `${item.ticker} research`, "Current score, thesis, driver, and risk from the latest completed Atlas cycle.")
+      + `<section class="panel"><div class="research-header"><div class="security-title"><span class="ticker-logo">${item.ticker.slice(0, 2)}</span><div><h1>${item.name} <span class="tag ${actionClass(item.action)}">${item.action}</span></h1><p>${item.ticker} · ${item.sector} · latest Atlas snapshot</p></div></div><div class="quote"><strong>${item.price == null ? "Unavailable" : money(item.price, 2)}</strong><span class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)} last session</span></div></div></section><div class="spacer"></div>
+      <section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Atlas thesis</h2><p>Research evidence, not an automatic trade instruction</p></div></div><div class="panel-body"><h3 class="research-thesis">${item.thesisTitle}</h3><p class="research-copy">${item.thesis}</p><div class="grid cols-3"><div class="callout"><strong>Primary driver</strong>${item.catalyst}</div><div class="callout risk"><strong>Key risk</strong>${item.risk}</div><div class="callout"><strong>Portfolio status</strong>${position ? `${position.shares} simulated shares currently held` : "Not currently owned"}</div></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Atlas Score</h2><p>Research priority; not a return forecast</p></div></div><div class="panel-body score-breakdown"><div class="score-large"><strong>${item.score}</strong></div><div class="score-bars">${Object.entries(item.scores).map(([label, value]) => `<div class="allocation-row"><span>${label}</span><div class="bar ${label === "Risk" ? "gold" : ""}"><span style="width:${value}%"></span></div><b>${value}</b></div>`).join("")}</div></div></article></section><div class="spacer"></div><section class="panel empty-state">${icon("workflow")}<div><h3>Detailed research integration is next</h3><p>Financials, valuation, news, peers, and paper-decision previews remain disabled here until their dedicated read-only contracts are connected and verified.</p></div></section>`;
+    initializePage();
+    return;
+  }
   pageContent.innerHTML = pageHeading("Company research", `${item.ticker} research`, "Evidence, valuation, catalysts, and risks behind the current Atlas view.", `<button class="button" data-watch="${item.ticker}">${icon("bookmark-plus")} Add to prototype watchlist</button>`)
     + `<section class="panel"><div class="research-header"><div class="security-title"><span class="ticker-logo">${item.ticker.slice(0, 2)}</span><div><h1>${item.name} <span class="tag ${actionClass(item.action)}">${item.action}</span></h1><p>${item.ticker} · ${item.sector} · ${item.exchange} · sample close</p></div></div><div class="quote"><strong>${money(item.price, 2)}</strong><span class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)} at sample close</span></div></div>${researchTabs(item, activeTab)}</section><div class="spacer"></div>${researchDetail(item, activeTab)}`;
   initializePage();
@@ -429,8 +471,91 @@ function drawPerformanceChart(id, security = false) {
   });
 }
 
+function mapLiveIdea(item) {
+  const scores = {};
+  Object.entries(item.scores || {}).forEach(([key, value]) => { scores[key.charAt(0).toUpperCase() + key.slice(1)] = Number(value || 0); });
+  return {
+    ticker: item.ticker,
+    name: item.company_name || item.ticker,
+    sector: item.sector || "Unclassified",
+    exchange: "",
+    score: Number(item.score || 0),
+    price: item.price == null ? null : Number(item.price),
+    move: Number(item.percent_change || 0),
+    action: item.recommendation || "Monitor",
+    conviction: item.confidence || "Low",
+    catalyst: item.key_driver || "No primary driver available",
+    risk: item.key_risk || "No primary risk available",
+    targetWeight: Number(item.position_weight_pct || 0),
+    preferredRange: "Not calculated by this read-only API",
+    thesisTitle: item.thesis || "Atlas thesis unavailable.",
+    thesis: item.thesis || "Atlas thesis unavailable.",
+    whyNow: item.score_horizon || "Research priority; not a return forecast",
+    invalidation: item.key_risk || "No invalidation evidence available",
+    scores,
+    owned: Boolean(item.owned),
+    dataMode: "live-summary"
+  };
+}
+
+async function loadAtlasPages() {
+  const [ideasResponse, todayResponse] = await Promise.all([
+    fetch("/api/v2/ideas", { cache: "no-store" }),
+    fetch("/api/v2/today", { cache: "no-store" })
+  ]);
+  if (!ideasResponse.ok || !todayResponse.ok) throw new Error(`Atlas API unavailable (${ideasResponse.status}/${todayResponse.status})`);
+  const [ideasPage, today] = await Promise.all([ideasResponse.json(), todayResponse.json()]);
+  securities = (ideasPage.ideas || []).map(mapLiveIdea);
+  ideasSummary = ideasPage.summary || null;
+  todayPage = today;
+  const portfolio = today.portfolio || {};
+  const positions = (portfolio.positions || []).filter(position => securities.some(item => item.ticker === position.ticker)).map(position => ({
+    ticker: position.ticker,
+    shares: Number(position.shares || 0),
+    averageCost: Number(position.average_cost || 0)
+  }));
+  const equity = Number(portfolio.equity || 0);
+  const totalReturn = Number(portfolio.total_return_pct || 0);
+  paperAccount = {
+    cash: Number(portfolio.cash || 0),
+    startingValue: totalReturn === -100 ? equity : equity / (1 + totalReturn / 100),
+    positions
+  };
+  const status = ideasPage.data_status || {};
+  const asOf = status.as_of ? new Date(status.as_of).toLocaleString([], { dateStyle: "medium", timeStyle: "short" }) : "Timestamp unavailable";
+  prototypeSnapshot = {
+    label: status.state === "stale" ? "Atlas data · stale snapshot" : "Atlas data · latest completed cycle",
+    asOf,
+    session: status.session || "Latest completed cycle",
+    source: status.source || "Atlas read-only API",
+    state: status.state || "unknown"
+  };
+  integrationState = { mode: "live" };
+  const badge = document.querySelector(".prototype-badge");
+  if (badge) { badge.textContent = "Atlas data"; badge.classList.add("live"); }
+}
+
+async function bootstrap() {
+  pageContent.innerHTML = `<section class="loading-state" role="status">${icon("loader-circle")}<h1>Loading Atlas</h1><p>Connecting to the local read-only research service.</p></section>`;
+  if (window.lucide) lucide.createIcons();
+  try {
+    await loadAtlasPages();
+  } catch (error) {
+    integrationState = { mode: "error", message: error.message };
+    prototypeSnapshot = {
+      label: "Prototype fallback · Atlas API unavailable",
+      asOf: "Illustrative data only",
+      session: "Development fallback",
+      source: "Design fixtures, not Atlas records",
+      state: "error"
+    };
+  }
+  route();
+}
+
 function route() {
   const [name = "today", ticker = "NVDA", activeTab = "overview"] = (location.hash.replace("#", "") || "today").split("/");
+  currentRouteName = name;
   const activeNavigation = ["ideas", "discover", "research", "decision"].includes(name) ? "ideas" : ["reports", "alerts"].includes(name) ? "today" : name;
   document.querySelectorAll(".nav-link").forEach(link => link.classList.toggle("active", link.dataset.route === activeNavigation));
   document.querySelector(".sidebar").classList.remove("open");
@@ -467,4 +592,4 @@ document.getElementById("mobile-menu").addEventListener("click", () => document.
 document.querySelectorAll("[data-go]").forEach(button => button.addEventListener("click", () => { location.hash = button.dataset.go; }));
 window.addEventListener("hashchange", route);
 window.addEventListener("resize", () => { const chart = document.querySelector("canvas"); if (chart) route(); });
-route();
+bootstrap();

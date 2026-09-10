@@ -19,6 +19,57 @@ from app.web_dashboard import (
 
 
 class WebDashboardTests(unittest.TestCase):
+    def test_redesign_page_contracts_are_explicit_when_data_is_empty(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            service = DashboardDataService(
+                archive_dir=root / "archive",
+                reports_dir=root / "reports",
+                paper_account=PaperTradingAccount(
+                    account_file=root / "paper" / "account.json",
+                    ledger_file=root / "paper" / "ledger.jsonl",
+                ),
+                research_queue=ResearchTaskQueue(root / "tasks" / "tasks.json"),
+            )
+
+            ideas = service.build_ideas_page()
+            today = service.build_today_page()
+
+            self.assertEqual(ideas["data_status"]["state"], "unknown")
+            self.assertFalse(ideas["data_status"]["is_live"])
+            self.assertEqual(ideas["summary"]["covered"], 0)
+            self.assertEqual(ideas["ideas"], [])
+            self.assertIsNone(today["research_leader"])
+            self.assertFalse(today["portfolio"]["configured"])
+            self.assertEqual(today["decision_queue"]["pending"], 0)
+
+    def test_redesign_score_confidence_is_not_a_trade_recommendation(self):
+        self.assertEqual(DashboardDataService._score_confidence(90), "High")
+        self.assertEqual(DashboardDataService._score_confidence(75), "Medium")
+        self.assertEqual(DashboardDataService._score_confidence(None), "Low")
+
+    def test_redesign_server_keeps_scripts_self_hosted(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir) / "web_redesign"
+            root.mkdir()
+            (root / "index.html").write_text("Atlas", encoding="utf-8")
+            server = ThreadingHTTPServer(
+                ("127.0.0.1", 0), create_handler(web_dir=root)
+            )
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                with urlopen(
+                    f"http://127.0.0.1:{server.server_port}/", timeout=5
+                ) as response:
+                    policy = response.headers["Content-Security-Policy"]
+                    self.assertIn("script-src 'self'", policy)
+                    self.assertIn("style-src 'self' 'unsafe-inline'", policy)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+
     def test_overview_marks_all_zero_daily_movement_as_limited(self):
         available = {
             f"T{i}": {"status": "available", "percent_change": 0}
@@ -673,7 +724,10 @@ class WebDashboardTests(unittest.TestCase):
         self.assertIn("Execution risk review: valuation is stretched.", combined)
 
     def test_static_routes_are_explicit_and_read_only(self):
-        self.assertEqual(set(STATIC_FILES), {"/", "/index.html", "/styles.css", "/app.js"})
+        self.assertEqual(
+            set(STATIC_FILES),
+            {"/", "/index.html", "/styles.css", "/app.js", "/lucide.min.js"},
+        )
 
     def test_dashboard_exposes_normalized_corporate_actions(self):
         rows = DashboardDataService._corporate_actions(
@@ -1928,6 +1982,18 @@ class WebDashboardTests(unittest.TestCase):
                         "frame-ancestors 'none'",
                         response.headers["Content-Security-Policy"],
                     )
+
+                with urlopen(f"{base_url}/api/v2/ideas", timeout=5) as response:
+                    ideas = json.load(response)
+                    self.assertEqual(response.status, 200)
+                    self.assertIn("data_status", ideas)
+                    self.assertIn("ideas", ideas)
+
+                with urlopen(f"{base_url}/api/v2/today", timeout=5) as response:
+                    today = json.load(response)
+                    self.assertEqual(response.status, 200)
+                    self.assertIn("decision_queue", today)
+                    self.assertIn("portfolio", today)
 
                 with self.assertRaises(HTTPError) as raised:
                     urlopen(Request(base_url, data=b"{}", method="POST"), timeout=5)
