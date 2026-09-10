@@ -202,6 +202,115 @@ class DashboardDataService:
             ],
         }
 
+    def build_security_page(self, ticker):
+        """Build verified research detail for one covered security."""
+        ticker = str(ticker or "").strip().upper()
+        if not re.fullmatch(r"[A-Z0-9.-]{1,10}", ticker):
+            return None
+        snapshot = self._latest_snapshot()
+        securities = snapshot.get("securities", {})
+        security = securities.get(ticker)
+        if not security or security.get("status") != "available":
+            return None
+        available = {
+            symbol: data
+            for symbol, data in securities.items()
+            if data.get("status") == "available"
+        }
+        paper = self._paper(available, include_details=True)
+        position = next(
+            (item for item in paper.get("positions", []) if item.get("ticker") == ticker),
+            None,
+        )
+        profile = security.get("profile") or {}
+        peers = [
+            item
+            for item in self._watchlist(available)
+            if item.get("ticker") != ticker
+            and item.get("sector") == security.get("sector")
+        ]
+        peers.sort(key=lambda item: float(item.get("score") or 0), reverse=True)
+        return {
+            "data_status": self._page_data_status(snapshot),
+            "security": {
+                "ticker": ticker,
+                "company_name": security.get("company_name") or ticker,
+                "sector": security.get("sector"),
+                "category": security.get("category"),
+                "price": security.get("price"),
+                "previous_close": security.get("previous_close"),
+                "change": security.get("change"),
+                "percent_change": security.get("percent_change"),
+                "volume": security.get("volume"),
+                "quote_source": security.get("source"),
+                "score": security.get("total_score"),
+                "score_source": security.get("score_source"),
+                "score_horizon": "Research priority; not a return forecast",
+                "scores": security.get("scores") or {},
+                "thesis": profile.get("thesis"),
+                "key_driver": profile.get("key_driver"),
+                "key_risk": profile.get("key_risk"),
+                "growth": security.get("growth_metrics") or {},
+                "quality": security.get("quality_metrics") or {},
+                "momentum": security.get("momentum_metrics") or {},
+                "news": security.get("news_signal") or {},
+            },
+            "position": position,
+            "peers": peers[:5],
+            "valuation": {
+                "status": "unavailable",
+                "detail": "Verified valuation multiples are not stored in the current Atlas snapshot.",
+            },
+        }
+
+    def build_portfolio_page(self):
+        """Build the paper portfolio page from the ledger and latest prices."""
+        snapshot = self._latest_snapshot()
+        available = {
+            ticker: data
+            for ticker, data in snapshot.get("securities", {}).items()
+            if data.get("status") == "available"
+        }
+        paper = self._paper(available, include_details=True)
+        equity = float(paper.get("equity") or 0)
+        allocations = defaultdict(float)
+        risks = []
+        for position in paper.get("positions", []):
+            security = available.get(position.get("ticker"), {})
+            allocations[security.get("sector") or "Unclassified"] += float(
+                position.get("market_value") or 0
+            )
+            review = position.get("review") or {}
+            if review.get("verdict") == "review":
+                risks.append(
+                    {
+                        "ticker": position.get("ticker"),
+                        "summary": (position.get("thesis_status") or {}).get("summary"),
+                        "flags": review.get("flags") or [],
+                    }
+                )
+        allocation_rows = [
+            {
+                "label": "Cash",
+                "value": paper.get("cash"),
+                "weight_pct": float(paper.get("cash") or 0) / equity * 100 if equity else 0,
+            }
+        ] + [
+            {
+                "label": label,
+                "value": value,
+                "weight_pct": value / equity * 100 if equity else 0,
+            }
+            for label, value in sorted(allocations.items(), key=lambda item: item[1], reverse=True)
+        ]
+        return {
+            "data_status": self._page_data_status(snapshot),
+            "portfolio": paper,
+            "allocations": allocation_rows,
+            "risks": risks,
+            "history": self._history(),
+        }
+
     @staticmethod
     def _score_confidence(score):
         value = float(score or 0)
@@ -2129,6 +2238,17 @@ def create_handler(data_service=None, web_dir=WEB_DIR):
                 return
             if path == "/api/v2/ideas":
                 self._send_json(service.build_ideas_page())
+                return
+            if path == "/api/v2/portfolio":
+                self._send_json(service.build_portfolio_page())
+                return
+            if path.startswith("/api/v2/securities/"):
+                ticker = path.removeprefix("/api/v2/securities/")
+                payload = service.build_security_page(ticker)
+                if payload is None:
+                    self.send_error(404)
+                else:
+                    self._send_json(payload)
                 return
             if path == "/api/dashboard/summary":
                 self._send_json(service.build_summary())

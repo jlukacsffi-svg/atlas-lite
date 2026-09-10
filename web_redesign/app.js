@@ -35,6 +35,8 @@ securities.forEach(item => { item.owned = heldTickers.has(item.ticker); });
 let integrationState = { mode: "loading", message: "Connecting to Atlas read-only data..." };
 let ideasSummary = null;
 let todayPage = null;
+let portfolioPage = null;
+const securityDetails = new Map();
 let currentRouteName = "today";
 
 const alerts = [
@@ -142,7 +144,7 @@ function decisionPreview(item) {
 }
 
 function dataStatus() {
-  const integrated = integrationState.mode === "live" && ["today", "ideas", "discover", "research"].includes(currentRouteName);
+  const integrated = integrationState.mode === "live" && ["today", "ideas", "discover", "research", "portfolio"].includes(currentRouteName);
   const statusClass = integrated && prototypeSnapshot.state !== "stale" ? "live" : integrationState.mode === "error" ? "error" : "";
   const statusIcon = integrated ? "database" : integrationState.mode === "error" ? "triangle-alert" : "flask-conical";
   const label = integrated ? prototypeSnapshot.label : integrationState.mode === "live" ? "Prototype page · live integration pending" : prototypeSnapshot.label;
@@ -302,17 +304,56 @@ function renderResearch(ticker = "NVDA", activeTab = "overview") {
     return;
   }
   if (item.dataMode === "live-summary") {
-    const position = positionFor(item.ticker);
-    pageContent.innerHTML = pageHeading("Live research summary", `${item.ticker} research`, "Current score, thesis, driver, and risk from the latest completed Atlas cycle.")
-      + `<section class="panel"><div class="research-header"><div class="security-title"><span class="ticker-logo">${item.ticker.slice(0, 2)}</span><div><h1>${item.name} <span class="tag ${actionClass(item.action)}">${item.action}</span></h1><p>${item.ticker} · ${item.sector} · latest Atlas snapshot</p></div></div><div class="quote"><strong>${item.price == null ? "Unavailable" : money(item.price, 2)}</strong><span class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)} last session</span></div></div></section><div class="spacer"></div>
-      <section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Atlas thesis</h2><p>Research evidence, not an automatic trade instruction</p></div></div><div class="panel-body"><h3 class="research-thesis">${item.thesisTitle}</h3><p class="research-copy">${item.thesis}</p><div class="grid cols-3"><div class="callout"><strong>Primary driver</strong>${item.catalyst}</div><div class="callout risk"><strong>Key risk</strong>${item.risk}</div><div class="callout"><strong>Portfolio status</strong>${position ? `${position.shares} simulated shares currently held` : "Not currently owned"}</div></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Atlas Score</h2><p>Research priority; not a return forecast</p></div></div><div class="panel-body score-breakdown"><div class="score-large"><strong>${item.score}</strong></div><div class="score-bars">${Object.entries(item.scores).map(([label, value]) => `<div class="allocation-row"><span>${label}</span><div class="bar ${label === "Risk" ? "gold" : ""}"><span style="width:${value}%"></span></div><b>${value}</b></div>`).join("")}</div></div></article></section><div class="spacer"></div><section class="panel empty-state">${icon("workflow")}<div><h3>Detailed research integration is next</h3><p>Financials, valuation, news, peers, and paper-decision previews remain disabled here until their dedicated read-only contracts are connected and verified.</p></div></section>`;
-    initializePage();
+    const detail = securityDetails.get(item.ticker);
+    if (!detail) {
+      pageContent.innerHTML = pageHeading("Company research", `${item.ticker} research`, "Loading verified Atlas evidence.") + `<section class="loading-state compact">${icon("loader-circle")}<h2>Loading ${item.ticker}</h2><p>Reading the latest research snapshot and paper context.</p></section>`;
+      initializePage();
+      fetch(`/api/v2/securities/${encodeURIComponent(item.ticker)}`, { cache: "no-store" }).then(response => {
+        if (!response.ok) throw new Error(`Research unavailable (${response.status})`);
+        return response.json();
+      }).then(payload => { securityDetails.set(item.ticker, payload); renderResearch(item.ticker, activeTab); }).catch(error => { securityDetails.set(item.ticker, { error: error.message }); renderResearch(item.ticker, activeTab); });
+      return;
+    }
+    renderLiveResearch(item, detail, activeTab);
     return;
   }
   pageContent.innerHTML = pageHeading("Company research", `${item.ticker} research`, "Evidence, valuation, catalysts, and risks behind the current Atlas view.", `<button class="button" data-watch="${item.ticker}">${icon("bookmark-plus")} Add to prototype watchlist</button>`)
     + `<section class="panel"><div class="research-header"><div class="security-title"><span class="ticker-logo">${item.ticker.slice(0, 2)}</span><div><h1>${item.name} <span class="tag ${actionClass(item.action)}">${item.action}</span></h1><p>${item.ticker} · ${item.sector} · ${item.exchange} · sample close</p></div></div><div class="quote"><strong>${money(item.price, 2)}</strong><span class="${item.move >= 0 ? "positive" : "negative"}">${signed(item.move)} at sample close</span></div></div>${researchTabs(item, activeTab)}</section><div class="spacer"></div>${researchDetail(item, activeTab)}`;
   initializePage();
   drawPerformanceChart("security-chart", true);
+}
+
+function liveResearchTabs(item, activeTab) {
+  const tabs = [["overview", "Overview"], ["fundamentals", "Fundamentals"], ["momentum", "Momentum"], ["news", "News"], ["peers", "Peers"], ["valuation", "Valuation"]];
+  return `<div class="tabs" role="tablist" aria-label="${item.ticker} research views">${tabs.map(([key, label]) => `<button role="tab" aria-selected="${key === activeTab}" class="${key === activeTab ? "active" : ""}" data-research-tab="${key}" data-ticker="${item.ticker}">${label}</button>`).join("")}</div>`;
+}
+
+function readableMetric(key) {
+  return key.replaceAll("_pct", " %").replaceAll("_", " ").replace(/\b\w/g, letter => letter.toUpperCase());
+}
+
+function researchMetricList(values) {
+  const entries = Object.entries(values || {}).filter(([key, value]) => !["source", "revenue_tag", "net_income_tag", "operating_cash_flow_tag", "capex_tag"].includes(key) && value != null);
+  return entries.length ? `<div class="list">${entries.map(([key, value]) => `<div class="list-row"><div><b>${readableMetric(key)}</b></div><strong>${typeof value === "number" ? value.toFixed(2).replace(/\.00$/, "") : value}</strong></div>`).join("")}</div>` : `<div class="empty-state"><div><h3>No verified metrics available</h3><p>The latest Atlas snapshot did not contain this evidence.</p></div></div>`;
+}
+
+function renderLiveResearch(item, detail, activeTab) {
+  if (detail.error) {
+    pageContent.innerHTML = pageHeading("Company research", `${item.ticker} unavailable`, "Atlas could not load this security detail.") + `<section class="panel empty-state">${icon("triangle-alert")}<div><h3>Research request failed</h3><p>${detail.error}</p></div></section>`;
+    initializePage();
+    return;
+  }
+  const security = detail.security;
+  const position = detail.position;
+  let body;
+  if (activeTab === "fundamentals") body = `<section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Growth</h2><p>SEC company-facts evidence</p></div></div><div class="panel-body">${researchMetricList(security.growth)}</div></article><article class="panel"><div class="panel-heading"><div><h2>Quality</h2><p>Margins and cash-flow evidence</p></div></div><div class="panel-body">${researchMetricList(security.quality)}</div></article></section>`;
+  else if (activeTab === "momentum") body = `<section class="panel"><div class="panel-heading"><div><h2>Price and trend evidence</h2><p>Yahoo one-year chart calculations</p></div></div><div class="panel-body">${researchMetricList(security.momentum)}</div></section>`;
+  else if (activeTab === "news") { const events = security.news?.headline_events || []; body = `<section class="panel"><div class="panel-heading"><div><h2>Company-specific news</h2><p>${security.news?.signal_label || "Unknown"} signal · score ${Number(security.news?.signal_score || 0).toFixed(1)}</p></div></div><div class="panel-body list">${events.length ? events.map(event => `<div class="list-row"><span class="list-icon ${event.sentiment === "negative" ? "negative" : "positive"}">${icon("newspaper")}</span><div><b>${event.title}</b><small>${event.publisher || "Publisher unavailable"} · ${event.event_type || "event"} · ${event.sentiment || "unclassified"}</small></div><span class="tag ${event.severity === "high" ? "risk" : ""}">${event.severity || "normal"}</span></div>`).join("") : `<div class="empty-state"><div><h3>No company-specific headlines</h3><p>The latest scan did not identify a relevant company headline.</p></div></div>`}</div></section>`; }
+  else if (activeTab === "peers") body = `<section class="panel table-panel"><div class="panel-heading"><div><h2>Sector peers</h2><p>Highest-scoring related Atlas coverage</p></div></div><table class="data-table"><thead><tr><th>Security</th><th>Atlas Score</th><th>Research horizon</th><th></th></tr></thead><tbody>${(detail.peers || []).map(peer => `<tr><td>${tickerCell({ticker:peer.ticker,name:peer.company_name})}</td><td><span class="score">${peer.score}</span></td><td>${peer.score_horizon}</td><td><button class="button" data-security="${peer.ticker}">Review</button></td></tr>`).join("")}</tbody></table></section>`;
+  else if (activeTab === "valuation") body = `<section class="panel empty-state">${icon("badge-dollar-sign")}<div><h3>Verified valuation data is not available yet</h3><p>${detail.valuation?.detail || "Atlas will not display estimated valuation figures without a verified source."}</p></div></section>`;
+  else body = `<section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Atlas thesis</h2><p>Research evidence, not an automatic trade instruction</p></div></div><div class="panel-body"><h3 class="research-thesis">${security.thesis || "Thesis unavailable"}</h3><div class="grid cols-3"><div class="callout"><strong>Primary driver</strong>${security.key_driver || "Unavailable"}</div><div class="callout risk"><strong>Key risk</strong>${security.key_risk || "Unavailable"}</div><div class="callout"><strong>Portfolio status</strong>${position ? `${position.shares} simulated shares · ${money(position.market_value)}` : "Not currently owned"}</div></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Atlas Score</h2><p>${security.score_horizon}</p></div></div><div class="panel-body score-breakdown"><div class="score-large"><strong>${security.score}</strong></div><div class="score-bars">${Object.entries(security.scores || {}).map(([label, value]) => `<div class="allocation-row"><span>${readableMetric(label)}</span><div class="bar ${label === "risk" ? "gold" : ""}"><span style="width:${value}%"></span></div><b>${value}</b></div>`).join("")}</div></div></article></section>`;
+  pageContent.innerHTML = pageHeading("Verified company research", `${security.ticker} research`, "Evidence from the latest completed Atlas cycle.") + `<section class="panel"><div class="research-header"><div class="security-title"><span class="ticker-logo">${security.ticker.slice(0,2)}</span><div><h1>${security.company_name} <span class="tag ${actionClass(item.action)}">${item.action}</span></h1><p>${security.ticker} · ${security.sector} · ${security.quote_source || "source unavailable"}</p></div></div><div class="quote"><strong>${money(security.price,2)}</strong><span class="${security.percent_change >= 0 ? "positive" : "negative"}">${signed(security.percent_change)} last session</span></div></div>${liveResearchTabs(item, activeTab)}</section><div class="spacer"></div>${body}`;
+  initializePage();
 }
 
 function decisionStepper(item, activeStep) {
@@ -348,6 +389,7 @@ function renderDecision(ticker = "NVDA", activeStep = "impact") {
 }
 
 function renderPortfolio() {
+  if (integrationState.mode === "live") return renderLivePortfolio();
   const portfolio = portfolioSnapshot();
   const totalReturn = (portfolio.totalValue / paperAccount.startingValue - 1) * 100;
   const unrealizedReturn = portfolio.unrealized / portfolio.costBasis * 100;
@@ -363,6 +405,36 @@ function renderPortfolio() {
     <section class="grid cols-3"><article class="panel"><div class="panel-heading"><div><h2>Risk summary</h2><p>Portfolio-level exposure checks</p></div></div><div class="panel-body list"><div class="list-row"><span class="list-icon warning">${icon("layers-3")}</span><div><b>Position concentration</b><small>META is ${percent(positionFor("META").marketValue / portfolio.totalValue * 100)} of the paper portfolio and has an exit view.</small></div><span class="tag risk">Review</span></div><div class="list-row"><span class="list-icon positive">${icon("shield-check")}</span><div><b>Cash reserve</b><small>${percent(portfolio.cashWeight)} is above the 20% minimum.</small></div><span class="tag buy">Clear</span></div><div class="list-row"><span class="list-icon positive">${icon("waves")}</span><div><b>Drawdown</b><small>-3.8% versus -10% limit.</small></div><span class="tag buy">Clear</span></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Return attribution</h2><p>Largest contributors and detractors</p></div></div><div class="panel-body"><div class="allocation-row"><span>MSFT</span><div class="bar"><span style="width:82%"></span></div><b>+1.42%</b></div><div class="allocation-row"><span>PLTR</span><div class="bar"><span style="width:56%"></span></div><b>+0.88%</b></div><div class="allocation-row"><span>AMZN</span><div class="bar red"><span style="width:28%"></span></div><b>-0.31%</b></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Scenario check</h2><p>Estimated portfolio sensitivity</p></div></div><div class="panel-body"><div class="list"><div class="list-row"><div><b>Nasdaq -10%</b><small>Growth shock estimate</small></div><b class="negative">-7.4%</b></div><div class="list-row"><div><b>Rates +1%</b><small>Duration sensitivity</small></div><b class="negative">-3.1%</b></div><div class="list-row"><div><b>Defense +10%</b><small>Sector upside estimate</small></div><b class="positive">+1.2%</b></div></div></div></article></section>`;
   initializePage();
   drawPerformanceChart("portfolio-chart");
+}
+
+function renderLivePortfolio() {
+  const paper = portfolioPage?.portfolio || {};
+  const positions = paper.positions || [];
+  const equity = Number(paper.equity || 0);
+  const cash = Number(paper.cash || 0);
+  const totalReturn = Number(paper.total_return_pct || 0);
+  const unrealized = positions.reduce((sum, position) => sum + Number(position.unrealized_gain_loss || 0), 0);
+  const risks = portfolioPage?.risks || [];
+  const allocations = portfolioPage?.allocations || [];
+  const history = portfolioPage?.history || [];
+  const latestHistory = history.at(-1) || {};
+  pageContent.innerHTML = pageHeading("Live paper account", "Portfolio", "Ledger-derived performance, positions, allocation, and review signals.")
+    + `<section class="grid cols-4"><article class="panel metric"><small>Total value</small><strong>${money(equity)}</strong><span class="${totalReturn >= 0 ? "positive" : "negative"}">${signed(totalReturn)} since start</span></article><article class="panel metric"><small>Invested</small><strong>${money(paper.market_value || 0)}</strong><span>${equity ? percent(Number(paper.market_value || 0) / equity * 100) : "0.0%"} exposure</span></article><article class="panel metric"><small>Available cash</small><strong>${money(cash)}</strong><span>${equity ? percent(cash / equity * 100) : "0.0%"} of portfolio</span></article><article class="panel metric"><small>Needs review</small><strong>${risks.length}</strong><span class="${risks.length ? "warning" : "positive"}">${risks.length ? "Paper position signals" : "No current flags"}</span></article></section><div class="spacer"></div>
+    <section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Performance history</h2><p>Atlas paper portfolio versus recorded benchmarks</p></div></div>${history.length > 1 ? `<div class="chart-wrap"><canvas id="live-portfolio-chart"></canvas><div class="chart-legend"><span><i class="legend-dot"></i>Atlas ${signed(totalReturn)}</span><span><i class="legend-dot spy"></i>SPY ${signed(Number(latestHistory.spy_return || 0))}</span><span><i class="legend-dot qqq"></i>QQQ ${signed(Number(latestHistory.qqq_return || 0))}</span></div></div>` : `<div class="empty-state"><div><h3>More history is needed</h3><p>Atlas will draw performance after at least two ledger snapshots exist.</p></div></div>`}</article><article class="panel"><div class="panel-heading"><div><h2>Allocation</h2><p>Calculated from current simulated positions and cash</p></div></div><div class="panel-body">${allocations.map((row,index) => `<div class="allocation-row"><span>${row.label}</span><div class="bar ${index === 0 ? "gold" : index === 2 ? "blue" : ""}"><span style="width:${row.weight_pct}%"></span></div><b>${percent(row.weight_pct)}</b></div>`).join("")}</div></article></section><div class="spacer"></div>
+    <section class="panel table-panel holdings-panel"><div class="panel-heading"><div><h2>Current simulated holdings</h2><p>${positions.length} positions · ${money(paper.market_value || 0)} invested</p></div><span class="tag">Paper only</span></div>${positions.length ? `<table class="data-table"><thead><tr><th>Holding</th><th>Status</th><th>Shares</th><th>Price</th><th>Market value</th><th>Weight</th><th>Open gain/loss</th><th>Next action</th></tr></thead><tbody>${positions.map(position => { const item=securities.find(row=>row.ticker===position.ticker)||{ticker:position.ticker,name:position.ticker}; const review=position.review?.verdict==="review"; return `<tr><td data-label="Holding">${tickerCell(item)}</td><td data-label="Status"><span class="tag ${review ? "sell" : "watch"}">${review ? "Review" : "Hold"}</span></td><td data-label="Shares">${position.shares}</td><td data-label="Price">${money(position.price,2)}</td><td data-label="Market value">${money(position.market_value)}</td><td data-label="Weight">${equity ? percent(position.market_value/equity*100) : "0.0%"}</td><td data-label="Open gain/loss" class="${position.unrealized_gain_loss>=0?"positive":"negative"}">${money(position.unrealized_gain_loss)}</td><td data-label="Next action"><button class="button" data-security="${position.ticker}">${icon("file-search")} Review evidence</button></td></tr>`; }).join("")}</tbody></table>` : `<div class="empty-state"><div><h3>No open paper positions</h3><p>Atlas currently holds the simulated account in cash.</p></div></div>`}</section><div class="spacer"></div>
+    <section class="grid two-one"><article class="panel"><div class="panel-heading"><div><h2>Position review queue</h2><p>Latest paper-monitor findings</p></div></div><div class="panel-body list">${risks.length ? risks.map(risk => `<div class="list-row"><span class="list-icon warning">${icon("triangle-alert")}</span><div><b>${risk.ticker}</b><small>${risk.summary || risk.flags?.[0] || "Atlas requested review."}</small></div><button class="button" data-security="${risk.ticker}">Review</button></div>`).join("") : `<div class="empty-state"><div><h3>No positions need review</h3><p>The latest monitor cycle did not flag an open holding.</p></div></div>`}</div></article><article class="panel"><div class="panel-heading"><div><h2>Account integrity</h2><p>Values derived from the paper ledger</p></div></div><div class="panel-body decision-context"><div><span>Cash plus positions</span><strong>${money(cash + Number(paper.market_value || 0))}</strong></div><div><span>Reported equity</span><strong>${money(equity)}</strong></div><div><span>Open gain/loss</span><strong class="${unrealized>=0?"positive":"negative"}">${money(unrealized)}</strong></div><div><span>Authority</span><strong>Simulated paper account only</strong></div></div></article></section>`;
+  initializePage();
+  drawPortfolioHistory("live-portfolio-chart", history);
+}
+
+function drawPortfolioHistory(id, history) {
+  const canvas=document.getElementById(id); if(!canvas||history.length<2)return;
+  const ratio=window.devicePixelRatio||1,width=canvas.clientWidth||700,height=canvas.clientHeight||220; canvas.width=width*ratio;canvas.height=height*ratio;
+  const ctx=canvas.getContext("2d");ctx.scale(ratio,ratio);ctx.strokeStyle=getComputedStyle(document.documentElement).getPropertyValue("--line").trim();
+  for(let i=0;i<5;i+=1){const y=12+i*((height-30)/4);ctx.beginPath();ctx.moveTo(10,y);ctx.lineTo(width-10,y);ctx.stroke();}
+  const series=[{color:"#586fdb",key:"atlas_return"},{color:"#3984c6",key:"spy_return"},{color:"#e08a52",key:"qqq_return"}];
+  const values=history.flatMap(row=>series.map(item=>Number(row[item.key])).filter(Number.isFinite));const min=Math.min(...values),max=Math.max(...values),span=Math.max(1,max-min);
+  series.forEach(item=>{ctx.strokeStyle=item.color;ctx.lineWidth=2;ctx.beginPath();history.forEach((row,index)=>{const value=Number(row[item.key]);if(!Number.isFinite(value))return;const x=12+index*((width-24)/Math.max(1,history.length-1));const y=height-15-(value-min)*((height-35)/span);if(index===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);});ctx.stroke();});
 }
 
 function renderActivity() {
@@ -499,15 +571,17 @@ function mapLiveIdea(item) {
 }
 
 async function loadAtlasPages() {
-  const [ideasResponse, todayResponse] = await Promise.all([
+  const [ideasResponse, todayResponse, portfolioResponse] = await Promise.all([
     fetch("/api/v2/ideas", { cache: "no-store" }),
-    fetch("/api/v2/today", { cache: "no-store" })
+    fetch("/api/v2/today", { cache: "no-store" }),
+    fetch("/api/v2/portfolio", { cache: "no-store" })
   ]);
-  if (!ideasResponse.ok || !todayResponse.ok) throw new Error(`Atlas API unavailable (${ideasResponse.status}/${todayResponse.status})`);
-  const [ideasPage, today] = await Promise.all([ideasResponse.json(), todayResponse.json()]);
+  if (!ideasResponse.ok || !todayResponse.ok || !portfolioResponse.ok) throw new Error(`Atlas API unavailable (${ideasResponse.status}/${todayResponse.status}/${portfolioResponse.status})`);
+  const [ideasPage, today, portfolioData] = await Promise.all([ideasResponse.json(), todayResponse.json(), portfolioResponse.json()]);
   securities = (ideasPage.ideas || []).map(mapLiveIdea);
   ideasSummary = ideasPage.summary || null;
   todayPage = today;
+  portfolioPage = portfolioData;
   const portfolio = today.portfolio || {};
   const positions = (portfolio.positions || []).filter(position => securities.some(item => item.ticker === position.ticker)).map(position => ({
     ticker: position.ticker,

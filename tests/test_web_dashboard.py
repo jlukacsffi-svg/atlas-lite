@@ -34,6 +34,7 @@ class WebDashboardTests(unittest.TestCase):
 
             ideas = service.build_ideas_page()
             today = service.build_today_page()
+            portfolio = service.build_portfolio_page()
 
             self.assertEqual(ideas["data_status"]["state"], "unknown")
             self.assertFalse(ideas["data_status"]["is_live"])
@@ -42,6 +43,9 @@ class WebDashboardTests(unittest.TestCase):
             self.assertIsNone(today["research_leader"])
             self.assertFalse(today["portfolio"]["configured"])
             self.assertEqual(today["decision_queue"]["pending"], 0)
+            self.assertFalse(portfolio["portfolio"]["configured"])
+            self.assertEqual(portfolio["allocations"][0]["label"], "Cash")
+            self.assertIsNone(service.build_security_page("../env"))
 
     def test_redesign_score_confidence_is_not_a_trade_recommendation(self):
         self.assertEqual(DashboardDataService._score_confidence(90), "High")
@@ -279,8 +283,14 @@ class WebDashboardTests(unittest.TestCase):
 
             data = service.build()
             summary = service.build_summary()
+            security_page = service.build_security_page("AAA")
+            portfolio_page = service.build_portfolio_page()
 
         self.assertEqual(data["overview"]["tracked"], 2)
+        self.assertEqual(security_page["security"]["ticker"], "AAA")
+        self.assertEqual(security_page["security"]["scores"]["growth"], 92)
+        self.assertEqual(security_page["valuation"]["status"], "unavailable")
+        self.assertEqual(portfolio_page["allocations"][0]["label"], "Cash")
         self.assertEqual(data["overview"]["advancing"], 1)
         self.assertEqual(data["movers"][0]["ticker"], "AAA")
         self.assertEqual(data["score_leaders"][0]["score"], 90)
@@ -1994,6 +2004,15 @@ class WebDashboardTests(unittest.TestCase):
                     self.assertEqual(response.status, 200)
                     self.assertIn("decision_queue", today)
                     self.assertIn("portfolio", today)
+
+                with urlopen(f"{base_url}/api/v2/portfolio", timeout=5) as response:
+                    portfolio = json.load(response)
+                    self.assertEqual(response.status, 200)
+                    self.assertIn("allocations", portfolio)
+
+                with self.assertRaises(HTTPError) as missing_security:
+                    urlopen(f"{base_url}/api/v2/securities/UNKNOWN", timeout=5)
+                self.assertEqual(missing_security.exception.code, 404)
 
                 with self.assertRaises(HTTPError) as raised:
                     urlopen(Request(base_url, data=b"{}", method="POST"), timeout=5)

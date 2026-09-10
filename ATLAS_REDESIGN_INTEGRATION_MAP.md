@@ -39,6 +39,8 @@ Implemented read-only endpoints:
 
 - `GET /api/v2/today`
 - `GET /api/v2/ideas`
+- `GET /api/v2/securities/{ticker}`
+- `GET /api/v2/portfolio`
 
 These endpoints are backed by the existing research archive and paper ledger.
 The redesigned browser loads both before rendering and exposes failures,
@@ -108,6 +110,8 @@ Implemented now:
 - Real read-only Today and Ideas integration with server-derived freshness,
   research-status semantics, paper-account reconciliation, and explicit
   development fallback behavior
+- On-demand verified security research and a ledger-derived paper Portfolio,
+  including real benchmark history, allocation, and review signals
 
 Prototype-only interactions are visibly labeled. They do not write to Atlas,
 create a paper fill, send email, or change cloud state.

@@ -2961,3 +2961,24 @@ Next redesign focus:
 
 - Connect security-detail Research and Portfolio to dedicated read-only APIs,
   then connect the report archive. Do not enable paper writes yet.
+
+## September 9, 2026 - Research And Portfolio Integration
+
+- `GET /api/v2/securities/{ticker}` serves verified per-security evidence on
+  demand and rejects unknown or invalid ticker paths.
+- Connected Research tabs cover Overview, Fundamentals, Momentum, News, Peers,
+  and Valuation. Valuation remains explicitly unavailable until a verified
+  source is stored by Atlas.
+- `GET /api/v2/portfolio` serves the paper ledger, calculated allocation,
+  review signals, and recorded benchmark history.
+- Portfolio now reconciles cash plus positions to equity and contains no
+  prototype attribution, scenario, drawdown, or concentration claims.
+- Desktop and mobile flows were checked across research tabs and holdings with
+  no browser errors or page-level horizontal overflow.
+- The redesign is approximately 80% complete. The paper-only Stage 5 engine
+  remains approximately 95% complete.
+
+Next redesign focus:
+
+- Connect Reports, then Activity and Alerts, to narrow read-only page APIs.
+  Keep all paper and real-money writes disabled in the redesign.

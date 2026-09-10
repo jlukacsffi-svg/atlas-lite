@@ -210,9 +210,22 @@ The first real-data integration is complete:
 - Lucide is self-hosted under its ISC license, so the read-only server keeps a
   self-only script policy without relying on a third-party runtime CDN.
 
-The redesign is approximately 70% complete. The next stage is to connect
-security-detail research and Portfolio to dedicated read-only APIs, followed
-by Reports. Paper decision writes remain deferred.
+Security Research and Portfolio are now connected to dedicated read-only APIs:
+
+- Security detail loads on demand by ticker and exposes verified thesis,
+  score components, SEC growth and quality metrics, trend evidence,
+  company-specific news, sector peers, quote provenance, and paper position
+  context.
+- Valuation explicitly reports unavailable because the current snapshot does
+  not contain verified multiples.
+- Portfolio uses ledger-derived equity, cash, positions, allocation, open
+  gain/loss, benchmark history, and position-review signals.
+- The performance chart uses recorded Atlas, SPY, and QQQ history, and the
+  account-integrity panel reconciles cash plus positions to reported equity.
+
+The redesign is approximately 80% complete. The next stage is to connect the
+report archive, then finish Activity and Alerts read-only state. Paper decision
+writes remain deferred.
 
 This redesign does not expand Atlas's financial authority. Real brokerage
 execution remains disabled.

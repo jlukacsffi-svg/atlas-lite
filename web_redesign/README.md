@@ -8,9 +8,9 @@ py -3.12 run_redesign.py
 
 Open `http://127.0.0.1:8771/`.
 
-Today and Ideas use real Atlas records from the latest completed research
-snapshot and paper ledger. Their status banner identifies the source timestamp
-and whether the snapshot is stale. Research, Portfolio, Activity, Reports,
+Today, Ideas, Research, and Portfolio use real Atlas records from the latest
+completed research snapshot and paper ledger. Their status banner identifies
+the source timestamp and whether the snapshot is stale. Activity, Reports,
 Alerts, and Settings remain prototype or partially connected pages and say so
 in their status banner.
 
